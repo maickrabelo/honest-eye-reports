@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import TrackReportModal from '@/components/TrackReportModal';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -126,6 +128,7 @@ const ReportChat = () => {
       toast({
         title: "Denúncia registrada com sucesso!",
         description: `Importante: Anote seu código de acompanhamento: ${reportId}`,
+        variant: "default", // Fixed the variant type
         duration: 10000,
       });
 
