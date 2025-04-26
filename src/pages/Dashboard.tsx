@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -32,8 +31,8 @@ import { Calendar, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AIAnalysisCard from '@/components/AIAnalysisCard';
 import TrackReportModal from '@/components/TrackReportModal';
+import DownloadReportButton from '@/components/DownloadReportButton';
 
-// Dados de exemplo para os gráficos
 const monthlyData = [
   { name: 'Jan', denuncias: 4 },
   { name: 'Fev', denuncias: 3 },
@@ -67,7 +66,6 @@ const statusData = [
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
-// Lista de denúncias recentes (exemplo)
 const recentReports = [
   {
     id: "REP-2025-042",
@@ -144,7 +142,6 @@ const Dashboard = () => {
   const handleSubmitResponse = () => {
     if (!responseText.trim()) return;
 
-    // Adicionar resposta ao relatório selecionado
     const updatedReport = {
       ...selectedReport,
       updates: [
@@ -157,19 +154,10 @@ const Dashboard = () => {
       ]
     };
 
-    // Atualizar status se foi alterado
     if (selectedStatus !== selectedReport.status) {
       updatedReport.status = selectedStatus;
     }
 
-    // Em um ambiente real, aqui você enviaria os dados para seu backend
-    
-    // Atualiza o relatório na lista local para fins de demonstração
-    const updatedReports = recentReports.map(report => 
-      report.id === selectedReport.id ? updatedReport : report
-    );
-
-    // Atualizar o estado
     setSelectedReport(updatedReport);
     setResponseText("");
     
@@ -179,7 +167,6 @@ const Dashboard = () => {
     });
   };
 
-  // Formata o status com cores apropriadas
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Resolvida':
@@ -202,10 +189,12 @@ const Dashboard = () => {
         <div className="audit-container">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-audit-primary">Dashboard</h1>
-            <TrackReportModal />
+            <div className="flex gap-4">
+              <DownloadReportButton />
+              <TrackReportModal />
+            </div>
           </div>
           
-          {/* Cards de estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[
               { title: "Total de Denúncias", value: "89", change: "+12%", color: "bg-audit-primary" },
@@ -232,7 +221,6 @@ const Dashboard = () => {
             ))}
           </div>
           
-          {/* Análise de IA e Gráficos */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2">
               <Tabs defaultValue="overview" className="mb-8">
@@ -338,7 +326,6 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {/* Denúncias Recentes */}
           <Card>
             <CardHeader>
               <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
@@ -410,7 +397,6 @@ const Dashboard = () => {
       </main>
       <Footer />
       
-      {/* Modal de detalhes da denúncia */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {selectedReport && (
           <DialogContent className="max-w-3xl">

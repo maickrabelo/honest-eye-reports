@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,7 +11,6 @@ import { Check, CheckCheck, Loader2, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 
-// Mensagens iniciais do chatbot
 const initialMessages = [
   {
     role: "system",
@@ -27,11 +25,11 @@ const ReportChat = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [summary, setSummary] = useState("");
   const [reportId, setReportId] = useState("");
+  const [showTrackingDialog, setShowTrackingDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Gera um ID de relatório aleatório
   useEffect(() => {
     const generateReportId = () => {
       const prefix = "REP";
@@ -43,7 +41,6 @@ const ReportChat = () => {
     setReportId(generateReportId());
   }, []);
 
-  // Auto-scroll quando novas mensagens são adicionadas
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -52,7 +49,16 @@ const ReportChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Simula o envio da mensagem para a API da OpenAI
+  const formatReportId = (num: string) => {
+    const cleanNum = num.replace(/\D/g, '');
+    if (cleanNum.length <= 3) {
+      return `REP-${new Date().getFullYear()}-${cleanNum.padStart(3, '0')}`;
+    }
+    const year = cleanNum.slice(0, 4);
+    const seq = cleanNum.slice(4, 7);
+    return `REP-${year}-${seq}`;
+  };
+
   const handleSendMessage = async () => {
     if (input.trim() === "") return;
     
@@ -65,12 +71,9 @@ const ReportChat = () => {
     setInput("");
     setIsLoading(true);
 
-    // Em um ambiente real, aqui você enviaria a mensagem para a API da OpenAI
-    // Simulando resposta da IA
     setTimeout(() => {
       let aiResponse;
       
-      // Simulação de resposta baseada no número de mensagens trocadas
       if (messages.length < 3) {
         aiResponse = {
           role: "assistant",
@@ -91,7 +94,6 @@ const ReportChat = () => {
       setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
       
-      // Se já tiver muitas mensagens, oferece finalizar
       if (messages.length > 6 && !isComplete) {
         setTimeout(() => {
           setMessages(prev => [...prev, {
@@ -103,18 +105,15 @@ const ReportChat = () => {
     }, 1500);
   };
 
-  // Finaliza a denúncia e gera o resumo
   const handleFinishReport = () => {
     setIsLoading(true);
     
-    // Simulando processamento da IA para gerar resumo
     setTimeout(() => {
       const userMessages = messages
         .filter(msg => msg.role === "user")
         .map(msg => msg.content)
         .join(" ");
       
-      // Em um ambiente real, enviaria todo o histórico para a API da OpenAI gerar um resumo
       const generatedSummary = `Denúncia sobre situação de desconforto no ambiente de trabalho. 
       O denunciante relatou problemas de conduta inadequada por parte de superiores, 
       incluindo possíveis casos de assédio moral. Incidente ocorreu principalmente no setor comercial 
@@ -126,16 +125,19 @@ const ReportChat = () => {
       
       toast({
         title: "Denúncia registrada com sucesso!",
-        description: `Seu código de acompanhamento: ${reportId}`,
+        description: `Importante: Anote seu código de acompanhamento: ${reportId}`,
+        duration: 10000,
       });
+
+      setTimeout(() => {
+        setShowTrackingDialog(true);
+      }, 1000);
     }, 2000);
   };
 
-  // Salva a denúncia no banco de dados e retorna à página inicial
   const handleSaveReport = () => {
     setIsLoading(true);
     
-    // Em um ambiente real, aqui você enviaria os dados para seu banco de dados
     setTimeout(() => {
       setIsLoading(false);
       toast({
@@ -143,14 +145,12 @@ const ReportChat = () => {
         description: "Você receberá atualizações sobre o andamento.",
       });
       
-      // Redirecionamento para a página inicial após alguns segundos
       setTimeout(() => {
         navigate('/');
       }, 2000);
     }, 1500);
   };
 
-  // Renderiza as mensagens do chat
   const renderMessages = () => {
     return messages.map((message, index) => {
       if (message.role === "system") {
@@ -193,10 +193,11 @@ const ReportChat = () => {
         <div className="audit-container max-w-4xl">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-audit-primary mb-2">Nova Denúncia</h1>
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center gap-4">
               <Badge variant="outline" className="text-lg px-4 py-1 border-2 border-audit-secondary">
                 ID: {reportId}
               </Badge>
+              <TrackReportModal />
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
               Guarde este ID para acompanhar sua denúncia posteriormente.

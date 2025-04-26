@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-// Dados simulados de denúncias
 const mockReports = [
   {
     id: "REP-2025-042",
@@ -46,6 +44,25 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
+  const formatReportId = (input: string) => {
+    const cleanNum = input.replace(/\D/g, '');
+    if (cleanNum.length <= 3) {
+      return `REP-${new Date().getFullYear()}-${cleanNum.padStart(3, '0')}`;
+    }
+    const year = cleanNum.slice(0, 4);
+    const seq = cleanNum.slice(4, 7);
+    return `REP-${year}-${seq}`;
+  };
+
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    if (input.startsWith('REP-')) {
+      setReportId(input);
+    } else {
+      setReportId(formatReportId(input));
+    }
+  };
+
   const handleSearch = () => {
     if (!reportId.trim()) {
       setError("Por favor, insira um ID de denúncia");
@@ -55,7 +72,6 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     setIsLoading(true);
     setError("");
     
-    // Simulando chamada de API
     setTimeout(() => {
       const foundReport = mockReports.find(r => r.id === reportId);
       
@@ -76,7 +92,6 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     }, 1000);
   };
 
-  // Formata o status com cores apropriadas
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Resolvida':
@@ -95,7 +110,6 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (!newOpen) {
-      // Reset state when modal closes
       setReportId("");
       setReport(null);
       setError("");
@@ -129,9 +143,9 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
               </Label>
               <Input
                 id="report-id"
-                placeholder="Ex: REP-2025-042"
+                placeholder="Digite apenas os números"
                 value={reportId}
-                onChange={(e) => setReportId(e.target.value)}
+                onChange={handleIdChange}
               />
             </div>
             <Button onClick={handleSearch} disabled={isLoading}>
