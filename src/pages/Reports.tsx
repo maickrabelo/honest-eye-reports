@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Dados simulados de denúncias
 const reportData = [
@@ -114,6 +115,8 @@ const Reports = () => {
   });
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [newUpdate, setNewUpdate] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const { toast } = useToast();
   
   const filteredReports = reportData.filter(report => {
     return (!filter.status || report.status === filter.status) &&
@@ -124,23 +127,71 @@ const Reports = () => {
   });
 
   const handleUpdateSubmit = () => {
-    if (!newUpdate.trim()) return;
+    if (!newUpdate.trim() && selectedStatus === selectedReport.status) return;
     
-    // Aqui seria a lógica para salvar o update no banco de dados
-    // Por enquanto, apenas simulamos a adição
-    setSelectedReport({
+    // Create updated report object with new status and update
+    const updatedReport = {
       ...selectedReport,
+      status: selectedStatus,
       updates: [
         ...selectedReport.updates,
-        {
-          date: new Date().toLocaleDateString('pt-BR'),
-          note: newUpdate,
-          author: "Admin"
-        }
       ]
-    });
+    };
     
+    // Only add the update message if there is one
+    if (newUpdate.trim()) {
+      updatedReport.updates.push({
+        date: new Date().toLocaleDateString('pt-BR'),
+        note: newUpdate,
+        author: "Admin"
+      });
+    }
+    
+    // Update the report in the data array
+    const reportIndex = reportData.findIndex(r => r.id === selectedReport.id);
+    if (reportIndex !== -1) {
+      reportData[reportIndex] = updatedReport;
+    }
+    
+    // Update the selected report
+    setSelectedReport(updatedReport);
     setNewUpdate("");
+    
+    toast({
+      title: "Atualização salva",
+      description: "A denúncia foi atualizada com sucesso.",
+      variant: "default",
+    });
+  };
+
+  const handleOpenReportDetails = (report: any) => {
+    setSelectedReport(report);
+    setSelectedStatus(report.status);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Resolvida':
+        return <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                 {status}
+               </span>;
+      case 'Em análise':
+        return <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                 {status}
+               </span>;
+      case 'Aberta':
+        return <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                 {status}
+               </span>;
+      case 'Arquivada':
+        return <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                 {status}
+               </span>;
+      default:
+        return <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                 {status}
+               </span>;
+    }
   };
 
   return (
@@ -246,14 +297,7 @@ const Reports = () => {
                             </span>
                           </td>
                           <td className="px-4 py-4">
-                            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                              report.status === "Resolvida" ? "bg-green-100 text-green-800" : 
-                              report.status === "Em análise" ? "bg-blue-100 text-blue-800" :
-                              report.status === "Aberta" ? "bg-yellow-100 text-yellow-800" :
-                              "bg-gray-100 text-gray-800"
-                            }`}>
-                              {report.status}
-                            </span>
+                            {getStatusBadge(report.status)}
                           </td>
                           <td className="px-4 py-4 text-gray-500">{report.date}</td>
                           <td className="px-4 py-4">
@@ -267,7 +311,7 @@ const Reports = () => {
                           </td>
                           <td className="px-4 py-4">
                             <Dialog onOpenChange={(open) => {
-                              if (open) setSelectedReport(report);
+                              if (open) handleOpenReportDetails(report);
                             }}>
                               <DialogTrigger asChild>
                                 <Button variant="outline" size="sm">Detalhes</Button>
@@ -328,6 +372,24 @@ const Reports = () => {
                                     </div>
                                     
                                     <div>
+                                      <h3 className="font-medium mb-3">Alterar Status</h3>
+                                      <Select
+                                        value={selectedStatus}
+                                        onValueChange={setSelectedStatus}
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="Selecione um status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Aberta">Aberta</SelectItem>
+                                          <SelectItem value="Em análise">Em análise</SelectItem>
+                                          <SelectItem value="Resolvida">Resolvida</SelectItem>
+                                          <SelectItem value="Arquivada">Arquivada</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    
+                                    <div>
                                       <h3 className="font-medium mb-3">Adicionar Atualização</h3>
                                       <div className="space-y-3">
                                         <Textarea
@@ -338,7 +400,7 @@ const Reports = () => {
                                         <div className="flex justify-end">
                                           <Button 
                                             onClick={handleUpdateSubmit}
-                                            disabled={!newUpdate.trim()}
+                                            disabled={!newUpdate.trim() && selectedStatus === selectedReport.status}
                                           >
                                             Adicionar
                                           </Button>

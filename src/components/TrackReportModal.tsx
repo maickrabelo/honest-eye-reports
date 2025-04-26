@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Search } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const mockReports = [
   {
@@ -44,6 +44,8 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
   const [error, setError] = useState("");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [newUpdate, setNewUpdate] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const formatReportId = (input: string) => {
     // Remove all non-digit characters
@@ -91,6 +93,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
       
       if (foundReport) {
         setReport(foundReport);
+        setSelectedStatus(foundReport.status);
         setError("");
       } else {
         setReport(null);
@@ -104,6 +107,39 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
       
       setIsLoading(false);
     }, 1000);
+  };
+
+  const handleUpdateSubmit = () => {
+    if (!newUpdate.trim()) return;
+    
+    // Update the report with new status and update
+    const updatedReport = {
+      ...report,
+      status: selectedStatus,
+      updates: [
+        ...report.updates,
+        {
+          date: new Date().toLocaleDateString('pt-BR'),
+          note: newUpdate,
+          author: "Admin"
+        }
+      ]
+    };
+    
+    setReport(updatedReport);
+    
+    // Update the mock data (in a real app, this would be an API call)
+    const reportIndex = mockReports.findIndex(r => r.id === report.id);
+    if (reportIndex !== -1) {
+      mockReports[reportIndex] = updatedReport;
+    }
+    
+    setNewUpdate("");
+    
+    toast({
+      title: "Atualização salva",
+      description: "A denúncia foi atualizada com sucesso.",
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -127,6 +163,8 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
       setReportId("");
       setReport(null);
       setError("");
+      setNewUpdate("");
+      setSelectedStatus("");
     }
   };
 
@@ -189,6 +227,42 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
               <div>
                 <h4 className="text-sm font-medium mb-1">Data de Registro</h4>
                 <p className="text-sm">{report.date}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">Status</h4>
+                <div className="flex gap-2">
+                  {["Aberta", "Em análise", "Resolvida", "Arquivada"].map((status) => (
+                    <Button
+                      key={status}
+                      variant={selectedStatus === status ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedStatus(status)}
+                    >
+                      {status}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">Adicionar Comentário</h4>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Adicionar novo comentário..."
+                    value={newUpdate}
+                    onChange={(e) => setNewUpdate(e.target.value)}
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleUpdateSubmit}
+                    disabled={!newUpdate.trim()}
+                    className="w-full"
+                  >
+                    Adicionar atualização
+                  </Button>
+                </div>
               </div>
               
               <div>
