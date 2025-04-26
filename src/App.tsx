@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ReportForm from "./pages/ReportForm";
+import ReportChat from "./pages/ReportChat";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 
@@ -22,7 +23,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/report" element={<ReportForm />} />
+          <Route path="/report" element={<ReportChat />} />
+          <Route path="/report-form" element={<ReportForm />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
