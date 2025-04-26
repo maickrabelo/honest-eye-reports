@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, logout } = useAuth();
+  const isLoggedIn = !!user;
 
-  // Simulação de logout (seria implementado com autenticação real)
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    logout();
   };
 
   return (
@@ -23,6 +24,18 @@ const Navbar = () => {
               </div>
               <span className="text-xl font-bold text-audit-primary">Honest Eyes</span>
             </Link>
+            
+            {/* Display company logo if available */}
+            {user?.role === 'company' && user?.companyLogo && (
+              <div className="ml-6 flex items-center">
+                <div className="h-10 w-px bg-gray-200 mx-4"></div>
+                <img 
+                  src={user.companyLogo} 
+                  alt={user.companyName || 'Logo da empresa'} 
+                  className="h-8 max-w-[120px] object-contain"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -34,11 +47,11 @@ const Navbar = () => {
                 </Button>
                 <div className="flex items-center gap-3">
                   <div className="hidden md:block text-sm text-right">
-                    <div className="font-medium">Admin User</div>
-                    <div className="text-xs text-muted-foreground">admin@honestype.com</div>
+                    <div className="font-medium">{user.name}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
                   </div>
                   <div className="h-8 w-8 rounded-full bg-audit-accent flex items-center justify-center text-white">
-                    AU
+                    {user.name.substring(0, 2).toUpperCase()}
                   </div>
                   <Button variant="ghost" onClick={handleLogout} className="hidden md:inline-flex">
                     Sair
