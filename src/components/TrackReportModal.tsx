@@ -35,9 +35,10 @@ const mockReports = [
 
 type TrackReportModalProps = {
   className?: string;
+  fixedPrefix?: string; // Add fixedPrefix prop
 };
 
-const TrackReportModal = ({ className }: TrackReportModalProps) => {
+const TrackReportModal = ({ className, fixedPrefix }: TrackReportModalProps) => {
   const [reportId, setReportId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
@@ -51,17 +52,17 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     // Remove all non-digit characters
     const cleanInput = input.replace(/\D/g, '');
     
-    // Start with "REP-"
-    let formattedId = "REP-";
+    // Start with fixed prefix or "REP" if none provided
+    let formattedId = fixedPrefix || "REP";
     
     // Add current year if not present
     if (cleanInput.length > 0) {
       formattedId += new Date().getFullYear();
     }
     
-    // Add hyphen after year
-    if (cleanInput.length > 4) {
-      formattedId += `-${cleanInput.slice(4).padStart(3, '0')}`;
+    // Add number part
+    if (cleanInput.length > 0) {
+      formattedId += cleanInput;
     }
     
     return formattedId;
@@ -70,8 +71,8 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     
-    // If input starts with "REP-", only allow digits after
-    if (input.startsWith("REP-")) {
+    // If input starts with the prefix, only allow digits after
+    if (fixedPrefix && input.startsWith(fixedPrefix)) {
       const digitsOnly = input.replace(/\D/g, '');
       setReportId(formatReportId(digitsOnly));
     } else {

@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import BackButton from '@/components/BackButton';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"; // Add Badge import
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
