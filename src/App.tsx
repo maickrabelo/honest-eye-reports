@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import SSTDashboard from "./pages/SSTDashboard";
 import MasterDashboard from "./pages/MasterDashboard";
 import CompanyReport from "./pages/CompanyReport";
+import OpenAIConfig from "./pages/OpenAIConfig";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +34,7 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<CompanyProfile />} />
+            <Route path="/openai-config" element={<OpenAIConfig />} />
             <Route path="/sst-dashboard" element={<SSTDashboard />} />
             <Route path="/master-dashboard" element={<MasterDashboard />} />
             <Route path="/company-dashboard/:id" element={<Dashboard />} />

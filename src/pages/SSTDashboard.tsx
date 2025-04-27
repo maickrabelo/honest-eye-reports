@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, AlertCircle } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import EmbeddedDashboard from '@/components/EmbeddedDashboard';
 
 // Mock companies for the SST dashboard
 const mockCompanies = [
@@ -63,6 +63,7 @@ const mockCompanies = [
 
 const SSTDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const filteredCompanies = mockCompanies.filter(company => 
@@ -70,8 +71,7 @@ const SSTDashboard = () => {
   );
 
   const handleCompanyClick = (companySlug: string) => {
-    // In a real app, this would navigate to the company's dashboard with the company's data
-    navigate(`/company-dashboard/${companySlug}`);
+    setSelectedCompany(companySlug);
   };
 
   return (
@@ -81,9 +81,19 @@ const SSTDashboard = () => {
         <div className="audit-container">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-audit-primary">Gestão SST</h1>
+              <h1 className="text-3xl font-bold text-green-800">Gestão SST</h1>
               <p className="text-gray-600">Monitore todas as empresas sob sua gestão</p>
             </div>
+            
+            {selectedCompany && (
+              <Button 
+                variant="outline"
+                onClick={() => setSelectedCompany(null)}
+                className="mb-4"
+              >
+                Voltar para lista de empresas
+              </Button>
+            )}
             
             <div className="relative w-full md:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -96,63 +106,67 @@ const SSTDashboard = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCompanies.map((company) => (
-              <Card 
-                key={company.id} 
-                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => handleCompanyClick(company.slug)}
-              >
-                <div className="relative">
-                  {company.newReports > 0 && (
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-red-500 text-white border-none">
-                        {company.newReports} {company.newReports === 1 ? 'nova denúncia' : 'novas denúncias'}
-                      </Badge>
+          {selectedCompany ? (
+            <EmbeddedDashboard companyId={selectedCompany} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCompanies.map((company) => (
+                <Card 
+                  key={company.id} 
+                  className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleCompanyClick(company.slug)}
+                >
+                  <div className="relative">
+                    {company.newReports > 0 && (
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-red-500 text-white border-none">
+                          {company.newReports} {company.newReports === 1 ? 'nova denúncia' : 'novas denúncias'}
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="h-32 bg-gray-100 flex items-center justify-center p-4">
+                      <img 
+                        src={company.logo} 
+                        alt={`Logo ${company.name}`} 
+                        className="max-h-full max-w-full object-contain"
+                      />
                     </div>
-                  )}
-                  <div className="h-32 bg-gray-100 flex items-center justify-center p-4">
-                    <img 
-                      src={company.logo} 
-                      alt={`Logo ${company.name}`} 
-                      className="max-h-full max-w-full object-contain"
-                    />
                   </div>
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{company.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Total de denúncias:</span>
-                    <span className="font-medium">{company.reportCount}</span>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-0">
-                  {company.newReports > 0 ? (
-                    <div className="w-full py-2 text-sm flex items-center justify-center text-red-600 bg-red-50 rounded-md">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      Nova atividade detectada
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{company.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Total de denúncias:</span>
+                      <span className="font-medium">{company.reportCount}</span>
                     </div>
-                  ) : (
-                    <Button variant="outline" className="w-full">
-                      Ver dashboard
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            ))}
-            
-            {filteredCompanies.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                <div className="bg-gray-100 rounded-full p-4 mb-4">
-                  <Search className="h-8 w-8 text-gray-400" />
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    {company.newReports > 0 ? (
+                      <div className="w-full py-2 text-sm flex items-center justify-center text-red-600 bg-red-50 rounded-md">
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        Nova atividade detectada
+                      </div>
+                    ) : (
+                      <Button variant="outline" className="w-full">
+                        Ver dashboard
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              ))}
+              
+              {filteredCompanies.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                  <div className="bg-gray-100 rounded-full p-4 mb-4">
+                    <Search className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">Nenhuma empresa encontrada</h3>
+                  <p className="text-gray-500">Tente ajustar sua busca ou entre em contato com o suporte.</p>
                 </div>
-                <h3 className="text-lg font-medium mb-1">Nenhuma empresa encontrada</h3>
-                <p className="text-gray-500">Tente ajustar sua busca ou entre em contato com o suporte.</p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
       <Footer />

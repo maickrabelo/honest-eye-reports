@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,36 +46,8 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
   const [newUpdate, setNewUpdate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
-  const formatReportId = (input: string) => {
-    // Remove all non-digit characters
-    const cleanInput = input.replace(/\D/g, '');
-    
-    // Start with "REP-"
-    let formattedId = "REP-";
-    
-    // Add current year if not present
-    if (cleanInput.length > 0) {
-      formattedId += new Date().getFullYear();
-    }
-    
-    // Add hyphen after year
-    if (cleanInput.length > 4) {
-      formattedId += `-${cleanInput.slice(4).padStart(3, '0')}`;
-    }
-    
-    return formattedId;
-  };
-
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    
-    // If input starts with "REP-", only allow digits after
-    if (input.startsWith("REP-")) {
-      const digitsOnly = input.replace(/\D/g, '');
-      setReportId(formatReportId(digitsOnly));
-    } else {
-      setReportId(formatReportId(input));
-    }
+    setReportId(e.target.value);
   };
 
   const handleSearch = () => {
@@ -112,7 +83,6 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
   const handleUpdateSubmit = () => {
     if (!newUpdate.trim()) return;
     
-    // Update the report with new status and update
     const updatedReport = {
       ...report,
       status: selectedStatus,
@@ -128,7 +98,6 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     
     setReport(updatedReport);
     
-    // Update the mock data (in a real app, this would be an API call)
     const reportIndex = mockReports.findIndex(r => r.id === report.id);
     if (reportIndex !== -1) {
       mockReports[reportIndex] = updatedReport;
