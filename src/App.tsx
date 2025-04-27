@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,7 +16,6 @@ import CompanyProfile from "./pages/CompanyProfile";
 import SSTDashboard from "./pages/SSTDashboard";
 import MasterDashboard from "./pages/MasterDashboard";
 import CompanyReport from "./pages/CompanyReport";
-import MasterConfig from "./pages/MasterConfig";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,6 @@ const App = () => (
             <Route path="/master-dashboard" element={<MasterDashboard />} />
             <Route path="/company-dashboard/:id" element={<Dashboard />} />
             <Route path="/report/:companySlug" element={<CompanyReport />} />
-            <Route path="/master-config" element={<MasterConfig />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
