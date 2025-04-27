@@ -1,331 +1,86 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import TrackReportModal from '@/components/TrackReportModal';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, CheckCheck, Loader2, Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Send } from "lucide-react";
 
-interface ReportChatProps {
-  companyId?: string;
+interface ChatMessage {
+  text: string;
+  sender: 'user' | 'bot';
 }
 
-const initialMessages = [
-  {
-    role: "system",
-    content: "Olá, sou Ana, psicóloga e assistente virtual da ouvidoria. Estou aqui para ouvir sua denúncia de forma confidencial. Pode me contar o que aconteceu com detalhes. Em que posso ajudar?",
-  },
-];
-
-export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
-  const [messages, setMessages] = useState(initialMessages);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [summary, setSummary] = useState("");
-  const [reportId, setReportId] = useState("");
-  const [showIdDialog, setShowIdDialog] = useState(false);
-  const [showTrackingDialog, setShowTrackingDialog] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+export function ReportChat({ companyId = "" }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = useState('');
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const generateReportId = () => {
-      const prefix = "REP";
-      const year = new Date().getFullYear();
-      const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `${prefix}-${year}-${randomNum}`;
-    };
-    
-    setReportId(generateReportId());
+  const initialMessage = "Olá, sou Ana, psicóloga e assistente virtual da ouvidoria. Estou aqui para ouvir sua denúncia de forma confidencial. Pode me contar o que aconteceu com detalhes. Em que posso ajudar?";
+
+  const botResponse = useCallback(async (userMessage: string) => {
+    // Simulate a bot response (replace with actual AI logic)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return `Obrigado pela sua mensagem: "${userMessage}". Sua denúncia foi registrada e será analisada.`;
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  const sendMessage = async () => {
+    if (inputText.trim() === '') return;
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    const newMessage: ChatMessage = { text: inputText, sender: 'user' };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    setInputText('');
 
-  const formatReportId = (num: string) => {
-    const cleanNum = num.replace(/\D/g, '');
-    if (cleanNum.length <= 3) {
-      return `REP-${new Date().getFullYear()}-${cleanNum.padStart(3, '0')}`;
-    }
-    const year = cleanNum.slice(0, 4);
-    const seq = cleanNum.slice(4, 7);
-    return `REP-${year}-${seq}`;
-  };
+    try {
+      const responseText = await botResponse(inputText);
+      const botMessage: ChatMessage = { text: responseText, sender: 'bot' };
+      setMessages(prevMessages => [...prevMessages, botMessage]);
 
-  const handleSendMessage = async () => {
-    if (input.trim() === "") return;
-    
-    const userMessage = {
-      role: "user",
-      content: input,
-    };
-    
-    setMessages([...messages, userMessage]);
-    setInput("");
-    setIsLoading(true);
-
-    setTimeout(() => {
-      let aiResponse;
-      
-      if (messages.length < 3) {
-        aiResponse = {
-          role: "assistant",
-          content: "Obrigada por compartilhar isso. Pode me dar mais detalhes sobre quando e onde isso aconteceu?",
-        };
-      } else if (messages.length < 5) {
-        aiResponse = {
-          role: "assistant",
-          content: "Compreendo sua situação. Havia outras pessoas presentes quando isso ocorreu? Como você se sentiu?",
-        };
-      } else {
-        aiResponse = {
-          role: "assistant",
-          content: "Agradeço por confiar em nós para relatar essa situação. Gostaria de compartilhar mais algum detalhe ou podemos finalizar o relatório da denúncia?",
-        };
-      }
-      
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-      
-      if (messages.length > 6 && !isComplete) {
-        setTimeout(() => {
-          setMessages(prev => [...prev, {
-            role: "system",
-            content: "Para finalizar a denúncia e gerar o relatório, clique no botão 'Finalizar Denúncia' abaixo."
-          }]);
-        }, 1000);
-      }
-    }, 1500);
-  };
-
-  const handleFinishReport = () => {
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      const userMessages = messages
-        .filter(msg => msg.role === "user")
-        .map(msg => msg.content)
-        .join(" ");
-      
-      const generatedSummary = `Denúncia sobre situação de desconforto no ambiente de trabalho. 
-      O denunciante relatou problemas de conduta inadequada por parte de superiores, 
-      incluindo possíveis casos de assédio moral. Incidente ocorreu principalmente no setor comercial 
-      durante reuniões de equipe. Necessita investigação imediata.`;
-      
-      setSummary(generatedSummary);
-      setIsComplete(true);
-      setIsLoading(false);
-      
-      // Show dialog with report ID
-      setShowIdDialog(true);
-    }, 2000);
-  };
-
-  const handleSaveReport = () => {
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      setIsLoading(false);
       toast({
-        title: "Denúncia enviada com sucesso!",
-        description: "Você receberá atualizações sobre o andamento.",
+        title: "Denúncia enviada",
+        description: "Sua denúncia foi enviada com sucesso e será analisada.",
       });
-      
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-    }, 1500);
+    } catch (error) {
+      console.error("Erro ao obter resposta do bot:", error);
+      toast({
+        title: "Erro",
+        description: "Houve um erro ao processar sua denúncia. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const renderMessages = () => {
-    return messages.map((message, index) => {
-      if (message.role === "system") {
-        return (
-          <div key={index} className="bg-muted/50 p-4 rounded-md mb-4 text-center">
-            <p className="text-sm">{message.content}</p>
-          </div>
-        );
-      }
-      
-      const isUser = message.role === "user";
-      return (
-        <div 
-          key={index} 
-          className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
-        >
-          <div 
-            className={`max-w-[80%] rounded-lg p-3 ${
-              isUser 
-                ? 'bg-audit-primary text-white rounded-br-none' 
-                : 'bg-gray-100 text-gray-800 rounded-bl-none'
-            }`}
-          >
-            <p className="text-sm">{message.content}</p>
-            {isUser && (
-              <div className="flex justify-end mt-1">
-                <CheckCheck size={16} className="text-white/70" />
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    });
-  };
+  React.useEffect(() => {
+    // Simulate initial bot message
+    const initialBotMessage: ChatMessage = { text: initialMessage, sender: 'bot' };
+    setMessages([initialBotMessage]);
+  }, [initialMessage]);
 
   return (
-    <>
-      <div className="mb-8 text-center">
-        <div className="flex items-center justify-center gap-4">
-          <Badge variant="outline" className="text-lg px-4 py-1 border-2 border-audit-secondary">
-            ID: {reportId}
-          </Badge>
-          <TrackReportModal />
+    <Card className="w-full">
+      <CardContent className="p-4 space-y-4">
+        <div className="space-y-2">
+          {messages.map((message, index) => (
+            <div key={index} className={`text-sm rounded-md p-3 ${message.sender === 'user' ? 'bg-green-100 text-green-800 ml-auto w-fit' : 'bg-gray-100 text-gray-800 mr-auto w-fit'}`}>
+              {message.text}
+            </div>
+          ))}
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Guarde este ID para acompanhar sua denúncia posteriormente.
-        </p>
-      </div>
-      
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Chat da Ouvidoria</span>
-            {isComplete && <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Finalizado</Badge>}
-          </CardTitle>
-          <CardDescription>
-            Converse com nossa assistente virtual para registrar sua denúncia.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="h-[400px] overflow-y-auto mb-4 p-2">
-            {renderMessages()}
-            {isLoading && (
-              <div className="flex justify-center my-2">
-                <Loader2 className="h-5 w-5 animate-spin text-audit-primary" />
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-          
-          {isComplete ? (
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <h3 className="font-medium text-lg mb-2">Resumo da Denúncia</h3>
-              <p className="text-gray-700">{summary}</p>
-              <div className="mt-4 flex items-center">
-                <span className="text-sm font-medium mr-2">Status:</span>
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                  Registrada
-                </Badge>
-              </div>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Digite sua mensagem..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                disabled={isLoading || isComplete}
-                className="flex-grow"
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                disabled={isLoading || isComplete || !input.trim()}
-                size="icon"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </CardContent>
-        
-        <CardFooter className="flex justify-between border-t pt-4">
-          {!isComplete ? (
-            <div className="w-full flex justify-end">
-              <Button 
-                onClick={handleFinishReport}
-                disabled={isLoading || messages.length < 5}
-                variant={messages.length < 5 ? "outline" : "default"}
-                className="ml-auto"
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Finalizar Denúncia
-              </Button>
-            </div>
-          ) : (
-            <div className="w-full flex justify-end">
-              <Button 
-                onClick={handleSaveReport}
-                disabled={isLoading}
-                className="bg-audit-primary hover:bg-audit-primary/90"
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                Confirmar e Enviar
-              </Button>
-            </div>
-          )}
-        </CardFooter>
-      </Card>
-      
-      {/* Dialog to show report ID */}
-      <Dialog open={showIdDialog} onOpenChange={setShowIdDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Denúncia Registrada</DialogTitle>
-            <DialogDescription>
-              Guarde o código de acompanhamento para consultar o status de sua denúncia no futuro.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center space-y-4 p-4">
-            <div className="bg-gray-50 w-full p-6 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground mb-2">Código de Acompanhamento:</p>
-              <p className="text-2xl font-bold text-audit-primary">{reportId}</p>
-            </div>
-            <p className="text-sm text-center text-muted-foreground">
-              Anote este código em um local seguro. Você precisará dele para acompanhar o status da denúncia.
-            </p>
-          </div>
-          <DialogFooter className="sm:justify-center">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                navigator.clipboard.writeText(reportId);
-                toast({
-                  title: "Código copiado",
-                  description: "O código de acompanhamento foi copiado para a área de transferência."
-                });
-              }}
-              className="mr-2"
-            >
-              Copiar código
-            </Button>
-            <Button onClick={() => {
-              setShowIdDialog(false);
-              setShowTrackingDialog(true);
-            }}>
-              Continuar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Digite sua mensagem..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                sendMessage();
+              }
+            }}
+          />
+          <Button onClick={sendMessage}><Send className="h-4 w-4 mr-2" /> Enviar</Button>
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}

@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,10 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Building, UserCheck, Edit, Trash } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for companies and SST managers
 const mockCompanies = [
   { id: "1", name: "Tech Solutions Ltda", email: "contato@techsol.com", reports: 12, createdAt: "12/04/2025" },
   { id: "2", name: "Indústrias ABC", email: "admin@abc.ind.br", reports: 8, createdAt: "10/03/2025" },
@@ -71,13 +69,23 @@ const MasterDashboard = () => {
     navigate(`/sst-dashboard/${id}`);
   };
 
+  const handleOpenCompanyDetails = (company) => {
+    // Implement logic to open company details dialog
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow bg-green-50 py-8">
         <div className="audit-container">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-audit-primary">Painel Administrativo</h1>
+            <h1 className="text-3xl font-bold text-green-800">Painel Administrativo</h1>
+            <Button 
+              onClick={() => navigate('/master-config')}
+              className="bg-green-700 hover:bg-green-800"
+            >
+              Configurações do Sistema
+            </Button>
           </div>
           
           <Tabs defaultValue="companies" value={activeTab} onValueChange={setActiveTab} className="mb-8">
@@ -227,7 +235,14 @@ const MasterDashboard = () => {
                                   size="sm" 
                                   onClick={() => handleViewCompany(company.id)}
                                 >
-                                  Ver
+                                  Ver Dashboard
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenCompanyDetails(company)}
+                                >
+                                  Ver Dados
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -301,7 +316,14 @@ const MasterDashboard = () => {
                                   size="sm" 
                                   onClick={() => handleViewSST(manager.id)}
                                 >
-                                  Ver
+                                  Ver Dashboard
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenCompanyDetails(manager)}
+                                >
+                                  Ver Dados
                                 </Button>
                                 <Button
                                   variant="ghost"

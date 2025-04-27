@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
+import BackButton from '@/components/BackButton';
+import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
@@ -23,8 +27,6 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Check } from "lucide-react";
@@ -132,6 +134,9 @@ const Dashboard = () => {
   const [responseText, setResponseText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const showBackButton = user?.role === 'master' || user?.role === 'sst';
 
   const handleOpenReportDetails = (report: any) => {
     setSelectedReport(report);
@@ -185,13 +190,21 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow bg-green-50 py-8">
         <div className="audit-container">
+          {showBackButton && <BackButton />}
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-audit-primary">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-green-800">Dashboard</h1>
             <div className="flex gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/profile')}
+                className="bg-white hover:bg-green-50"
+              >
+                Editar Perfil
+              </Button>
               <DownloadReportButton />
-              <TrackReportModal />
+              <TrackReportModal fixedPrefix="REP" />
             </div>
           </div>
           
