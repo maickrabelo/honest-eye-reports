@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import TrackReportModal from '@/components/TrackReportModal';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,10 +35,8 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   useEffect(() => {
     const generateReportId = () => {
-      const prefix = "REP";
-      const year = new Date().getFullYear();
-      const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `${prefix}-${year}-${randomNum}`;
+      const randomNum = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+      return randomNum;
     };
     
     setReportId(generateReportId());
@@ -55,12 +52,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   const formatReportId = (num: string) => {
     const cleanNum = num.replace(/\D/g, '');
-    if (cleanNum.length <= 3) {
-      return `REP-${new Date().getFullYear()}-${cleanNum.padStart(3, '0')}`;
-    }
-    const year = cleanNum.slice(0, 4);
-    const seq = cleanNum.slice(4, 7);
-    return `REP-${year}-${seq}`;
+    return cleanNum;
   };
 
   const handleSendMessage = async () => {
