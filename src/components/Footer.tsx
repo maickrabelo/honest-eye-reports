@@ -8,7 +8,13 @@ const Footer = () => {
       <div className="audit-container">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Honest Eyes</h3>
+            <div className="mb-4">
+              <img 
+                src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
+                alt="SOIA Logo" 
+                className="h-8 brightness-0 invert"
+              />
+            </div>
             <p className="text-sm opacity-80">
               Promovendo transparência e integridade nas organizações através de denúncias seguras e análise inteligente de dados.
             </p>
@@ -24,13 +30,13 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Contato</h3>
             <p className="text-sm opacity-80">
-              Email: contato@honestype.com<br />
+              Email: contato@soia.com<br />
               Telefone: +55 (11) 3456-7890
             </p>
           </div>
         </div>
         <div className="border-t border-white/10 mt-8 pt-6 text-center text-sm opacity-70">
-          <p>&copy; {new Date().getFullYear()} Honest Eyes. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} SOIA. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

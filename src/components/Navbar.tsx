@@ -19,10 +19,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-audit-primary rounded-md flex items-center justify-center">
-                <span className="text-white font-semibold">HE</span>
-              </div>
-              <span className="text-xl font-bold text-audit-primary">Honest Eyes</span>
+              <img 
+                src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
+                alt="SOIA Logo" 
+                className="h-8"
+              />
             </Link>
             
             {/* Display company logo if available */}
