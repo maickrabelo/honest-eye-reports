@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import TrackReportModal from '@/components/TrackReportModal';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,7 @@ interface ReportChatProps {
 const initialMessages = [
   {
     role: "system",
-    content: "Olá, sou Ana, assistente virtual da ouvidoria. Estou aqui para ouvir sua denúncia de forma confidencial. Pode me contar o que aconteceu com detalhes. Em que posso ajudar?",
+    content: "Olá, sou Ana, psicóloga e assistente virtual da ouvidoria. Estou aqui para ouvir sua denúncia de forma confidencial. Pode me contar o que aconteceu com detalhes. Em que posso ajudar?",
   },
 ];
 
@@ -35,8 +36,10 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   useEffect(() => {
     const generateReportId = () => {
-      const randomNum = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-      return randomNum;
+      const prefix = "REP";
+      const year = new Date().getFullYear();
+      const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      return `${prefix}-${year}-${randomNum}`;
     };
     
     setReportId(generateReportId());
@@ -52,7 +55,12 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   const formatReportId = (num: string) => {
     const cleanNum = num.replace(/\D/g, '');
-    return cleanNum;
+    if (cleanNum.length <= 3) {
+      return `REP-${new Date().getFullYear()}-${cleanNum.padStart(3, '0')}`;
+    }
+    const year = cleanNum.slice(0, 4);
+    const seq = cleanNum.slice(4, 7);
+    return `REP-${year}-${seq}`;
   };
 
   const handleSendMessage = async () => {

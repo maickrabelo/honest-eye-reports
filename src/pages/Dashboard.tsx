@@ -68,7 +68,7 @@ const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'
 
 const recentReports = [
   {
-    id: "20250042",
+    id: "REP-2025-042",
     title: "Assédio moral no setor de atendimento",
     category: "RH",
     status: "Em análise",
@@ -82,7 +82,7 @@ const recentReports = [
     ]
   },
   {
-    id: "20250041",
+    id: "REP-2025-041",
     title: "Descarte inadequado de resíduos",
     category: "Produção",
     status: "Aberta",
@@ -95,7 +95,7 @@ const recentReports = [
     ]
   },
   {
-    id: "20250040",
+    id: "REP-2025-040",
     title: "Divergências em relatório financeiro",
     category: "Financeiro",
     status: "Em análise",
@@ -109,7 +109,7 @@ const recentReports = [
     ]
   },
   {
-    id: "20250039",
+    id: "REP-2025-039",
     title: "Uso inadequado de recursos da empresa",
     category: "TI",
     status: "Resolvida",
