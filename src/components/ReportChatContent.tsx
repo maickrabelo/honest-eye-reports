@@ -17,7 +17,7 @@ interface ReportChatProps {
 const initialMessages = [
   {
     role: "system",
-    content: "Olá, sou Ana, psicóloga e assistente virtual da ouvidoria. Estou aqui para ouvir sua denúncia de forma confidencial. Pode me contar o que aconteceu com detalhes. Em que posso ajudar?",
+    content: "Olá, sou Ana, assistente virtual da ouvidoria. Estou aqui para ouvir sua denúncia de forma confidencial. Pode me contar o que aconteceu com detalhes. Em que posso ajudar?",
   },
 ];
 
