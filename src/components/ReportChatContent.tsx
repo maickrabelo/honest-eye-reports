@@ -46,12 +46,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
     setReportId(generateReportId());
   }, []);
 
-  useEffect(() => {
-    // Only scroll if there's more than the initial message
-    if (messages.length > 1) {
-      scrollToBottom();
-    }
-  }, [messages]);
+  // Removed automatic scrolling - user can scroll manually if needed
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
