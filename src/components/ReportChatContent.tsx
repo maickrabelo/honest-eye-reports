@@ -133,19 +133,35 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
     try {
       console.log("Generating report summary...");
       
-      // Create a summary prompt with all conversation messages
-      const summaryPrompt = {
-        role: "user",
-        content: `Com base na conversa anterior, crie um resumo profissional e objetivo da denúncia em até 4 frases. 
-        Inclua: o que aconteceu, quando/onde ocorreu, quem estava envolvido, e a gravidade da situação.
-        Use linguagem formal e imparcial, adequada para um relatório oficial de ouvidoria.`
-      };
+      // Extract only the conversation between user and assistant
+      const conversationText = messages
+        .filter(m => m.role !== "system")
+        .map(m => `${m.role === "user" ? "Denunciante" : "Ouvidoria"}: ${m.content}`)
+        .join("\n\n");
       
+      console.log("Conversation text:", conversationText);
+      
+      // Send to AI with a specific system prompt for summarization
       const { data, error } = await supabase.functions.invoke('chat-report', {
         body: { 
           messages: [
-            ...messages.filter(m => m.role !== "system"),
-            summaryPrompt
+            {
+              role: "system",
+              content: `Você é um analista de ouvidoria especializado em criar resumos executivos de denúncias.
+              Sua tarefa é analisar a conversa completa e criar um resumo profissional e imparcial.
+              
+              O resumo deve conter:
+              1. Natureza da denúncia (tipo de incidente)
+              2. Quando e onde ocorreu
+              3. Pessoas envolvidas (sem nomes, use "denunciante", "superior", "colega", etc)
+              4. Gravidade e impacto
+              
+              Use linguagem formal, objetiva e imparcial. Máximo de 4-5 frases.`
+            },
+            {
+              role: "user",
+              content: `Analise esta conversa de denúncia e crie um resumo executivo:\n\n${conversationText}`
+            }
           ]
         }
       });
@@ -160,7 +176,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
       }
 
       const generatedSummary = data.choices[0].message.content;
-      console.log("Summary generated successfully");
+      console.log("Summary generated:", generatedSummary);
       
       setSummary(generatedSummary);
       setIsComplete(true);
