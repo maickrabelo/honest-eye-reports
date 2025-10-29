@@ -9,6 +9,7 @@ import { Check, CheckCheck, Loader2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReportChatProps {
   companyId?: string;
@@ -71,34 +72,39 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
       content: input,
     };
     
-    setMessages([...messages, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      let aiResponse;
+    try {
+      console.log("Sending message to AI...");
       
-      if (messages.length < 3) {
-        aiResponse = {
-          role: "assistant",
-          content: "Obrigada por compartilhar isso. Pode me dar mais detalhes sobre quando e onde isso aconteceu?",
-        };
-      } else if (messages.length < 5) {
-        aiResponse = {
-          role: "assistant",
-          content: "Compreendo sua situação. Havia outras pessoas presentes quando isso ocorreu? Como você se sentiu?",
-        };
-      } else {
-        aiResponse = {
-          role: "assistant",
-          content: "Agradeço por confiar em nós para relatar essa situação. Gostaria de compartilhar mais algum detalhe ou podemos finalizar o relatório da denúncia?",
-        };
+      const { data, error } = await supabase.functions.invoke('chat-report', {
+        body: { 
+          messages: updatedMessages.filter(m => m.role !== "system" || m.content.includes("Ana"))
+        }
+      });
+
+      if (error) {
+        console.error("Error calling chat function:", error);
+        throw error;
       }
+
+      if (!data || !data.choices || !data.choices[0]) {
+        throw new Error("Resposta inválida da IA");
+      }
+
+      const aiResponse = {
+        role: "assistant" as const,
+        content: data.choices[0].message.content,
+      };
       
+      console.log("AI response received:", aiResponse.content);
       setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
       
-      if (messages.length > 6 && !isComplete) {
+      // Show finish button hint after several exchanges
+      if (updatedMessages.filter(m => m.role === "user").length >= 3 && !isComplete) {
         setTimeout(() => {
           setMessages(prev => [...prev, {
             role: "system",
@@ -106,7 +112,19 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
           }]);
         }, 1000);
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Error in handleSendMessage:", error);
+      toast({
+        title: "Erro ao enviar mensagem",
+        description: "Não foi possível processar sua mensagem. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+      
+      // Remove the user message if there was an error
+      setMessages(messages);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFinishReport = () => {
