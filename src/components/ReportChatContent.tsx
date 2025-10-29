@@ -127,27 +127,54 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
     }
   };
 
-  const handleFinishReport = () => {
+  const handleFinishReport = async () => {
     setIsLoading(true);
     
-    setTimeout(() => {
-      const userMessages = messages
-        .filter(msg => msg.role === "user")
-        .map(msg => msg.content)
-        .join(" ");
+    try {
+      console.log("Generating report summary...");
       
-      const generatedSummary = `Denúncia sobre situação de desconforto no ambiente de trabalho. 
-      O denunciante relatou problemas de conduta inadequada por parte de superiores, 
-      incluindo possíveis casos de assédio moral. Incidente ocorreu principalmente no setor comercial 
-      durante reuniões de equipe. Necessita investigação imediata.`;
+      // Create a summary prompt with all conversation messages
+      const summaryPrompt = {
+        role: "user",
+        content: `Com base na conversa anterior, crie um resumo profissional e objetivo da denúncia em até 4 frases. 
+        Inclua: o que aconteceu, quando/onde ocorreu, quem estava envolvido, e a gravidade da situação.
+        Use linguagem formal e imparcial, adequada para um relatório oficial de ouvidoria.`
+      };
+      
+      const { data, error } = await supabase.functions.invoke('chat-report', {
+        body: { 
+          messages: [
+            ...messages.filter(m => m.role !== "system"),
+            summaryPrompt
+          ]
+        }
+      });
+
+      if (error) {
+        console.error("Error generating summary:", error);
+        throw error;
+      }
+
+      if (!data || !data.choices || !data.choices[0]) {
+        throw new Error("Resposta inválida ao gerar resumo");
+      }
+
+      const generatedSummary = data.choices[0].message.content;
+      console.log("Summary generated successfully");
       
       setSummary(generatedSummary);
       setIsComplete(true);
-      setIsLoading(false);
-      
-      // Show dialog with report ID
       setShowIdDialog(true);
-    }, 2000);
+    } catch (error) {
+      console.error("Error in handleFinishReport:", error);
+      toast({
+        title: "Erro ao gerar resumo",
+        description: "Não foi possível gerar o resumo. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveReport = () => {
