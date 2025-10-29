@@ -47,7 +47,10 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll if there's more than the initial message
+    if (messages.length > 1) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const scrollToBottom = () => {
@@ -95,9 +98,16 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
         throw new Error("Resposta inválida da IA");
       }
 
+      // Remove markdown formatting characters from AI response
+      const cleanContent = data.choices[0].message.content
+        .replace(/\*\*/g, '')  // Remove bold markers
+        .replace(/\*/g, '')    // Remove italic markers
+        .replace(/#{1,6}\s/g, '') // Remove heading markers
+        .replace(/`/g, '');    // Remove code markers
+
       const aiResponse = {
         role: "assistant" as const,
-        content: data.choices[0].message.content,
+        content: cleanContent,
       };
       
       console.log("AI response received:", aiResponse.content);
@@ -175,10 +185,16 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
         throw new Error("Resposta inválida ao gerar resumo");
       }
 
-      const generatedSummary = data.choices[0].message.content;
-      console.log("Summary generated:", generatedSummary);
+      // Remove markdown formatting from summary
+      const cleanSummary = data.choices[0].message.content
+        .replace(/\*\*/g, '')  // Remove bold markers
+        .replace(/\*/g, '')    // Remove italic markers
+        .replace(/#{1,6}\s/g, '') // Remove heading markers
+        .replace(/`/g, '');    // Remove code markers
+
+      console.log("Summary generated:", cleanSummary);
       
-      setSummary(generatedSummary);
+      setSummary(cleanSummary);
       setIsComplete(true);
       setShowIdDialog(true);
     } catch (error) {
