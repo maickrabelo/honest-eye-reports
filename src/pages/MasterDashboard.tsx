@@ -1,75 +1,432 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Mock data for companies and SST managers
-const mockCompanies = [
-  { id: "1", name: "Tech Solutions Ltda", email: "contato@techsol.com", reports: 12, createdAt: "12/04/2025" },
-  { id: "2", name: "Indústrias ABC", email: "admin@abc.ind.br", reports: 8, createdAt: "10/03/2025" },
-  { id: "3", name: "Comércio XYZ", email: "xyz@comercio.com", reports: 5, createdAt: "05/02/2025" },
-  { id: "4", name: "Serviços Especializados", email: "contato@se.com.br", reports: 15, createdAt: "20/01/2025" },
-];
+type Company = {
+  id: string;
+  name: string;
+  cnpj: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  logo_url: string | null;
+  created_at: string;
+};
 
-const mockSSTManagers = [
-  { id: "1", name: "SST Consultoria", email: "contato@sstconsult.com", companies: 8, createdAt: "15/03/2025" },
-  { id: "2", name: "Segurança Trabalho Ltda", email: "atendimento@segtrabalho.com.br", companies: 12, createdAt: "10/01/2025" },
-  { id: "3", name: "Proteção Ocupacional", email: "contato@protecao.com", companies: 5, createdAt: "08/04/2025" },
-];
+type SSTManager = {
+  id: string;
+  name: string;
+  cnpj: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  logo_url: string | null;
+  created_at: string;
+};
+
+type Assignment = {
+  id: string;
+  company_id: string;
+  sst_manager_id: string;
+  assigned_at: string;
+};
 
 const MasterDashboard = () => {
   const [activeTab, setActiveTab] = useState("companies");
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [sstManagers, setSSTManagers] = useState<SSTManager[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   const [sstSearchTerm, setSSTSearchTerm] = useState('');
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [isAddSSTOpen, setIsAddSSTOpen] = useState(false);
-  const navigate = useNavigate();
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedSST, setSelectedSST] = useState<SSTManager | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
-  const filteredCompanies = mockCompanies.filter(company => 
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [companiesRes, sstRes, assignmentsRes] = await Promise.all([
+        supabase.from('companies').select('*').order('created_at', { ascending: false }),
+        supabase.from('sst_managers').select('*').order('created_at', { ascending: false }),
+        supabase.from('company_sst_assignments').select('*')
+      ]);
+
+      if (companiesRes.error) throw companiesRes.error;
+      if (sstRes.error) throw sstRes.error;
+      if (assignmentsRes.error) throw assignmentsRes.error;
+
+      setCompanies(companiesRes.data || []);
+      setSSTManagers(sstRes.data || []);
+      setAssignments(assignmentsRes.data || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar os dados do sistema.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const filteredCompanies = companies.filter(company => 
     company.name.toLowerCase().includes(companySearchTerm.toLowerCase()) ||
-    company.email.toLowerCase().includes(companySearchTerm.toLowerCase())
+    (company.email && company.email.toLowerCase().includes(companySearchTerm.toLowerCase()))
   );
   
-  const filteredSSTManagers = mockSSTManagers.filter(manager => 
+  const filteredSSTManagers = sstManagers.filter(manager => 
     manager.name.toLowerCase().includes(sstSearchTerm.toLowerCase()) ||
-    manager.email.toLowerCase().includes(sstSearchTerm.toLowerCase())
+    (manager.email && manager.email.toLowerCase().includes(sstSearchTerm.toLowerCase()))
   );
 
-  const handleAddCompany = (e: React.FormEvent) => {
+  const handleAddCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast({
-      title: "Empresa adicionada",
-      description: "A empresa foi adicionada com sucesso."
-    });
-    setIsAddCompanyOpen(false);
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      const { error } = await supabase.from('companies').insert({
+        name: formData.get('companyName') as string,
+        email: formData.get('companyEmail') as string,
+        cnpj: formData.get('companyCNPJ') as string,
+        phone: formData.get('companyPhone') as string,
+        address: formData.get('companyAddress') as string,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Empresa adicionada",
+        description: "A empresa foi adicionada com sucesso."
+      });
+      setIsAddCompanyOpen(false);
+      loadData();
+    } catch (error) {
+      console.error('Error adding company:', error);
+      toast({
+        title: "Erro ao adicionar empresa",
+        description: "Não foi possível adicionar a empresa.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleAddSST = (e: React.FormEvent) => {
+  const handleAddSST = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast({
-      title: "Gestora SST adicionada",
-      description: "A empresa gestora SST foi adicionada com sucesso."
-    });
-    setIsAddSSTOpen(false);
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      const { error } = await supabase.from('sst_managers').insert({
+        name: formData.get('sstName') as string,
+        email: formData.get('sstEmail') as string,
+        cnpj: formData.get('sstCNPJ') as string,
+        phone: formData.get('sstPhone') as string,
+        address: formData.get('sstAddress') as string,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Gestora SST adicionada",
+        description: "A empresa gestora SST foi adicionada com sucesso."
+      });
+      setIsAddSSTOpen(false);
+      loadData();
+    } catch (error) {
+      console.error('Error adding SST manager:', error);
+      toast({
+        title: "Erro ao adicionar gestora SST",
+        description: "Não foi possível adicionar a gestora SST.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleViewCompany = (id: string) => {
-    navigate(`/company-dashboard/${id}`);
+  const handleDeleteCompany = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta empresa?')) return;
+    
+    try {
+      const { error } = await supabase.from('companies').delete().eq('id', id);
+      if (error) throw error;
+      
+      toast({
+        title: "Empresa excluída",
+        description: "A empresa foi excluída com sucesso."
+      });
+      loadData();
+    } catch (error) {
+      console.error('Error deleting company:', error);
+      toast({
+        title: "Erro ao excluir empresa",
+        description: "Não foi possível excluir a empresa.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleViewSST = (id: string) => {
-    navigate(`/sst-dashboard/${id}`);
+  const handleDeleteSST = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta gestora SST?')) return;
+    
+    try {
+      const { error } = await supabase.from('sst_managers').delete().eq('id', id);
+      if (error) throw error;
+      
+      toast({
+        title: "Gestora SST excluída",
+        description: "A gestora SST foi excluída com sucesso."
+      });
+      loadData();
+    } catch (error) {
+      console.error('Error deleting SST manager:', error);
+      toast({
+        title: "Erro ao excluir gestora SST",
+        description: "Não foi possível excluir a gestora SST.",
+        variant: "destructive"
+      });
+    }
   };
+
+  const handleAssignSST = async (companyId: string, sstManagerId: string) => {
+    try {
+      const { error } = await supabase.from('company_sst_assignments').upsert({
+        company_id: companyId,
+        sst_manager_id: sstManagerId
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Atribuição realizada",
+        description: "A gestora SST foi atribuída à empresa com sucesso."
+      });
+      loadData();
+    } catch (error) {
+      console.error('Error assigning SST:', error);
+      toast({
+        title: "Erro ao atribuir gestora SST",
+        description: "Não foi possível atribuir a gestora SST.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getAssignedSST = (companyId: string) => {
+    const assignment = assignments.find(a => a.company_id === companyId);
+    if (!assignment) return null;
+    return sstManagers.find(sst => sst.id === assignment.sst_manager_id);
+  };
+
+  const getAssignedCompanies = (sstId: string) => {
+    const assignedCompanyIds = assignments
+      .filter(a => a.sst_manager_id === sstId)
+      .map(a => a.company_id);
+    return companies.filter(c => assignedCompanyIds.includes(c.id));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
+          <p>Carregando...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Company Detail View
+  if (selectedCompany) {
+    const assignedSST = getAssignedSST(selectedCompany.id);
+    
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8">
+          <div className="audit-container">
+            <Button variant="ghost" onClick={() => setSelectedCompany(null)} className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>{selectedCompany.name}</CardTitle>
+                <CardDescription>Detalhes da empresa</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Email</Label>
+                    <p className="text-base">{selectedCompany.email || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">CNPJ</Label>
+                    <p className="text-base">{selectedCompany.cnpj || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Telefone</Label>
+                    <p className="text-base">{selectedCompany.phone || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Endereço</Label>
+                    <p className="text-base">{selectedCompany.address || '-'}</p>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4 mt-4">
+                  <Label className="text-sm font-medium mb-2 block">Gestora SST</Label>
+                  {assignedSST ? (
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{assignedSST.name}</p>
+                        <p className="text-sm text-gray-500">{assignedSST.email}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={async () => {
+                          const assignment = assignments.find(a => a.company_id === selectedCompany.id);
+                          if (assignment) {
+                            await supabase.from('company_sst_assignments').delete().eq('id', assignment.id);
+                            loadData();
+                            toast({ title: "Atribuição removida" });
+                          }
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select onValueChange={(value) => handleAssignSST(selectedCompany.id, value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma gestora SST" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sstManagers.map(sst => (
+                          <SelectItem key={sst.id} value={sst.id}>{sst.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // SST Detail View
+  if (selectedSST) {
+    const assignedCompanies = getAssignedCompanies(selectedSST.id);
+    
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8">
+          <div className="audit-container">
+            <Button variant="ghost" onClick={() => setSelectedSST(null)} className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>{selectedSST.name}</CardTitle>
+                <CardDescription>Detalhes da gestora SST</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Email</Label>
+                    <p className="text-base">{selectedSST.email || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">CNPJ</Label>
+                    <p className="text-base">{selectedSST.cnpj || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Telefone</Label>
+                    <p className="text-base">{selectedSST.phone || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Endereço</Label>
+                    <p className="text-base">{selectedSST.address || '-'}</p>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4 mt-4">
+                  <Label className="text-sm font-medium mb-2 block">Atribuir Empresa</Label>
+                  <Select onValueChange={(value) => handleAssignSST(value, selectedSST.id)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma empresa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies.filter(c => !getAssignedSST(c.id)).map(company => (
+                        <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <Label className="text-sm font-medium mb-3 block">Empresas Atribuídas ({assignedCompanies.length})</Label>
+                  <div className="space-y-2">
+                    {assignedCompanies.map(company => (
+                      <div key={company.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{company.name}</p>
+                          <p className="text-sm text-gray-500">{company.email}</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={async () => {
+                            const assignment = assignments.find(a => a.company_id === company.id);
+                            if (assignment) {
+                              await supabase.from('company_sst_assignments').delete().eq('id', assignment.id);
+                              loadData();
+                              toast({ title: "Empresa removida" });
+                            }
+                          }}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                    {assignedCompanies.length === 0 && (
+                      <p className="text-gray-500 text-sm">Nenhuma empresa atribuída</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -117,15 +474,23 @@ const MasterDashboard = () => {
                           <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
                               <Label htmlFor="companyName">Nome da Empresa</Label>
-                              <Input id="companyName" placeholder="Nome da empresa" required />
+                              <Input id="companyName" name="companyName" placeholder="Nome da empresa" required />
                             </div>
                             <div className="grid gap-2">
                               <Label htmlFor="companyEmail">Email</Label>
-                              <Input id="companyEmail" type="email" placeholder="contato@empresa.com" required />
+                              <Input id="companyEmail" name="companyEmail" type="email" placeholder="contato@empresa.com" required />
                             </div>
                             <div className="grid gap-2">
-                              <Label htmlFor="companyPassword">Senha inicial</Label>
-                              <Input id="companyPassword" type="password" placeholder="********" required />
+                              <Label htmlFor="companyCNPJ">CNPJ</Label>
+                              <Input id="companyCNPJ" name="companyCNPJ" placeholder="00.000.000/0000-00" />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="companyPhone">Telefone</Label>
+                              <Input id="companyPhone" name="companyPhone" placeholder="(00) 0000-0000" />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="companyAddress">Endereço</Label>
+                              <Input id="companyAddress" name="companyAddress" placeholder="Endereço completo" />
                             </div>
                           </div>
                           <DialogFooter>
@@ -164,15 +529,23 @@ const MasterDashboard = () => {
                           <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
                               <Label htmlFor="sstName">Nome da Gestora SST</Label>
-                              <Input id="sstName" placeholder="Nome da empresa" required />
+                              <Input id="sstName" name="sstName" placeholder="Nome da empresa" required />
                             </div>
                             <div className="grid gap-2">
                               <Label htmlFor="sstEmail">Email</Label>
-                              <Input id="sstEmail" type="email" placeholder="contato@gestora.com" required />
+                              <Input id="sstEmail" name="sstEmail" type="email" placeholder="contato@gestora.com" required />
                             </div>
                             <div className="grid gap-2">
-                              <Label htmlFor="sstPassword">Senha inicial</Label>
-                              <Input id="sstPassword" type="password" placeholder="********" required />
+                              <Label htmlFor="sstCNPJ">CNPJ</Label>
+                              <Input id="sstCNPJ" name="sstCNPJ" placeholder="00.000.000/0000-00" />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="sstPhone">Telefone</Label>
+                              <Input id="sstPhone" name="sstPhone" placeholder="(00) 0000-0000" />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="sstAddress">Endereço</Label>
+                              <Input id="sstAddress" name="sstAddress" placeholder="Endereço completo" />
                             </div>
                           </div>
                           <DialogFooter>
@@ -201,52 +574,51 @@ const MasterDashboard = () => {
                         <tr className="border-b">
                           <th className="px-4 py-3 text-left font-medium">Empresa</th>
                           <th className="px-4 py-3 text-left font-medium">Email</th>
-                          <th className="px-4 py-3 text-left font-medium">Data de cadastro</th>
-                          <th className="px-4 py-3 text-left font-medium">Denúncias</th>
+                          <th className="px-4 py-3 text-left font-medium">CNPJ</th>
+                          <th className="px-4 py-3 text-left font-medium">Gestora SST</th>
                           <th className="px-4 py-3 text-left font-medium">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredCompanies.map((company) => (
-                          <tr key={company.id} className="border-b hover:bg-gray-50">
-                            <td className="px-4 py-4">
-                              <div className="flex items-center">
-                                <div className="h-8 w-8 rounded-md bg-audit-primary/10 flex items-center justify-center mr-3">
-                                  <Building className="h-4 w-4 text-audit-primary" />
+                        {filteredCompanies.map((company) => {
+                          const assignedSST = getAssignedSST(company.id);
+                          return (
+                            <tr key={company.id} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-4">
+                                <div className="flex items-center">
+                                  <div className="h-8 w-8 rounded-md bg-audit-primary/10 flex items-center justify-center mr-3">
+                                    <Building className="h-4 w-4 text-audit-primary" />
+                                  </div>
+                                  {company.name}
                                 </div>
-                                {company.name}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-gray-500">{company.email}</td>
-                            <td className="px-4 py-4 text-gray-500">{company.createdAt}</td>
-                            <td className="px-4 py-4">{company.reports}</td>
-                            <td className="px-4 py-4">
-                              <div className="flex gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => handleViewCompany(company.id)}
-                                >
-                                  Ver
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-red-500 hover:text-red-600"
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="px-4 py-4 text-gray-500">{company.email || '-'}</td>
+                              <td className="px-4 py-4 text-gray-500">{company.cnpj || '-'}</td>
+                              <td className="px-4 py-4 text-gray-500">
+                                {assignedSST ? assignedSST.name : '-'}
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => setSelectedCompany(company)}
+                                  >
+                                    Ver
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-red-500 hover:text-red-600"
+                                    onClick={() => handleDeleteCompany(company.id)}
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                     
@@ -275,52 +647,49 @@ const MasterDashboard = () => {
                         <tr className="border-b">
                           <th className="px-4 py-3 text-left font-medium">Gestora</th>
                           <th className="px-4 py-3 text-left font-medium">Email</th>
-                          <th className="px-4 py-3 text-left font-medium">Data de cadastro</th>
+                          <th className="px-4 py-3 text-left font-medium">CNPJ</th>
                           <th className="px-4 py-3 text-left font-medium">Empresas geridas</th>
                           <th className="px-4 py-3 text-left font-medium">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredSSTManagers.map((manager) => (
-                          <tr key={manager.id} className="border-b hover:bg-gray-50">
-                            <td className="px-4 py-4">
-                              <div className="flex items-center">
-                                <div className="h-8 w-8 rounded-md bg-audit-accent/10 flex items-center justify-center mr-3">
-                                  <UserCheck className="h-4 w-4 text-audit-accent" />
+                        {filteredSSTManagers.map((manager) => {
+                          const assignedCompanies = getAssignedCompanies(manager.id);
+                          return (
+                            <tr key={manager.id} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-4">
+                                <div className="flex items-center">
+                                  <div className="h-8 w-8 rounded-md bg-audit-accent/10 flex items-center justify-center mr-3">
+                                    <UserCheck className="h-4 w-4 text-audit-accent" />
+                                  </div>
+                                  {manager.name}
                                 </div>
-                                {manager.name}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-gray-500">{manager.email}</td>
-                            <td className="px-4 py-4 text-gray-500">{manager.createdAt}</td>
-                            <td className="px-4 py-4">{manager.companies}</td>
-                            <td className="px-4 py-4">
-                              <div className="flex gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => handleViewSST(manager.id)}
-                                >
-                                  Ver
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-red-500 hover:text-red-600"
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="px-4 py-4 text-gray-500">{manager.email || '-'}</td>
+                              <td className="px-4 py-4 text-gray-500">{manager.cnpj || '-'}</td>
+                              <td className="px-4 py-4">{assignedCompanies.length}</td>
+                              <td className="px-4 py-4">
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => setSelectedSST(manager)}
+                                  >
+                                    Ver
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-red-500 hover:text-red-600"
+                                    onClick={() => handleDeleteSST(manager.id)}
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                     
