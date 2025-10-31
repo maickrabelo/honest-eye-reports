@@ -86,6 +86,148 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          sst_manager_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          sst_manager_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          sst_manager_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_updates: {
+        Row: {
+          created_at: string
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          report_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          report_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          report_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_updates_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          category: string
+          company_id: string
+          created_at: string
+          department: string | null
+          description: string
+          id: string
+          is_anonymous: boolean
+          reporter_email: string | null
+          reporter_name: string | null
+          reporter_phone: string | null
+          status: string
+          title: string
+          tracking_code: string | null
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          category: string
+          company_id: string
+          created_at?: string
+          department?: string | null
+          description: string
+          id?: string
+          is_anonymous?: boolean
+          reporter_email?: string | null
+          reporter_name?: string | null
+          reporter_phone?: string | null
+          status?: string
+          title: string
+          tracking_code?: string | null
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          category?: string
+          company_id?: string
+          created_at?: string
+          department?: string | null
+          description?: string
+          id?: string
+          is_anonymous?: boolean
+          reporter_email?: string | null
+          reporter_name?: string | null
+          reporter_phone?: string | null
+          status?: string
+          title?: string
+          tracking_code?: string | null
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sst_managers: {
         Row: {
           address: string | null
@@ -148,6 +290,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_tracking_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -157,7 +300,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "company" | "sst"
+      app_role: "admin" | "company" | "sst" | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -285,7 +428,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "company", "sst"],
+      app_role: ["admin", "company", "sst", "pending"],
     },
   },
 } as const
