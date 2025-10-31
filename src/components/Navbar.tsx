@@ -2,16 +2,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
+import { Bell, Shield } from "lucide-react";
+import { useRealAuth } from '@/contexts/RealAuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, role, signOut, profile } = useRealAuth();
   const isLoggedIn = !!user;
-
-  const handleLogout = () => {
-    logout();
-  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -25,18 +28,6 @@ const Navbar = () => {
                 className="h-8"
               />
             </Link>
-            
-            {/* Display company logo if available */}
-            {user?.role === 'company' && user?.companyLogo && (
-              <div className="ml-6 flex items-center">
-                <div className="h-10 w-px bg-gray-200 mx-4"></div>
-                <img 
-                  src={user.companyLogo} 
-                  alt={user.companyName || 'Logo da empresa'} 
-                  className="h-8 max-w-[120px] object-contain"
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -46,25 +37,62 @@ const Navbar = () => {
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
                 </Button>
-                <div className="flex items-center gap-3">
-                  <div className="hidden md:block text-sm text-right">
-                    <div className="font-medium">{user.name}</div>
-                    <div className="text-xs text-muted-foreground">{user.email}</div>
-                  </div>
-                  <div className="h-8 w-8 rounded-full bg-audit-accent flex items-center justify-center text-white">
-                    {user.name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <Button variant="ghost" onClick={handleLogout} className="hidden md:inline-flex">
-                    Sair
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-3">
+                      <div className="hidden md:block text-sm text-right">
+                        <div className="font-medium">{profile?.full_name || 'Usuário'}</div>
+                        <div className="text-xs text-muted-foreground">{user.email}</div>
+                      </div>
+                      <div className="h-8 w-8 rounded-full bg-audit-accent flex items-center justify-center text-white">
+                        {(profile?.full_name || 'U').substring(0, 2).toUpperCase()}
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {role === 'admin' && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/master-dashboard" className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Painel Admin
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/user-management" className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Gestão de Usuários
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {role === 'company' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard">Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {role === 'sst' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/sst-dashboard">Dashboard SST</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile">Perfil</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut}>
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <div className="flex items-center gap-4">
                 <Link to="/report">
                   <Button variant="outline">Fazer Denúncia</Button>
                 </Link>
-                <Link to="/login">
+                <Link to="/auth">
                   <Button>Entrar</Button>
                 </Link>
               </div>

@@ -93,7 +93,7 @@ const Index = () => {
               Junte-se a centenas de empresas que já utilizam nossa plataforma para criar um ambiente de trabalho mais seguro e transparente.
             </p>
             <Button 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/auth')}
               size="lg" 
               variant="outline"
               className="border-white text-white hover:bg-white hover:text-audit-secondary"
