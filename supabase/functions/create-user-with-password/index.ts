@@ -46,18 +46,45 @@ serve(async (req) => {
       throw new Error("sst_manager_id é obrigatório para usuários do tipo 'sst'");
     }
 
-    // Criar usuário no auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name,
-      },
-    });
+    // Verificar se o usuário já existe
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users.find(u => u.email === email);
 
-    if (authError) throw authError;
-    if (!authData.user) throw new Error("Usuário não foi criado");
+    let userId: string;
+
+    if (existingUser) {
+      // Usuário já existe, atualizar senha
+      const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name,
+          },
+        }
+      );
+
+      if (updateError) throw updateError;
+      if (!updateData.user) throw new Error("Erro ao atualizar usuário");
+      
+      userId = updateData.user.id;
+    } else {
+      // Criar novo usuário
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Usuário não foi criado");
+      
+      userId = authData.user.id;
+    }
 
     // Atualizar profile
     const { error: profileError } = await supabaseAdmin
@@ -67,23 +94,37 @@ serve(async (req) => {
         company_id: role === 'company' ? company_id : null,
         sst_manager_id: role === 'sst' ? sst_manager_id : null,
       })
-      .eq("id", authData.user.id);
+      .eq("id", userId);
 
     if (profileError) throw profileError;
 
-    // Atualizar role
-    const { error: roleError } = await supabaseAdmin
+    // Atualizar ou inserir role
+    const { data: existingRole } = await supabaseAdmin
       .from("user_roles")
-      .update({ role })
-      .eq("user_id", authData.user.id);
+      .select()
+      .eq("user_id", userId)
+      .single();
 
-    if (roleError) throw roleError;
+    if (existingRole) {
+      const { error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .update({ role })
+        .eq("user_id", userId);
+
+      if (roleError) throw roleError;
+    } else {
+      const { error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: userId, role });
+
+      if (roleError) throw roleError;
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        user: authData.user,
-        message: "Usuário criado com sucesso",
+        user_id: userId,
+        message: existingUser ? "Senha atualizada com sucesso" : "Usuário criado com sucesso",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
