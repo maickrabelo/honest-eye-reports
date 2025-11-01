@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,6 +53,10 @@ const MasterDashboard = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedSST, setSelectedSST] = useState<SSTManager | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratePasswordOpen, setIsGeneratePasswordOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({ entity: '', type: '', email: '', name: '', id: '' });
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -240,6 +244,61 @@ const MasterDashboard = () => {
     return companies.filter(c => assignedCompanyIds.includes(c.id));
   };
 
+  const handleOpenGeneratePassword = (entity: Company | SSTManager, type: 'company' | 'sst') => {
+    setPasswordData({
+      entity: entity.name,
+      type,
+      email: entity.email || '',
+      name: entity.name,
+      id: entity.id
+    });
+    setGeneratedPassword('');
+    setIsGeneratePasswordOpen(true);
+  };
+
+  const handleGeneratePassword = async (password: string) => {
+    if (!password || password.length < 6) {
+      toast({
+        title: "Senha inválida",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-user-with-password', {
+        body: {
+          email: passwordData.email,
+          password: password,
+          full_name: passwordData.name,
+          role: passwordData.type,
+          company_id: passwordData.type === 'company' ? passwordData.id : null,
+          sst_manager_id: passwordData.type === 'sst' ? passwordData.id : null,
+        }
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      setGeneratedPassword(password);
+      toast({
+        title: "Usuário criado",
+        description: `Usuário criado com sucesso. Login: ${passwordData.email}`,
+      });
+    } catch (error: any) {
+      console.error('Error generating password:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message || "Não foi possível criar o usuário.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -291,6 +350,17 @@ const MasterDashboard = () => {
                   </div>
                 </div>
                 
+                <div className="border-t pt-4 mt-4">
+                  <Label className="text-sm font-medium mb-3 block">Acesso ao Sistema</Label>
+                  <Button 
+                    variant="outline" 
+                    className="w-full mb-4"
+                    onClick={() => handleOpenGeneratePassword(selectedCompany, 'company')}
+                  >
+                    Gerar Senha de Acesso
+                  </Button>
+                </div>
+
                 <div className="border-t pt-4 mt-4">
                   <Label className="text-sm font-medium mb-2 block">Gestora SST</Label>
                   {assignedSST ? (
@@ -375,6 +445,17 @@ const MasterDashboard = () => {
                   </div>
                 </div>
                 
+                <div className="border-t pt-4 mt-4">
+                  <Label className="text-sm font-medium mb-3 block">Acesso ao Sistema</Label>
+                  <Button 
+                    variant="outline" 
+                    className="w-full mb-4"
+                    onClick={() => handleOpenGeneratePassword(selectedSST, 'sst')}
+                  >
+                    Gerar Senha de Acesso
+                  </Button>
+                </div>
+
                 <div className="border-t pt-4 mt-4">
                   <Label className="text-sm font-medium mb-2 block">Atribuir Empresa</Label>
                   <Select onValueChange={(value) => handleAssignSST(value, selectedSST.id)}>
@@ -602,6 +683,15 @@ const MasterDashboard = () => {
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
+                                    onClick={() => handleOpenGeneratePassword(company, 'company')}
+                                    title="Gerar senha de acesso"
+                                  >
+                                    <Key className="h-4 w-4 mr-1" />
+                                    Senha
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
                                     onClick={() => setSelectedCompany(company)}
                                   >
                                     Ver
@@ -673,6 +763,15 @@ const MasterDashboard = () => {
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
+                                    onClick={() => handleOpenGeneratePassword(manager, 'sst')}
+                                    title="Gerar senha de acesso"
+                                  >
+                                    <Key className="h-4 w-4 mr-1" />
+                                    Senha
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
                                     onClick={() => setSelectedSST(manager)}
                                   >
                                     Ver
@@ -706,6 +805,73 @@ const MasterDashboard = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Dialog para gerar senha */}
+      <Dialog open={isGeneratePasswordOpen} onOpenChange={setIsGeneratePasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar Senha de Acesso</DialogTitle>
+            <DialogDescription>
+              Crie uma senha para o usuário acessar o sistema.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Entidade</Label>
+              <p className="text-sm font-medium">{passwordData.entity}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Email (Login)</Label>
+              <p className="text-sm font-medium">{passwordData.email}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <p className="text-sm font-medium capitalize">{passwordData.type === 'company' ? 'Empresa' : 'Gestora SST'}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input 
+                id="password" 
+                type="text" 
+                placeholder="Digite a senha (mínimo 6 caracteres)"
+                defaultValue={generatedPassword}
+              />
+            </div>
+
+            {generatedPassword && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                <p className="text-sm text-green-800">
+                  <strong>✓ Usuário criado com sucesso!</strong><br/>
+                  Login: {passwordData.email}<br/>
+                  Senha: {generatedPassword}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsGeneratePasswordOpen(false)}
+            >
+              Fechar
+            </Button>
+            <Button 
+              onClick={() => {
+                const input = document.getElementById('password') as HTMLInputElement;
+                handleGeneratePassword(input.value);
+              }}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Criando...' : 'Criar Usuário'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
