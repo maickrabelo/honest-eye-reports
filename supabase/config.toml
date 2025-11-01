@@ -2,3 +2,9 @@ project_id = "ovednzilplbewpzpvxnf"
 
 [functions.chat-report]
 verify_jwt = false
+
+[functions.create-user-with-password]
+# Requires admin authentication
+
+[functions.submit-report]
+verify_jwt = false

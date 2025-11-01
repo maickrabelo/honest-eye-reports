@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
+import { z } from 'zod';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Card,
   CardContent,
@@ -32,6 +34,23 @@ const categories = [
   { value: "financeiro", label: "Financeiro" },
   { value: "outro", label: "Outro" },
 ];
+
+// Validation schema
+const reportSchema = z.object({
+  title: z.string()
+    .min(5, "O título deve ter no mínimo 5 caracteres")
+    .max(200, "O título deve ter no máximo 200 caracteres"),
+  description: z.string()
+    .min(20, "A descrição deve ter no mínimo 20 caracteres")
+    .max(5000, "A descrição deve ter no máximo 5000 caracteres"),
+  category: z.string().min(1, "Selecione uma categoria"),
+  name: z.string().max(100, "Nome deve ter no máximo 100 caracteres").optional(),
+  email: z.string().email("Email inválido").max(255).optional().or(z.literal('')),
+  phone: z.string()
+    .regex(/^\+?[1-9]\d{1,14}$/, "Telefone inválido")
+    .optional()
+    .or(z.literal('')),
+});
 
 const ReportForm = () => {
   const { toast } = useToast();
@@ -68,35 +87,74 @@ const ReportForm = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validação básica
-    if (!formData.title || !formData.description || !formData.category) {
-      toast({
-        variant: "destructive",
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-      });
-      return;
+    // Validate inputs
+    const validationData = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone.replace(/[\s\-\(\)]/g, ''), // Remove formatting
+    };
+
+    try {
+      reportSchema.parse(validationData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          variant: "destructive",
+          title: "Erro de validação",
+          description: error.errors[0].message,
+        });
+        return;
+      }
     }
     
-    // Simulação de envio
     setIsSubmitting(true);
     
-    setTimeout(() => {
+    try {
+      // Call the secure edge function to submit the report
+      const { data, error } = await supabase.functions.invoke('submit-report', {
+        body: {
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          company_id: '00000000-0000-0000-0000-000000000000', // Default company ID - should be selected by user
+          is_anonymous: formData.isAnonymous,
+          reporter_name: formData.isAnonymous ? null : formData.name,
+          reporter_email: formData.isAnonymous ? null : formData.email,
+          reporter_phone: formData.isAnonymous ? null : formData.phone,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setIsSubmitting(false);
       
       toast({
         title: "Denúncia enviada com sucesso",
-        description: "Sua denúncia foi registrada e será analisada em breve.",
+        description: data.tracking_code 
+          ? `Código de rastreamento: ${data.tracking_code}`
+          : "Sua denúncia foi registrada e será analisada em breve.",
       });
       
-      // Redirecionamento para a página inicial
+      // Redirect to home page
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
-    }, 1500);
+    } catch (error: any) {
+      setIsSubmitting(false);
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar denúncia",
+        description: "Ocorreu um erro ao processar sua denúncia. Tente novamente.",
+      });
+    }
   };
 
   return (
