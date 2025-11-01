@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Shield, User } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getSafeErrorMessage } from '@/lib/errorUtils';
 
 interface UserWithRole {
   id: string;
@@ -44,52 +45,26 @@ const UserManagement = () => {
     try {
       setLoading(true);
       
-      // Fetch all profiles with their roles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          full_name,
-          company_id,
-          sst_manager_id,
-          created_at
-        `);
+      // Call the secure edge function to list users
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        throw new Error('Não autenticado');
+      }
 
-      if (profilesError) throw profilesError;
-
-      // Fetch roles
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) throw rolesError;
-
-      // Fetch auth users for emails
-      const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) throw authError;
-
-      // Combine data
-      const usersWithRoles = (profilesData || []).map(profile => {
-        const roleData = rolesData?.find((r: any) => r.user_id === profile.id);
-        const authUser = authUsers?.find((u: any) => u.id === profile.id);
-        
-        return {
-          id: profile.id,
-          full_name: profile.full_name,
-          company_id: profile.company_id,
-          sst_manager_id: profile.sst_manager_id,
-          created_at: profile.created_at || new Date().toISOString(),
-          email: authUser?.email || '',
-          role: (roleData?.role || 'pending') as 'admin' | 'company' | 'sst' | 'pending',
-        };
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
       });
 
-      setUsers(usersWithRoles);
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      setUsers(data.users || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar usuários",
-        description: error.message,
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -125,7 +100,7 @@ const UserManagement = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar papel",
-        description: error.message,
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -149,7 +124,7 @@ const UserManagement = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar empresa",
-        description: error.message,
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -173,7 +148,7 @@ const UserManagement = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar gestora SST",
-        description: error.message,
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     }

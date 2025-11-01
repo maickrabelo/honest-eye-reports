@@ -1,6 +1,27 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+// Error sanitization utility
+function getSafeErrorMessage(error: any): string {
+  const errorMessage = error?.message || String(error);
+  
+  // Map common error patterns to safe messages
+  if (errorMessage.includes('23505') || errorMessage.includes('duplicate key')) {
+    return 'Este email já está registrado no sistema.';
+  }
+  if (errorMessage.includes('23503')) {
+    return 'Referência não encontrada. Verifique os dados relacionados.';
+  }
+  if (errorMessage.includes('password')) {
+    return 'Erro ao processar senha. Verifique o formato.';
+  }
+  if (errorMessage.includes('email')) {
+    return 'Erro ao processar email. Verifique o formato.';
+  }
+  
+  return 'Erro ao processar solicitação. Tente novamente.';
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -167,10 +188,11 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error("Error creating user:", error);
+    const safeMessage = getSafeErrorMessage(error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: safeMessage,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

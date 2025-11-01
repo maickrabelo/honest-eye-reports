@@ -11,6 +11,7 @@ import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 type Company = {
   id: string;
@@ -80,10 +81,9 @@ const MasterDashboard = () => {
       setSSTManagers(sstRes.data || []);
       setAssignments(assignmentsRes.data || []);
     } catch (error) {
-      console.error('Error loading data:', error);
       toast({
         title: "Erro ao carregar dados",
-        description: "Não foi possível carregar os dados do sistema.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     } finally {
@@ -123,10 +123,9 @@ const MasterDashboard = () => {
       setIsAddCompanyOpen(false);
       loadData();
     } catch (error) {
-      console.error('Error adding company:', error);
       toast({
         title: "Erro ao adicionar empresa",
-        description: "Não foi possível adicionar a empresa.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     }
@@ -154,10 +153,9 @@ const MasterDashboard = () => {
       setIsAddSSTOpen(false);
       loadData();
     } catch (error) {
-      console.error('Error adding SST manager:', error);
       toast({
         title: "Erro ao adicionar gestora SST",
-        description: "Não foi possível adicionar a gestora SST.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     }
@@ -176,10 +174,9 @@ const MasterDashboard = () => {
       });
       loadData();
     } catch (error) {
-      console.error('Error deleting company:', error);
       toast({
         title: "Erro ao excluir empresa",
-        description: "Não foi possível excluir a empresa.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     }
@@ -198,10 +195,9 @@ const MasterDashboard = () => {
       });
       loadData();
     } catch (error) {
-      console.error('Error deleting SST manager:', error);
       toast({
         title: "Erro ao excluir gestora SST",
-        description: "Não foi possível excluir a gestora SST.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     }
@@ -222,10 +218,9 @@ const MasterDashboard = () => {
       });
       loadData();
     } catch (error) {
-      console.error('Error assigning SST:', error);
       toast({
         title: "Erro ao atribuir gestora SST",
-        description: "Não foi possível atribuir a gestora SST.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     }
@@ -288,10 +283,9 @@ const MasterDashboard = () => {
         description: `Usuário criado com sucesso. Login: ${passwordData.email}`,
       });
     } catch (error: any) {
-      console.error('Error generating password:', error);
       toast({
         title: "Erro ao criar usuário",
-        description: error.message || "Não foi possível criar o usuário.",
+        description: getSafeErrorMessage(error),
         variant: "destructive"
       });
     } finally {
