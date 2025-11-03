@@ -4,37 +4,56 @@ import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ReportChat } from '@/components/ReportChatContent';
-
-// Mock company data
-const mockCompanies = [
-  {
-    slug: "tech-solutions",
-    name: "Tech Solutions Ltda",
-    logo: "https://via.placeholder.com/150?text=TechSol",
-  },
-  {
-    slug: "industrias-abc",
-    name: "Indústrias ABC",
-    logo: "https://via.placeholder.com/150?text=ABC",
-  },
-  {
-    slug: "comercio-xyz",
-    name: "Comércio XYZ",
-    logo: "https://via.placeholder.com/150?text=XYZ",
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 const CompanyReport = () => {
   const { companySlug } = useParams<{ companySlug: string }>();
-  const [company, setCompany] = useState<{ name: string, logo: string } | null>(null);
+  const [company, setCompany] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // In a real app, fetch company data from an API
-    const foundCompany = mockCompanies.find(c => c.slug === companySlug);
-    if (foundCompany) {
-      setCompany(foundCompany);
-    }
+    const fetchCompany = async () => {
+      if (!companySlug) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('id, name, logo_url, slug')
+          .eq('slug', companySlug)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching company:', error);
+          setCompany(null);
+        } else {
+          setCompany(data);
+        }
+      } catch (error) {
+        console.error('Error fetching company:', error);
+        setCompany(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompany();
   }, [companySlug]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-audit-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!company) {
     return (
@@ -58,11 +77,13 @@ const CompanyReport = () => {
         <div className="audit-container max-w-4xl">
           <div className="mb-8 text-center">
             <div className="flex flex-col items-center">
-              <img 
-                src={company.logo} 
-                alt={`Logo ${company.name}`} 
-                className="h-16 object-contain mb-4"
-              />
+              {company.logo_url && (
+                <img 
+                  src={company.logo_url} 
+                  alt={`Logo ${company.name}`} 
+                  className="h-16 object-contain mb-4"
+                />
+              )}
               <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria {company.name}</h1>
               <p className="text-gray-600 mt-2">
                 Aqui você pode registrar sua denúncia de forma anônima e segura.
@@ -71,7 +92,7 @@ const CompanyReport = () => {
           </div>
           
           {/* Reuse the ReportChat component */}
-          <ReportChat companyId={companySlug || ""} />
+          <ReportChat companyId={company.id} />
         </div>
       </main>
       <Footer />

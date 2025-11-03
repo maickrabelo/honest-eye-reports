@@ -204,11 +204,47 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
     }
   };
 
-  const handleSaveReport = () => {
+  const handleSaveReport = async () => {
+    if (!companyId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Extract conversation for description
+      const conversationText = messages
+        .filter(m => m.role !== "system")
+        .map(m => `${m.role === "user" ? "Denunciante" : "Ouvidoria"}: ${m.content}`)
+        .join("\n\n");
+
+      const { data, error } = await supabase
+        .from('reports')
+        .insert({
+          company_id: companyId,
+          title: summary.substring(0, 100) || "Denúncia via chat",
+          description: conversationText,
+          category: "Outros",
+          is_anonymous: true,
+          status: "pending",
+          urgency: "medium",
+          tracking_code: reportId
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving report:', error);
+        throw error;
+      }
+
+      console.log('Report saved:', data);
+      
       toast({
         title: "Denúncia enviada com sucesso!",
         description: "Você receberá atualizações sobre o andamento.",
@@ -217,7 +253,16 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
       setTimeout(() => {
         navigate('/');
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      console.error('Error in handleSaveReport:', error);
+      toast({
+        title: "Erro ao salvar denúncia",
+        description: "Não foi possível salvar a denúncia. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderMessages = () => {
