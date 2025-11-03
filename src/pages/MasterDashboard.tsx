@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,7 @@ type Company = {
   phone: string | null;
   address: string | null;
   logo_url: string | null;
+  slug: string | null;
   created_at: string;
 };
 
@@ -342,6 +343,31 @@ const MasterDashboard = () => {
                     <Label className="text-sm font-medium text-gray-500">Endereço</Label>
                     <p className="text-base">{selectedCompany.address || '-'}</p>
                   </div>
+                  <div className="col-span-2">
+                    <Label className="text-sm font-medium text-gray-500">Slug da Empresa</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="text-base bg-gray-100 px-3 py-1 rounded">
+                        {selectedCompany.slug || '-'}
+                      </code>
+                      {selectedCompany.slug && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const url = `${window.location.origin}/report/${selectedCompany.slug}`;
+                            navigator.clipboard.writeText(url);
+                            toast({
+                              title: "URL copiada",
+                              description: "Link para denúncias copiado."
+                            });
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copiar URL de Denúncia
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="border-t pt-4 mt-4">
@@ -650,6 +676,7 @@ const MasterDashboard = () => {
                           <th className="px-4 py-3 text-left font-medium">Empresa</th>
                           <th className="px-4 py-3 text-left font-medium">Email</th>
                           <th className="px-4 py-3 text-left font-medium">CNPJ</th>
+                          <th className="px-4 py-3 text-left font-medium">Slug (URL)</th>
                           <th className="px-4 py-3 text-left font-medium">Gestora SST</th>
                           <th className="px-4 py-3 text-left font-medium">Ações</th>
                         </tr>
@@ -669,6 +696,29 @@ const MasterDashboard = () => {
                               </td>
                               <td className="px-4 py-4 text-gray-500">{company.email || '-'}</td>
                               <td className="px-4 py-4 text-gray-500">{company.cnpj || '-'}</td>
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-2">
+                                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                    {company.slug || '-'}
+                                  </code>
+                                  {company.slug && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const url = `${window.location.origin}/report/${company.slug}`;
+                                        navigator.clipboard.writeText(url);
+                                        toast({
+                                          title: "URL copiada",
+                                          description: "Link para denúncias copiado."
+                                        });
+                                      }}
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
                               <td className="px-4 py-4 text-gray-500">
                                 {assignedSST ? assignedSST.name : '-'}
                               </td>
