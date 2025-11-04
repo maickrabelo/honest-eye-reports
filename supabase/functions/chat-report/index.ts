@@ -153,9 +153,10 @@ serve(async (req) => {
     
     // Clean up old rate limit records (optional, can be done periodically)
     if (Math.random() < 0.1) { // 10% chance to clean up
-      await supabase.rpc('cleanup_old_rate_limits').catch(err => 
-        console.error('Cleanup error:', err)
-      );
+      const { error: cleanupError } = await supabase.rpc('cleanup_old_rate_limits');
+      if (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
     }
     
     return new Response(JSON.stringify(data), {
