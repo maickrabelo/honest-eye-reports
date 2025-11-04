@@ -173,6 +173,10 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
               content: `Analise esta conversa de denúncia e crie um resumo executivo:\n\n${conversationText}`
             }
           ]
+        },
+        headers: {
+          'x-session-id': sessionId,
+          'x-company-id': companyId || ''
         }
       });
 
