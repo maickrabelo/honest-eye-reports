@@ -64,8 +64,15 @@ const CompanyProfile = () => {
   };
 
   const handleGenerateReportUrl = () => {
-    // Generate a unique URL for this company's report page
-    const companySlug = companyName.toLowerCase().replace(/\s+/g, '-');
+    // Generate a clean URL slug for this company's report page
+    const companySlug = companyName
+      .toLowerCase()
+      .normalize('NFD') // Decompose accented characters
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Remove duplicate hyphens
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
     return `${window.location.origin}/report/${companySlug}`;
   };
 
