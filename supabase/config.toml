@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.list-users]
 # Requires admin authentication
+
+[functions.update-user-role]
+# Requires admin authentication
+
+[functions.update-user-profile]
+# Requires admin authentication

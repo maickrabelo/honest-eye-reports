@@ -84,12 +84,20 @@ const UserManagement = () => {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .update({ role: newRole as 'admin' | 'company' | 'sst' | 'pending' })
-        .eq('user_id', userId);
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        throw new Error('Não autenticado');
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-user-role', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+        body: { userId, newRole },
+      });
 
       if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
       toast({
         title: "Papel atualizado",
@@ -108,12 +116,20 @@ const UserManagement = () => {
 
   const updateUserCompany = async (userId: string, companyId: string | null) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ company_id: companyId })
-        .eq('id', userId);
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        throw new Error('Não autenticado');
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-user-profile', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+        body: { userId, companyId },
+      });
 
       if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
       toast({
         title: "Empresa atualizada",
@@ -132,12 +148,20 @@ const UserManagement = () => {
 
   const updateUserSST = async (userId: string, sstId: string | null) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ sst_manager_id: sstId })
-        .eq('id', userId);
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        throw new Error('Não autenticado');
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-user-profile', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+        body: { userId, sstManagerId: sstId },
+      });
 
       if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
       toast({
         title: "Gestora SST atualizada",
