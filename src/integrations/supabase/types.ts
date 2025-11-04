@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_rate_limits: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          request_count: number | null
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
@@ -293,6 +320,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       generate_tracking_code: { Args: never; Returns: string }
       has_role: {
         Args: {

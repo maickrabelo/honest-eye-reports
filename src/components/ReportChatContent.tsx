@@ -29,6 +29,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
   const [isComplete, setIsComplete] = useState(false);
   const [summary, setSummary] = useState("");
   const [reportId, setReportId] = useState("");
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substring(7)}`);
   const [showIdDialog, setShowIdDialog] = useState(false);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -81,6 +82,10 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
       const { data, error } = await supabase.functions.invoke('chat-report', {
         body: { 
           messages: updatedMessages.filter(m => m.role !== "system" || m.content.includes("Ana"))
+        },
+        headers: {
+          'x-session-id': sessionId,
+          'x-company-id': companyId || ''
         }
       });
 

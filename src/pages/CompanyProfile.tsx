@@ -8,17 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRealAuth } from "@/contexts/RealAuthContext";
 import { Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const CompanyProfile = () => {
-  const { user, updateUserProfile } = useAuth();
+  const { user, profile } = useRealAuth();
   const { toast } = useToast();
-  const [companyName, setCompanyName] = useState(user?.companyName || '');
+  const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [companyLogo, setCompanyLogo] = useState<string>(user?.companyLogo || '');
+  const [companyLogo, setCompanyLogo] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,25 +34,33 @@ const CompanyProfile = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      updateUserProfile({
-        companyName,
-        email,
-        companyLogo
-      });
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: companyName,
+        })
+        .eq('id', user?.id);
+
+      if (error) throw error;
 
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso."
       });
-      
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar perfil",
+        description: error.message
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleGenerateReportUrl = () => {

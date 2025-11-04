@@ -15,7 +15,6 @@ import CompanyProfile from "./pages/CompanyProfile";
 import SSTDashboard from "./pages/SSTDashboard";
 import MasterDashboard from "./pages/MasterDashboard";
 import CompanyReport from "./pages/CompanyReport";
-import OpenAIConfig from "./pages/OpenAIConfig";
 import PendingApproval from "./pages/PendingApproval";
 import UserManagement from "./pages/UserManagement";
 
@@ -37,7 +36,6 @@ const App = () => (
             <Route path="/report-form" element={<ReportForm />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/profile" element={<CompanyProfile />} />
-            <Route path="/openai-config" element={<OpenAIConfig />} />
             <Route path="/sst-dashboard" element={<SSTDashboard />} />
             <Route path="/master-dashboard" element={<MasterDashboard />} />
             <Route path="/user-management" element={<UserManagement />} />

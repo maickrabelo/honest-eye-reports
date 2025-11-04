@@ -13,14 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRealAuth } from '@/contexts/RealAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const LoginCard = () => {
   const { toast } = useToast();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
-  const { login } = useAuth();
+  const { role } = useRealAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,30 +39,24 @@ const LoginCard = () => {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
       
       toast({
         title: "Login bem-sucedido",
         description: "Você foi autenticado com sucesso.",
       });
       
-      // Redirect based on user role
-      const savedUser = localStorage.getItem('honest_eyes_user');
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
-        if (user.role === 'company') {
-          navigate('/dashboard');
-        } else if (user.role === 'sst') {
-          navigate('/sst-dashboard');
-        } else if (user.role === 'master') {
-          navigate('/master-dashboard');
-        }
-      }
-    } catch (error) {
+      // Navigation will be handled by RealAuthContext
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro de autenticação",
-        description: "Credenciais inválidas. Tente novamente.",
+        description: error.message || "Credenciais inválidas. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -106,15 +101,6 @@ const LoginCard = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-          </div>
-          <div className="text-sm text-muted-foreground">
-            <p>Para testar diferentes perfis de acesso, use:</p>
-            <ul className="list-disc list-inside mt-1">
-              <li>company@example.com (acesso empresa)</li>
-              <li>sst@example.com (acesso gestão SST)</li>
-              <li>master@example.com (acesso master)</li>
-              <li>Qualquer senha é aceita</li>
-            </ul>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col">

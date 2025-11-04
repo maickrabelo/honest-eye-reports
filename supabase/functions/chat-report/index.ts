@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id, x-company-id',
 };
 
 serve(async (req) => {
@@ -18,7 +19,73 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log("Processing chat request with", messages.length, "messages");
+    // Get session ID and company ID from headers
+    const sessionId = req.headers.get('x-session-id');
+    const companyId = req.headers.get('x-company-id');
+
+    if (!sessionId) {
+      return new Response(
+        JSON.stringify({ error: "Session ID required" }), 
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Initialize Supabase client with service role for rate limiting
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check rate limit - 50 requests per hour per session
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    const { data: rateLimitData, error: rateLimitError } = await supabase
+      .from('chat_rate_limits')
+      .select('request_count')
+      .eq('session_id', sessionId)
+      .gte('created_at', oneHourAgo)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    // Calculate total requests in the last hour
+    const { count } = await supabase
+      .from('chat_rate_limits')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId)
+      .gte('created_at', oneHourAgo);
+
+    const requestCount = count || 0;
+
+    if (requestCount >= 50) {
+      console.log(`Rate limit exceeded for session ${sessionId}: ${requestCount} requests`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Limite de requisições excedido. Por favor, aguarde antes de enviar mais mensagens." 
+        }), 
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Record this request
+    await supabase
+      .from('chat_rate_limits')
+      .insert({
+        session_id: sessionId,
+        company_id: companyId,
+        request_count: 1,
+      });
+
+    console.log(`Processing chat request for session ${sessionId} (${requestCount + 1}/50 requests)`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -83,6 +150,13 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log("AI response received successfully");
+    
+    // Clean up old rate limit records (optional, can be done periodically)
+    if (Math.random() < 0.1) { // 10% chance to clean up
+      await supabase.rpc('cleanup_old_rate_limits').catch(err => 
+        console.error('Cleanup error:', err)
+      );
+    }
     
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
