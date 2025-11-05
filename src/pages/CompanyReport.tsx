@@ -30,6 +30,8 @@ const CompanyReport = () => {
           console.error('Error fetching company:', error);
           setCompany(null);
         } else {
+          console.log('Company fetched successfully:', data);
+          console.log('Company ID that will be passed to ReportChat:', data?.id);
           setCompany(data);
         }
       } catch (error) {
