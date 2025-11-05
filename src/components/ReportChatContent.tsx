@@ -214,7 +214,10 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
   };
 
   const handleSaveReport = async () => {
+    console.log('handleSaveReport called with companyId:', companyId);
+    
     if (!companyId) {
+      console.error('CompanyId is missing!');
       toast({
         title: "Erro",
         description: "ID da empresa não encontrado.",
@@ -232,6 +235,15 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
         .map(m => `${m.role === "user" ? "Denunciante" : "Ouvidoria"}: ${m.content}`)
         .join("\n\n");
 
+      console.log('Attempting to save report with data:', {
+        company_id: companyId,
+        title: summary.substring(0, 100) || "Denúncia via chat",
+        category: "Outros",
+        is_anonymous: true,
+        status: "pending",
+        urgency: "medium"
+      });
+
       const { data, error } = await supabase
         .from('reports')
         .insert({
@@ -247,7 +259,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
         .single();
 
       if (error) {
-        console.error('Error saving report:', error);
+        console.error('Error saving report - Full error object:', JSON.stringify(error, null, 2));
         throw error;
       }
 
@@ -266,11 +278,15 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
       setTimeout(() => {
         navigate('/');
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in handleSaveReport:', error);
+      console.error('Error message:', error?.message);
+      console.error('Error details:', error?.details);
+      console.error('Error hint:', error?.hint);
+      console.error('Error code:', error?.code);
       toast({
         title: "Erro ao salvar denúncia",
-        description: "Não foi possível salvar a denúncia. Por favor, tente novamente.",
+        description: error?.message || "Não foi possível salvar a denúncia. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
