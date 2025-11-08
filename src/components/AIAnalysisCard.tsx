@@ -4,48 +4,155 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useRealAuth } from "@/contexts/RealAuthContext";
 
 const AIAnalysisCard = () => {
+  const { profile } = useRealAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<any[]>([]);
   
-  // Simula a análise da IA
   useEffect(() => {
-    loadAnalysis();
-  }, []);
+    if (profile?.company_id) {
+      loadAnalysis();
+    }
+  }, [profile?.company_id]);
   
-  const loadAnalysis = () => {
+  const loadAnalysis = async () => {
+    if (!profile?.company_id) return;
+    
     setIsLoading(true);
     
-    // Em um ambiente real, aqui seria uma chamada para sua API que usa a OpenAI
-    setTimeout(() => {
-      const mockInsights = [
-        {
-          id: 1,
-          category: "RH",
-          alert: "Alto",
-          trend: "crescente",
-          message: "Aumento significativo de 35% em denúncias relacionadas a assédio moral no setor de RH nas últimas 4 semanas. Recomenda-se investigação prioritária e treinamento de liderança.",
-        },
-        {
-          id: 2,
-          category: "Produção",
-          alert: "Médio",
-          trend: "estável",
-          message: "Padrão recorrente de denúncias sobre segurança no trabalho na área de produção. 70% mencionam equipamentos inadequados. Sugestão: auditoria de segurança imediata.",
-        },
-        {
-          id: 3,
-          category: "Comercial",
-          alert: "Baixo",
-          trend: "decrescente",
-          message: "Redução de 15% nas denúncias após implementação do novo código de conduta. Recomenda-se manter as práticas atuais e continuar monitoramento.",
-        },
-      ];
+    try {
+      // Buscar denúncias dos últimos 60 dias
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
       
-      setInsights(mockInsights);
+      const { data: recentReports, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('company_id', profile.company_id)
+        .gte('created_at', sixtyDaysAgo.toISOString());
+
+      if (error) throw error;
+
+      // Buscar denúncias dos 60 dias anteriores para comparação
+      const oneHundredTwentyDaysAgo = new Date();
+      oneHundredTwentyDaysAgo.setDate(oneHundredTwentyDaysAgo.getDate() - 120);
+
+      const { data: previousReports, error: prevError } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('company_id', profile.company_id)
+        .gte('created_at', oneHundredTwentyDaysAgo.toISOString())
+        .lt('created_at', sixtyDaysAgo.toISOString());
+
+      if (prevError) throw prevError;
+
+      const generatedInsights: any[] = [];
+
+      // Análise por categoria
+      const categoryCount: { [key: string]: number } = {};
+      const prevCategoryCount: { [key: string]: number } = {};
+
+      recentReports?.forEach(report => {
+        const cat = report.category || 'Outros';
+        categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+      });
+
+      previousReports?.forEach(report => {
+        const cat = report.category || 'Outros';
+        prevCategoryCount[cat] = (prevCategoryCount[cat] || 0) + 1;
+      });
+
+      // Gerar insights por categoria
+      Object.keys(categoryCount).forEach((category, index) => {
+        const current = categoryCount[category];
+        const previous = prevCategoryCount[category] || 0;
+        const change = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+        
+        let alert = 'Baixo';
+        let trend = 'estável';
+        let message = '';
+
+        if (change > 30) {
+          alert = 'Alto';
+          trend = 'crescente';
+          message = `Aumento significativo de ${Math.round(change)}% em denúncias de ${category} nos últimos 60 dias. Recomenda-se investigação prioritária.`;
+        } else if (change > 10) {
+          alert = 'Médio';
+          trend = 'crescente';
+          message = `Aumento moderado de ${Math.round(change)}% em denúncias de ${category}. Monitoramento contínuo recomendado.`;
+        } else if (change < -10) {
+          alert = 'Baixo';
+          trend = 'decrescente';
+          message = `Redução de ${Math.abs(Math.round(change))}% nas denúncias de ${category}. Continue monitorando as práticas atuais.`;
+        } else {
+          alert = 'Baixo';
+          trend = 'estável';
+          message = `Denúncias de ${category} mantêm-se estáveis. Total: ${current} denúncias nos últimos 60 dias.`;
+        }
+
+        if (current >= 3) { // Só mostra insights para categorias com pelo menos 3 denúncias
+          generatedInsights.push({
+            id: index + 1,
+            category,
+            alert,
+            trend,
+            message,
+          });
+        }
+      });
+
+      // Análise por departamento
+      const deptCount: { [key: string]: number } = {};
+      recentReports?.forEach(report => {
+        if (report.department) {
+          deptCount[report.department] = (deptCount[report.department] || 0) + 1;
+        }
+      });
+
+      // Identificar departamento com mais denúncias
+      const maxDept = Object.entries(deptCount).reduce((a, b) => a[1] > b[1] ? a : b, ['', 0]);
+      if (maxDept[1] >= 3) {
+        generatedInsights.push({
+          id: generatedInsights.length + 1,
+          category: maxDept[0],
+          alert: maxDept[1] > 5 ? 'Alto' : 'Médio',
+          trend: 'crescente',
+          message: `Departamento ${maxDept[0]} concentra ${maxDept[1]} denúncias nos últimos 60 dias. Análise detalhada recomendada.`,
+        });
+      }
+
+      // Análise de urgência
+      const highUrgency = recentReports?.filter(r => r.urgency === 'high').length || 0;
+      if (highUrgency > 0) {
+        generatedInsights.push({
+          id: generatedInsights.length + 1,
+          category: 'Urgência Alta',
+          alert: 'Alto',
+          trend: 'crescente',
+          message: `${highUrgency} denúncia${highUrgency > 1 ? 's' : ''} de alta urgência ${highUrgency > 1 ? 'foram' : 'foi'} registrada${highUrgency > 1 ? 's' : ''} recentemente. Atenção imediata necessária.`,
+        });
+      }
+
+      if (generatedInsights.length === 0) {
+        generatedInsights.push({
+          id: 1,
+          category: 'Geral',
+          alert: 'Baixo',
+          trend: 'estável',
+          message: 'Nenhuma anomalia detectada. O volume de denúncias está dentro dos padrões esperados.',
+        });
+      }
+
+      setInsights(generatedInsights.slice(0, 3)); // Limita a 3 insights principais
+    } catch (error) {
+      console.error('Error loading analysis:', error);
+      setInsights([]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
   
   const getAlertBadge = (level: string) => {
