@@ -160,26 +160,49 @@ const Dashboard = () => {
     if (!responseText.trim() || !selectedReport) return;
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('Updating report:', {
+        report_id: selectedReport.id,
+        old_status: selectedReport.status,
+        new_status: selectedStatus,
+        user_id: user.id,
+        company_id: profile?.company_id
+      });
+
       // Insert new update
       const { error: updateError } = await supabase
         .from('report_updates')
         .insert({
           report_id: selectedReport.id,
+          user_id: user.id,
           old_status: selectedReport.status,
           new_status: selectedStatus,
           notes: responseText
         });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error inserting update:', updateError);
+        throw updateError;
+      }
 
       // Update report status if changed
       if (selectedStatus !== selectedReport.status) {
+        console.log('Updating report status to:', selectedStatus);
         const { error: statusError } = await supabase
           .from('reports')
           .update({ status: selectedStatus })
           .eq('id', selectedReport.id);
 
-        if (statusError) throw statusError;
+        if (statusError) {
+          console.error('Error updating status:', statusError);
+          throw statusError;
+        }
       }
 
       toast({
@@ -191,10 +214,11 @@ const Dashboard = () => {
       setIsDialogOpen(false);
       loadDashboardData(); // Reload data
     } catch (error: any) {
+      console.error('Error in handleSubmitResponse:', error);
       toast({
         variant: "destructive",
         title: "Erro ao atualizar",
-        description: error.message
+        description: error.message || "Não foi possível atualizar a denúncia."
       });
     }
   };
