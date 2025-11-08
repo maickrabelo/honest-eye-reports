@@ -483,10 +483,24 @@ const Dashboard = () => {
             
             <div className="space-y-6 my-4">
               <div>
-                <h3 className="font-medium mb-2">Descrição da Denúncia</h3>
-                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
-                  {selectedReport.description}
+                <h3 className="font-medium mb-2">Resumo da Denúncia (IA)</h3>
+                <p className="text-sm text-gray-700 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  {selectedReport.ai_summary || selectedReport.description}
                 </p>
+              </div>
+
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const transcriptDialog = document.getElementById('transcript-dialog') as HTMLDialogElement;
+                    if (transcriptDialog) transcriptDialog.showModal();
+                  }}
+                  className="w-full"
+                >
+                  Ver Transcrição Completa
+                </Button>
               </div>
               
               <div className="space-y-2">
@@ -589,6 +603,35 @@ const Dashboard = () => {
           </DialogContent>
         )}
       </Dialog>
+
+      {/* Transcript Dialog */}
+      <dialog 
+        id="transcript-dialog"
+        className="p-0 rounded-lg shadow-xl backdrop:bg-black/50 max-w-3xl w-full"
+      >
+        <div className="bg-white rounded-lg">
+          <div className="p-6 border-b">
+            <h3 className="text-lg font-semibold">Transcrição Completa da Conversa</h3>
+            <p className="text-sm text-gray-500 mt-1">Registro completo da interação com a ouvidoria</p>
+          </div>
+          <div className="p-6 max-h-[60vh] overflow-y-auto">
+            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed">
+              {selectedReport?.description}
+            </pre>
+          </div>
+          <div className="p-6 border-t flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const transcriptDialog = document.getElementById('transcript-dialog') as HTMLDialogElement;
+                if (transcriptDialog) transcriptDialog.close();
+              }}
+            >
+              Fechar
+            </Button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 };

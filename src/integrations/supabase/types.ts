@@ -198,6 +198,7 @@ export type Database = {
       }
       reports: {
         Row: {
+          ai_summary: string | null
           category: string
           company_id: string
           created_at: string
@@ -215,6 +216,7 @@ export type Database = {
           urgency: string
         }
         Insert: {
+          ai_summary?: string | null
           category: string
           company_id: string
           created_at?: string
@@ -232,6 +234,7 @@ export type Database = {
           urgency?: string
         }
         Update: {
+          ai_summary?: string | null
           category?: string
           company_id?: string
           created_at?: string

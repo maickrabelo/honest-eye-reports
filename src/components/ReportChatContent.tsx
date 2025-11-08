@@ -238,6 +238,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
           company_id: companyId,
           title: summary.substring(0, 100) || "Denúncia via chat",
           description: conversationText,
+          ai_summary: summary,
           category: "Outros",
           is_anonymous: true,
         }

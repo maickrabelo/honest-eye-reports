@@ -9,6 +9,7 @@ const corsHeaders = {
 interface ReportSubmission {
   title: string;
   description: string;
+  ai_summary?: string;
   category: string;
   company_id: string;
   is_anonymous: boolean;
@@ -105,6 +106,7 @@ serve(async (req) => {
     const sanitizedData = {
       title: sanitizeInput(submission.title, 200),
       description: sanitizeInput(submission.description, 5000),
+      ai_summary: submission.ai_summary ? sanitizeInput(submission.ai_summary, 1000) : null,
       category: sanitizeInput(submission.category, 50),
       company_id: submission.company_id,
       is_anonymous: submission.is_anonymous,
