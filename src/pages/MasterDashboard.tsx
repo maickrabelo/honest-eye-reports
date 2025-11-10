@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -59,6 +59,8 @@ const MasterDashboard = () => {
   const [passwordData, setPasswordData] = useState({ entity: '', type: '', email: '', name: '', id: '' });
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -102,17 +104,76 @@ const MasterDashboard = () => {
     (manager.email && manager.email.toLowerCase().includes(sstSearchTerm.toLowerCase()))
   );
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadLogo = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('company-logos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('company-logos')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      return null;
+    }
+  };
+
   const handleAddCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
     try {
+      let logoUrl = null;
+      
+      // Upload logo if provided
+      if (logoFile) {
+        logoUrl = await uploadLogo(logoFile);
+      }
+
+      const companyName = formData.get('companyName') as string;
+      
+      // Generate slug from company name
+      const slug = companyName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+        .trim()
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-'); // Remove duplicate hyphens
+
       const { error } = await supabase.from('companies').insert({
-        name: formData.get('companyName') as string,
+        name: companyName,
         email: formData.get('companyEmail') as string,
         cnpj: formData.get('companyCNPJ') as string,
         phone: formData.get('companyPhone') as string,
         address: formData.get('companyAddress') as string,
+        logo_url: logoUrl,
+        slug: slug,
       });
 
       if (error) throw error;
@@ -122,6 +183,8 @@ const MasterDashboard = () => {
         description: "A empresa foi adicionada com sucesso."
       });
       setIsAddCompanyOpen(false);
+      setLogoFile(null);
+      setLogoPreview(null);
       loadData();
     } catch (error) {
       toast({
@@ -326,6 +389,15 @@ const MasterDashboard = () => {
                 <CardDescription>Detalhes da empresa</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {selectedCompany.logo_url && (
+                  <div className="flex justify-center mb-4">
+                    <img 
+                      src={selectedCompany.logo_url} 
+                      alt={`Logo ${selectedCompany.name}`}
+                      className="h-20 object-contain"
+                    />
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Email</Label>
@@ -557,7 +629,13 @@ const MasterDashboard = () => {
                         className="pl-10"
                       />
                     </div>
-                    <Dialog open={isAddCompanyOpen} onOpenChange={setIsAddCompanyOpen}>
+                    <Dialog open={isAddCompanyOpen} onOpenChange={(open) => {
+                      setIsAddCompanyOpen(open);
+                      if (!open) {
+                        setLogoFile(null);
+                        setLogoPreview(null);
+                      }
+                    }}>
                       <DialogTrigger asChild>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
@@ -573,6 +651,30 @@ const MasterDashboard = () => {
                         </DialogHeader>
                         <form onSubmit={handleAddCompany}>
                           <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="companyLogo">Logo da Empresa</Label>
+                              <div className="flex flex-col gap-3">
+                                <Input 
+                                  id="companyLogo" 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/gif"
+                                  onChange={handleLogoChange}
+                                  className="cursor-pointer"
+                                />
+                                {logoPreview && (
+                                  <div className="flex justify-center p-2 border rounded-lg bg-gray-50">
+                                    <img 
+                                      src={logoPreview} 
+                                      alt="Preview da logo" 
+                                      className="h-20 object-contain"
+                                    />
+                                  </div>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  Formatos aceitos: JPG, PNG, WEBP, GIF (máx. 5MB)
+                                </p>
+                              </div>
+                            </div>
                             <div className="grid gap-2">
                               <Label htmlFor="companyName">Nome da Empresa</Label>
                               <Input id="companyName" name="companyName" placeholder="Nome da empresa" required />
