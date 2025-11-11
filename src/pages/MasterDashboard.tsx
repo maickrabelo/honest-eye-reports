@@ -385,22 +385,33 @@ const MasterDashboard = () => {
       const notificationEmail2 = (formData.get('notificationEmail2') as string)?.trim();
       const notificationEmail3 = (formData.get('notificationEmail3') as string)?.trim();
 
-      const { error } = await supabase
+      const updateData = {
+        name: formData.get('companyName') as string,
+        email: formData.get('companyEmail') as string,
+        cnpj: formData.get('companyCNPJ') as string,
+        phone: formData.get('companyPhone') as string,
+        address: formData.get('companyAddress') as string,
+        notification_email_1: notificationEmail1 || null,
+        notification_email_2: notificationEmail2 || null,
+        notification_email_3: notificationEmail3 || null,
+        logo_url: logoUrl,
+      };
+
+      console.log('Updating company with data:', updateData);
+
+      const { data, error, count } = await supabase
         .from('companies')
-        .update({
-          name: formData.get('companyName') as string,
-          email: formData.get('companyEmail') as string,
-          cnpj: formData.get('companyCNPJ') as string,
-          phone: formData.get('companyPhone') as string,
-          address: formData.get('companyAddress') as string,
-          notification_email_1: notificationEmail1 || null,
-          notification_email_2: notificationEmail2 || null,
-          notification_email_3: notificationEmail3 || null,
-          logo_url: logoUrl,
-        })
-        .eq('id', editingCompany.id);
+        .update(updateData)
+        .eq('id', editingCompany.id)
+        .select();
+
+      console.log('Update result:', { data, error, count });
 
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error('Nenhuma linha foi atualizada. Verifique suas permissões.');
+      }
 
       toast({
         title: "Empresa atualizada",
@@ -412,6 +423,7 @@ const MasterDashboard = () => {
       setLogoPreview(null);
       loadData();
     } catch (error) {
+      console.error('Error updating company:', error);
       toast({
         title: "Erro ao atualizar empresa",
         description: getSafeErrorMessage(error),
