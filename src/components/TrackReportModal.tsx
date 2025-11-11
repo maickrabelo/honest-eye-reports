@@ -225,7 +225,11 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
             </Button>
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mt-2">
+              <p className="text-sm text-destructive font-medium">{error}</p>
+            </div>
+          )}
           
           {report && (
             <div className="border rounded-lg p-4 mt-2 space-y-4">
