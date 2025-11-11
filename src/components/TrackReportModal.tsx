@@ -37,11 +37,15 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     setError("");
     
     try {
+      console.log('Searching for tracking code:', reportId.toUpperCase());
+      
       const { data: reportData, error: reportError } = await supabase
         .from('reports')
         .select('*')
         .eq('tracking_code', reportId.toUpperCase())
         .single();
+
+      console.log('Search result:', { reportData, reportError });
 
       if (reportError || !reportData) {
         setReport(null);
