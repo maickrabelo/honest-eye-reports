@@ -7,30 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const mockReports = [
-  {
-    id: "REP-2025-042",
-    title: "Denúncia sobre comportamento inadequado",
-    summary: "Denúncia sobre situação de desconforto no ambiente de trabalho. O denunciante relatou problemas de conduta inadequada por parte de superiores, incluindo possíveis casos de assédio moral. Incidente ocorreu principalmente no setor comercial durante reuniões de equipe. Necessita investigação imediata.",
-    status: "Em análise",
-    date: "23/04/2025",
-    updates: [
-      { date: "23/04/2025", note: "Denúncia recebida e registrada no sistema.", author: "Sistema" },
-      { date: "24/04/2025", note: "Análise inicial concluída. Encaminhado para RH para investigação.", author: "Admin" }
-    ]
-  },
-  {
-    id: "REP-2025-041",
-    title: "Descarte inadequado de resíduos",
-    summary: "Denúncia sobre materiais tóxicos sendo descartados incorretamente, sem seguir os protocolos ambientais da empresa. Situação observada no setor de produção, área B.",
-    status: "Aberta",
-    date: "22/04/2025",
-    updates: [
-      { date: "22/04/2025", note: "Denúncia recebida e registrada no sistema.", author: "Sistema" }
-    ]
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 type TrackReportModalProps = {
   className?: string;
@@ -50,76 +27,149 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     setReportId(e.target.value);
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!reportId.trim()) {
-      setError("Por favor, insira um ID de denúncia");
+      setError("Por favor, insira um código de rastreamento");
       return;
     }
 
     setIsLoading(true);
     setError("");
     
-    setTimeout(() => {
-      const foundReport = mockReports.find(r => r.id === reportId);
-      
-      if (foundReport) {
-        setReport(foundReport);
-        setSelectedStatus(foundReport.status);
-        setError("");
-      } else {
+    try {
+      const { data: reportData, error: reportError } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('tracking_code', reportId.toUpperCase())
+        .single();
+
+      if (reportError || !reportData) {
         setReport(null);
-        setError("Denúncia não encontrada. Verifique o ID e tente novamente.");
+        setError("Denúncia não encontrada. Verifique o código e tente novamente.");
         toast({
           variant: "destructive",
           title: "Não encontrada",
-          description: "Denúncia não encontrada com o ID fornecido.",
+          description: "Denúncia não encontrada com o código fornecido.",
         });
+        setIsLoading(false);
+        return;
       }
-      
+
+      const { data: updatesData } = await supabase
+        .from('report_updates')
+        .select('*')
+        .eq('report_id', reportData.id)
+        .order('created_at', { ascending: true });
+
+      const formattedReport = {
+        id: reportData.tracking_code,
+        title: reportData.title,
+        summary: reportData.description,
+        status: reportData.status,
+        date: new Date(reportData.created_at).toLocaleDateString('pt-BR'),
+        updates: updatesData?.map(update => ({
+          date: new Date(update.created_at).toLocaleDateString('pt-BR'),
+          note: update.notes || `Status alterado para: ${update.new_status}`,
+          author: "Sistema"
+        })) || []
+      };
+
+      setReport(formattedReport);
+      setSelectedStatus(reportData.status);
+      setError("");
+    } catch (err) {
+      console.error('Erro ao buscar denúncia:', err);
+      setError("Erro ao buscar denúncia. Tente novamente.");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao buscar denúncia. Tente novamente.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleUpdateSubmit = () => {
-    if (!newUpdate.trim()) return;
+  const handleUpdateSubmit = async () => {
+    if (!newUpdate.trim() || !report) return;
     
-    const updatedReport = {
-      ...report,
-      status: selectedStatus,
-      updates: [
-        ...report.updates,
-        {
-          date: new Date().toLocaleDateString('pt-BR'),
-          note: newUpdate,
-          author: "Admin"
-        }
-      ]
-    };
+    setIsLoading(true);
     
-    setReport(updatedReport);
-    
-    const reportIndex = mockReports.findIndex(r => r.id === report.id);
-    if (reportIndex !== -1) {
-      mockReports[reportIndex] = updatedReport;
+    try {
+      const { data: reportData } = await supabase
+        .from('reports')
+        .select('id')
+        .eq('tracking_code', report.id)
+        .single();
+
+      if (!reportData) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível encontrar a denúncia.",
+        });
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('report_updates')
+        .insert({
+          report_id: reportData.id,
+          old_status: report.status,
+          new_status: selectedStatus,
+          notes: newUpdate
+        });
+
+      if (updateError) throw updateError;
+
+      if (selectedStatus !== report.status) {
+        await supabase
+          .from('reports')
+          .update({ status: selectedStatus })
+          .eq('id', reportData.id);
+      }
+
+      const updatedReport = {
+        ...report,
+        status: selectedStatus,
+        updates: [
+          ...report.updates,
+          {
+            date: new Date().toLocaleDateString('pt-BR'),
+            note: newUpdate,
+            author: "Sistema"
+          }
+        ]
+      };
+      
+      setReport(updatedReport);
+      setNewUpdate("");
+      
+      toast({
+        title: "Atualização salva",
+        description: "A denúncia foi atualizada com sucesso.",
+      });
+    } catch (err) {
+      console.error('Erro ao atualizar denúncia:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao atualizar a denúncia.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setNewUpdate("");
-    
-    toast({
-      title: "Atualização salva",
-      description: "A denúncia foi atualizada com sucesso.",
-    });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Resolvida':
+      case 'resolved':
         return <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">Resolvida</Badge>;
-      case 'Em análise':
+      case 'in_progress':
         return <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-300">Em análise</Badge>;
-      case 'Aberta':
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 border-yellow-300">Aberta</Badge>;
-      case 'Arquivada':
+      case 'pending':
+        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 border-yellow-300">Pendente</Badge>;
+      case 'archived':
         return <Badge variant="default" className="bg-gray-100 text-gray-800 border-gray-300">Arquivada</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -160,13 +210,14 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <Label htmlFor="report-id" className="mb-2 block">
-                ID da Denúncia
+                Código de Rastreamento
               </Label>
               <Input
                 id="report-id"
-                placeholder="Digite apenas os números"
+                placeholder="Ex: QKTX265"
                 value={reportId}
                 onChange={handleIdChange}
+                className="uppercase"
               />
             </div>
             <Button onClick={handleSearch} disabled={isLoading}>
@@ -200,15 +251,20 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
               
               <div>
                 <h4 className="text-sm font-medium mb-1">Status</h4>
-                <div className="flex gap-2">
-                  {["Aberta", "Em análise", "Resolvida", "Arquivada"].map((status) => (
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: "pending", label: "Pendente" },
+                    { value: "in_progress", label: "Em análise" },
+                    { value: "resolved", label: "Resolvida" },
+                    { value: "archived", label: "Arquivada" }
+                  ].map((status) => (
                     <Button
-                      key={status}
-                      variant={selectedStatus === status ? "default" : "outline"}
+                      key={status.value}
+                      variant={selectedStatus === status.value ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedStatus(status)}
+                      onClick={() => setSelectedStatus(status.value)}
                     >
-                      {status}
+                      {status.label}
                     </Button>
                   ))}
                 </div>
