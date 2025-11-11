@@ -28,13 +28,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2 } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AIAnalysisCard from '@/components/AIAnalysisCard';
 import TrackReportModal from '@/components/TrackReportModal';
 import DownloadReportButton from '@/components/DownloadReportButton';
+import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -48,6 +49,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [isLoading, setIsLoading] = useState(true);
   const [reports, setReports] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companySlug, setCompanySlug] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -67,7 +69,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         const isUuid = uuidRegex.test(identifier);
         
         try {
-          let query = supabase.from('companies').select('id');
+          let query = supabase.from('companies').select('id, slug');
           
           if (isUuid) {
             query = query.eq('id', identifier);
@@ -78,7 +80,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           const { data: company, error } = await query.maybeSingle();
           
           if (error) throw error;
-          return company?.id || null;
+          return company ? { id: company.id, slug: company.slug } : null;
         } catch (error) {
           console.error('Error fetching company:', error);
           return null;
@@ -87,15 +89,25 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
       // Prioritize embedded company ID
       if (embeddedCompanyId) {
-        const id = await fetchCompanyId(embeddedCompanyId);
-        setCompanyId(id);
+        const result = await fetchCompanyId(embeddedCompanyId);
+        if (result) {
+          setCompanyId(result.id);
+          setCompanySlug(result.slug);
+        }
       } else if (urlCompanyParam) {
         // URL has company parameter (slug or id), fetch company
-        const id = await fetchCompanyId(urlCompanyParam);
-        setCompanyId(id);
+        const result = await fetchCompanyId(urlCompanyParam);
+        if (result) {
+          setCompanyId(result.id);
+          setCompanySlug(result.slug);
+        }
       } else if (profile?.company_id) {
-        // Use profile company_id
-        setCompanyId(profile.company_id);
+        // Use profile company_id and fetch slug
+        const result = await fetchCompanyId(profile.company_id);
+        if (result) {
+          setCompanyId(result.id);
+          setCompanySlug(result.slug);
+        }
       }
     };
 
@@ -314,6 +326,22 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Link copiado!",
+        description: "O link foi copiado para a área de transferência.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return hideNavigation ? (
       <div className="flex items-center justify-center py-8">
@@ -332,8 +360,40 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
   const dashboardContent = (
     <>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-audit-primary">Dashboard</h1>
+      <div className="flex justify-between items-start mb-8 gap-6">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
+          
+          {companySlug && (
+            <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={`${window.location.origin}/report/${companySlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                >
+                  <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{window.location.origin}/report/{companySlug}</span>
+                </a>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToClipboard(`${window.location.origin}/report/${companySlug}`)}
+                  className="h-8 px-2"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <QRCodeDownloader
+                url={`${window.location.origin}/report/${companySlug}`}
+                filename={`qrcode-${companySlug}.png`}
+                size="sm"
+              />
+            </div>
+          )}
+        </div>
         <div className="flex gap-4">
           <DownloadReportButton />
           <TrackReportModal />

@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2 } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy } from "lucide-react";
+import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
 import { supabase } from "@/integrations/supabase/client";
@@ -150,6 +151,23 @@ const SSTDashboard = () => {
     setSelectedCompany(companySlug);
   };
 
+  const copyToClipboard = async (text: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Link copiado!",
+        description: "O link foi copiado para a área de transferência.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -217,10 +235,40 @@ const SSTDashboard = () => {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">{company.name}</CardTitle>
                   </CardHeader>
-                  <CardContent className="pb-2">
+                  <CardContent className="pb-2 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Total de denúncias:</span>
                       <span className="font-medium">{company.reportCount}</span>
+                    </div>
+                    
+                    <div className="pt-2 border-t space-y-2">
+                      <p className="text-xs text-gray-500 font-medium">Canal de Denúncias:</p>
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={`${window.location.origin}/report/${company.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                        >
+                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                        </a>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)}
+                          className="h-6 px-2"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <QRCodeDownloader
+                        url={`${window.location.origin}/report/${company.slug}`}
+                        filename={`qrcode-${company.slug}.png`}
+                        size="sm"
+                        className="w-full"
+                      />
                     </div>
                   </CardContent>
                   <CardFooter className="pt-0">
