@@ -23,6 +23,9 @@ type Company = {
   logo_url: string | null;
   slug: string | null;
   created_at: string;
+  notification_email_1: string | null;
+  notification_email_2: string | null;
+  notification_email_3: string | null;
 };
 
 type SSTManager = {
@@ -52,6 +55,8 @@ const MasterDashboard = () => {
   const [sstSearchTerm, setSSTSearchTerm] = useState('');
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [isAddSSTOpen, setIsAddSSTOpen] = useState(false);
+  const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedSST, setSelectedSST] = useState<SSTManager | null>(null);
   const [loading, setLoading] = useState(true);
@@ -354,6 +359,60 @@ const MasterDashboard = () => {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleOpenEditCompany = (company: Company) => {
+    setEditingCompany(company);
+    setLogoPreview(company.logo_url);
+    setIsEditCompanyOpen(true);
+  };
+
+  const handleEditCompany = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingCompany) return;
+
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      let logoUrl = editingCompany.logo_url;
+      
+      if (logoFile) {
+        logoUrl = await uploadLogo(logoFile);
+      }
+
+      const { error } = await supabase
+        .from('companies')
+        .update({
+          name: formData.get('companyName') as string,
+          email: formData.get('companyEmail') as string,
+          cnpj: formData.get('companyCNPJ') as string,
+          phone: formData.get('companyPhone') as string,
+          address: formData.get('companyAddress') as string,
+          notification_email_1: formData.get('notificationEmail1') as string || null,
+          notification_email_2: formData.get('notificationEmail2') as string || null,
+          notification_email_3: formData.get('notificationEmail3') as string || null,
+          logo_url: logoUrl,
+        })
+        .eq('id', editingCompany.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Empresa atualizada",
+        description: "As informações da empresa foram atualizadas com sucesso."
+      });
+      setIsEditCompanyOpen(false);
+      setEditingCompany(null);
+      setLogoFile(null);
+      setLogoPreview(null);
+      loadData();
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar empresa",
+        description: getSafeErrorMessage(error),
+        variant: "destructive"
+      });
     }
   };
 
@@ -702,6 +761,148 @@ const MasterDashboard = () => {
                         </form>
                       </DialogContent>
                     </Dialog>
+
+                    {/* Edit Company Dialog */}
+                    <Dialog open={isEditCompanyOpen} onOpenChange={(open) => {
+                      setIsEditCompanyOpen(open);
+                      if (!open) {
+                        setEditingCompany(null);
+                        setLogoFile(null);
+                        setLogoPreview(null);
+                      }
+                    }}>
+                      <DialogContent className="max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Editar Empresa</DialogTitle>
+                          <DialogDescription>
+                            Atualize as informações da empresa, incluindo até 3 emails para notificações de denúncias.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleEditCompany}>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanyLogo">Logo da Empresa</Label>
+                              <div className="flex flex-col gap-3">
+                                <Input 
+                                  id="editCompanyLogo" 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/gif"
+                                  onChange={handleLogoChange}
+                                  className="cursor-pointer"
+                                />
+                                {logoPreview && (
+                                  <div className="flex justify-center p-2 border rounded-lg bg-gray-50">
+                                    <img 
+                                      src={logoPreview} 
+                                      alt="Preview da logo" 
+                                      className="h-20 object-contain"
+                                    />
+                                  </div>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  Formatos aceitos: JPG, PNG, WEBP, GIF (máx. 5MB)
+                                </p>
+                              </div>
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanyName">Nome da Empresa</Label>
+                              <Input 
+                                id="editCompanyName" 
+                                name="companyName" 
+                                placeholder="Nome da empresa" 
+                                defaultValue={editingCompany?.name}
+                                required 
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanyEmail">Email Principal</Label>
+                              <Input 
+                                id="editCompanyEmail" 
+                                name="companyEmail" 
+                                type="email" 
+                                placeholder="contato@empresa.com"
+                                defaultValue={editingCompany?.email || ''}
+                                required 
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanyCNPJ">CNPJ</Label>
+                              <Input 
+                                id="editCompanyCNPJ" 
+                                name="companyCNPJ" 
+                                placeholder="00.000.000/0000-00"
+                                defaultValue={editingCompany?.cnpj || ''}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanyPhone">Telefone</Label>
+                              <Input 
+                                id="editCompanyPhone" 
+                                name="companyPhone" 
+                                placeholder="(00) 0000-0000"
+                                defaultValue={editingCompany?.phone || ''}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanyAddress">Endereço</Label>
+                              <Input 
+                                id="editCompanyAddress" 
+                                name="companyAddress" 
+                                placeholder="Endereço completo"
+                                defaultValue={editingCompany?.address || ''}
+                              />
+                            </div>
+
+                            <div className="border-t pt-4 mt-2">
+                              <Label className="text-base font-semibold mb-3 block">
+                                Emails para Notificações de Denúncias
+                              </Label>
+                              <p className="text-sm text-gray-500 mb-3">
+                                Configure até 3 emails que receberão notificações quando novas denúncias forem registradas.
+                              </p>
+                              <div className="grid gap-3">
+                                <div className="grid gap-2">
+                                  <Label htmlFor="notificationEmail1">Email de Notificação 1</Label>
+                                  <Input 
+                                    id="notificationEmail1" 
+                                    name="notificationEmail1" 
+                                    type="email" 
+                                    placeholder="email1@empresa.com"
+                                    defaultValue={editingCompany?.notification_email_1 || ''}
+                                  />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label htmlFor="notificationEmail2">Email de Notificação 2</Label>
+                                  <Input 
+                                    id="notificationEmail2" 
+                                    name="notificationEmail2" 
+                                    type="email" 
+                                    placeholder="email2@empresa.com"
+                                    defaultValue={editingCompany?.notification_email_2 || ''}
+                                  />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label htmlFor="notificationEmail3">Email de Notificação 3</Label>
+                                  <Input 
+                                    id="notificationEmail3" 
+                                    name="notificationEmail3" 
+                                    type="email" 
+                                    placeholder="email3@empresa.com"
+                                    defaultValue={editingCompany?.notification_email_3 || ''}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsEditCompanyOpen(false)}>
+                              Cancelar
+                            </Button>
+                            <Button type="submit">Salvar Alterações</Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
                   </>
                 ) : (
                   <>
@@ -826,6 +1027,15 @@ const MasterDashboard = () => {
                               </td>
                               <td className="px-4 py-4">
                                 <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleOpenEditCompany(company)}
+                                    title="Editar empresa"
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Editar
+                                  </Button>
                                   <Button 
                                     variant="outline" 
                                     size="sm" 

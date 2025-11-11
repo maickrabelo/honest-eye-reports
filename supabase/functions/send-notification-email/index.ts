@@ -33,7 +33,7 @@ serve(async (req) => {
     // Buscar dados da empresa
     const { data: company, error: companyError } = await supabase
       .from('companies')
-      .select('name, email')
+      .select('name, email, notification_email_1, notification_email_2, notification_email_3')
       .eq('id', company_id)
       .single();
 
@@ -45,7 +45,15 @@ serve(async (req) => {
       );
     }
 
-    if (!company.email) {
+    // Coletar todos os emails configurados
+    const emailAddresses = [
+      company.email,
+      company.notification_email_1,
+      company.notification_email_2,
+      company.notification_email_3
+    ].filter(email => email && email.trim() !== '');
+
+    if (emailAddresses.length === 0) {
       console.log('Company has no email configured, skipping notification');
       return new Response(
         JSON.stringify({ success: true, message: "Empresa sem email configurado" }),
@@ -53,10 +61,12 @@ serve(async (req) => {
       );
     }
 
-    // Enviar email
+    console.log(`Sending notification to ${emailAddresses.length} email(s):`, emailAddresses);
+
+    // Enviar email para todos os endereços configurados
     const emailResponse = await resend.emails.send({
       from: "Canal de Denúncias <onboarding@resend.dev>",
-      to: [company.email],
+      to: emailAddresses,
       subject: `Nova Denúncia Recebida - ${tracking_code}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -65,6 +75,7 @@ serve(async (req) => {
           </h1>
           
           <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px;">
+            <p style="margin: 10px 0;"><strong>Empresa:</strong> ${company.name}</p>
             <p style="margin: 10px 0;"><strong>Código de Rastreamento:</strong> ${tracking_code}</p>
             <p style="margin: 10px 0;"><strong>Título:</strong> ${title}</p>
             <p style="margin: 10px 0;"><strong>Categoria:</strong> ${category}</p>
