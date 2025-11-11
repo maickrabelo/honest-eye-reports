@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
@@ -37,7 +38,8 @@ import DownloadReportButton from '@/components/DownloadReportButton';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
-const Dashboard = () => {
+const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: string; hideNavigation?: boolean } = {}) => {
+  const { id: urlCompanyParam } = useParams();
   const { profile } = useRealAuth();
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,6 +47,7 @@ const Dashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [reports, setReports] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -57,13 +60,54 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (profile?.company_id) {
+    const initCompanyId = async () => {
+      // Prioritize embedded company ID
+      if (embeddedCompanyId) {
+        try {
+          const { data: company, error } = await supabase
+            .from('companies')
+            .select('id')
+            .or(`id.eq.${embeddedCompanyId},slug.eq.${embeddedCompanyId}`)
+            .single();
+          
+          if (error) throw error;
+          setCompanyId(company.id);
+        } catch (error) {
+          console.error('Error fetching company:', error);
+          setCompanyId(null);
+        }
+      } else if (urlCompanyParam) {
+        // URL has company parameter (slug or id), fetch company
+        try {
+          const { data: company, error } = await supabase
+            .from('companies')
+            .select('id')
+            .or(`id.eq.${urlCompanyParam},slug.eq.${urlCompanyParam}`)
+            .single();
+          
+          if (error) throw error;
+          setCompanyId(company.id);
+        } catch (error) {
+          console.error('Error fetching company:', error);
+          setCompanyId(null);
+        }
+      } else if (profile?.company_id) {
+        // Use profile company_id
+        setCompanyId(profile.company_id);
+      }
+    };
+
+    initCompanyId();
+  }, [embeddedCompanyId, urlCompanyParam, profile?.company_id]);
+
+  useEffect(() => {
+    if (companyId) {
       loadDashboardData();
     }
-  }, [profile?.company_id]);
+  }, [companyId]);
 
   const loadDashboardData = async () => {
-    if (!profile?.company_id) return;
+    if (!companyId) return;
     
     setIsLoading(true);
     try {
@@ -71,7 +115,7 @@ const Dashboard = () => {
       const { data: reportsData, error } = await supabase
         .from('reports')
         .select('*')
-        .eq('company_id', profile.company_id)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -172,7 +216,7 @@ const Dashboard = () => {
         old_status: selectedReport.status,
         new_status: selectedStatus,
         user_id: user.id,
-        company_id: profile?.company_id
+        company_id: companyId
       });
 
       // Insert new update
@@ -269,7 +313,11 @@ const Dashboard = () => {
   };
 
   if (isLoading) {
-    return (
+    return hideNavigation ? (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-audit-primary" />
+      </div>
+    ) : (
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
@@ -280,215 +328,203 @@ const Dashboard = () => {
     );
   }
 
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
-        <div className="audit-container">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-audit-primary">Dashboard</h1>
-            <div className="flex gap-4">
-              <DownloadReportButton />
-              <TrackReportModal />
-            </div>
-          </div>
+  const dashboardContent = (
+    <>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-audit-primary">Dashboard</h1>
+        <div className="flex gap-4">
+          <DownloadReportButton />
+          <TrackReportModal />
+        </div>
+      </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[
-              { title: "Total de Denúncias", value: stats.total.toString(), color: "bg-audit-primary" },
-              { title: "Denúncias Pendentes", value: stats.pending.toString(), color: "bg-audit-secondary" },
-              { title: "Em Análise", value: stats.inProgress.toString(), color: "bg-audit-accent" },
-              { title: "Resolvidas", value: stats.resolved.toString(), color: "bg-green-600" },
-            ].map((stat, idx) => (
-              <Card key={idx} className="card-hover">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-end">
-                    <div className="text-3xl font-bold">{stat.value}</div>
-                  </div>
-                  <div className={`h-1 w-full mt-4 ${stat.color} rounded-full`}></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
-              <Tabs defaultValue="overview" className="mb-8">
-                <TabsList className="grid grid-cols-3 mb-4 w-full max-w-md">
-                  <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                  <TabsTrigger value="departments">Departamentos</TabsTrigger>
-                  <TabsTrigger value="status">Status</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="overview">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Denúncias por Mês</CardTitle>
-                      <CardDescription>Distribuição de denúncias ao longo do último ano</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={monthlyData}
-                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="denuncias" stroke="#0F3460" strokeWidth={2} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="departments">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Denúncias por Departamento</CardTitle>
-                      <CardDescription>Distribuição do total de denúncias por área</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={departmentData}
-                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="value" name="Denúncias">
-                              {departmentData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="status">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Status das Denúncias</CardTitle>
-                      <CardDescription>Distribuição do status atual das denúncias</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={statusData}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              outerRadius={120}
-                              fill="#8884d8"
-                              dataKey="value"
-                              label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            >
-                              {statusData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-            
-            <div>
-              <AIAnalysisCard />
-            </div>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
-              <CardDescription>
-                Últimas denúncias registradas no sistema
-              </CardDescription>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[
+          { title: "Total de Denúncias", value: stats.total.toString(), color: "bg-audit-primary" },
+          { title: "Denúncias Pendentes", value: stats.pending.toString(), color: "bg-audit-secondary" },
+          { title: "Em Análise", value: stats.inProgress.toString(), color: "bg-audit-accent" },
+          { title: "Resolvidas", value: stats.resolved.toString(), color: "bg-green-600" },
+        ].map((stat, idx) => (
+          <Card key={idx} className="card-hover">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="px-4 py-3 text-left font-medium">ID</th>
-                      <th className="px-4 py-3 text-left font-medium">Título</th>
-                      <th className="px-4 py-3 text-left font-medium">Categoria</th>
-                      <th className="px-4 py-3 text-left font-medium">Status</th>
-                      <th className="px-4 py-3 text-left font-medium">Data</th>
-                      <th className="px-4 py-3 text-left font-medium">Urgência</th>
-                      <th className="px-4 py-3 text-left font-medium">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reports.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                          Nenhuma denúncia registrada ainda
-                        </td>
-                      </tr>
-                    ) : (
-                      reports.map((report) => (
-                        <tr key={report.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-4 text-audit-primary font-medium">{report.tracking_code}</td>
-                          <td className="px-4 py-4">{report.title}</td>
-                          <td className="px-4 py-4">
-                            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100">
-                              {report.category}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            {getStatusBadge(report.status)}
-                          </td>
-                          <td className="px-4 py-4 text-gray-500">
-                            {new Date(report.created_at).toLocaleDateString('pt-BR')}
-                          </td>
-                          <td className="px-4 py-4">
-                            {getUrgencyBadge(report.urgency)}
-                          </td>
-                          <td className="px-4 py-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleOpenReportDetails(report)}
-                            >
-                              Detalhes
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-bold">{stat.value}</div>
               </div>
+              <div className={`h-1 w-full mt-4 ${stat.color} rounded-full`}></div>
             </CardContent>
           </Card>
-        </div>
-      </main>
-      <Footer />
+        ))}
+      </div>
       
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="overview" className="mb-8">
+            <TabsList className="grid grid-cols-3 mb-4 w-full max-w-md">
+              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+              <TabsTrigger value="departments">Departamentos</TabsTrigger>
+              <TabsTrigger value="status">Status</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Denúncias por Mês</CardTitle>
+                  <CardDescription>Distribuição de denúncias ao longo do último ano</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={monthlyData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="denuncias" stroke="#0F3460" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="departments">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Denúncias por Departamento</CardTitle>
+                  <CardDescription>Distribuição do total de denúncias por área</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={departmentData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="value" name="Denúncias">
+                          {departmentData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="status">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Status das Denúncias</CardTitle>
+                  <CardDescription>Distribuição do status atual das denúncias</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={120}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        <div>
+          <AIAnalysisCard />
+        </div>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
+          <CardDescription>
+            Últimas denúncias registradas no sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-4 py-3 text-left font-medium">ID</th>
+                  <th className="px-4 py-3 text-left font-medium">Título</th>
+                  <th className="px-4 py-3 text-left font-medium">Categoria</th>
+                  <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-left font-medium">Data</th>
+                  <th className="px-4 py-3 text-left font-medium">Urgência</th>
+                  <th className="px-4 py-3 text-left font-medium">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                      Nenhuma denúncia registrada ainda
+                    </td>
+                  </tr>
+                ) : (
+                  reports.map((report) => (
+                    <tr key={report.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-4 text-audit-primary font-medium">{report.tracking_code}</td>
+                      <td className="px-4 py-4">{report.title}</td>
+                      <td className="px-4 py-4">
+                        <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100">
+                          {report.category}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">{getStatusBadge(report.status)}</td>
+                      <td className="px-4 py-4">{new Date(report.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-4">{getUrgencyBadge(report.urgency)}</td>
+                      <td className="px-4 py-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenReportDetails(report)}
+                        >
+                          Detalhes
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {selectedReport && (
           <DialogContent className="max-w-3xl">
@@ -656,6 +692,28 @@ const Dashboard = () => {
           </div>
         </div>
       </dialog>
+    </>
+  );
+
+  if (hideNavigation) {
+    return (
+      <div className="bg-gray-50 py-8">
+        <div className="audit-container">
+          {dashboardContent}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-grow bg-gray-50 py-8">
+        <div className="audit-container">
+          {dashboardContent}
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 };
