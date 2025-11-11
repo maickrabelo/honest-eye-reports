@@ -36,23 +36,6 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const generateReportId = () => {
-      // Generate 4 random uppercase letters
-      let letters = '';
-      for (let i = 0; i < 4; i++) {
-        letters += String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      }
-      
-      // Generate 3 random digits
-      const numbers = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      
-      return `${letters}${numbers}`;
-    };
-    
-    setReportId(generateReportId());
-  }, []);
-
   // Removed automatic scrolling - user can scroll manually if needed
 
   const scrollToBottom = () => {
@@ -312,17 +295,19 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   return (
     <>
-      <div className="mb-8 text-center">
-        <div className="flex items-center justify-center gap-4">
-          <Badge variant="outline" className="text-lg px-4 py-1 border-2 border-audit-secondary">
-            ID: {reportId}
-          </Badge>
-          <TrackReportModal />
+      {reportId && (
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center gap-4">
+            <Badge variant="outline" className="text-lg px-4 py-1 border-2 border-audit-secondary">
+              ID: {reportId}
+            </Badge>
+            <TrackReportModal />
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Guarde este ID para acompanhar sua denúncia posteriormente.
+          </p>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Guarde este ID para acompanhar sua denúncia posteriormente.
-        </p>
-      </div>
+      )}
       
       <Card className="shadow-md">
         <CardHeader>
