@@ -38,10 +38,16 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   useEffect(() => {
     const generateReportId = () => {
-      const prefix = "REP";
-      const year = new Date().getFullYear();
-      const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `${prefix}-${year}-${randomNum}`;
+      // Generate 4 random uppercase letters
+      let letters = '';
+      for (let i = 0; i < 4; i++) {
+        letters += String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      }
+      
+      // Generate 3 random digits
+      const numbers = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      
+      return `${letters}${numbers}`;
     };
     
     setReportId(generateReportId());
@@ -53,15 +59,6 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const formatReportId = (num: string) => {
-    const cleanNum = num.replace(/\D/g, '');
-    if (cleanNum.length <= 3) {
-      return `REP-${new Date().getFullYear()}-${cleanNum.padStart(3, '0')}`;
-    }
-    const year = cleanNum.slice(0, 4);
-    const seq = cleanNum.slice(4, 7);
-    return `REP-${year}-${seq}`;
-  };
 
   const handleSendMessage = async () => {
     if (input.trim() === "") return;
