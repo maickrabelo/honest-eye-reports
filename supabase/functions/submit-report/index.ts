@@ -134,6 +134,22 @@ serve(async (req) => {
       );
     }
 
+    // Enviar notificação por email (sem aguardar para não bloquear a resposta)
+    supabase.functions.invoke('send-notification-email', {
+      body: {
+        company_id: data.company_id,
+        tracking_code: data.tracking_code,
+        title: data.title,
+        category: data.category,
+      }
+    }).then(({ error }) => {
+      if (error) {
+        console.error('Error sending notification email:', error);
+      }
+    }).catch(err => {
+      console.error('Failed to invoke notification function:', err);
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
