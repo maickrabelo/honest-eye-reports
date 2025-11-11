@@ -381,6 +381,10 @@ const MasterDashboard = () => {
         logoUrl = await uploadLogo(logoFile);
       }
 
+      const notificationEmail1 = (formData.get('notificationEmail1') as string)?.trim();
+      const notificationEmail2 = (formData.get('notificationEmail2') as string)?.trim();
+      const notificationEmail3 = (formData.get('notificationEmail3') as string)?.trim();
+
       const { error } = await supabase
         .from('companies')
         .update({
@@ -389,9 +393,9 @@ const MasterDashboard = () => {
           cnpj: formData.get('companyCNPJ') as string,
           phone: formData.get('companyPhone') as string,
           address: formData.get('companyAddress') as string,
-          notification_email_1: formData.get('notificationEmail1') as string || null,
-          notification_email_2: formData.get('notificationEmail2') as string || null,
-          notification_email_3: formData.get('notificationEmail3') as string || null,
+          notification_email_1: notificationEmail1 || null,
+          notification_email_2: notificationEmail2 || null,
+          notification_email_3: notificationEmail3 || null,
           logo_url: logoUrl,
         })
         .eq('id', editingCompany.id);
