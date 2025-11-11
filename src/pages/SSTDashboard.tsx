@@ -1,74 +1,150 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle } from "lucide-react";
+import { Search, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
+import { supabase } from "@/integrations/supabase/client";
+import { useRealAuth } from "@/contexts/RealAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock companies for the SST dashboard
-const mockCompanies = [
-  {
-    id: "company1",
-    name: "Tech Solutions Ltda",
-    logo: "https://via.placeholder.com/150?text=TechSol",
-    reportCount: 12,
-    newReports: 3,
-    slug: "tech-solutions"
-  },
-  {
-    id: "company2",
-    name: "Indústrias ABC",
-    logo: "https://via.placeholder.com/150?text=ABC",
-    reportCount: 8,
-    newReports: 0,
-    slug: "industrias-abc"
-  },
-  {
-    id: "company3",
-    name: "Comércio XYZ",
-    logo: "https://via.placeholder.com/150?text=XYZ",
-    reportCount: 5,
-    newReports: 1,
-    slug: "comercio-xyz"
-  },
-  {
-    id: "company4",
-    name: "Serviços Especializados",
-    logo: "https://via.placeholder.com/150?text=SE",
-    reportCount: 15,
-    newReports: 0,
-    slug: "servicos-especializados"
-  },
-  {
-    id: "company5",
-    name: "Construtora Delta",
-    logo: "https://via.placeholder.com/150?text=Delta",
-    reportCount: 23,
-    newReports: 5,
-    slug: "construtora-delta"
-  },
-  {
-    id: "company6",
-    name: "Transportadora Rápida",
-    logo: "https://via.placeholder.com/150?text=TR",
-    reportCount: 7,
-    newReports: 2,
-    slug: "transportadora-rapida"
-  },
-];
+interface Company {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  slug: string;
+  reportCount: number;
+  newReports: number;
+}
 
 const SSTDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  
-  const filteredCompanies = mockCompanies.filter(company => 
+  const { user, role, isLoading: authLoading } = useRealAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+      if (role !== 'sst') {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar esta página.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+      fetchCompanies();
+    }
+  }, [user, role, authLoading, navigate, toast]);
+
+  const fetchCompanies = async () => {
+    try {
+      setIsLoading(true);
+
+      // Get user's profile to find sst_manager_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('sst_manager_id')
+        .eq('id', user?.id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (!profileData?.sst_manager_id) {
+        toast({
+          title: "Erro",
+          description: "Seu perfil não está vinculado a uma gestora SST.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Get companies assigned to this SST manager
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('company_sst_assignments')
+        .select('company_id')
+        .eq('sst_manager_id', profileData.sst_manager_id);
+
+      if (assignmentsError) throw assignmentsError;
+
+      if (!assignmentsData || assignmentsData.length === 0) {
+        setCompanies([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const companyIds = assignmentsData.map(a => a.company_id);
+
+      // Get company details
+      const { data: companiesData, error: companiesError } = await supabase
+        .from('companies')
+        .select('id, name, logo_url, slug')
+        .in('id', companyIds);
+
+      if (companiesError) throw companiesError;
+
+      // Get report counts for each company
+      const companiesWithCounts = await Promise.all(
+        (companiesData || []).map(async (company) => {
+          const { count: totalCount } = await supabase
+            .from('reports')
+            .select('*', { count: 'exact', head: true })
+            .eq('company_id', company.id);
+
+          const { count: newCount } = await supabase
+            .from('reports')
+            .select('*', { count: 'exact', head: true })
+            .eq('company_id', company.id)
+            .eq('status', 'pending');
+
+          return {
+            ...company,
+            reportCount: totalCount || 0,
+            newReports: newCount || 0,
+          };
+        })
+      );
+
+      setCompanies(companiesWithCounts);
+    } catch (error: any) {
+      console.error('Error fetching companies:', error);
+      toast({
+        title: "Erro ao carregar empresas",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredCompanies = companies.filter(company => 
     company.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (authLoading || isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-green-800" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const handleCompanyClick = (companySlug: string) => {
     setSelectedCompany(companySlug);
@@ -125,11 +201,17 @@ const SSTDashboard = () => {
                       </div>
                     )}
                     <div className="h-32 bg-gray-100 flex items-center justify-center p-4">
-                      <img 
-                        src={company.logo} 
-                        alt={`Logo ${company.name}`} 
-                        className="max-h-full max-w-full object-contain"
-                      />
+                      {company.logo_url ? (
+                        <img 
+                          src={company.logo_url} 
+                          alt={`Logo ${company.name}`} 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-gray-400 text-4xl font-bold">
+                          {company.name.substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <CardHeader className="pb-2">
