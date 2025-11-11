@@ -61,36 +61,38 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
   useEffect(() => {
     const initCompanyId = async () => {
+      const fetchCompanyId = async (identifier: string) => {
+        // Check if identifier is a valid UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isUuid = uuidRegex.test(identifier);
+        
+        try {
+          let query = supabase.from('companies').select('id');
+          
+          if (isUuid) {
+            query = query.eq('id', identifier);
+          } else {
+            query = query.eq('slug', identifier);
+          }
+          
+          const { data: company, error } = await query.maybeSingle();
+          
+          if (error) throw error;
+          return company?.id || null;
+        } catch (error) {
+          console.error('Error fetching company:', error);
+          return null;
+        }
+      };
+
       // Prioritize embedded company ID
       if (embeddedCompanyId) {
-        try {
-          const { data: company, error } = await supabase
-            .from('companies')
-            .select('id')
-            .or(`id.eq.${embeddedCompanyId},slug.eq.${embeddedCompanyId}`)
-            .single();
-          
-          if (error) throw error;
-          setCompanyId(company.id);
-        } catch (error) {
-          console.error('Error fetching company:', error);
-          setCompanyId(null);
-        }
+        const id = await fetchCompanyId(embeddedCompanyId);
+        setCompanyId(id);
       } else if (urlCompanyParam) {
         // URL has company parameter (slug or id), fetch company
-        try {
-          const { data: company, error } = await supabase
-            .from('companies')
-            .select('id')
-            .or(`id.eq.${urlCompanyParam},slug.eq.${urlCompanyParam}`)
-            .single();
-          
-          if (error) throw error;
-          setCompanyId(company.id);
-        } catch (error) {
-          console.error('Error fetching company:', error);
-          setCompanyId(null);
-        }
+        const id = await fetchCompanyId(urlCompanyParam);
+        setCompanyId(id);
       } else if (profile?.company_id) {
         // Use profile company_id
         setCompanyId(profile.company_id);
