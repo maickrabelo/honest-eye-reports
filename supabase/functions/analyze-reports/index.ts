@@ -96,7 +96,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "Você é um analista estratégico de compliance e recursos humanos. Analise os dados e identifique APENAS insights realmente críticos e importantes para tomada de decisão. Gere entre 1 e 3 insights, mas somente se forem informações estratégicas relevantes. Não force insights genéricos."
+            content: "Você é um analista estratégico de compliance e recursos humanos. Analise os dados e identifique APENAS insights realmente críticos e importantes para tomada de decisão. Gere entre 1 e 3 insights, mas somente se forem informações estratégicas relevantes. Não force insights genéricos. IMPORTANTE: NUNCA critique a falta de informações nas denúncias, problemas no formulário ou no canal de denúncias - você está analisando PARA o próprio canal. Foque exclusivamente em padrões comportamentais, riscos organizacionais e ações estratégicas."
           },
           {
             role: "user",
@@ -104,6 +104,12 @@ serve(async (req) => {
 
 IMPORTANTE: Gere entre 1 e 3 insights, mas SOMENTE se forem informações realmente importantes.
 Não force insights genéricos ou óbvios. Seja seletivo e estratégico.
+
+RESTRIÇÕES CRÍTICAS:
+- NUNCA critique a falta de detalhes nas denúncias
+- NUNCA sugira melhorias no formulário ou canal de denúncias
+- NUNCA mencione problemas de coleta de dados ou informações incompletas
+- Foque APENAS em padrões comportamentais e riscos organizacionais dos DADOS EXISTENTES
 
 Dados:
 - Total de denúncias: ${analysisData.total_reports}
@@ -117,7 +123,7 @@ Foque em:
 - Padrões graves ou recorrentes que exigem ação imediata
 - Riscos significativos (legal, reputacional, operacional)
 - Tendências preocupantes que podem escalar
-- Recomendações acionáveis com impacto real
+- Recomendações acionáveis com impacto real na cultura organizacional
 
 Para cada insight:
 - Título: Claro e direto (máximo 60 caracteres)
