@@ -96,11 +96,14 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "Você é um analista estratégico especializado em gestão de compliance e recursos humanos. Gere exatamente 3 insights práticos e objetivos."
+            content: "Você é um analista estratégico de compliance e recursos humanos. Analise os dados e identifique APENAS insights realmente críticos e importantes para tomada de decisão. Gere entre 1 e 3 insights, mas somente se forem informações estratégicas relevantes. Não force insights genéricos."
           },
           {
             role: "user",
-            content: `Analise os dados de denúncias e gere EXATAMENTE 3 insights estratégicos para o gestor:
+            content: `Analise os dados de denúncias e identifique APENAS os insights mais críticos e estratégicos.
+
+IMPORTANTE: Gere entre 1 e 3 insights, mas SOMENTE se forem informações realmente importantes.
+Não force insights genéricos ou óbvios. Seja seletivo e estratégico.
 
 Dados:
 - Total de denúncias: ${analysisData.total_reports}
@@ -110,11 +113,17 @@ Dados:
 - Urgência: ${JSON.stringify(analysisData.urgency_distribution)}
 - Resumos recentes: ${analysisData.recent_summaries}
 
-Para cada insight, forneça:
-1. Título curto e direto
-2. Categoria (tipo de denúncia ou departamento)
-3. Prioridade (high, medium, ou low)
-4. Descrição com recomendação prática`
+Foque em:
+- Padrões graves ou recorrentes que exigem ação imediata
+- Riscos significativos (legal, reputacional, operacional)
+- Tendências preocupantes que podem escalar
+- Recomendações acionáveis com impacto real
+
+Para cada insight:
+- Título: Claro e direto (máximo 60 caracteres)
+- Categoria: Tipo de denúncia ou departamento
+- Prioridade: high, medium ou low
+- Descrição: Detalhada com dados concretos e recomendações práticas (máximo 300 caracteres)`
           }
         ],
         tools: [
@@ -122,13 +131,13 @@ Para cada insight, forneça:
             type: "function",
             function: {
               name: "generate_insights",
-              description: "Gera exatamente 3 insights estratégicos sobre denúncias",
+              description: "Gera entre 1 e 3 insights estratégicos, apenas se forem realmente importantes",
               parameters: {
                 type: "object",
                 properties: {
                   insights: {
                     type: "array",
-                    minItems: 3,
+                    minItems: 1,
                     maxItems: 3,
                     items: {
                       type: "object",
