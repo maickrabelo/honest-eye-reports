@@ -178,8 +178,54 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
       console.log("Summary generated:", cleanSummary);
       
+      // Extract category and department from conversation
+      const { data: classificationData, error: classificationError } = await supabase.functions.invoke('chat-report', {
+        body: { 
+          messages: [
+            {
+              role: "system",
+              content: `Você é um classificador de denúncias. Analise a conversa e retorne APENAS um JSON válido (sem markdown) com:
+              {
+                "category": "uma das opções: Assédio, Discriminação, Fraude, Segurança, Conflito, Produção, RH, TI, Financeiro, Comercial, Outro",
+                "department": "nome do departamento/setor mencionado ou null se não mencionado"
+              }`
+            },
+            {
+              role: "user",
+              content: `Classifique esta denúncia:\n\n${conversationText}`
+            }
+          ]
+        },
+        headers: {
+          'x-session-id': sessionId,
+          'x-company-id': companyId || ''
+        }
+      });
+
+      let category = "Outros";
+      let department = null;
+
+      if (!classificationError && classificationData?.choices?.[0]?.message?.content) {
+        try {
+          const classification = JSON.parse(
+            classificationData.choices[0].message.content
+              .replace(/```json\n?/g, '')
+              .replace(/```\n?/g, '')
+              .trim()
+          );
+          category = classification.category || "Outros";
+          department = classification.department || null;
+          console.log("Classification extracted:", { category, department });
+        } catch (e) {
+          console.error("Error parsing classification:", e);
+        }
+      }
+      
       setSummary(cleanSummary);
       setIsComplete(true);
+      
+      // Store classification for later use
+      (window as any).__reportClassification = { category, department };
     } catch (error) {
       console.error("Error in handleFinishReport:", error);
       toast({
@@ -211,6 +257,12 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
         .map(m => `${m.role === "user" ? "Denunciante" : "Ouvidoria"}: ${m.content}`)
         .join("\n\n");
 
+      // Get classification from previous analysis
+      const classification = (window as any).__reportClassification || { 
+        category: "Outros", 
+        department: null 
+      };
+
       // Use the submit-report edge function instead of direct insert
       const { data, error } = await supabase.functions.invoke('submit-report', {
         body: {
@@ -218,7 +270,8 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
           title: summary.substring(0, 100) || "Denúncia via chat",
           description: conversationText,
           ai_summary: summary,
-          category: "Outros",
+          category: classification.category,
+          department: classification.department,
           is_anonymous: true,
         }
       });
