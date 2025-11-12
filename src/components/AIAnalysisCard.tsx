@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertTriangle, RefreshCw, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 
@@ -11,6 +12,7 @@ const AIAnalysisCard = () => {
   const { profile } = useRealAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   
   useEffect(() => {
     if (profile?.company_id) {
@@ -89,51 +91,69 @@ const AIAnalysisCard = () => {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-xl flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2 text-audit-secondary" />
-              Análise de IA
-            </CardTitle>
-            <CardDescription>
-              Insights automáticos baseados em tendências das denúncias
-            </CardDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={loadAnalysis} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="h-[200px] flex items-center justify-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-audit-primary/50" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {insights.map((insight) => (
-              <div key={insight.id} className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex gap-2 items-center">
-                    <Badge variant="outline" className="bg-gray-100">
-                      {insight.category}
-                    </Badge>
-                    {getAlertBadge(insight.alert)}
-                  </div>
-                  <div className="text-sm font-medium flex items-center">
-                    Tendência: {getTrendIcon(insight.trend)} {insight.trend}
-                  </div>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card>
+        <CardHeader className="pb-3">
+          <CollapsibleTrigger className="w-full">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-audit-secondary" />
+                <div className="text-left">
+                  <CardTitle className="text-xl">Análise de IA</CardTitle>
+                  <CardDescription className="text-sm">
+                    {insights.length} {insights.length === 1 ? 'insight' : 'insights'} disponíveis
+                  </CardDescription>
                 </div>
-                <p className="text-sm">{insight.message}</p>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    loadAnalysis();
+                  }} 
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+                <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </CollapsibleTrigger>
+        </CardHeader>
+        
+        <CollapsibleContent>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[150px] flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-audit-primary/50" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {insights.map((insight) => (
+                  <div key={insight.id} className="border rounded-lg p-4 bg-muted/30">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex gap-2 items-center">
+                        <Badge variant="outline" className="bg-background">
+                          {insight.category}
+                        </Badge>
+                        {getAlertBadge(insight.alert)}
+                      </div>
+                      <div className="text-sm font-medium flex items-center">
+                        Tendência: {getTrendIcon(insight.trend)} {insight.trend}
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground">{insight.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
 
