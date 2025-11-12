@@ -24,132 +24,43 @@ const AIAnalysisCard = () => {
     setIsLoading(true);
     
     try {
-      // Buscar denúncias dos últimos 60 dias
-      const sixtyDaysAgo = new Date();
-      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-      
-      const { data: recentReports, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('company_id', profile.company_id)
-        .gte('created_at', sixtyDaysAgo.toISOString());
-
-      if (error) throw error;
-
-      // Buscar denúncias dos 60 dias anteriores para comparação
-      const oneHundredTwentyDaysAgo = new Date();
-      oneHundredTwentyDaysAgo.setDate(oneHundredTwentyDaysAgo.getDate() - 120);
-
-      const { data: previousReports, error: prevError } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('company_id', profile.company_id)
-        .gte('created_at', oneHundredTwentyDaysAgo.toISOString())
-        .lt('created_at', sixtyDaysAgo.toISOString());
-
-      if (prevError) throw prevError;
-
-      const generatedInsights: any[] = [];
-
-      // Análise por categoria
-      const categoryCount: { [key: string]: number } = {};
-      const prevCategoryCount: { [key: string]: number } = {};
-
-      recentReports?.forEach(report => {
-        const cat = report.category || 'Outros';
-        categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+      const { data, error } = await supabase.functions.invoke('analyze-reports', {
+        body: { company_id: profile.company_id }
       });
 
-      previousReports?.forEach(report => {
-        const cat = report.category || 'Outros';
-        prevCategoryCount[cat] = (prevCategoryCount[cat] || 0) + 1;
-      });
+      if (error) {
+        console.error('Error calling analyze-reports:', error);
+        throw error;
+      }
 
-      // Gerar insights por categoria
-      Object.keys(categoryCount).forEach((category, index) => {
-        const current = categoryCount[category];
-        const previous = prevCategoryCount[category] || 0;
-        const change = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+      if (data?.insights) {
+        const formattedInsights = data.insights.map((insight: any, index: number) => ({
+          id: index + 1,
+          category: insight.category,
+          alert: insight.priority === 'high' ? 'Alto' : insight.priority === 'medium' ? 'Médio' : 'Baixo',
+          trend: insight.priority === 'high' ? 'crescente' : 'estável',
+          message: `${insight.title}: ${insight.description}`
+        }));
         
-        let alert = 'Baixo';
-        let trend = 'estável';
-        let message = '';
-
-        if (change > 30) {
-          alert = 'Alto';
-          trend = 'crescente';
-          message = `Aumento significativo de ${Math.round(change)}% em denúncias de ${category} nos últimos 60 dias. Recomenda-se investigação prioritária.`;
-        } else if (change > 10) {
-          alert = 'Médio';
-          trend = 'crescente';
-          message = `Aumento moderado de ${Math.round(change)}% em denúncias de ${category}. Monitoramento contínuo recomendado.`;
-        } else if (change < -10) {
-          alert = 'Baixo';
-          trend = 'decrescente';
-          message = `Redução de ${Math.abs(Math.round(change))}% nas denúncias de ${category}. Continue monitorando as práticas atuais.`;
-        } else {
-          alert = 'Baixo';
-          trend = 'estável';
-          message = `Denúncias de ${category} mantêm-se estáveis. Total: ${current} denúncias nos últimos 60 dias.`;
-        }
-
-        if (current >= 3) { // Só mostra insights para categorias com pelo menos 3 denúncias
-          generatedInsights.push({
-            id: index + 1,
-            category,
-            alert,
-            trend,
-            message,
-          });
-        }
-      });
-
-      // Análise por departamento
-      const deptCount: { [key: string]: number } = {};
-      recentReports?.forEach(report => {
-        if (report.department) {
-          deptCount[report.department] = (deptCount[report.department] || 0) + 1;
-        }
-      });
-
-      // Identificar departamento com mais denúncias
-      const maxDept = Object.entries(deptCount).reduce((a, b) => a[1] > b[1] ? a : b, ['', 0]);
-      if (maxDept[1] >= 3) {
-        generatedInsights.push({
-          id: generatedInsights.length + 1,
-          category: maxDept[0],
-          alert: maxDept[1] > 5 ? 'Alto' : 'Médio',
-          trend: 'crescente',
-          message: `Departamento ${maxDept[0]} concentra ${maxDept[1]} denúncias nos últimos 60 dias. Análise detalhada recomendada.`,
-        });
-      }
-
-      // Análise de urgência
-      const highUrgency = recentReports?.filter(r => r.urgency === 'high').length || 0;
-      if (highUrgency > 0) {
-        generatedInsights.push({
-          id: generatedInsights.length + 1,
-          category: 'Urgência Alta',
-          alert: 'Alto',
-          trend: 'crescente',
-          message: `${highUrgency} denúncia${highUrgency > 1 ? 's' : ''} de alta urgência ${highUrgency > 1 ? 'foram' : 'foi'} registrada${highUrgency > 1 ? 's' : ''} recentemente. Atenção imediata necessária.`,
-        });
-      }
-
-      if (generatedInsights.length === 0) {
-        generatedInsights.push({
+        setInsights(formattedInsights);
+      } else {
+        setInsights([{
           id: 1,
           category: 'Geral',
           alert: 'Baixo',
           trend: 'estável',
-          message: 'Nenhuma anomalia detectada. O volume de denúncias está dentro dos padrões esperados.',
-        });
+          message: 'Nenhuma análise disponível no momento.'
+        }]);
       }
-
-      setInsights(generatedInsights.slice(0, 3)); // Limita a 3 insights principais
     } catch (error) {
       console.error('Error loading analysis:', error);
-      setInsights([]);
+      setInsights([{
+        id: 1,
+        category: 'Erro',
+        alert: 'Baixo',
+        trend: 'estável',
+        message: 'Não foi possível carregar a análise de IA. Tente novamente mais tarde.'
+      }]);
     } finally {
       setIsLoading(false);
     }

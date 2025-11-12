@@ -1,5 +1,8 @@
 project_id = "ovednzilplbewpzpvxnf"
 
+[functions.analyze-reports]
+# Requires authentication
+
 [functions.chat-report]
 verify_jwt = false
 
