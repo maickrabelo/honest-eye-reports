@@ -112,6 +112,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
           title: "Erro",
           description: "Não foi possível encontrar a denúncia.",
         });
+        setIsLoading(false);
         return;
       }
 
@@ -120,28 +121,24 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
         .insert({
           report_id: reportData.id,
           old_status: report.status,
-          new_status: selectedStatus,
-          notes: newUpdate
+          new_status: report.status,
+          notes: newUpdate,
+          user_id: null
         });
 
-      if (updateError) throw updateError;
-
-      if (selectedStatus !== report.status) {
-        await supabase
-          .from('reports')
-          .update({ status: selectedStatus })
-          .eq('id', reportData.id);
+      if (updateError) {
+        console.error('Error inserting update:', updateError);
+        throw updateError;
       }
 
       const updatedReport = {
         ...report,
-        status: selectedStatus,
         updates: [
           ...report.updates,
           {
             date: new Date().toLocaleDateString('pt-BR'),
             note: newUpdate,
-            author: "Sistema"
+            author: "Público"
           }
         ]
       };
@@ -150,15 +147,15 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
       setNewUpdate("");
       
       toast({
-        title: "Atualização salva",
-        description: "A denúncia foi atualizada com sucesso.",
+        title: "Comentário adicionado",
+        description: "Seu comentário foi registrado com sucesso.",
       });
     } catch (err) {
-      console.error('Erro ao atualizar denúncia:', err);
+      console.error('Erro ao adicionar comentário:', err);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Erro ao atualizar a denúncia.",
+        description: "Não foi possível adicionar o comentário. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -255,27 +252,6 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
               <div>
                 <h4 className="text-sm font-medium mb-1">Data de Registro</h4>
                 <p className="text-sm">{report.date}</p>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium mb-1">Status</h4>
-                <div className="flex gap-2 flex-wrap">
-                  {[
-                    { value: "pending", label: "Pendente" },
-                    { value: "in_progress", label: "Em análise" },
-                    { value: "resolved", label: "Resolvida" },
-                    { value: "archived", label: "Arquivada" }
-                  ].map((status) => (
-                    <Button
-                      key={status.value}
-                      variant={selectedStatus === status.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedStatus(status.value)}
-                    >
-                      {status.label}
-                    </Button>
-                  ))}
-                </div>
               </div>
               
               <div>
