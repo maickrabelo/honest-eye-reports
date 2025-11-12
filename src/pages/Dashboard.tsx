@@ -215,7 +215,20 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   };
 
   const handleSubmitResponse = async () => {
-    if (!responseText.trim() || !selectedReport) return;
+    if (!selectedReport) return;
+
+    // Validar se há mudança de status ou texto
+    const hasStatusChange = selectedStatus !== selectedReport.status;
+    const hasNotes = responseText.trim().length > 0;
+
+    if (!hasStatusChange && !hasNotes) {
+      toast({
+        variant: "destructive",
+        title: "Nenhuma alteração",
+        description: "Altere o status ou adicione uma nota para salvar.",
+      });
+      return;
+    }
 
     try {
       // Get current user
@@ -230,27 +243,38 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         old_status: selectedReport.status,
         new_status: selectedStatus,
         user_id: user.id,
-        company_id: companyId
+        company_id: companyId,
+        has_notes: hasNotes
       });
 
-      // Insert new update
-      const { error: updateError } = await supabase
-        .from('report_updates')
-        .insert({
+      // Insert new update only if there's a status change or notes
+      if (hasStatusChange || hasNotes) {
+        const updateData: any = {
           report_id: selectedReport.id,
           user_id: user.id,
           old_status: selectedReport.status,
           new_status: selectedStatus,
-          notes: responseText
-        });
+        };
 
-      if (updateError) {
-        console.error('Error inserting update:', updateError);
-        throw updateError;
+        // Only add notes if they exist
+        if (hasNotes) {
+          updateData.notes = responseText;
+        } else {
+          updateData.notes = `Status alterado de ${selectedReport.status} para ${selectedStatus}`;
+        }
+
+        const { error: updateError } = await supabase
+          .from('report_updates')
+          .insert(updateData);
+
+        if (updateError) {
+          console.error('Error inserting update:', updateError);
+          throw updateError;
+        }
       }
 
       // Update report status if changed
-      if (selectedStatus !== selectedReport.status) {
+      if (hasStatusChange) {
         console.log('Updating report status to:', selectedStatus);
         const { error: statusError } = await supabase
           .from('reports')
@@ -696,13 +720,16 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               </div>
               
               <div>
-                <h3 className="font-medium mb-3">Adicionar Atualização</h3>
+                <h3 className="font-medium mb-3">Adicionar Atualização (Opcional)</h3>
                 <div className="space-y-3">
                   <Textarea
-                    placeholder="Adicione uma atualização ou comentário..."
+                    placeholder="Adicione uma atualização ou comentário (opcional)..."
                     value={responseText}
                     onChange={(e) => setResponseText(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Você pode salvar apenas alterando o status, sem adicionar uma nota.
+                  </p>
                 </div>
               </div>
             </div>
@@ -716,7 +743,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               </Button>
               <Button 
                 onClick={handleSubmitResponse}
-                disabled={!responseText.trim() && selectedStatus === selectedReport.status}
+                disabled={selectedStatus === selectedReport.status && !responseText.trim()}
               >
                 <Check className="mr-2 h-4 w-4" />
                 Salvar Alterações
