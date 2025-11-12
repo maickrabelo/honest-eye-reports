@@ -589,7 +589,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {selectedReport && (
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex justify-between items-center">
                 <span>{selectedReport.title}</span>
@@ -603,7 +603,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-6 my-4">
+            <div className="space-y-6 my-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <h3 className="font-medium mb-2">Resumo da Denúncia (IA)</h3>
                 <p className="text-sm text-gray-700 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -649,7 +649,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               
               <div>
                 <h3 className="font-medium mb-3">Histórico de Atualizações</h3>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
                   {selectedReport.updates?.length === 0 ? (
                     <p className="text-sm text-gray-500">Nenhuma atualização ainda</p>
                   ) : (
