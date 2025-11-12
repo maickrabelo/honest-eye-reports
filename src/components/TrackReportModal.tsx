@@ -199,7 +199,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
           Acompanhar Denúncia
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Acompanhar Denúncia</DialogTitle>
           <DialogDescription>
@@ -207,7 +207,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 overflow-y-auto flex-1">
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <Label htmlFor="report-id" className="mb-2 block">
@@ -276,7 +276,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
               
               <div>
                 <h4 className="text-sm font-medium mb-2">Histórico de Atualizações</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                   {report.updates.map((update: any, idx: number) => (
                     <div key={idx} className="bg-muted/50 p-2 rounded text-sm">
                       <div className="flex justify-between">
