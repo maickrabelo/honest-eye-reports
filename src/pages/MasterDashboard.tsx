@@ -56,7 +56,9 @@ const MasterDashboard = () => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [isAddSSTOpen, setIsAddSSTOpen] = useState(false);
   const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
+  const [isEditSSTOpen, setIsEditSSTOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [editingSST, setEditingSST] = useState<SSTManager | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedSST, setSelectedSST] = useState<SSTManager | null>(null);
   const [loading, setLoading] = useState(true);
@@ -390,6 +392,71 @@ const MasterDashboard = () => {
     setIsEditCompanyOpen(true);
   };
 
+  const handleOpenEditSST = (sst: SSTManager) => {
+    setEditingSST(sst);
+    setSstLogoPreview(sst.logo_url);
+    setIsEditSSTOpen(true);
+  };
+
+  const handleEditSST = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingSST) return;
+
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      let logoUrl = editingSST.logo_url;
+      
+      if (sstLogoFile) {
+        logoUrl = await uploadLogo(sstLogoFile);
+      }
+
+      const updateData = {
+        name: formData.get('sstName') as string,
+        email: formData.get('sstEmail') as string,
+        cnpj: formData.get('sstCNPJ') as string,
+        phone: formData.get('sstPhone') as string,
+        address: formData.get('sstAddress') as string,
+        logo_url: logoUrl,
+      };
+
+      const { data, error } = await supabase
+        .from('sst_managers')
+        .update(updateData)
+        .eq('id', editingSST.id)
+        .select();
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error('Nenhuma linha foi atualizada. Verifique suas permissões.');
+      }
+
+      toast({
+        title: "Gestora SST atualizada",
+        description: "As informações da gestora SST foram atualizadas com sucesso."
+      });
+      setIsEditSSTOpen(false);
+      setEditingSST(null);
+      setSstLogoFile(null);
+      setSstLogoPreview(null);
+      
+      // Update selectedSST if it's the one being edited
+      if (selectedSST && selectedSST.id === editingSST.id) {
+        setSelectedSST(data[0]);
+      }
+      
+      loadData();
+    } catch (error) {
+      console.error('Error updating SST:', error);
+      toast({
+        title: "Erro ao atualizar gestora SST",
+        description: getSafeErrorMessage(error),
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleEditCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingCompany) return;
@@ -615,6 +682,27 @@ const MasterDashboard = () => {
                 <CardDescription>Detalhes da gestora SST</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {selectedSST.logo_url && (
+                  <div className="flex justify-center mb-4">
+                    <img 
+                      src={selectedSST.logo_url} 
+                      alt={`Logo ${selectedSST.name}`}
+                      className="h-20 object-contain"
+                    />
+                  </div>
+                )}
+                
+                <div className="mb-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleOpenEditSST(selectedSST)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar Informações e Logo
+                  </Button>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Email</Label>
@@ -934,6 +1022,106 @@ const MasterDashboard = () => {
                           </div>
                           <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsEditCompanyOpen(false)}>
+                              Cancelar
+                            </Button>
+                            <Button type="submit">Salvar Alterações</Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Edit SST Dialog */}
+                    <Dialog open={isEditSSTOpen} onOpenChange={(open) => {
+                      setIsEditSSTOpen(open);
+                      if (!open) {
+                        setEditingSST(null);
+                        setSstLogoFile(null);
+                        setSstLogoPreview(null);
+                      }
+                    }}>
+                      <DialogContent className="max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Editar Gestora SST</DialogTitle>
+                          <DialogDescription>
+                            Atualize as informações da gestora SST e sua logo.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleEditSST}>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstLogo">Logo da Gestora SST</Label>
+                              <div className="flex flex-col gap-3">
+                                <Input 
+                                  id="editSstLogo" 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/gif"
+                                  onChange={handleSSTLogoChange}
+                                  className="cursor-pointer"
+                                />
+                                {sstLogoPreview && (
+                                  <div className="flex justify-center p-2 border rounded-lg bg-gray-50">
+                                    <img 
+                                      src={sstLogoPreview} 
+                                      alt="Preview da logo" 
+                                      className="h-20 object-contain"
+                                    />
+                                  </div>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  Formatos aceitos: JPG, PNG, WEBP, GIF (máx. 5MB)
+                                </p>
+                              </div>
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstName">Nome da Gestora</Label>
+                              <Input 
+                                id="editSstName" 
+                                name="sstName" 
+                                placeholder="Nome da gestora SST" 
+                                defaultValue={editingSST?.name}
+                                required 
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstEmail">Email</Label>
+                              <Input 
+                                id="editSstEmail" 
+                                name="sstEmail" 
+                                type="email" 
+                                placeholder="contato@sst.com"
+                                defaultValue={editingSST?.email || ''}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstCNPJ">CNPJ</Label>
+                              <Input 
+                                id="editSstCNPJ" 
+                                name="sstCNPJ" 
+                                placeholder="00.000.000/0000-00"
+                                defaultValue={editingSST?.cnpj || ''}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstPhone">Telefone</Label>
+                              <Input 
+                                id="editSstPhone" 
+                                name="sstPhone" 
+                                placeholder="(00) 00000-0000"
+                                defaultValue={editingSST?.phone || ''}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstAddress">Endereço</Label>
+                              <Input 
+                                id="editSstAddress" 
+                                name="sstAddress" 
+                                placeholder="Rua, número, cidade - Estado"
+                                defaultValue={editingSST?.address || ''}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsEditSSTOpen(false)}>
                               Cancelar
                             </Button>
                             <Button type="submit">Salvar Alterações</Button>
