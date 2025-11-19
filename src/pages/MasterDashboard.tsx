@@ -66,6 +66,8 @@ const MasterDashboard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [sstLogoFile, setSstLogoFile] = useState<File | null>(null);
+  const [sstLogoPreview, setSstLogoPreview] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -116,6 +118,18 @@ const MasterDashboard = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSSTLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSstLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSstLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -205,12 +219,18 @@ const MasterDashboard = () => {
     const formData = new FormData(e.currentTarget);
     
     try {
+      let logoUrl = null;
+      if (sstLogoFile) {
+        logoUrl = await uploadLogo(sstLogoFile);
+      }
+
       const { error } = await supabase.from('sst_managers').insert({
         name: formData.get('sstName') as string,
         email: formData.get('sstEmail') as string,
         cnpj: formData.get('sstCNPJ') as string,
         phone: formData.get('sstPhone') as string,
         address: formData.get('sstAddress') as string,
+        logo_url: logoUrl,
       });
 
       if (error) throw error;
@@ -220,6 +240,8 @@ const MasterDashboard = () => {
         description: "A empresa gestora SST foi adicionada com sucesso."
       });
       setIsAddSSTOpen(false);
+      setSstLogoFile(null);
+      setSstLogoPreview(null);
       loadData();
     } catch (error) {
       toast({
@@ -947,6 +969,30 @@ const MasterDashboard = () => {
                         </DialogHeader>
                         <form onSubmit={handleAddSST}>
                           <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="sstLogo">Logo da Gestora SST</Label>
+                              <div className="flex flex-col gap-3">
+                                <Input 
+                                  id="sstLogo" 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/gif"
+                                  onChange={handleSSTLogoChange}
+                                  className="cursor-pointer"
+                                />
+                                {sstLogoPreview && (
+                                  <div className="flex justify-center p-2 border rounded-lg bg-gray-50">
+                                    <img 
+                                      src={sstLogoPreview} 
+                                      alt="Preview da logo" 
+                                      className="h-20 object-contain"
+                                    />
+                                  </div>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  Formatos aceitos: JPG, PNG, WEBP, GIF (máx. 5MB)
+                                </p>
+                              </div>
+                            </div>
                             <div className="grid gap-2">
                               <Label htmlFor="sstName">Nome da Gestora SST</Label>
                               <Input id="sstName" name="sstName" placeholder="Nome da empresa" required />

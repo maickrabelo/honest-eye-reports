@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Bell, Shield } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,18 +16,61 @@ import {
 const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
   const isLoggedIn = !!user;
+  const [sstLogo, setSstLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSSTLogo = async () => {
+      if (!profile?.company_id) return;
+
+      try {
+        // Get SST manager assigned to this company
+        const { data: assignment } = await supabase
+          .from('company_sst_assignments')
+          .select('sst_manager_id')
+          .eq('company_id', profile.company_id)
+          .maybeSingle();
+
+        if (assignment?.sst_manager_id) {
+          // Get SST manager logo
+          const { data: sstManager } = await supabase
+            .from('sst_managers')
+            .select('logo_url')
+            .eq('id', assignment.sst_manager_id)
+            .maybeSingle();
+
+          if (sstManager?.logo_url) {
+            setSstLogo(sstManager.logo_url);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching SST logo:', error);
+      }
+    };
+
+    fetchSSTLogo();
+  }, [profile?.company_id]);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="audit-container">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-3">
               <img 
                 src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
                 alt="SOIA Logo" 
                 className="h-8"
               />
+              {sstLogo && role === 'company' && (
+                <>
+                  <span className="text-muted-foreground mx-1">+</span>
+                  <img 
+                    src={sstLogo} 
+                    alt="SST Logo" 
+                    className="h-8"
+                  />
+                </>
+              )}
             </Link>
           </div>
 
