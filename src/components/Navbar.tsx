@@ -13,21 +13,22 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-const Navbar = () => {
+const Navbar = ({ companyId }: { companyId?: string } = {}) => {
   const { user, role, signOut, profile } = useRealAuth();
   const isLoggedIn = !!user;
   const [sstLogo, setSstLogo] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSSTLogo = async () => {
-      if (!profile?.company_id) return;
+      const targetCompanyId = companyId || profile?.company_id;
+      if (!targetCompanyId) return;
 
       try {
         // Get SST manager assigned to this company
         const { data: assignment } = await supabase
           .from('company_sst_assignments')
           .select('sst_manager_id')
-          .eq('company_id', profile.company_id)
+          .eq('company_id', targetCompanyId)
           .maybeSingle();
 
         if (assignment?.sst_manager_id) {
@@ -48,7 +49,7 @@ const Navbar = () => {
     };
 
     fetchSSTLogo();
-  }, [profile?.company_id]);
+  }, [companyId, profile?.company_id]);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -61,7 +62,7 @@ const Navbar = () => {
                 alt="SOIA Logo" 
                 className="h-8"
               />
-              {sstLogo && role === 'company' && (
+              {sstLogo && (
                 <>
                   <span className="text-muted-foreground mx-1">+</span>
                   <img 
