@@ -21,31 +21,25 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
   useEffect(() => {
     const fetchSSTLogo = async () => {
       const targetCompanyId = companyId || profile?.company_id;
-      console.log('Fetching SST Logo - companyId:', companyId, 'profile?.company_id:', profile?.company_id, 'targetCompanyId:', targetCompanyId);
       if (!targetCompanyId) return;
 
       try {
         // Get SST manager assigned to this company
-        const { data: assignment, error: assignmentError } = await supabase
+        const { data: assignment } = await supabase
           .from('company_sst_assignments')
           .select('sst_manager_id')
           .eq('company_id', targetCompanyId)
           .maybeSingle();
 
-        console.log('Assignment result:', assignment, 'Error:', assignmentError);
-
         if (assignment?.sst_manager_id) {
           // Get SST manager logo
-          const { data: sstManager, error: sstError } = await supabase
+          const { data: sstManager } = await supabase
             .from('sst_managers')
             .select('logo_url')
             .eq('id', assignment.sst_manager_id)
             .maybeSingle();
 
-          console.log('SST Manager result:', sstManager, 'Error:', sstError);
-
           if (sstManager?.logo_url) {
-            console.log('Setting SST Logo:', sstManager.logo_url);
             setSstLogo(sstManager.logo_url);
           }
         }
