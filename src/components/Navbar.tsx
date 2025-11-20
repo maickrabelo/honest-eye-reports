@@ -60,7 +60,7 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
               <img 
                 src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
                 alt="SOIA Logo" 
-                className="h-12"
+                className="h-8"
               />
               {sstLogo && (
                 <>
