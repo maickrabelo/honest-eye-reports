@@ -68,7 +68,7 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
                   <img 
                     src={sstLogo} 
                     alt="SST Logo" 
-                    className="h-12"
+                    className="h-16"
                   />
                 </>
               )}
