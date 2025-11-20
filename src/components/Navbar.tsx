@@ -60,15 +60,15 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
               <img 
                 src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
                 alt="SOIA Logo" 
-                className="h-8"
+                className="h-12"
               />
               {sstLogo && (
                 <>
-                  <span className="text-muted-foreground mx-1">+</span>
+                  <span className="text-muted-foreground mx-1 text-xl">+</span>
                   <img 
                     src={sstLogo} 
                     alt="SST Logo" 
-                    className="h-8"
+                    className="h-12"
                   />
                 </>
               )}
