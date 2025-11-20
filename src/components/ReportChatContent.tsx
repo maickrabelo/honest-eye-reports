@@ -382,11 +382,16 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
             <div className="border rounded-lg p-4 bg-gray-50">
               <h3 className="font-medium text-lg mb-2">Resumo da Denúncia</h3>
               <p className="text-gray-700">{summary}</p>
-              <div className="mt-4 flex items-center">
-                <span className="text-sm font-medium mr-2">Status:</span>
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                  Registrada
-                </Badge>
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-sm font-medium mr-2">Status:</span>
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                    Pronto para envio
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O resumo não está correto?
+                </p>
               </div>
             </div>
           ) : (
@@ -426,7 +431,20 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
               </Button>
             </div>
           ) : (
-            <div className="w-full flex justify-end">
+            <div className="w-full flex justify-between">
+              <Button 
+                onClick={() => {
+                  setIsComplete(false);
+                  setMessages(prev => [...prev, {
+                    role: "system",
+                    content: "Você pode continuar conversando para fazer ajustes no relato. Quando terminar, clique novamente em 'Finalizar Denúncia'."
+                  }]);
+                }}
+                variant="outline"
+                disabled={isLoading}
+              >
+                Corrigir Resumo
+              </Button>
               <Button 
                 onClick={handleSaveReport}
                 disabled={isLoading}
