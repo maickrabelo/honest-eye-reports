@@ -33,11 +33,13 @@ import {
   TrendingUp,
   Star,
   Plus,
-  Download,
   Calendar,
-  Building2
+  QrCode
 } from "lucide-react";
 import { gptwCategories } from "@/data/gptwQuestions";
+import { ClimateSurveyExportButton } from "@/components/climate-survey/ClimateSurveyExportButton";
+import { AIInsightsCard } from "@/components/climate-survey/AIInsightsCard";
+import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 
 interface Survey {
   id: string;
@@ -46,7 +48,7 @@ interface Survey {
   is_active: boolean;
   created_at: string;
   company_id: string;
-  companies?: { name: string };
+  companies?: { name: string; slug?: string };
 }
 
 interface SurveyStats {
@@ -103,7 +105,7 @@ export default function ClimateSurveyDashboard() {
       // Fetch surveys
       let query = supabase
         .from('climate_surveys')
-        .select('*, companies(name)')
+        .select('*, companies(name, slug)')
         .order('created_at', { ascending: false });
 
       if (role === 'company' && profile?.company_id) {
@@ -187,6 +189,39 @@ export default function ClimateSurveyDashboard() {
     navigate('/climate-survey/new');
   };
 
+  const getSelectedSurvey = () => surveys.find(s => s.id === selectedSurvey);
+
+  const getSurveyUrl = (survey: Survey) => {
+    if (!survey.companies?.slug) return '';
+    return `${window.location.origin}/pesquisa/${survey.companies.slug}`;
+  };
+
+  // Mock open responses for AI analysis demo
+  const getMockOpenResponses = () => {
+    return [
+      {
+        question: "O que você mais gosta na empresa?",
+        answers: [
+          "O ambiente de trabalho é muito bom",
+          "Equipe colaborativa e unida",
+          "Oportunidades de crescimento",
+          "Flexibilidade de horário",
+          "Benefícios oferecidos"
+        ]
+      },
+      {
+        question: "O que poderia melhorar?",
+        answers: [
+          "Comunicação entre departamentos",
+          "Processos internos mais claros",
+          "Mais treinamentos",
+          "Infraestrutura do escritório",
+          "Feedback mais frequente"
+        ]
+      }
+    ];
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -236,6 +271,15 @@ export default function ClimateSurveyDashboard() {
                   ))}
                 </SelectContent>
               </Select>
+            )}
+
+            {getSelectedSurvey() && getSurveyUrl(getSelectedSurvey()!) && (
+              <QRCodeDownloader
+                url={getSurveyUrl(getSelectedSurvey()!)}
+                filename={`qrcode-pesquisa-${getSelectedSurvey()?.companies?.slug || 'clima'}.png`}
+                variant="outline"
+                size="default"
+              />
             )}
             
             {role === 'admin' && (
@@ -410,12 +454,19 @@ export default function ClimateSurveyDashboard() {
               </Card>
             </div>
 
+            {/* AI Insights Card */}
+            <AIInsightsCard 
+              surveyId={selectedSurvey} 
+              openResponses={getMockOpenResponses()}
+            />
+
             {/* Export Button */}
             <div className="flex justify-end mt-6">
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar Relatório
-              </Button>
+              <ClimateSurveyExportButton
+                surveyTitle={getSelectedSurvey()?.title || 'Pesquisa de Clima'}
+                companyName={getSelectedSurvey()?.companies?.name}
+                stats={stats}
+              />
             </div>
           </>
         )}
