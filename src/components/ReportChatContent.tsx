@@ -378,8 +378,8 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
             <div ref={messagesEndRef} />
           </div>
           
-          {isComplete ? (
-            <div className="border rounded-lg p-4 bg-gray-50">
+          {isComplete && (
+            <div className="border rounded-lg p-4 bg-gray-50 mb-4">
               <h3 className="font-medium text-lg mb-2">Resumo da Denúncia</h3>
               <p className="text-gray-700">{summary}</p>
               <div className="mt-4 flex items-center justify-between">
@@ -394,25 +394,25 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Digite sua mensagem..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                disabled={isLoading || isComplete}
-                className="flex-grow"
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                disabled={isLoading || isComplete || !input.trim()}
-                size="icon"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
           )}
+          
+          <div className="flex gap-2">
+            <Input
+              placeholder="Digite sua mensagem..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSendMessage()}
+              disabled={isLoading}
+              className="flex-grow"
+            />
+            <Button 
+              onClick={handleSendMessage} 
+              disabled={isLoading || !input.trim()}
+              size="icon"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </CardContent>
         
         <CardFooter className="flex justify-between border-t pt-4">
