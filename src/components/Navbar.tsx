@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield } from "lucide-react";
+import { Bell, Shield, ClipboardList } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -107,6 +107,12 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
                           <Link to="/user-management" className="flex items-center gap-2">
                             <Shield className="h-4 w-4" />
                             Gestão de Usuários
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/climate-dashboard" className="flex items-center gap-2">
+                            <ClipboardList className="h-4 w-4" />
+                            Pesquisa de Clima
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
