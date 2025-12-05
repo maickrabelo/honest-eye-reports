@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,6 +48,7 @@ type Assignment = {
 };
 
 const MasterDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("companies");
   const [companies, setCompanies] = useState<Company[]>([]);
   const [sstManagers, setSSTManagers] = useState<SSTManager[]>([]);
@@ -793,6 +795,41 @@ const MasterDashboard = () => {
         <div className="audit-container">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-audit-primary">Painel Administrativo</h1>
+          </div>
+
+          {/* Quick Actions Section */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Pesquisa de Clima</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Crie e gerencie pesquisas de clima organizacional
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button 
+                    onClick={() => navigate('/climate-survey/new')} 
+                    className="w-full"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nova Pesquisa
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => navigate('/climate-dashboard')}
+                    className="w-full text-sm"
+                  >
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Ver Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
           
           <Tabs defaultValue="companies" value={activeTab} onValueChange={setActiveTab} className="mb-8">
