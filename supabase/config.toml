@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.update-user-profile]
 # Requires admin authentication
+
+[functions.analyze-climate-survey]
+verify_jwt = false

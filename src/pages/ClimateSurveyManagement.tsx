@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Save, ArrowLeft, Copy, QrCode, Link as LinkIcon } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Copy } from "lucide-react";
 import { gptwQuestions, gptwCategories, openQuestions, npsQuestion } from "@/data/gptwQuestions";
+import { QRCodeDownloader } from "@/components/QRCodeDownloader";
+import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
 
 interface Company {
   id: string;
@@ -272,7 +274,7 @@ export default function ClimateSurveyManagement() {
 
             {/* Survey URL */}
             {formData.company_id && (
-              <div className="space-y-2 pt-4 border-t">
+              <div className="space-y-4 pt-4 border-t">
                 <Label>Link da Pesquisa</Label>
                 <div className="flex gap-2">
                   <Input
@@ -291,6 +293,23 @@ export default function ClimateSurveyManagement() {
                 <p className="text-xs text-muted-foreground">
                   Compartilhe este link com os funcionários para responderem a pesquisa
                 </p>
+
+                {/* QR Code Section */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                  <QRCodePreview url={getSurveyUrl()} size={120} />
+                  <div className="flex-1 text-center sm:text-left">
+                    <h4 className="font-medium mb-1">QR Code da Pesquisa</h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Imprima e distribua o QR Code para facilitar o acesso à pesquisa
+                    </p>
+                    <QRCodeDownloader
+                      url={getSurveyUrl()}
+                      filename={`qrcode-pesquisa-clima-${companies.find(c => c.id === formData.company_id)?.slug || 'empresa'}.png`}
+                      variant="default"
+                      size="sm"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
