@@ -17,6 +17,9 @@ import MasterDashboard from "./pages/MasterDashboard";
 import CompanyReport from "./pages/CompanyReport";
 import PendingApproval from "./pages/PendingApproval";
 import UserManagement from "./pages/UserManagement";
+import ClimateSurvey from "./pages/ClimateSurvey";
+import ClimateSurveyDashboard from "./pages/ClimateSurveyDashboard";
+import ClimateSurveyManagement from "./pages/ClimateSurveyManagement";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +44,11 @@ const App = () => (
             <Route path="/user-management" element={<UserManagement />} />
             <Route path="/company-dashboard/:id" element={<Dashboard />} />
             <Route path="/report/:companySlug" element={<CompanyReport />} />
+            <Route path="/pesquisa/:companySlug" element={<ClimateSurvey />} />
+            <Route path="/pesquisa/:companySlug/:surveyId" element={<ClimateSurvey />} />
+            <Route path="/climate-dashboard" element={<ClimateSurveyDashboard />} />
+            <Route path="/climate-survey/new" element={<ClimateSurveyManagement />} />
+            <Route path="/climate-survey/:id" element={<ClimateSurveyManagement />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>

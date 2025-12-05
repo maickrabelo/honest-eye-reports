@@ -41,6 +41,50 @@ export type Database = {
         }
         Relationships: []
       }
+      climate_surveys: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          start_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          start_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          start_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "climate_surveys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -306,6 +350,130 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_answers: {
+        Row: {
+          answer_text: string | null
+          answer_value: string | null
+          created_at: string
+          id: string
+          question_id: string
+          response_id: string
+        }
+        Insert: {
+          answer_text?: string | null
+          answer_value?: string | null
+          created_at?: string
+          id?: string
+          question_id: string
+          response_id: string
+        }
+        Update: {
+          answer_text?: string | null
+          answer_value?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "survey_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_questions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_required: boolean
+          options: Json | null
+          order_index: number
+          question_text: string
+          question_type: Database["public"]["Enums"]["survey_question_type"]
+          survey_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          question_text: string
+          question_type?: Database["public"]["Enums"]["survey_question_type"]
+          survey_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          question_text?: string
+          question_type?: Database["public"]["Enums"]["survey_question_type"]
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_questions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "climate_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          demographics: Json | null
+          department: string | null
+          id: string
+          respondent_token: string
+          survey_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          respondent_token: string
+          survey_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          respondent_token?: string
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "climate_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -344,6 +512,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "company" | "sst" | "pending"
+      survey_question_type:
+        | "likert"
+        | "single_choice"
+        | "multiple_choice"
+        | "scale_0_10"
+        | "open_text"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -472,6 +646,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "company", "sst", "pending"],
+      survey_question_type: [
+        "likert",
+        "single_choice",
+        "multiple_choice",
+        "scale_0_10",
+        "open_text",
+      ],
     },
   },
 } as const
