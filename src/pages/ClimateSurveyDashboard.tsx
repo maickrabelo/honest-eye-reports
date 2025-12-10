@@ -34,7 +34,7 @@ import {
   Star,
   Plus,
   Calendar,
-  QrCode
+  Settings
 } from "lucide-react";
 import { gptwCategories } from "@/data/gptwQuestions";
 import { ClimateSurveyExportButton } from "@/components/climate-survey/ClimateSurveyExportButton";
@@ -137,40 +137,108 @@ export default function ClimateSurveyDashboard() {
 
       if (error) throw error;
 
-      // Calculate stats (mock data for demonstration)
-      // In production, you'd calculate from actual survey_answers
       const totalResponses = responses?.length || 0;
-      
-      // Mock NPS calculation
-      const npsScore = Math.round(Math.random() * 100 - 20); // -20 to 80
-      
-      // Mock average score
-      const avgScore = 3.5 + Math.random() * 1.5; // 3.5 to 5.0
-      
-      // Mock category scores
-      const categoryScores = gptwCategories.map(cat => ({
-        category: cat.name,
-        score: 3 + Math.random() * 2, // 3.0 to 5.0
-        fullMark: 5
-      }));
 
-      // Mock NPS distribution
-      const detractors = Math.floor(Math.random() * 30);
-      const passives = Math.floor(Math.random() * 30);
-      const promoters = 100 - detractors - passives;
+      // Fetch questions for this survey
+      const { data: questions, error: questionsError } = await supabase
+        .from('survey_questions')
+        .select('id, question_type, category')
+        .eq('survey_id', surveyId);
+
+      if (questionsError) throw questionsError;
+
+      // Fetch all answers for this survey's responses
+      const responseIds = responses?.map(r => r.id) || [];
+      let answersData: any[] = [];
       
-      const npsDistribution = [
-        { name: 'Detratores (0-6)', value: detractors, color: '#ef4444' },
-        { name: 'Neutros (7-8)', value: passives, color: '#f59e0b' },
-        { name: 'Promotores (9-10)', value: promoters, color: '#22c55e' }
+      if (responseIds.length > 0) {
+        const { data: answers, error: answersError } = await supabase
+          .from('survey_answers')
+          .select('*')
+          .in('response_id', responseIds);
+
+        if (answersError) throw answersError;
+        answersData = answers || [];
+      }
+
+      // Create maps for quick lookup
+      const questionMap = new Map(questions?.map(q => [q.id, q]) || []);
+
+      // Calculate category scores from real data
+      const categoryAnswers: Record<string, number[]> = {};
+      const npsAnswers: number[] = [];
+
+      answersData.forEach(answer => {
+        const question = questionMap.get(answer.question_id);
+        if (!question || !answer.answer_value) return;
+
+        const value = parseFloat(answer.answer_value);
+        if (isNaN(value)) return;
+
+        if (question.question_type === 'scale_0_10') {
+          npsAnswers.push(value);
+        } else if (question.question_type === 'likert' && question.category) {
+          if (!categoryAnswers[question.category]) {
+            categoryAnswers[question.category] = [];
+          }
+          categoryAnswers[question.category].push(value);
+        }
+      });
+
+      // Calculate category scores
+      const categoryScores = gptwCategories.map(cat => {
+        const answers = categoryAnswers[cat.id] || [];
+        const avgScore = answers.length > 0 
+          ? answers.reduce((a, b) => a + b, 0) / answers.length 
+          : 0;
+        return {
+          category: cat.name,
+          score: parseFloat(avgScore.toFixed(2)),
+          fullMark: 5
+        };
+      });
+
+      // Calculate overall average
+      const allLikertValues = Object.values(categoryAnswers).flat();
+      const avgScore = allLikertValues.length > 0
+        ? allLikertValues.reduce((a, b) => a + b, 0) / allLikertValues.length
+        : 0;
+
+      // Calculate NPS
+      let npsScore = 0;
+      let npsDistribution = [
+        { name: 'Detratores (0-6)', value: 0, color: '#ef4444' },
+        { name: 'Neutros (7-8)', value: 0, color: '#f59e0b' },
+        { name: 'Promotores (9-10)', value: 0, color: '#22c55e' }
       ];
 
-      // Mock department distribution
-      const departments = ['Administrativo', 'Comercial', 'Operações', 'TI', 'RH', 'Outros'];
-      const departmentDistribution = departments.map(dept => ({
-        name: dept,
-        value: Math.floor(Math.random() * 50) + 5
-      }));
+      if (npsAnswers.length > 0) {
+        const detractors = npsAnswers.filter(v => v <= 6).length;
+        const passives = npsAnswers.filter(v => v >= 7 && v <= 8).length;
+        const promoters = npsAnswers.filter(v => v >= 9).length;
+        
+        const detractorPct = Math.round((detractors / npsAnswers.length) * 100);
+        const passivePct = Math.round((passives / npsAnswers.length) * 100);
+        const promoterPct = Math.round((promoters / npsAnswers.length) * 100);
+        
+        npsScore = promoterPct - detractorPct;
+        npsDistribution = [
+          { name: 'Detratores (0-6)', value: detractorPct, color: '#ef4444' },
+          { name: 'Neutros (7-8)', value: passivePct, color: '#f59e0b' },
+          { name: 'Promotores (9-10)', value: promoterPct, color: '#22c55e' }
+        ];
+      }
+
+      // Calculate department distribution from responses
+      const deptCounts: Record<string, number> = {};
+      responses?.forEach(r => {
+        const dept = r.department || 'Não informado';
+        deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+      });
+
+      const departmentDistribution = Object.entries(deptCounts)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
 
       setStats({
         totalResponses,

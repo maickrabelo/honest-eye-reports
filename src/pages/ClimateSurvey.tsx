@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { LikertQuestion } from "@/components/climate-survey/LikertQuestion";
@@ -9,10 +9,18 @@ import { NPSQuestion } from "@/components/climate-survey/NPSQuestion";
 import { DemographicsForm, Demographics } from "@/components/climate-survey/DemographicsForm";
 import { SurveyProgress } from "@/components/climate-survey/SurveyProgress";
 import { OpenQuestion } from "@/components/climate-survey/OpenQuestion";
-import { gptwQuestions, gptwCategories, openQuestions, npsQuestion } from "@/data/gptwQuestions";
 import { Loader2, CheckCircle2, ClipboardList, Building2 } from "lucide-react";
 
 const QUESTIONS_PER_PAGE = 10;
+
+interface SurveyQuestion {
+  id: string;
+  question_text: string;
+  question_type: 'likert' | 'scale_0_10' | 'open_text';
+  category: string;
+  order_index: number;
+  is_required: boolean;
+}
 
 export default function ClimateSurvey() {
   const { companySlug, surveyId } = useParams();
@@ -23,7 +31,8 @@ export default function ClimateSurvey() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [company, setCompany] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
   const [survey, setSurvey] = useState<{ id: string; title: string; description: string | null } | null>(null);
-  const [currentStep, setCurrentStep] = useState(0); // 0 = welcome
+  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number | string>>({});
   const [demographics, setDemographics] = useState<Demographics>({
     gender: '',
@@ -49,19 +58,39 @@ export default function ClimateSurvey() {
   ]);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Calculate total steps: welcome + question pages + demographics + NPS + open questions + completion
-  const questionPages = Math.ceil(gptwQuestions.length / QUESTIONS_PER_PAGE);
-  const totalSteps = 1 + questionPages + 1 + 1 + 1 + 1; // welcome + questions + demographics + NPS + open + complete
+  // Separate questions by type
+  const likertQuestions = questions.filter(q => q.question_type === 'likert');
+  const npsQuestions = questions.filter(q => q.question_type === 'scale_0_10');
+  const openQuestions = questions.filter(q => q.question_type === 'open_text');
+
+  // Calculate total steps
+  const questionPages = Math.ceil(likertQuestions.length / QUESTIONS_PER_PAGE);
+  const hasNps = npsQuestions.length > 0;
+  const hasOpen = openQuestions.length > 0;
+  const totalSteps = 1 + questionPages + 1 + (hasNps ? 1 : 0) + (hasOpen ? 1 : 0) + 1;
+
+  // Get unique categories for progress steps
+  const uniqueCategories = [...new Set(likertQuestions.map(q => q.category))];
+  const categoryLabels: Record<string, string> = {
+    credibilidade: 'Credibilidade',
+    respeito: 'Respeito',
+    imparcialidade: 'Imparcialidade',
+    orgulho: 'Orgulho',
+    camaradagem: 'Camaradagem',
+    nps: 'NPS',
+    open: 'Comentários',
+    custom: 'Personalizada'
+  };
   
   const steps = [
     { name: 'Início', completed: currentStep > 0 },
-    ...gptwCategories.map((cat, i) => ({ 
-      name: cat.name, 
-      completed: currentStep > i + 1 
+    ...Array.from({ length: questionPages }, (_, i) => ({
+      name: `Página ${i + 1}`,
+      completed: currentStep > i + 1
     })),
     { name: 'Dados', completed: currentStep > questionPages + 1 },
-    { name: 'NPS', completed: currentStep > questionPages + 2 },
-    { name: 'Comentários', completed: currentStep > questionPages + 3 },
+    ...(hasNps ? [{ name: 'NPS', completed: currentStep > questionPages + 2 }] : []),
+    ...(hasOpen ? [{ name: 'Comentários', completed: currentStep > questionPages + 2 + (hasNps ? 1 : 0) }] : []),
   ];
 
   useEffect(() => {
@@ -108,6 +137,26 @@ export default function ClimateSurvey() {
       }
 
       setSurvey(surveyData);
+
+      // Fetch questions for this survey
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('survey_questions')
+        .select('*')
+        .eq('survey_id', surveyData.id)
+        .order('order_index');
+
+      if (questionsError) throw questionsError;
+
+      if (questionsData && questionsData.length > 0) {
+        setQuestions(questionsData.map(q => ({
+          id: q.id,
+          question_text: q.question_text,
+          question_type: q.question_type as 'likert' | 'scale_0_10' | 'open_text',
+          category: q.category || 'custom',
+          order_index: q.order_index,
+          is_required: q.is_required
+        })));
+      }
     } catch (error) {
       console.error('Error fetching survey:', error);
       toast({ title: "Erro ao carregar pesquisa", variant: "destructive" });
@@ -125,33 +174,33 @@ export default function ClimateSurvey() {
   };
 
   const getCurrentQuestions = () => {
-    if (currentStep === 0) return []; // Welcome page
+    if (currentStep === 0) return [];
     if (currentStep <= questionPages) {
       const startIndex = (currentStep - 1) * QUESTIONS_PER_PAGE;
-      return gptwQuestions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
+      return likertQuestions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
     }
     return [];
   };
 
   const canProceed = () => {
-    if (currentStep === 0) return true; // Welcome page
+    if (currentStep === 0) return true;
     
     if (currentStep <= questionPages) {
       const currentQuestions = getCurrentQuestions();
-      return currentQuestions.every(q => answers[q.id] !== undefined);
+      return currentQuestions.filter(q => q.is_required).every(q => answers[q.id] !== undefined);
     }
     
     if (currentStep === questionPages + 1) {
-      // Demographics - at least department required
       return demographics.department !== '';
     }
     
-    if (currentStep === questionPages + 2) {
-      // NPS
-      return answers['nps'] !== undefined;
+    const npsStep = questionPages + 2;
+    if (hasNps && currentStep === npsStep) {
+      const requiredNps = npsQuestions.filter(q => q.is_required);
+      return requiredNps.every(q => answers[q.id] !== undefined);
     }
     
-    return true; // Open questions are optional
+    return true;
   };
 
   const handleNext = () => {
@@ -198,32 +247,23 @@ export default function ClimateSurvey() {
 
       if (responseError) throw responseError;
 
-      // Prepare answers for insertion
-      // For GPTW questions, we'll store them with a generated question_id based on the question index
-      // In a real implementation, you'd fetch the actual question IDs from survey_questions table
-      const answersToInsert = [
-        ...gptwQuestions.map((q, index) => ({
+      // Prepare answers for insertion using actual question IDs
+      const answersToInsert = questions
+        .filter(q => answers[q.id] !== undefined && answers[q.id] !== '')
+        .map(q => ({
           response_id: responseData.id,
-          question_id: responseData.id, // Using response_id as placeholder - in production, use actual question IDs
-          answer_value: answers[q.id]?.toString() || null,
-          answer_text: null
-        })),
-        {
-          response_id: responseData.id,
-          question_id: responseData.id,
-          answer_value: answers['nps']?.toString() || null,
-          answer_text: null
-        },
-        ...openQuestions.map(q => ({
-          response_id: responseData.id,
-          question_id: responseData.id,
-          answer_value: null,
-          answer_text: (answers[q.id] as string) || null
-        }))
-      ];
+          question_id: q.id,
+          answer_value: q.question_type !== 'open_text' ? answers[q.id]?.toString() : null,
+          answer_text: q.question_type === 'open_text' ? (answers[q.id] as string) : null
+        }));
 
-      // Note: In production, you'd need to create the survey_questions first
-      // and use their actual IDs. For now, we'll store answers in a simplified way.
+      if (answersToInsert.length > 0) {
+        const { error: answersError } = await supabase
+          .from('survey_answers')
+          .insert(answersToInsert);
+
+        if (answersError) throw answersError;
+      }
 
       setIsComplete(true);
       setCurrentStep(totalSteps - 1);
@@ -235,6 +275,11 @@ export default function ClimateSurvey() {
       setIsSubmitting(false);
     }
   };
+
+  // Calculate current step type
+  const getNpsStep = () => questionPages + 2;
+  const getOpenStep = () => questionPages + 2 + (hasNps ? 1 : 0);
+  const getSubmitStep = () => totalSteps - 2;
 
   if (isLoading) {
     return (
@@ -253,6 +298,22 @@ export default function ClimateSurvey() {
             <h2 className="text-xl font-semibold mb-2">Pesquisa não disponível</h2>
             <p className="text-muted-foreground">
               Não há pesquisa de clima ativa para esta empresa no momento.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6 text-center">
+            <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Pesquisa sem perguntas</h2>
+            <p className="text-muted-foreground">
+              Esta pesquisa ainda não possui perguntas configuradas.
             </p>
           </CardContent>
         </Card>
@@ -334,7 +395,7 @@ export default function ClimateSurvey() {
                   <LikertQuestion
                     key={question.id}
                     questionId={question.id}
-                    questionText={question.text}
+                    questionText={question.question_text}
                     questionNumber={(currentStep - 1) * QUESTIONS_PER_PAGE + index + 1}
                     value={answers[question.id] as number || null}
                     onChange={(value) => handleAnswerChange(question.id, value)}
@@ -353,29 +414,32 @@ export default function ClimateSurvey() {
             )}
 
             {/* NPS Step */}
-            {currentStep === questionPages + 2 && (
-              <div className="py-8">
-                <NPSQuestion
-                  value={answers['nps'] as number || null}
-                  onChange={(value) => handleAnswerChange('nps', value)}
-                />
+            {hasNps && currentStep === getNpsStep() && (
+              <div className="py-8 space-y-8">
+                {npsQuestions.map((question) => (
+                  <NPSQuestion
+                    key={question.id}
+                    value={answers[question.id] as number || null}
+                    onChange={(value) => handleAnswerChange(question.id, value)}
+                  />
+                ))}
               </div>
             )}
 
             {/* Open Questions Step */}
-            {currentStep === questionPages + 3 && (
+            {hasOpen && currentStep === getOpenStep() && (
               <div className="space-y-8 py-4">
                 <div className="text-center mb-6">
                   <h3 className="text-lg font-semibold text-foreground">Seus Comentários</h3>
                   <p className="text-sm text-muted-foreground">
-                    Compartilhe suas opiniões (opcional)
+                    Compartilhe suas opiniões {openQuestions.some(q => !q.is_required) && '(opcional)'}
                   </p>
                 </div>
                 {openQuestions.map((question) => (
                   <OpenQuestion
                     key={question.id}
                     questionId={question.id}
-                    questionText={question.text}
+                    questionText={question.question_text}
                     value={(answers[question.id] as string) || ''}
                     onChange={(value) => handleAnswerChange(question.id, value)}
                   />
@@ -406,7 +470,7 @@ export default function ClimateSurvey() {
                   Voltar
                 </Button>
                 
-                {currentStep === questionPages + 3 ? (
+                {currentStep === getSubmitStep() ? (
                   <Button onClick={handleSubmit} disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>

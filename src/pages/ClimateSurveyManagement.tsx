@@ -13,9 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2, Save, ArrowLeft, Copy } from "lucide-react";
-import { gptwQuestions, gptwCategories, openQuestions, npsQuestion } from "@/data/gptwQuestions";
+import { gptwQuestions, openQuestions, npsQuestion } from "@/data/gptwQuestions";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
+import { QuestionManager, SurveyQuestion } from "@/components/climate-survey/QuestionManager";
 
 interface Company {
   id: string;
@@ -33,6 +34,7 @@ export default function ClimateSurveyManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   
   const [formData, setFormData] = useState({
     title: 'Pesquisa de Clima Organizacional',
@@ -40,6 +42,37 @@ export default function ClimateSurveyManagement() {
     company_id: '',
     is_active: true
   });
+
+  // Initialize questions from template
+  const initializeQuestionsFromTemplate = (): SurveyQuestion[] => {
+    const templateQuestions: SurveyQuestion[] = [
+      ...gptwQuestions.map((q, index) => ({
+        tempId: `template-${q.id}`,
+        question_text: q.text,
+        question_type: q.type as 'likert' | 'scale_0_10' | 'open_text',
+        category: q.category,
+        order_index: index,
+        is_required: true
+      })),
+      {
+        tempId: `template-nps`,
+        question_text: npsQuestion.text,
+        question_type: 'scale_0_10' as const,
+        category: 'nps',
+        order_index: gptwQuestions.length,
+        is_required: true
+      },
+      ...openQuestions.map((q, index) => ({
+        tempId: `template-${q.id}`,
+        question_text: q.text,
+        question_type: 'open_text' as const,
+        category: 'open',
+        order_index: gptwQuestions.length + 1 + index,
+        is_required: false
+      }))
+    ];
+    return templateQuestions;
+  };
 
   useEffect(() => {
     if (!authLoading) {
@@ -64,7 +97,7 @@ export default function ClimateSurveyManagement() {
       if (companiesError) throw companiesError;
       setCompanies(companiesData || []);
 
-      // If editing, fetch survey data
+      // If editing, fetch survey data and questions
       if (isEditing) {
         const { data: surveyData, error: surveyError } = await supabase
           .from('climate_surveys')
@@ -81,6 +114,29 @@ export default function ClimateSurveyManagement() {
             is_active: surveyData.is_active
           });
         }
+
+        // Fetch questions for this survey
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('survey_questions')
+          .select('*')
+          .eq('survey_id', id)
+          .order('order_index');
+
+        if (questionsError) throw questionsError;
+        
+        if (questionsData && questionsData.length > 0) {
+          setQuestions(questionsData.map(q => ({
+            id: q.id,
+            question_text: q.question_text,
+            question_type: q.question_type as 'likert' | 'scale_0_10' | 'open_text',
+            category: q.category || 'custom',
+            order_index: q.order_index,
+            is_required: q.is_required
+          })));
+        }
+      } else {
+        // Initialize with template questions for new survey
+        setQuestions(initializeQuestionsFromTemplate());
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -96,9 +152,16 @@ export default function ClimateSurveyManagement() {
       return;
     }
 
+    const activeQuestions = questions.filter(q => !q.isDeleted);
+    if (activeQuestions.length === 0) {
+      toast({ title: "Adicione pelo menos uma pergunta", variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
     try {
       if (isEditing) {
+        // Update survey info
         const { error } = await supabase
           .from('climate_surveys')
           .update({
@@ -109,6 +172,54 @@ export default function ClimateSurveyManagement() {
           .eq('id', id);
 
         if (error) throw error;
+
+        // Handle questions: delete marked, update existing, insert new
+        const questionsToDelete = questions.filter(q => q.isDeleted && q.id);
+        const questionsToUpdate = questions.filter(q => !q.isDeleted && q.id);
+        const questionsToInsert = questions.filter(q => !q.isDeleted && !q.id);
+
+        // Delete removed questions
+        if (questionsToDelete.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('survey_questions')
+            .delete()
+            .in('id', questionsToDelete.map(q => q.id!));
+          
+          if (deleteError) throw deleteError;
+        }
+
+        // Update existing questions
+        for (const q of questionsToUpdate) {
+          const { error: updateError } = await supabase
+            .from('survey_questions')
+            .update({
+              question_text: q.question_text,
+              question_type: q.question_type,
+              category: q.category,
+              order_index: q.order_index,
+              is_required: q.is_required
+            })
+            .eq('id', q.id);
+          
+          if (updateError) throw updateError;
+        }
+
+        // Insert new questions
+        if (questionsToInsert.length > 0) {
+          const { error: insertError } = await supabase
+            .from('survey_questions')
+            .insert(questionsToInsert.map(q => ({
+              survey_id: id,
+              question_text: q.question_text,
+              question_type: q.question_type,
+              category: q.category,
+              order_index: q.order_index,
+              is_required: q.is_required
+            })));
+          
+          if (insertError) throw insertError;
+        }
+
         toast({ title: "Pesquisa atualizada com sucesso!" });
       } else {
         // Create survey
@@ -125,33 +236,15 @@ export default function ClimateSurveyManagement() {
 
         if (surveyError) throw surveyError;
 
-        // Create questions from GPTW template
-        const questionsToInsert = [
-          ...gptwQuestions.map((q, index) => ({
-            survey_id: surveyData.id,
-            question_text: q.text,
-            question_type: q.type as 'likert' | 'single_choice' | 'multiple_choice' | 'scale_0_10' | 'open_text',
-            category: q.category,
-            order_index: index,
-            is_required: true
-          })),
-          {
-            survey_id: surveyData.id,
-            question_text: npsQuestion.text,
-            question_type: 'scale_0_10' as const,
-            category: 'nps',
-            order_index: gptwQuestions.length,
-            is_required: true
-          },
-          ...openQuestions.map((q, index) => ({
-            survey_id: surveyData.id,
-            question_text: q.text,
-            question_type: 'open_text' as const,
-            category: 'open',
-            order_index: gptwQuestions.length + 1 + index,
-            is_required: false
-          }))
-        ];
+        // Insert all active questions
+        const questionsToInsert = activeQuestions.map((q, index) => ({
+          survey_id: surveyData.id,
+          question_text: q.question_text,
+          question_type: q.question_type,
+          category: q.category,
+          order_index: index,
+          is_required: q.is_required
+        }));
 
         const { error: questionsError } = await supabase
           .from('survey_questions')
@@ -181,6 +274,8 @@ export default function ClimateSurveyManagement() {
     toast({ title: "Link copiado!" });
   };
 
+  const activeQuestions = questions.filter(q => !q.isDeleted);
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -193,7 +288,7 @@ export default function ClimateSurveyManagement() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-grow container mx-auto px-4 py-8 max-w-3xl">
+      <main className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <Button
           variant="ghost"
           className="mb-4"
@@ -203,13 +298,13 @@ export default function ClimateSurveyManagement() {
           Voltar
         </Button>
 
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>{isEditing ? 'Editar Pesquisa' : 'Nova Pesquisa de Clima'}</CardTitle>
             <CardDescription>
               {isEditing 
-                ? 'Atualize as informações da pesquisa'
-                : 'Configure uma nova pesquisa baseada no modelo GPTW'
+                ? 'Atualize as informações e perguntas da pesquisa'
+                : 'Configure uma nova pesquisa personalizável baseada no modelo GPTW'
               }
             </CardDescription>
           </CardHeader>
@@ -312,23 +407,28 @@ export default function ClimateSurveyManagement() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
 
-            {/* Questions Preview */}
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-2">Perguntas Incluídas</h3>
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-                <p><strong>{gptwQuestions.length}</strong> afirmativas GPTW (escala Likert 1-5)</p>
-                <p><strong>1</strong> pergunta NPS (escala 0-10)</p>
-                <p><strong>{openQuestions.length}</strong> perguntas abertas (opcional)</p>
-                <p className="text-muted-foreground">
-                  Categorias: {gptwCategories.map(c => c.name).join(', ')}
-                </p>
+        {/* Question Manager */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <QuestionManager
+              questions={questions}
+              onChange={setQuestions}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Summary and Actions */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                <p><strong>{activeQuestions.length}</strong> perguntas no total</p>
+                <p><strong>{activeQuestions.filter(q => q.is_required).length}</strong> obrigatórias</p>
               </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
-              <Button onClick={handleSave} disabled={isSaving} className="flex-1">
+              <Button onClick={handleSave} disabled={isSaving} size="lg">
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
