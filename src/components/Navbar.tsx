@@ -140,11 +140,17 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
               </>
             ) : (
               <div className="flex items-center gap-4">
-                <Link to="/report">
-                  <Button variant="outline">Fazer Denúncia</Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  className="hidden sm:inline-flex"
+                  onClick={() => document.getElementById('cta-section')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Contato
+                </Button>
                 <Link to="/auth">
-                  <Button>Entrar</Button>
+                  <Button className="bg-audit-primary hover:bg-audit-primary/90">
+                    Área do Cliente
+                  </Button>
                 </Link>
               </div>
             )}
