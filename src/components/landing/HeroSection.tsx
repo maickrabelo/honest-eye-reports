@@ -47,8 +47,7 @@ const HeroSection = () => {
             </Button>
             <Button 
               size="lg" 
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-6 text-lg"
+              className="bg-audit-accent hover:bg-audit-accent/80 text-white font-semibold px-8 py-6 text-lg"
               onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
             >
               <MessageCircle className="mr-2 h-5 w-5" />
