@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, MessageCircle, Shield } from 'lucide-react';
+import heroIllustration from '@/assets/hero-illustration.png';
 
 const HeroSection = () => {
   const scrollToContact = () => {
@@ -20,53 +21,68 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
 
       <div className="audit-container relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-8 animate-fade-in">
-            <Shield className="h-4 w-4" />
-            <span>Conformidade total com a NR-01</span>
-          </div>
-          
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            Proteja sua empresa.
-            <br />
-            <span className="text-audit-secondary">Cuide das pessoas.</span>
-          </h1>
-          
-          <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            Canal de denúncias com inteligência artificial, pesquisas de clima organizacional e gestão de riscos psicossociais em uma única plataforma.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <Button 
-              size="lg" 
-              onClick={scrollToContact}
-              className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group"
-            >
-              Solicitar Demonstração
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button 
-              size="lg" 
-              className="bg-audit-accent hover:bg-audit-accent/80 text-white font-semibold px-8 py-6 text-lg"
-              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Falar com Especialista
-            </Button>
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Text Content */}
+          <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-8 animate-fade-in">
+              <Shield className="h-4 w-4" />
+              <span>Conformidade total com a NR-01</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              Proteja sua empresa.
+              <br />
+              <span className="text-audit-secondary">Cuide das pessoas.</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto lg:mx-0 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              Canal de denúncias com inteligência artificial, pesquisas de clima organizacional e gestão de riscos psicossociais em uma única plataforma.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              <Button 
+                size="lg" 
+                onClick={scrollToContact}
+                className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group"
+              >
+                Solicitar Demonstração
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button 
+                size="lg" 
+                className="bg-audit-accent hover:bg-audit-accent/80 text-white font-semibold px-8 py-6 text-lg"
+                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Falar com Especialista
+              </Button>
+            </div>
+
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+              {[
+                { value: '98%', label: 'Taxa de Resolução' },
+                { value: '<24h', label: 'Tempo de Resposta' },
+                { value: '100%', label: 'Anonimato Garantido' },
+                { value: '+500', label: 'Empresas Atendidas' },
+              ].map((stat, idx) => (
+                <div key={idx} className="text-center lg:text-left">
+                  <div className="text-2xl md:text-3xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-xs text-white/60">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            {[
-              { value: '98%', label: 'Taxa de Resolução' },
-              { value: '<24h', label: 'Tempo de Resposta' },
-              { value: '100%', label: 'Anonimato Garantido' },
-              { value: '+500', label: 'Empresas Atendidas' },
-            ].map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-sm text-white/60">{stat.label}</div>
-              </div>
-            ))}
+          {/* Illustration */}
+          <div className="hidden lg:flex items-center justify-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            <div className="relative">
+              <div className="absolute inset-0 bg-white/10 rounded-3xl blur-2xl transform scale-95" />
+              <img 
+                src={heroIllustration} 
+                alt="Equipe profissional trabalhando em compliance e ética corporativa"
+                className="relative z-10 max-w-full h-auto rounded-2xl shadow-2xl"
+              />
+            </div>
           </div>
         </div>
       </div>
