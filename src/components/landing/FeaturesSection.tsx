@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageSquareWarning, BarChart3, Brain, LayoutDashboard, ShieldCheck, FileText } from 'lucide-react';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const features = [
   {
@@ -41,10 +42,12 @@ const features = [
 ];
 
 const FeaturesSection = () => {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
+
   return (
     <section className="py-20 bg-background">
-      <div className="audit-container">
-        <div className="text-center mb-16">
+      <div className="audit-container" ref={ref}>
+        <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Soluções</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-3 mb-4">
             Tudo que você precisa em uma plataforma
@@ -58,7 +61,8 @@ const FeaturesSection = () => {
           {features.map((feature, idx) => (
             <div 
               key={idx} 
-              className="bg-card rounded-xl p-8 border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
+              className={`bg-card rounded-xl p-8 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 group ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+              style={{ transitionDelay: isVisible ? `${idx * 100 + 200}ms` : '0ms' }}
             >
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mb-6 group-hover:from-primary/20 group-hover:to-secondary/20 transition-colors">
                 <feature.icon className="h-7 w-7 text-primary" />

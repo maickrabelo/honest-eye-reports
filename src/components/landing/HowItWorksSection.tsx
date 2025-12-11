@@ -1,5 +1,6 @@
 import React from 'react';
 import { Rocket, MessageSquare, Cpu, BarChart, CheckCircle2 } from 'lucide-react';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const steps = [
   {
@@ -35,10 +36,12 @@ const steps = [
 ];
 
 const HowItWorksSection = () => {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
+
   return (
     <section className="py-20 bg-muted/30">
-      <div className="audit-container">
-        <div className="text-center mb-16">
+      <div className="audit-container" ref={ref}>
+        <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Processo</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-3 mb-4">
             Como funciona
@@ -50,13 +53,19 @@ const HowItWorksSection = () => {
 
         <div className="relative">
           {/* Connection line */}
-          <div className="hidden lg:block absolute top-24 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-border to-transparent" />
+          <div className={`hidden lg:block absolute top-24 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-border to-transparent transition-all duration-1000 ${isVisible ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}`} />
           
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
             {steps.map((step, idx) => (
-              <div key={idx} className="relative text-center group">
+              <div 
+                key={idx} 
+                className={`relative text-center group transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                style={{ transitionDelay: isVisible ? `${idx * 150 + 200}ms` : '0ms' }}
+              >
                 {/* Step number */}
-                <div className="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center lg:left-1/2 lg:-translate-x-1/2 lg:-top-4">
+                <div className={`absolute -top-2 -left-2 w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center lg:left-1/2 lg:-translate-x-1/2 lg:-top-4 transition-all duration-500 ${isVisible ? 'scale-100' : 'scale-0'}`}
+                  style={{ transitionDelay: isVisible ? `${idx * 150 + 400}ms` : '0ms' }}
+                >
                   {idx + 1}
                 </div>
                 
