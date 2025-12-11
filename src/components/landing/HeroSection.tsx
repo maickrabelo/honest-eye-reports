@@ -75,14 +75,11 @@ const HeroSection = () => {
 
           {/* Illustration */}
           <div className="hidden lg:flex items-center justify-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-white/10 rounded-3xl blur-2xl transform scale-95" />
-              <img 
-                src={heroIllustration} 
-                alt="Equipe profissional trabalhando em compliance e ética corporativa"
-                className="relative z-10 max-w-full h-auto rounded-2xl shadow-2xl"
-              />
-            </div>
+            <img 
+              src={heroIllustration} 
+              alt="Equipe profissional trabalhando em compliance e ética corporativa"
+              className="max-w-full h-auto"
+            />
           </div>
         </div>
       </div>
