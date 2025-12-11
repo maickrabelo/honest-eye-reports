@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Scale, Users, TrendingDown } from 'lucide-react';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const painPoints = [
   {
@@ -33,10 +34,12 @@ const painPoints = [
 ];
 
 const PainPointsSection = () => {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
+
   return (
     <section className="py-20 bg-muted/50">
-      <div className="audit-container">
-        <div className="text-center mb-16">
+      <div className="audit-container" ref={ref}>
+        <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">O Problema</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-3 mb-4">
             Os riscos que sua empresa corre
@@ -50,7 +53,8 @@ const PainPointsSection = () => {
           {painPoints.map((point, idx) => (
             <div 
               key={idx} 
-              className="bg-card rounded-xl p-6 border border-destructive/20 hover:border-destructive/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group"
+              className={`bg-card rounded-xl p-6 border border-destructive/20 hover:border-destructive/40 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 group ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+              style={{ transitionDelay: isVisible ? `${idx * 100 + 200}ms` : '0ms' }}
             >
               <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center mb-4 group-hover:bg-destructive/20 transition-colors">
                 <point.icon className="h-6 w-6 text-destructive" />
