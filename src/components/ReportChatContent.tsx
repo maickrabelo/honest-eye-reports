@@ -44,6 +44,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
   const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -239,6 +240,8 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
       setMessages(messages);
     } finally {
       setIsLoading(false);
+      // Focus back on input
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
@@ -569,6 +572,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
               <span className="hidden sm:inline text-sm">Anexar</span>
             </Button>
             <Input
+              ref={inputRef}
               placeholder="Digite sua mensagem..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
