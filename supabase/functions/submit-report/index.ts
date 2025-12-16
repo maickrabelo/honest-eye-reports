@@ -17,6 +17,7 @@ interface ReportSubmission {
   reporter_email?: string;
   reporter_phone?: string;
   department?: string;
+  attachments?: { file_path: string; file_name: string; file_type: string; file_size: number }[];
 }
 
 // Input validation functions
@@ -132,6 +133,26 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
+    }
+
+    // Insert attachments if provided
+    if (submission.attachments && submission.attachments.length > 0) {
+      const attachmentsData = submission.attachments.map(att => ({
+        report_id: data.id,
+        file_path: att.file_path,
+        file_name: att.file_name,
+        file_type: att.file_type,
+        file_size: att.file_size,
+      }));
+
+      const { error: attachmentError } = await supabase
+        .from('report_attachments')
+        .insert(attachmentsData);
+
+      if (attachmentError) {
+        console.error('Error saving attachments:', attachmentError);
+        // Don't fail the whole request, just log the error
+      }
     }
 
     // Enviar notificação por email (sem aguardar para não bloquear a resposta)

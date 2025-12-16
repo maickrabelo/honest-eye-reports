@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CheckCheck, Loader2, Send } from "lucide-react";
+import { Check, CheckCheck, Loader2, Send, Paperclip, X, FileImage, FileVideo, FileAudio, File } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -13,6 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ReportChatProps {
   companyId?: string;
+}
+
+interface Attachment {
+  file: File;
+  preview?: string;
+  uploading?: boolean;
+  uploaded?: boolean;
+  filePath?: string;
 }
 
 const initialMessages = [
@@ -32,7 +40,10 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substring(7)}`);
   const [showIdDialog, setShowIdDialog] = useState(false);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -40,6 +51,120 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const allowedTypes = ['image/', 'video/', 'audio/'];
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
+    const newAttachments: Attachment[] = [];
+
+    for (const file of Array.from(files)) {
+      const isAllowed = allowedTypes.some(type => file.type.startsWith(type));
+      
+      if (!isAllowed) {
+        toast({
+          title: "Tipo de arquivo não suportado",
+          description: `${file.name} não é um arquivo de imagem, vídeo ou áudio.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      if (file.size > maxSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `${file.name} excede o limite de 50MB.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      const attachment: Attachment = {
+        file,
+        preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+      };
+
+      newAttachments.push(attachment);
+    }
+
+    if (newAttachments.length > 0) {
+      setAttachments(prev => [...prev, ...newAttachments]);
+      
+      // Add system message about attachment
+      setMessages(prev => [...prev, {
+        role: "system",
+        content: `📎 ${newAttachments.length} arquivo(s) anexado(s) como prova.`
+      }]);
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => {
+      const updated = [...prev];
+      if (updated[index].preview) {
+        URL.revokeObjectURL(updated[index].preview!);
+      }
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  const uploadAttachments = async (): Promise<{ file_path: string; file_name: string; file_type: string; file_size: number }[]> => {
+    const uploadedFiles: { file_path: string; file_name: string; file_type: string; file_size: number }[] = [];
+    
+    for (const attachment of attachments) {
+      if (attachment.uploaded && attachment.filePath) {
+        uploadedFiles.push({
+          file_path: attachment.filePath,
+          file_name: attachment.file.name,
+          file_type: attachment.file.type,
+          file_size: attachment.file.size,
+        });
+        continue;
+      }
+
+      const fileExt = attachment.file.name.split('.').pop();
+      const fileName = `${sessionId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('report-attachments')
+        .upload(fileName, attachment.file);
+
+      if (error) {
+        console.error('Error uploading file:', error);
+        toast({
+          title: "Erro ao enviar arquivo",
+          description: `Não foi possível enviar ${attachment.file.name}.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      uploadedFiles.push({
+        file_path: fileName,
+        file_name: attachment.file.name,
+        file_type: attachment.file.type,
+        file_size: attachment.file.size,
+      });
+    }
+
+    return uploadedFiles;
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <FileImage className="h-4 w-4" />;
+    if (type.startsWith('video/')) return <FileVideo className="h-4 w-4" />;
+    if (type.startsWith('audio/')) return <FileAudio className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
   };
 
 
@@ -249,8 +374,13 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
     }
 
     setIsLoading(true);
+    setIsUploading(true);
     
     try {
+      // Upload attachments first
+      const uploadedAttachments = await uploadAttachments();
+      setIsUploading(false);
+
       // Extract conversation for description
       const conversationText = messages
         .filter(m => m.role !== "system")
@@ -273,6 +403,7 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
           category: classification.category,
           department: classification.department,
           is_anonymous: true,
+          attachments: uploadedAttachments,
         }
       });
 
@@ -396,7 +527,46 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
             </div>
           )}
           
+          {/* Attachments preview */}
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3 p-2 bg-muted/50 rounded-lg">
+              {attachments.map((att, index) => (
+                <div key={index} className="relative flex items-center gap-2 bg-background p-2 rounded border">
+                  {att.preview ? (
+                    <img src={att.preview} alt={att.file.name} className="h-10 w-10 object-cover rounded" />
+                  ) : (
+                    getFileIcon(att.file.type)
+                  )}
+                  <span className="text-xs max-w-[100px] truncate">{att.file.name}</span>
+                  <button
+                    onClick={() => removeAttachment(index)}
+                    className="text-destructive hover:bg-destructive/10 rounded-full p-1"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*,audio/*"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              title="Anexar arquivos (fotos, vídeos, áudios)"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
             <Input
               placeholder="Digite sua mensagem..."
               value={input}
@@ -451,11 +621,16 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
                 className="bg-audit-primary hover:bg-audit-primary/90"
               >
                 {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isUploading ? 'Enviando arquivos...' : 'Salvando...'}
+                  </>
                 ) : (
-                  <Check className="mr-2 h-4 w-4" />
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Confirmar e Enviar {attachments.length > 0 && `(${attachments.length} anexo${attachments.length > 1 ? 's' : ''})`}
+                  </>
                 )}
-                Confirmar e Enviar
               </Button>
             </div>
           )}
