@@ -14,6 +14,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2, Save, ArrowLeft, Copy } from "lucide-react";
 import { gptwQuestions, openQuestions, npsQuestion } from "@/data/gptwQuestions";
+import { soiaQuestions, soiaOpenQuestions } from "@/data/soiaQuestions";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
 import { QuestionManager, SurveyQuestion } from "@/components/climate-survey/QuestionManager";
@@ -23,6 +24,8 @@ interface Company {
   name: string;
   slug: string;
 }
+
+type SurveyModel = 'gptw' | 'soia';
 
 export default function ClimateSurveyManagement() {
   const { id } = useParams();
@@ -35,6 +38,7 @@ export default function ClimateSurveyManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [surveyModel, setSurveyModel] = useState<SurveyModel>('gptw');
   
   const [formData, setFormData] = useState({
     title: 'Pesquisa de Clima Organizacional',
@@ -43,8 +47,8 @@ export default function ClimateSurveyManagement() {
     is_active: true
   });
 
-  // Initialize questions from template
-  const initializeQuestionsFromTemplate = (): SurveyQuestion[] => {
+  // Initialize questions from GPTW template
+  const initializeGPTWQuestions = (): SurveyQuestion[] => {
     const templateQuestions: SurveyQuestion[] = [
       ...gptwQuestions.map((q, index) => ({
         tempId: `template-${q.id}`,
@@ -72,6 +76,51 @@ export default function ClimateSurveyManagement() {
       }))
     ];
     return templateQuestions;
+  };
+
+  // Initialize questions from SOIA template
+  const initializeSOIAQuestions = (): SurveyQuestion[] => {
+    const templateQuestions: SurveyQuestion[] = [
+      // First open question (about the work environment)
+      {
+        tempId: `template-${soiaOpenQuestions[0].id}`,
+        question_text: soiaOpenQuestions[0].text,
+        question_type: 'open_text' as const,
+        category: 'open',
+        order_index: 0,
+        is_required: false
+      },
+      // Likert questions
+      ...soiaQuestions.map((q, index) => ({
+        tempId: `template-${q.id}`,
+        question_text: q.text,
+        question_type: 'likert' as const,
+        category: q.category,
+        order_index: index + 1,
+        is_required: true
+      })),
+      // Remaining open questions
+      ...soiaOpenQuestions.slice(1).map((q, index) => ({
+        tempId: `template-${q.id}`,
+        question_text: q.text,
+        question_type: 'open_text' as const,
+        category: 'open',
+        order_index: soiaQuestions.length + 1 + index,
+        is_required: false
+      }))
+    ];
+    return templateQuestions;
+  };
+
+  // Initialize questions based on model
+  const initializeQuestionsFromModel = (model: SurveyModel): SurveyQuestion[] => {
+    return model === 'gptw' ? initializeGPTWQuestions() : initializeSOIAQuestions();
+  };
+
+  // Handle model change
+  const handleModelChange = (model: SurveyModel) => {
+    setSurveyModel(model);
+    setQuestions(initializeQuestionsFromModel(model));
   };
 
   useEffect(() => {
@@ -136,7 +185,7 @@ export default function ClimateSurveyManagement() {
         }
       } else {
         // Initialize with template questions for new survey
-        setQuestions(initializeQuestionsFromTemplate());
+        setQuestions(initializeQuestionsFromModel(surveyModel));
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -304,7 +353,9 @@ export default function ClimateSurveyManagement() {
             <CardDescription>
               {isEditing 
                 ? 'Atualize as informações e perguntas da pesquisa'
-                : 'Configure uma nova pesquisa personalizável baseada no modelo GPTW'
+                : surveyModel === 'gptw' 
+                  ? 'Configure uma nova pesquisa personalizável baseada no modelo GPTW (55 perguntas)'
+                  : 'Configure uma nova pesquisa baseada no modelo SOIA (17 perguntas)'
               }
             </CardDescription>
           </CardHeader>
@@ -329,6 +380,30 @@ export default function ClimateSurveyManagement() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Survey Model Selection */}
+            {!isEditing && (
+              <div className="space-y-2">
+                <Label>Modelo de Pesquisa *</Label>
+                <Select 
+                  value={surveyModel} 
+                  onValueChange={(val) => handleModelChange(val as SurveyModel)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gptw">Modelo GPTW (Great Place to Work)</SelectItem>
+                    <SelectItem value="soia">Modelo SOIA</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {surveyModel === 'gptw' 
+                    ? '55 perguntas Likert + 1 NPS + 2 abertas — baseadas na metodologia Great Place to Work'
+                    : '12 perguntas Likert + 5 abertas — focadas em ambiente, liderança e bem-estar'}
+                </p>
+              </div>
+            )}
 
             {/* Title */}
             <div className="space-y-2">
