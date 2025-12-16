@@ -87,7 +87,7 @@ serve(async (req) => {
 
     console.log(`Processing chat request for session ${sessionId} (${requestCount + 1}/50 requests)`);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -110,6 +110,14 @@ serve(async (req) => {
             - Mantenha um tom profissional mas humano
             - Não faça julgamentos
             - Encoraje a pessoa a compartilhar todos os detalhes relevantes
+            
+            IMPORTANTE - Identificação do denunciado:
+            - Após coletar os detalhes iniciais da denúncia, pergunte gentilmente se a pessoa poderia informar o nome da pessoa que cometeu a conduta denunciada.
+            - Se a pessoa não quiser ou não souber informar o nome, pergunte pelo menos o setor, departamento ou nível hierárquico (ex: diretoria, gerência, supervisão) do denunciado.
+            - Explique que essa informação é importante para direcionar a investigação e tomar as providências adequadas.
+            - Seja compreensivo se a pessoa demonstrar receio em identificar o denunciado.
+            
+            Lembre a pessoa que ela pode anexar fotos, vídeos ou áudios como provas usando o botão de anexo.
             
             Mantenha suas respostas concisas (2-3 frases no máximo).`
           },
