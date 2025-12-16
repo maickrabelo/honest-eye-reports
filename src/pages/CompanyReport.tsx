@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ReportChat } from '@/components/ReportChatContent';
+import TrackReportModal from '@/components/TrackReportModal';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -90,6 +91,9 @@ const CompanyReport = () => {
               <p className="text-gray-600 mt-2">
                 Aqui você pode registrar sua denúncia de forma anônima e segura.
               </p>
+              <div className="mt-4">
+                <TrackReportModal />
+              </div>
             </div>
           </div>
           

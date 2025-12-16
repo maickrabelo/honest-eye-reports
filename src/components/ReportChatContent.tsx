@@ -560,12 +560,13 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
             />
             <Button
               variant="outline"
-              size="icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading}
               title="Anexar arquivos (fotos, vídeos, áudios)"
+              className="flex items-center gap-2 px-3"
             >
               <Paperclip className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Anexar</span>
             </Button>
             <Input
               placeholder="Digite sua mensagem..."
