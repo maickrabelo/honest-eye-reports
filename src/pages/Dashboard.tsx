@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -206,12 +206,53 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       .eq('report_id', report.id)
       .order('created_at', { ascending: true });
 
+    // Fetch report attachments
+    const { data: attachments } = await supabase
+      .from('report_attachments')
+      .select('*')
+      .eq('report_id', report.id)
+      .order('created_at', { ascending: true });
+
     setSelectedReport({
       ...report,
-      updates: updates || []
+      updates: updates || [],
+      attachments: attachments || []
     });
     setSelectedStatus(report.status);
     setIsDialogOpen(true);
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <FileImage className="h-4 w-4" />;
+    if (type.startsWith('video/')) return <FileVideo className="h-4 w-4" />;
+    if (type.startsWith('audio/')) return <FileAudio className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
+  };
+
+  const handleDownloadAttachment = async (attachment: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('report-attachments')
+        .download(attachment.file_path);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = attachment.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Erro ao baixar arquivo",
+        description: "Não foi possível baixar o arquivo.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmitResponse = async () => {
@@ -670,6 +711,39 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                   )}
                 </div>
               </div>
+
+              {/* Attachments Section */}
+              {selectedReport.attachments && selectedReport.attachments.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-3">Anexos ({selectedReport.attachments.length})</h3>
+                  <div className="space-y-2">
+                    {selectedReport.attachments.map((attachment: any, idx: number) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                      >
+                        <div className="flex items-center gap-3">
+                          {getFileIcon(attachment.file_type)}
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[200px]">{attachment.file_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {attachment.file_type.split('/')[0]} • {(attachment.file_size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadAttachment(attachment)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Baixar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div>
                 <h3 className="font-medium mb-3">Histórico de Atualizações</h3>
