@@ -241,37 +241,52 @@ export default function ClimateSurvey() {
   const handleSubmit = async () => {
     if (!survey) return;
 
+    const generateResponseId = () => {
+      if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+        return crypto.randomUUID();
+      }
+      // Fallback UUIDv4
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    };
+
     setIsSubmitting(true);
     try {
-      // Create response record
-      const { data: responseData, error: responseError } = await supabase
+      // We avoid `.select().single()` here because public respondents may not have SELECT permission
+      // on survey_responses due to privacy, which can make the INSERT fail.
+      const responseId = generateResponseId();
+      const respondentToken = generateToken();
+
+      const { error: responseError } = await supabase
         .from('survey_responses')
         .insert({
+          id: responseId,
           survey_id: survey.id,
-          respondent_token: generateToken(),
+          respondent_token: respondentToken,
           department: demographics.department,
           demographics: {
             gender: demographics.gender,
             ageRange: demographics.ageRange,
             tenure: demographics.tenure,
             education: demographics.education,
-            role: demographics.role
+            role: demographics.role,
           },
-          completed_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+          completed_at: new Date().toISOString(),
+        });
 
       if (responseError) throw responseError;
 
       // Prepare answers for insertion using actual question IDs
       const answersToInsert = questions
-        .filter(q => answers[q.id] !== undefined && answers[q.id] !== '')
-        .map(q => ({
-          response_id: responseData.id,
+        .filter((q) => answers[q.id] !== undefined && answers[q.id] !== '')
+        .map((q) => ({
+          response_id: responseId,
           question_id: q.id,
           answer_value: q.question_type !== 'open_text' ? answers[q.id]?.toString() : null,
-          answer_text: q.question_type === 'open_text' ? (answers[q.id] as string) : null
+          answer_text: q.question_type === 'open_text' ? (answers[q.id] as string) : null,
         }));
 
       if (answersToInsert.length > 0) {
@@ -284,10 +299,15 @@ export default function ClimateSurvey() {
 
       setIsComplete(true);
       setCurrentStep(totalSteps - 1);
-      toast({ title: "Pesquisa enviada com sucesso!" });
-    } catch (error) {
+      toast({ title: 'Pesquisa enviada com sucesso!' });
+    } catch (error: any) {
       console.error('Error submitting survey:', error);
-      toast({ title: "Erro ao enviar pesquisa", variant: "destructive" });
+      const details = [error?.message, error?.details].filter(Boolean).join(' - ');
+      toast({
+        title: 'Erro ao enviar pesquisa',
+        description: details || 'Tente novamente em alguns instantes.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
