@@ -264,7 +264,7 @@ export default function ClimateSurveyDashboard() {
 
   const getSurveyUrl = (survey: Survey) => {
     if (!survey.companies?.slug) return '';
-    return `${window.location.origin}/pesquisa/${survey.companies.slug}`;
+    return `${window.location.origin}/pesquisa/${survey.companies.slug}/${survey.id}`;
   };
 
   const copyToClipboard = (text: string) => {
