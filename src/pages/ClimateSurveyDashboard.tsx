@@ -34,8 +34,11 @@ import {
   Star,
   Plus,
   Calendar,
-  Settings
+  Settings,
+  Copy,
+  Link as LinkIcon
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { gptwCategories } from "@/data/gptwQuestions";
 import { ClimateSurveyExportButton } from "@/components/climate-survey/ClimateSurveyExportButton";
 import { AIInsightsCard } from "@/components/climate-survey/AIInsightsCard";
@@ -264,6 +267,11 @@ export default function ClimateSurveyDashboard() {
     return `${window.location.origin}/pesquisa/${survey.companies.slug}`;
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Link copiado!" });
+  };
+
   // Mock open responses for AI analysis demo
   const getMockOpenResponses = () => {
     return [
@@ -377,6 +385,40 @@ export default function ClimateSurveyDashboard() {
           </Card>
         ) : stats && (
           <>
+            {/* Share Link Card */}
+            {getSelectedSurvey() && getSurveyUrl(getSelectedSurvey()!) && (
+              <Card className="mb-6">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <LinkIcon className="h-5 w-5 text-primary shrink-0" />
+                    <div className="flex-1 w-full">
+                      <p className="text-sm font-medium mb-1">Link de compartilhamento</p>
+                      <div className="flex gap-2">
+                        <Input
+                          value={getSurveyUrl(getSelectedSurvey()!)}
+                          readOnly
+                          className="bg-muted text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(getSurveyUrl(getSelectedSurvey()!))}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <QRCodeDownloader
+                      url={getSurveyUrl(getSelectedSurvey()!)}
+                      filename={`qrcode-pesquisa-${getSelectedSurvey()?.companies?.slug || 'clima'}.png`}
+                      variant="outline"
+                      size="sm"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <Card>

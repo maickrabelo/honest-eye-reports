@@ -42,20 +42,7 @@ export default function ClimateSurvey() {
     role: '',
     department: ''
   });
-  const [departments, setDepartments] = useState<string[]>([
-    'Administrativo',
-    'Comercial',
-    'Financeiro',
-    'Marketing',
-    'Operações',
-    'Recursos Humanos',
-    'TI',
-    'Jurídico',
-    'Produção',
-    'Qualidade',
-    'Logística',
-    'Outro'
-  ]);
+  const [departments, setDepartments] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
 
   // Separate questions by type
@@ -137,6 +124,31 @@ export default function ClimateSurvey() {
       }
 
       setSurvey(surveyData);
+
+      // Fetch departments for this survey
+      const { data: departmentsData, error: departmentsError } = await supabase
+        .from('survey_departments')
+        .select('name')
+        .eq('survey_id', surveyData.id)
+        .order('order_index');
+
+      if (departmentsError) throw departmentsError;
+      
+      if (departmentsData && departmentsData.length > 0) {
+        setDepartments(departmentsData.map(d => d.name));
+      } else {
+        // Fallback to default departments if none configured
+        setDepartments([
+          'Administrativo',
+          'Comercial',
+          'Financeiro',
+          'Marketing',
+          'Operações',
+          'Recursos Humanos',
+          'TI',
+          'Outro'
+        ]);
+      }
 
       // Fetch questions for this survey
       const { data: questionsData, error: questionsError } = await supabase

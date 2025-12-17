@@ -18,6 +18,7 @@ import { soiaQuestions, soiaOpenQuestions } from "@/data/soiaQuestions";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
 import { QuestionManager, SurveyQuestion } from "@/components/climate-survey/QuestionManager";
+import { DepartmentManager, SurveyDepartment } from "@/components/climate-survey/DepartmentManager";
 
 interface Company {
   id: string;
@@ -38,6 +39,7 @@ export default function ClimateSurveyManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [surveyModel, setSurveyModel] = useState<SurveyModel>('gptw');
   
   const [formData, setFormData] = useState({
@@ -183,6 +185,24 @@ export default function ClimateSurveyManagement() {
             is_required: q.is_required
           })));
         }
+
+        // Fetch departments for this survey
+        const { data: departmentsData, error: departmentsError } = await supabase
+          .from('survey_departments')
+          .select('*')
+          .eq('survey_id', id)
+          .order('order_index');
+
+        if (departmentsError) throw departmentsError;
+        
+        if (departmentsData && departmentsData.length > 0) {
+          setDepartments(departmentsData.map(d => ({
+            id: d.id,
+            name: d.name,
+            employee_count: d.employee_count,
+            order_index: d.order_index
+          })));
+        }
       } else {
         // Initialize with template questions for new survey
         setQuestions(initializeQuestionsFromModel(surveyModel));
@@ -204,6 +224,12 @@ export default function ClimateSurveyManagement() {
     const activeQuestions = questions.filter(q => !q.isDeleted);
     if (activeQuestions.length === 0) {
       toast({ title: "Adicione pelo menos uma pergunta", variant: "destructive" });
+      return;
+    }
+
+    const activeDepartments = departments.filter(d => !d.isDeleted);
+    if (activeDepartments.length === 0) {
+      toast({ title: "Adicione pelo menos um setor", variant: "destructive" });
       return;
     }
 
@@ -269,6 +295,46 @@ export default function ClimateSurveyManagement() {
           if (insertError) throw insertError;
         }
 
+        // Handle departments: delete marked, update existing, insert new
+        const deptsToDelete = departments.filter(d => d.isDeleted && d.id);
+        const deptsToUpdate = departments.filter(d => !d.isDeleted && d.id);
+        const deptsToInsert = departments.filter(d => !d.isDeleted && !d.id);
+
+        if (deptsToDelete.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('survey_departments')
+            .delete()
+            .in('id', deptsToDelete.map(d => d.id!));
+          
+          if (deleteError) throw deleteError;
+        }
+
+        for (const d of deptsToUpdate) {
+          const { error: updateError } = await supabase
+            .from('survey_departments')
+            .update({
+              name: d.name,
+              employee_count: d.employee_count,
+              order_index: d.order_index
+            })
+            .eq('id', d.id);
+          
+          if (updateError) throw updateError;
+        }
+
+        if (deptsToInsert.length > 0) {
+          const { error: insertError } = await supabase
+            .from('survey_departments')
+            .insert(deptsToInsert.map((d, index) => ({
+              survey_id: id,
+              name: d.name,
+              employee_count: d.employee_count,
+              order_index: d.order_index || index
+            })));
+          
+          if (insertError) throw insertError;
+        }
+
         toast({ title: "Pesquisa atualizada com sucesso!" });
       } else {
         // Create survey
@@ -300,6 +366,20 @@ export default function ClimateSurveyManagement() {
           .insert(questionsToInsert);
 
         if (questionsError) throw questionsError;
+
+        // Insert all departments
+        if (activeDepartments.length > 0) {
+          const { error: deptsError } = await supabase
+            .from('survey_departments')
+            .insert(activeDepartments.map((d, index) => ({
+              survey_id: surveyData.id,
+              name: d.name,
+              employee_count: d.employee_count,
+              order_index: index
+            })));
+
+          if (deptsError) throw deptsError;
+        }
 
         toast({ title: "Pesquisa criada com sucesso!" });
         navigate('/climate-dashboard');
@@ -484,6 +564,14 @@ export default function ClimateSurveyManagement() {
             )}
           </CardContent>
         </Card>
+
+        {/* Department Manager */}
+        <div className="mb-6">
+          <DepartmentManager
+            departments={departments}
+            onChange={setDepartments}
+          />
+        </div>
 
         {/* Question Manager */}
         <Card className="mb-6">
