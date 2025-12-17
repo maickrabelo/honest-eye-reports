@@ -430,6 +430,41 @@ export type Database = {
           },
         ]
       }
+      survey_departments: {
+        Row: {
+          created_at: string
+          employee_count: number
+          id: string
+          name: string
+          order_index: number
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string
+          employee_count?: number
+          id?: string
+          name: string
+          order_index?: number
+          survey_id: string
+        }
+        Update: {
+          created_at?: string
+          employee_count?: number
+          id?: string
+          name?: string
+          order_index?: number
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_departments_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "climate_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       survey_questions: {
         Row: {
           category: string | null
