@@ -114,9 +114,14 @@ export default function ClimateSurvey() {
         surveyQuery = surveyQuery.eq('id', surveyId);
       }
 
-      const { data: surveyData, error: surveyError } = await surveyQuery.maybeSingle();
+      // Order by created_at and get the first result to handle multiple active surveys
+      const { data: surveyResults, error: surveyError } = await surveyQuery
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (surveyError && surveyError.code !== 'PGRST116') throw surveyError;
+      const surveyData = surveyResults && surveyResults.length > 0 ? surveyResults[0] : null;
+
+      if (surveyError) throw surveyError;
       
       if (!surveyData) {
         toast({ title: "Nenhuma pesquisa ativa encontrada", variant: "destructive" });
