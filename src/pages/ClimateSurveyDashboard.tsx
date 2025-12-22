@@ -36,11 +36,16 @@ import {
   Calendar,
   Settings,
   Copy,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { gptwCategories } from "@/data/gptwQuestions";
+import { Badge } from "@/components/ui/badge";
+
 import { ClimateSurveyExportButton } from "@/components/climate-survey/ClimateSurveyExportButton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AIInsightsCard } from "@/components/climate-survey/AIInsightsCard";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 
@@ -63,6 +68,20 @@ interface SurveyStats {
   departmentDistribution: { name: string; value: number }[];
 }
 
+interface FullResponse {
+  id: string;
+  department: string | null;
+  completed_at: string | null;
+  demographics: any;
+  answers: {
+    question_text: string;
+    question_type: string;
+    category: string | null;
+    answer_value: string | null;
+    answer_text: string | null;
+  }[];
+}
+
 const COLORS = ['#ef4444', '#f59e0b', '#22c55e'];
 
 export default function ClimateSurveyDashboard() {
@@ -76,6 +95,8 @@ export default function ClimateSurveyDashboard() {
   const [stats, setStats] = useState<SurveyStats | null>(null);
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
+  const [fullResponses, setFullResponses] = useState<FullResponse[]>([]);
+  const [showResponses, setShowResponses] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -142,10 +163,10 @@ export default function ClimateSurveyDashboard() {
 
       const totalResponses = responses?.length || 0;
 
-      // Fetch questions for this survey
+      // Fetch questions for this survey with question_text
       const { data: questions, error: questionsError } = await supabase
         .from('survey_questions')
-        .select('id, question_type, category')
+        .select('id, question_text, question_type, category')
         .eq('survey_id', surveyId);
 
       if (questionsError) throw questionsError;
@@ -169,6 +190,7 @@ export default function ClimateSurveyDashboard() {
 
       // Calculate category scores from real data
       const categoryAnswers: Record<string, number[]> = {};
+      const categoryNames: Record<string, string> = {}; // Maps category id to display name
       const npsAnswers: number[] = [];
 
       answersData.forEach(answer => {
@@ -185,21 +207,32 @@ export default function ClimateSurveyDashboard() {
             categoryAnswers[question.category] = [];
           }
           categoryAnswers[question.category].push(value);
+          
+          // Store a formatted name for the category
+          if (!categoryNames[question.category]) {
+            categoryNames[question.category] = question.category
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (l: string) => l.toUpperCase());
+          }
         }
       });
 
-      // Calculate category scores
-      const categoryScores = gptwCategories.map(cat => {
-        const answers = categoryAnswers[cat.id] || [];
-        const avgScore = answers.length > 0 
-          ? answers.reduce((a, b) => a + b, 0) / answers.length 
-          : 0;
-        return {
-          category: cat.name,
-          score: parseFloat(avgScore.toFixed(2)),
-          fullMark: 5
-        };
-      });
+      // Calculate category scores dynamically from actual categories found
+      const uniqueCategories = Object.keys(categoryAnswers);
+      const categoryScores = uniqueCategories
+        .filter(catId => catId !== 'open' && catId !== 'nps') // Exclude non-score categories
+        .map(catId => {
+          const answers = categoryAnswers[catId] || [];
+          const avgScore = answers.length > 0 
+            ? answers.reduce((a, b) => a + b, 0) / answers.length 
+            : 0;
+          return {
+            category: categoryNames[catId] || catId,
+            score: parseFloat(avgScore.toFixed(2)),
+            fullMark: 5
+          };
+        })
+        .filter(c => c.score > 0); // Only show categories with responses
 
       // Calculate overall average
       const allLikertValues = Object.values(categoryAnswers).flat();
@@ -251,6 +284,28 @@ export default function ClimateSurveyDashboard() {
         npsDistribution,
         departmentDistribution
       });
+
+      // Build full responses for detailed view
+      const fullResponsesData: FullResponse[] = (responses || []).map(resp => {
+        const respAnswers = answersData.filter(a => a.response_id === resp.id);
+        return {
+          id: resp.id,
+          department: resp.department,
+          completed_at: resp.completed_at,
+          demographics: resp.demographics,
+          answers: respAnswers.map(a => {
+            const q = questionMap.get(a.question_id);
+            return {
+              question_text: q?.question_text || 'Pergunta não encontrada',
+              question_type: q?.question_type || 'unknown',
+              category: q?.category || null,
+              answer_value: a.answer_value,
+              answer_text: a.answer_text
+            };
+          })
+        };
+      });
+      setFullResponses(fullResponsesData);
     } catch (error) {
       console.error('Error fetching survey stats:', error);
     }
@@ -563,6 +618,170 @@ export default function ClimateSurveyDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Complete Responses Section */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-5 w-5" />
+                      Respostas Completas
+                    </CardTitle>
+                    <CardDescription>
+                      Visualize cada resposta individual na íntegra
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowResponses(!showResponses)}
+                  >
+                    {showResponses ? (
+                      <>
+                        <ChevronUp className="mr-2 h-4 w-4" />
+                        Ocultar
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="mr-2 h-4 w-4" />
+                        Ver {fullResponses.length} respostas
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              {showResponses && (
+                <CardContent>
+                  {fullResponses.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">
+                      Nenhuma resposta ainda.
+                    </p>
+                  ) : (
+                    <Accordion type="single" collapsible className="w-full">
+                      {fullResponses.map((resp, index) => (
+                        <AccordionItem key={resp.id} value={resp.id}>
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center gap-3 text-left">
+                              <Badge variant="secondary" className="shrink-0">
+                                #{index + 1}
+                              </Badge>
+                              <span className="text-sm">
+                                {resp.department || 'Setor não informado'}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {resp.completed_at 
+                                  ? new Date(resp.completed_at).toLocaleDateString('pt-BR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })
+                                  : 'Data não informada'}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-4 pt-2">
+                              {/* Demographics */}
+                              {resp.demographics && Object.keys(resp.demographics).length > 0 && (
+                                <div className="bg-muted/50 rounded-lg p-4">
+                                  <h4 className="font-medium text-sm mb-2">Dados Demográficos</h4>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                                    {resp.demographics.gender && (
+                                      <div>
+                                        <span className="text-muted-foreground">Gênero: </span>
+                                        {resp.demographics.gender}
+                                      </div>
+                                    )}
+                                    {resp.demographics.ageRange && (
+                                      <div>
+                                        <span className="text-muted-foreground">Idade: </span>
+                                        {resp.demographics.ageRange}
+                                      </div>
+                                    )}
+                                    {resp.demographics.tenure && (
+                                      <div>
+                                        <span className="text-muted-foreground">Tempo: </span>
+                                        {resp.demographics.tenure}
+                                      </div>
+                                    )}
+                                    {resp.demographics.education && (
+                                      <div>
+                                        <span className="text-muted-foreground">Escolaridade: </span>
+                                        {resp.demographics.education}
+                                      </div>
+                                    )}
+                                    {resp.demographics.role && (
+                                      <div>
+                                        <span className="text-muted-foreground">Cargo: </span>
+                                        {resp.demographics.role}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Answers */}
+                              <div className="space-y-3">
+                                {resp.answers.map((answer, ansIndex) => (
+                                  <div 
+                                    key={ansIndex} 
+                                    className="border-l-2 border-primary/30 pl-4"
+                                  >
+                                    <p className="text-sm font-medium text-foreground mb-1">
+                                      {answer.question_text}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      {answer.question_type === 'likert' && answer.answer_value && (
+                                        <Badge 
+                                          variant={
+                                            parseInt(answer.answer_value) >= 4 
+                                              ? 'default' 
+                                              : parseInt(answer.answer_value) >= 3 
+                                                ? 'secondary' 
+                                                : 'destructive'
+                                          }
+                                        >
+                                          {answer.answer_value}/5
+                                        </Badge>
+                                      )}
+                                      {answer.question_type === 'scale_0_10' && answer.answer_value && (
+                                        <Badge 
+                                          variant={
+                                            parseInt(answer.answer_value) >= 9 
+                                              ? 'default' 
+                                              : parseInt(answer.answer_value) >= 7 
+                                                ? 'secondary' 
+                                                : 'destructive'
+                                          }
+                                        >
+                                          NPS: {answer.answer_value}
+                                        </Badge>
+                                      )}
+                                      {answer.question_type === 'open_text' && answer.answer_text && (
+                                        <p className="text-sm text-muted-foreground italic">
+                                          "{answer.answer_text}"
+                                        </p>
+                                      )}
+                                      {!answer.answer_value && !answer.answer_text && (
+                                        <span className="text-xs text-muted-foreground">
+                                          Não respondido
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </CardContent>
+              )}
+            </Card>
 
             {/* AI Insights Card */}
             <AIInsightsCard 
