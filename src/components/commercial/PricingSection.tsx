@@ -1,4 +1,4 @@
-import { Check, Star } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ const plans = [
     price: 'R$ 149,90',
     period: '/mês',
     description: 'Ideal para pequenas empresas',
-    popular: false,
     features: [
       'Canal de denúncias anônimo',
       'Dashboard básico',
@@ -26,7 +25,6 @@ const plans = [
     price: 'R$ 199,90',
     period: '/mês',
     description: 'Para empresas em crescimento',
-    popular: true,
     features: [
       'Tudo do plano Starter',
       'Dashboard avançado com IA',
@@ -42,7 +40,6 @@ const plans = [
     price: 'R$ 299,90',
     period: '/mês',
     description: 'Para médias empresas',
-    popular: false,
     features: [
       'Tudo do plano Profissional',
       'Multi-departamentos',
@@ -58,7 +55,6 @@ const plans = [
     price: 'R$ 299,90',
     period: '+ R$ 1,00/funcionário',
     description: 'Para grandes organizações',
-    popular: false,
     features: [
       'Tudo do plano Empresarial',
       'Customização completa',
@@ -92,22 +88,9 @@ const PricingSection = () => {
           {plans.map((plan, index) => (
             <Card
               key={plan.name}
-              className={`relative transition-all duration-700 hover:shadow-xl hover:-translate-y-2 ${
-                plan.popular 
-                  ? 'border-primary shadow-lg ring-2 ring-primary/20' 
-                  : 'border-border hover:border-primary/50'
-              } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+              className={`relative transition-all duration-700 hover:shadow-xl hover:-translate-y-2 border-border hover:border-primary/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground shadow-lg">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    Mais Popular
-                  </Badge>
-                </div>
-              )}
-              
               <CardHeader className="text-center pb-2">
                 <CardTitle className="text-xl font-bold text-foreground">
                   {plan.name}
@@ -132,10 +115,7 @@ const PricingSection = () => {
                   ))}
                 </ul>
                 
-                <Button 
-                  className={`w-full ${plan.popular ? '' : 'variant-outline'}`}
-                  variant={plan.popular ? 'default' : 'outline'}
-                >
+                <Button variant="outline" className="w-full">
                   Começar agora
                 </Button>
               </CardContent>
