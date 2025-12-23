@@ -20,6 +20,7 @@ import UserManagement from "./pages/UserManagement";
 import ClimateSurvey from "./pages/ClimateSurvey";
 import ClimateSurveyDashboard from "./pages/ClimateSurveyDashboard";
 import ClimateSurveyManagement from "./pages/ClimateSurveyManagement";
+import CommercialPresentation from "./pages/CommercialPresentation";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/climate-dashboard" element={<ClimateSurveyDashboard />} />
             <Route path="/climate-survey/new" element={<ClimateSurveyManagement />} />
             <Route path="/climate-survey/:id" element={<ClimateSurveyManagement />} />
+            <Route path="/apresentacao" element={<CommercialPresentation />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>
