@@ -58,7 +58,7 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-3">
               <img 
-                src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
+                src="/lovable-uploads/Logo_SOIA.png" 
                 alt="SOIA Logo" 
                 className="h-8"
               />

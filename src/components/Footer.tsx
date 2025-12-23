@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <img 
-              src="/lovable-uploads/b77f9a5e-5823-4448-99b1-897fb16908a1.png" 
+              src="/lovable-uploads/Logo_SOIA.png" 
               alt="SOIA Logo" 
               className="h-10 brightness-0 invert mb-4"
             />
