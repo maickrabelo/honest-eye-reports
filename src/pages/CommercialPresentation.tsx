@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { 
   Shield, 
   BarChart3, 
@@ -11,21 +12,97 @@ import {
   Users,
   TrendingDown,
   Scale,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useToast } from '@/hooks/use-toast';
 import PricingSection from '@/components/commercial/PricingSection';
 import IncludedFeaturesSection from '@/components/commercial/IncludedFeaturesSection';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const CommercialPresentation = () => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { toast } = useToast();
+  
   const heroAnimation = useScrollAnimation();
   const problemAnimation = useScrollAnimation();
   const solutionAnimation = useScrollAnimation();
   const benefitsAnimation = useScrollAnimation();
   const ctaAnimation = useScrollAnimation();
+
+  const handleDownloadPDF = async () => {
+    if (!contentRef.current) return;
+
+    setIsGeneratingPDF(true);
+    
+    try {
+      const content = contentRef.current;
+      
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: content.scrollWidth,
+        windowHeight: content.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      const pdfWidth = 297;
+      const pdfHeight = 210;
+      
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 3.78;
+      const scaledWidth = imgWidth * ratio;
+      const pageHeight = pdfHeight;
+      
+      let heightLeft = imgHeight * ratio;
+      let position = 0;
+      let page = 1;
+
+      while (heightLeft > 0) {
+        if (page > 1) {
+          pdf.addPage();
+        }
+        
+        pdf.addImage(imgData, 'JPEG', 0, -position, scaledWidth, imgHeight * ratio);
+        heightLeft -= pageHeight;
+        position += pageHeight;
+        page++;
+      }
+
+      pdf.save('SOIA-Proposta-Comercial.pdf');
+      
+      toast({
+        title: 'PDF gerado com sucesso!',
+        description: 'O download da proposta comercial foi iniciado.',
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: 'Erro ao gerar PDF',
+        description: 'Tente novamente em alguns segundos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   const problems = [
     {
@@ -93,7 +170,26 @@ const CommercialPresentation = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" ref={contentRef}>
+      {/* Floating Download Button */}
+      <Button
+        onClick={handleDownloadPDF}
+        disabled={isGeneratingPDF}
+        className="fixed bottom-6 right-6 z-50 shadow-lg hover:shadow-xl transition-all"
+        size="lg"
+      >
+        {isGeneratingPDF ? (
+          <>
+            <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+            Gerando PDF...
+          </>
+        ) : (
+          <>
+            <Download className="mr-2 w-5 h-5" />
+            Baixar PDF
+          </>
+        )}
+      </Button>
       {/* Hero Section */}
       <section 
         ref={heroAnimation.ref}
