@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const plans = [
@@ -169,23 +169,23 @@ const PricingSection = () => {
                   </p>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Colaboradores: {corporateEmployees}</span>
-                  </div>
-                  <Slider
-                    value={[corporateEmployees]}
-                    onValueChange={(value) => setCorporateEmployees(value[0])}
+                <div className="space-y-2">
+                  <label htmlFor="corporate-employees" className="text-sm font-medium text-foreground">
+                    Quantidade de colaboradores:
+                  </label>
+                  <Input
+                    id="corporate-employees"
+                    type="number"
                     min={101}
-                    max={1000}
-                    step={1}
-                    className="w-full"
+                    value={corporateEmployees}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 101;
+                      setCorporateEmployees(Math.max(101, value));
+                    }}
+                    className="text-center text-lg font-semibold"
+                    placeholder="Digite a quantidade"
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>101</span>
-                    <span>500</span>
-                    <span>1000</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground">Mínimo de 101 colaboradores</p>
                 </div>
 
                 <Button 
