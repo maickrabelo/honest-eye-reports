@@ -176,11 +176,18 @@ const PricingSection = () => {
                   <Input
                     id="corporate-employees"
                     type="number"
-                    min={101}
-                    value={corporateEmployees}
+                    min={1}
+                    value={corporateEmployees || ''}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value) || 101;
-                      setCorporateEmployees(Math.max(101, value));
+                      const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      if (!isNaN(value)) {
+                        setCorporateEmployees(value);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (corporateEmployees < 101) {
+                        setCorporateEmployees(101);
+                      }
                     }}
                     className="text-center text-lg font-semibold"
                     placeholder="Digite a quantidade"
