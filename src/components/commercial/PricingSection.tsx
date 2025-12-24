@@ -1,13 +1,17 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const plans = [
   {
     name: 'Starter',
-    employees: '1 a 10 funcionários',
+    slug: 'starter',
+    employees: 'Até 15 colaboradores',
     price: 'R$ 149,90',
     period: '/mês',
     description: 'Ideal para pequenas empresas',
@@ -20,8 +24,9 @@ const plans = [
     ],
   },
   {
-    name: 'Profissional',
-    employees: 'Até 50 funcionários',
+    name: 'Basic',
+    slug: 'basic',
+    employees: '16 a 25 colaboradores',
     price: 'R$ 199,90',
     period: '/mês',
     description: 'Para empresas em crescimento',
@@ -31,43 +36,55 @@ const plans = [
       'Análise de sentimento',
       'Relatórios semanais',
       'Suporte prioritário',
-      'Integração com RH',
     ],
   },
   {
-    name: 'Empresarial',
-    employees: 'Até 100 funcionários',
-    price: 'R$ 299,90',
+    name: 'Professional',
+    slug: 'professional',
+    employees: '26 a 50 colaboradores',
+    price: 'R$ 249,90',
     period: '/mês',
     description: 'Para médias empresas',
     features: [
-      'Tudo do plano Profissional',
+      'Tudo do plano Basic',
       'Multi-departamentos',
       'Gestão de SST integrada',
       'API de integração',
       'Treinamento da equipe',
-      'Suporte telefônico',
     ],
   },
   {
-    name: 'Corporativo',
-    employees: 'Acima de 100 funcionários',
+    name: 'Business',
+    slug: 'business',
+    employees: '51 a 100 colaboradores',
     price: 'R$ 299,90',
-    period: '+ R$ 1,00/funcionário',
-    description: 'Para grandes organizações',
+    period: '/mês',
+    description: 'Para grandes empresas',
     features: [
-      'Tudo do plano Empresarial',
+      'Tudo do plano Professional',
       'Customização completa',
       'Múltiplas unidades',
       'Relatórios personalizados',
-      'Gerente de conta dedicado',
-      'SLA garantido',
+      'Suporte telefônico',
     ],
   },
 ];
 
 const PricingSection = () => {
   const { ref, isVisible } = useScrollAnimation();
+  const navigate = useNavigate();
+  const [corporateEmployees, setCorporateEmployees] = useState(150);
+
+  const calculateCorporatePrice = () => {
+    const basePrice = 29990; // R$ 299,90 in cents
+    const extraEmployees = Math.max(0, corporateEmployees - 100);
+    const totalCents = basePrice + (extraEmployees * 100); // R$ 1,00 per employee
+    return (totalCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const handleSelectPlan = (slug: string) => {
+    navigate(`/contratar?plano=${slug}`);
+  };
 
   return (
     <section ref={ref} className="py-20 px-4 bg-gradient-to-b from-background to-muted/30">
@@ -84,7 +101,7 @@ const PricingSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {plans.map((plan, index) => (
             <Card
               key={plan.name}
@@ -115,13 +132,89 @@ const PricingSection = () => {
                   ))}
                 </ul>
                 
-                <Button variant="outline" className="w-full">
-                  Começar agora
+                <Button 
+                  className="w-full"
+                  onClick={() => handleSelectPlan(plan.slug)}
+                >
+                  Contratar agora
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {/* Corporate Plan */}
+        <Card
+          className={`transition-all duration-700 hover:shadow-xl border-border hover:border-primary/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+          style={{ transitionDelay: '400ms' }}
+        >
+          <CardHeader className="text-center pb-2">
+            <div className="flex items-center justify-center gap-2">
+              <CardTitle className="text-2xl font-bold text-foreground">
+                Corporate
+              </CardTitle>
+              <Badge variant="secondary">Personalizado</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Acima de 100 colaboradores</p>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="text-center md:text-left">
+                  <span className="text-4xl font-bold text-primary">{calculateCorporatePrice()}</span>
+                  <span className="text-muted-foreground text-sm">/mês</span>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    R$ 299,90 + R$ 1,00 por colaborador acima de 100
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Colaboradores: {corporateEmployees}</span>
+                  </div>
+                  <Slider
+                    value={[corporateEmployees]}
+                    onValueChange={(value) => setCorporateEmployees(value[0])}
+                    min={101}
+                    max={1000}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>101</span>
+                    <span>500</span>
+                    <span>1000</span>
+                  </div>
+                </div>
+
+                <Button 
+                  size="lg" 
+                  className="w-full"
+                  onClick={() => handleSelectPlan('corporate')}
+                >
+                  Contratar agora
+                </Button>
+              </div>
+              
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  'Tudo do plano Business',
+                  'Colaboradores ilimitados',
+                  'Gerente de conta dedicado',
+                  'SLA garantido',
+                  'Onboarding personalizado',
+                  'Consultoria de compliance',
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
 
         <p className={`text-center text-sm text-muted-foreground mt-8 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
           * Todos os planos incluem período de teste gratuito de 14 dias. Sem compromisso.

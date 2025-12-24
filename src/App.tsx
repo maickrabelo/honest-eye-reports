@@ -21,6 +21,9 @@ import ClimateSurvey from "./pages/ClimateSurvey";
 import ClimateSurveyDashboard from "./pages/ClimateSurveyDashboard";
 import ClimateSurveyManagement from "./pages/ClimateSurveyManagement";
 import CommercialPresentation from "./pages/CommercialPresentation";
+import Checkout from "./pages/Checkout";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
+import CheckoutCanceled from "./pages/CheckoutCanceled";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +54,9 @@ const App = () => (
             <Route path="/climate-survey/new" element={<ClimateSurveyManagement />} />
             <Route path="/climate-survey/:id" element={<ClimateSurveyManagement />} />
             <Route path="/apresentacao" element={<CommercialPresentation />} />
+            <Route path="/contratar" element={<Checkout />} />
+            <Route path="/checkout/sucesso" element={<CheckoutSuccess />} />
+            <Route path="/checkout/cancelado" element={<CheckoutCanceled />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>

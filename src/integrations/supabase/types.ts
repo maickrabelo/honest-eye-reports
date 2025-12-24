@@ -93,12 +93,14 @@ export type Database = {
           email: string | null
           id: string
           logo_url: string | null
+          max_employees: number | null
           name: string
           notification_email_1: string | null
           notification_email_2: string | null
           notification_email_3: string | null
           phone: string | null
           slug: string | null
+          subscription_status: string | null
           updated_at: string | null
         }
         Insert: {
@@ -108,12 +110,14 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          max_employees?: number | null
           name: string
           notification_email_1?: string | null
           notification_email_2?: string | null
           notification_email_3?: string | null
           phone?: string | null
           slug?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -123,12 +127,14 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          max_employees?: number | null
           name?: string
           notification_email_1?: string | null
           notification_email_2?: string | null
           notification_email_3?: string | null
           phone?: string | null
           slug?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -387,6 +393,111 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          base_price_cents: number
+          created_at: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          max_employees: number | null
+          min_employees: number
+          name: string
+          price_per_employee_cents: number | null
+          slug: string
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_price_cents: number
+          created_at?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_employees?: number | null
+          min_employees: number
+          name: string
+          price_per_employee_cents?: number | null
+          slug: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_price_cents?: number
+          created_at?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_employees?: number | null
+          min_employees?: number
+          name?: string
+          price_per_employee_cents?: number | null
+          slug?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          employee_count: number
+          id: string
+          plan_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          employee_count: number
+          id?: string
+          plan_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          employee_count?: number
+          id?: string
+          plan_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       survey_answers: {
         Row: {
