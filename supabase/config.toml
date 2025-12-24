@@ -23,3 +23,12 @@ verify_jwt = false
 
 [functions.analyze-climate-survey]
 verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.customer-portal]
+# Requires authentication
