@@ -7,9 +7,11 @@ const corsHeaders = {
 };
 
 interface SignContractRequest {
-  partner_id: string;
+  partner_id?: string;
+  partnerId?: string;
   type: "partner" | "affiliate";
-  terms_accepted: boolean;
+  terms_accepted?: boolean;
+  termsAccepted?: boolean;
   signature_data?: {
     ip_address?: string;
     user_agent?: string;
@@ -26,12 +28,18 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { partner_id, type, terms_accepted, signature_data }: SignContractRequest = await req.json();
+    const requestData: SignContractRequest = await req.json();
+    
+    // Accept both partnerId and partner_id
+    const partner_id = requestData.partner_id || requestData.partnerId;
+    const type = requestData.type;
+    const terms_accepted = requestData.terms_accepted ?? requestData.termsAccepted ?? true;
+    const signature_data = requestData.signature_data;
 
     console.log(`Processing contract signature for ${type}: ${partner_id}`);
 
-    if (!terms_accepted) {
-      throw new Error("É necessário aceitar os termos para assinar o contrato");
+    if (!partner_id) {
+      throw new Error("ID do parceiro/afiliado não informado");
     }
 
     const tableName = type === "partner" ? "licensed_partners" : "affiliates";
