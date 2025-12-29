@@ -120,40 +120,73 @@ const handler = async (req: Request): Promise<Response> => {
     const email = partnerData.email;
     const initialPassword = loginIdentifier; // CNPJ or CPF as initial password
 
-    // Create auth user
-    const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
-      email: email,
-      password: initialPassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: type === "partner" ? partnerData.razao_social : partnerData.nome_completo,
-        partner_type: type,
-        partner_id: partner_id,
-      },
-    });
+    // Check if user already exists with this email
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
+    
+    let newUserId: string;
 
-    if (createUserError) {
-      console.error("Error creating user:", createUserError);
-      throw new Error(`Erro ao criar usuário: ${createUserError.message}`);
-    }
-
-    const newUserId = authData.user.id;
-    console.log(`Created auth user: ${newUserId}`);
-
-    // Assign role
-    const roleName = type === "partner" ? "partner" : "affiliate";
-    const { error: roleError } = await supabase
-      .from("user_roles")
-      .insert({
-        user_id: newUserId,
-        role: roleName,
+    if (existingUser) {
+      console.log(`User with email ${email} already exists, linking to existing user: ${existingUser.id}`);
+      newUserId = existingUser.id;
+      
+      // Update user metadata
+      await supabase.auth.admin.updateUserById(newUserId, {
+        user_metadata: {
+          full_name: type === "partner" ? partnerData.razao_social : partnerData.nome_completo,
+          partner_type: type,
+          partner_id: partner_id,
+        },
+      });
+    } else {
+      // Create new auth user
+      const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: initialPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: type === "partner" ? partnerData.razao_social : partnerData.nome_completo,
+          partner_type: type,
+          partner_id: partner_id,
+        },
       });
 
-    if (roleError) {
-      console.error("Error assigning role:", roleError);
-      // Rollback: delete the created user
-      await supabase.auth.admin.deleteUser(newUserId);
-      throw new Error("Erro ao atribuir role");
+      if (createUserError) {
+        console.error("Error creating user:", createUserError);
+        throw new Error(`Erro ao criar usuário: ${createUserError.message}`);
+      }
+
+      newUserId = authData.user.id;
+    }
+    console.log(`Created auth user: ${newUserId}`);
+
+    // Check if role already exists, if not assign it
+    const roleName = type === "partner" ? "partner" : "affiliate";
+    const { data: existingRole } = await supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", newUserId)
+      .eq("role", roleName)
+      .maybeSingle();
+
+    if (!existingRole) {
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: newUserId,
+          role: roleName,
+        });
+
+      if (roleError) {
+        console.error("Error assigning role:", roleError);
+        // Only rollback if we created a new user
+        if (!existingUser) {
+          await supabase.auth.admin.deleteUser(newUserId);
+        }
+        throw new Error("Erro ao atribuir role");
+      }
+    } else {
+      console.log(`Role ${roleName} already exists for user ${newUserId}`);
     }
 
     // Update partner/affiliate with user_id and approved status
