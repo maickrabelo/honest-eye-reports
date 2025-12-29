@@ -353,21 +353,21 @@ const Checkout = () => {
                         </div>
                         
                         {selectedPlan?.slug === 'corporate' && (
-                          <div className="space-y-3">
-                            <Label>Quantidade de colaboradores: <strong>{employeeCount}</strong></Label>
-                            <Slider
-                              value={[employeeCount]}
-                              onValueChange={(value) => setEmployeeCount(value[0])}
+                          <div className="space-y-2">
+                            <Label htmlFor="employeeCount">Quantidade de colaboradores</Label>
+                            <Input
+                              id="employeeCount"
+                              type="number"
                               min={101}
-                              max={1000}
-                              step={1}
+                              placeholder="Ex: 150"
+                              value={employeeCount}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 101;
+                                setEmployeeCount(Math.max(101, value));
+                              }}
                               className="w-full"
                             />
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>101</span>
-                              <span>500</span>
-                              <span>1000</span>
-                            </div>
+                            <p className="text-xs text-muted-foreground">Mínimo: 101 colaboradores</p>
                           </div>
                         )}
                       </div>
