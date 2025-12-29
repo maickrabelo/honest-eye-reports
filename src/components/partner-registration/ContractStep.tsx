@@ -43,9 +43,11 @@ const ContractStep = ({
       });
 
       if (error) throw error;
-      if (!data?.contractHtml) throw new Error("Contrato não gerado");
 
-      setContractHtml(data.contractHtml);
+      const html = (data as any)?.contractHtml ?? (data as any)?.contract_html;
+      if (!html) throw new Error("Contrato não gerado");
+
+      setContractHtml(html);
     } catch (err: any) {
       console.error("Error generating contract:", err);
       setError(err.message || "Erro ao gerar contrato");
@@ -69,8 +71,9 @@ const ContractStep = ({
 
       if (error) throw error;
 
+      const contractUrl = (data as any)?.contractUrl ?? (data as any)?.contract_url ?? "";
       toast.success("Contrato assinado com sucesso!");
-      onContractSigned(data?.contractUrl || "");
+      onContractSigned(contractUrl);
     } catch (err: any) {
       console.error("Error signing contract:", err);
       toast.error(err.message || "Erro ao assinar contrato");
