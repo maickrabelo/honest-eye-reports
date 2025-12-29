@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          contract_signed: boolean | null
+          contract_signed_at: string | null
+          contract_signed_ip: string | null
+          contract_url: string | null
+          cpf: string
+          created_at: string
+          email: string
+          endereco_completo: string
+          estado_civil: string
+          first_access_completed: boolean | null
+          id: string
+          nome_completo: string
+          phone: string | null
+          profissao: string
+          referral_code: string
+          rejection_reason: string | null
+          rg: string
+          status: string
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          contract_signed?: boolean | null
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_url?: string | null
+          cpf: string
+          created_at?: string
+          email: string
+          endereco_completo: string
+          estado_civil: string
+          first_access_completed?: boolean | null
+          id?: string
+          nome_completo: string
+          phone?: string | null
+          profissao: string
+          referral_code?: string
+          rejection_reason?: string | null
+          rg: string
+          status?: string
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          contract_signed?: boolean | null
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_url?: string | null
+          cpf?: string
+          created_at?: string
+          email?: string
+          endereco_completo?: string
+          estado_civil?: string
+          first_access_completed?: boolean | null
+          id?: string
+          nome_completo?: string
+          phone?: string | null
+          profissao?: string
+          referral_code?: string
+          rejection_reason?: string | null
+          rg?: string
+          status?: string
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_rate_limits: {
         Row: {
           company_id: string | null
@@ -99,6 +180,8 @@ export type Database = {
           notification_email_2: string | null
           notification_email_3: string | null
           phone: string | null
+          referred_by_affiliate_id: string | null
+          referred_by_partner_id: string | null
           slug: string | null
           subscription_status: string | null
           updated_at: string | null
@@ -116,6 +199,8 @@ export type Database = {
           notification_email_2?: string | null
           notification_email_3?: string | null
           phone?: string | null
+          referred_by_affiliate_id?: string | null
+          referred_by_partner_id?: string | null
           slug?: string | null
           subscription_status?: string | null
           updated_at?: string | null
@@ -133,11 +218,28 @@ export type Database = {
           notification_email_2?: string | null
           notification_email_3?: string | null
           phone?: string | null
+          referred_by_affiliate_id?: string | null
+          referred_by_partner_id?: string | null
           slug?: string | null
           subscription_status?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_referred_by_affiliate_id_fkey"
+            columns: ["referred_by_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_referred_by_partner_id_fkey"
+            columns: ["referred_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_sst_assignments: {
         Row: {
@@ -171,6 +273,176 @@ export type Database = {
             columns: ["sst_manager_id"]
             isOneToOne: false
             referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licensed_partners: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cnpj: string
+          contract_signed: boolean | null
+          contract_signed_at: string | null
+          contract_signed_ip: string | null
+          contract_url: string | null
+          created_at: string
+          email: string
+          endereco_completo: string
+          first_access_completed: boolean | null
+          id: string
+          nome_fantasia: string
+          phone: string | null
+          razao_social: string
+          referral_code: string
+          rejection_reason: string | null
+          status: string
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cnpj: string
+          contract_signed?: boolean | null
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_url?: string | null
+          created_at?: string
+          email: string
+          endereco_completo: string
+          first_access_completed?: boolean | null
+          id?: string
+          nome_fantasia: string
+          phone?: string | null
+          razao_social: string
+          referral_code?: string
+          rejection_reason?: string | null
+          status?: string
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cnpj?: string
+          contract_signed?: boolean | null
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_url?: string | null
+          created_at?: string
+          email?: string
+          endereco_completo?: string
+          first_access_completed?: boolean | null
+          id?: string
+          nome_fantasia?: string
+          phone?: string | null
+          razao_social?: string
+          referral_code?: string
+          rejection_reason?: string | null
+          status?: string
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      partner_prospects: {
+        Row: {
+          company_name: string
+          contact_name: string | null
+          converted_company_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          partner_id: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          contact_name?: string | null
+          converted_company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          partner_id: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string | null
+          converted_company_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          partner_id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_prospects_converted_company_id_fkey"
+            columns: ["converted_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_prospects_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_representatives: {
+        Row: {
+          cpf: string
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          nome: string
+          partner_id: string
+          rg: string
+        }
+        Insert: {
+          cpf: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          nome: string
+          partner_id: string
+          rg: string
+        }
+        Update: {
+          cpf?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          nome?: string
+          partner_id?: string
+          rg?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_representatives_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_partners"
             referencedColumns: ["id"]
           },
         ]
@@ -695,7 +967,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "company" | "sst" | "pending"
+      app_role:
+        | "admin"
+        | "company"
+        | "sst"
+        | "pending"
+        | "partner"
+        | "affiliate"
       survey_question_type:
         | "likert"
         | "single_choice"
@@ -829,7 +1107,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "company", "sst", "pending"],
+      app_role: ["admin", "company", "sst", "pending", "partner", "affiliate"],
       survey_question_type: [
         "likert",
         "single_choice",
