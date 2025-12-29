@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
-type UserRole = 'admin' | 'company' | 'sst' | 'pending' | null;
+type UserRole = 'admin' | 'company' | 'sst' | 'pending' | 'partner' | 'affiliate' | null;
 
 interface Profile {
   id: string;
@@ -99,6 +99,10 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               navigate('/dashboard');
             } else if (userRole === 'sst') {
               navigate('/sst-dashboard');
+            } else if (userRole === 'partner') {
+              navigate('/parceiro/dashboard');
+            } else if (userRole === 'affiliate') {
+              navigate('/afiliado/dashboard');
             }
           }, 0);
         } else {

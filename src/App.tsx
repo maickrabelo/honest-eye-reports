@@ -26,6 +26,7 @@ import CheckoutSuccess from "./pages/CheckoutSuccess";
 import CheckoutCanceled from "./pages/CheckoutCanceled";
 import PartnerRegistration from "./pages/PartnerRegistration";
 import AffiliateRegistration from "./pages/AffiliateRegistration";
+import PartnerDashboard from "./pages/PartnerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/checkout/sucesso" element={<CheckoutSuccess />} />
             <Route path="/checkout/cancelado" element={<CheckoutCanceled />} />
             <Route path="/parceiro/cadastro" element={<PartnerRegistration />} />
+            <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
             <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
