@@ -242,7 +242,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { partner_id, type }: PartnerContractRequest = await req.json();
+    const body = await req.json();
+    // Accept both partnerId and partner_id for compatibility
+    const partner_id = body.partner_id || body.partnerId;
+    const type = body.type || "partner";
 
     console.log(`Generating contract for ${type}: ${partner_id}`);
 
