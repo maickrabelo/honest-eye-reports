@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3 } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users } from "lucide-react";
+import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
+import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -837,6 +839,7 @@ const MasterDashboard = () => {
               <TabsList>
                 <TabsTrigger value="companies">Empresas</TabsTrigger>
                 <TabsTrigger value="sst">Gestoras SST</TabsTrigger>
+                <TabsTrigger value="partners">Parceiros/Afiliados</TabsTrigger>
               </TabsList>
               
               <div className="flex gap-4">
@@ -1443,6 +1446,12 @@ const MasterDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Partners/Affiliates Tab */}
+            <TabsContent value="partners" className="space-y-6">
+              <PendingPartnersManager />
+              <PendingAffiliatesManager />
             </TabsContent>
           </Tabs>
         </div>
