@@ -54,11 +54,44 @@ serve(async (req) => {
         company_email,
         company_phone,
         responsible_name,
-        employee_count
+        employee_count,
+        referral_code
       } = metadata;
 
       if (!company_email || !company_name) {
         throw new Error("Missing required metadata");
+      }
+
+      // Look up referral code to find partner or affiliate
+      let referredByPartnerId = null;
+      let referredByAffiliateId = null;
+
+      if (referral_code) {
+        // Check partners first
+        const { data: partner } = await supabaseClient
+          .from("licensed_partners")
+          .select("id")
+          .eq("referral_code", referral_code)
+          .eq("status", "approved")
+          .maybeSingle();
+
+        if (partner) {
+          referredByPartnerId = partner.id;
+          logStep("Found referring partner", { partnerId: partner.id });
+        } else {
+          // Check affiliates
+          const { data: affiliate } = await supabaseClient
+            .from("affiliates")
+            .select("id")
+            .eq("referral_code", referral_code)
+            .eq("status", "approved")
+            .maybeSingle();
+
+          if (affiliate) {
+            referredByAffiliateId = affiliate.id;
+            logStep("Found referring affiliate", { affiliateId: affiliate.id });
+          }
+        }
       }
 
       // 1. Create company
@@ -72,6 +105,8 @@ serve(async (req) => {
           notification_email_1: company_email,
           subscription_status: 'active',
           max_employees: parseInt(employee_count || '15'),
+          referred_by_partner_id: referredByPartnerId,
+          referred_by_affiliate_id: referredByAffiliateId,
         })
         .select()
         .single();

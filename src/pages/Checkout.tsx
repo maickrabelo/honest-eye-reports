@@ -39,11 +39,67 @@ const Checkout = () => {
     email: '',
     phone: '',
     responsibleName: '',
+    referralCode: searchParams.get('ref') || '',
   });
+  const [referralInfo, setReferralInfo] = useState<{
+    type: 'partner' | 'affiliate' | null;
+    name: string;
+  } | null>(null);
+  const [isValidatingReferral, setIsValidatingReferral] = useState(false);
 
   useEffect(() => {
     fetchPlans();
+    // Validate referral code if provided via URL
+    if (searchParams.get('ref')) {
+      validateReferralCode(searchParams.get('ref')!);
+    }
   }, []);
+
+  const validateReferralCode = async (code: string) => {
+    if (!code.trim()) {
+      setReferralInfo(null);
+      return;
+    }
+    
+    setIsValidatingReferral(true);
+    try {
+      // Check licensed_partners first
+      const { data: partner } = await supabase
+        .from('licensed_partners')
+        .select('nome_fantasia, status')
+        .eq('referral_code', code.toUpperCase())
+        .eq('status', 'approved')
+        .maybeSingle();
+
+      if (partner) {
+        setReferralInfo({ type: 'partner', name: partner.nome_fantasia });
+        return;
+      }
+
+      // Check affiliates
+      const { data: affiliate } = await supabase
+        .from('affiliates')
+        .select('nome_completo, status')
+        .eq('referral_code', code.toUpperCase())
+        .eq('status', 'approved')
+        .maybeSingle();
+
+      if (affiliate) {
+        setReferralInfo({ type: 'affiliate', name: affiliate.nome_completo });
+        return;
+      }
+
+      setReferralInfo(null);
+      if (code.trim()) {
+        toast.error('Código de indicação não encontrado ou inválido');
+      }
+    } catch (error) {
+      console.error('Error validating referral code:', error);
+      setReferralInfo(null);
+    } finally {
+      setIsValidatingReferral(false);
+    }
+  };
 
   useEffect(() => {
     if (preselectedPlan && plans.length > 0) {
@@ -153,6 +209,7 @@ const Checkout = () => {
           companyEmail: formData.email,
           companyPhone: formData.phone,
           responsibleName: formData.responsibleName,
+          referralCode: formData.referralCode.toUpperCase() || null,
         },
       });
 
@@ -423,6 +480,38 @@ const Checkout = () => {
                     onChange={(e) => handleInputChange('responsibleName', e.target.value)}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="referralCode">Código de Indicação (opcional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="referralCode"
+                      placeholder="Ex: ABC123"
+                      value={formData.referralCode}
+                      onChange={(e) => {
+                        handleInputChange('referralCode', e.target.value.toUpperCase());
+                        if (e.target.value.length >= 6) {
+                          validateReferralCode(e.target.value);
+                        } else {
+                          setReferralInfo(null);
+                        }
+                      }}
+                      className="uppercase"
+                    />
+                    {isValidatingReferral && (
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground self-center" />
+                    )}
+                  </div>
+                  {referralInfo && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                      <Check className="w-4 h-4" />
+                      <span>
+                        Indicado por: <strong>{referralInfo.name}</strong>
+                        {referralInfo.type === 'partner' ? ' (Parceiro)' : ' (Afiliado)'}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -486,6 +575,12 @@ const Checkout = () => {
                     <p><span className="text-muted-foreground">Email:</span> {formData.email}</p>
                     {formData.phone && <p><span className="text-muted-foreground">Telefone:</span> {formData.phone}</p>}
                     <p><span className="text-muted-foreground">Responsável:</span> {formData.responsibleName}</p>
+                    {referralInfo && (
+                      <p className="text-green-600 dark:text-green-400">
+                        <span className="text-muted-foreground">Indicado por:</span> {referralInfo.name}
+                        {referralInfo.type === 'partner' ? ' (Parceiro)' : ' (Afiliado)'}
+                      </p>
+                    )}
                   </div>
                 </div>
 
