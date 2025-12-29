@@ -24,6 +24,7 @@ import CommercialPresentation from "./pages/CommercialPresentation";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import CheckoutCanceled from "./pages/CheckoutCanceled";
+import PartnerRegistration from "./pages/PartnerRegistration";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/contratar" element={<Checkout />} />
             <Route path="/checkout/sucesso" element={<CheckoutSuccess />} />
             <Route path="/checkout/cancelado" element={<CheckoutCanceled />} />
+            <Route path="/parceiro/cadastro" element={<PartnerRegistration />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>
