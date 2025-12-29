@@ -31,10 +31,11 @@ serve(async (req) => {
       companyCnpj, 
       companyEmail, 
       companyPhone,
-      responsibleName 
+      responsibleName,
+      referralCode
     } = await req.json();
 
-    logStep("Request data received", { planSlug, employeeCount, companyName });
+    logStep("Request data received", { planSlug, employeeCount, companyName, referralCode });
 
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -157,6 +158,7 @@ serve(async (req) => {
         company_phone: companyPhone,
         responsible_name: responsibleName,
         employee_count: employeeCount.toString(),
+        referral_code: referralCode || '',
       },
       subscription_data: {
         metadata: {
