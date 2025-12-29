@@ -7,9 +7,11 @@ const corsHeaders = {
 };
 
 interface ApprovePartnerRequest {
-  partner_id: string;
+  partnerId?: string;
+  partner_id?: string;
   type: "partner" | "affiliate";
   action: "approve" | "reject";
+  reason?: string;
   rejection_reason?: string;
 }
 
@@ -48,7 +50,14 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Acesso negado. Apenas administradores podem aprovar parceiros.");
     }
 
-    const { partner_id, type, action, rejection_reason }: ApprovePartnerRequest = await req.json();
+    const body: ApprovePartnerRequest = await req.json();
+    const partner_id = body.partnerId || body.partner_id;
+    const rejection_reason = body.reason || body.rejection_reason;
+    const { type, action } = body;
+
+    if (!partner_id) {
+      throw new Error("ID do parceiro/afiliado é obrigatório");
+    }
 
     console.log(`Processing ${action} for ${type}: ${partner_id}`);
 
