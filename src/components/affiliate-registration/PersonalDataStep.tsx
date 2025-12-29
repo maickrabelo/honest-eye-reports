@@ -85,9 +85,12 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
   const handleSubmit = async (data: AffiliateFormData) => {
     setIsSubmitting(true);
     try {
-      const { data: affiliate, error } = await supabase
+      const affiliateId = crypto.randomUUID();
+
+      const { error } = await supabase
         .from("affiliates")
         .insert({
+          id: affiliateId,
           nome_completo: data.nomeCompleto,
           cpf: data.cpf.replace(/\D/g, ""),
           rg: data.rg,
@@ -97,14 +100,12 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
           email: data.email,
           phone: data.phone.replace(/\D/g, ""),
           status: "pending_contract",
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
       toast.success("Dados salvos com sucesso!");
-      onSubmit(data, affiliate.id);
+      onSubmit(data, affiliateId);
     } catch (error: any) {
       console.error("Error saving affiliate:", error);
       toast.error(error.message || "Erro ao salvar dados");

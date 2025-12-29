@@ -131,10 +131,12 @@ const RepresentativesStep = ({
 
     setIsSubmitting(true);
     try {
-      // Create partner record
-      const { data: partner, error: partnerError } = await supabase
+      const partnerId = crypto.randomUUID();
+
+      const { error: partnerError } = await supabase
         .from("licensed_partners")
         .insert({
+          id: partnerId,
           razao_social: partnerData.razaoSocial,
           nome_fantasia: partnerData.nomeFantasia,
           cnpj: partnerData.cnpj.replace(/\D/g, ""),
@@ -142,15 +144,13 @@ const RepresentativesStep = ({
           email: partnerData.email,
           phone: partnerData.phone.replace(/\D/g, ""),
           status: "pending_contract",
-        })
-        .select()
-        .single();
+        });
 
       if (partnerError) throw partnerError;
 
       // Create representatives
       const representativesData = representatives.map((rep) => ({
-        partner_id: partner.id,
+        partner_id: partnerId,
         nome: rep.nome,
         cpf: rep.cpf.replace(/\D/g, ""),
         rg: rep.rg,
@@ -164,7 +164,7 @@ const RepresentativesStep = ({
       if (repsError) throw repsError;
 
       toast.success("Dados salvos com sucesso!");
-      onSubmit(representatives, partner.id);
+      onSubmit(representatives, partnerId);
     } catch (error: any) {
       console.error("Error saving partner:", error);
       toast.error(error.message || "Erro ao salvar dados");
