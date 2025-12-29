@@ -358,12 +358,19 @@ const Checkout = () => {
                             <Input
                               id="employeeCount"
                               type="number"
-                              min={101}
+                              min={1}
                               placeholder="Ex: 150"
-                              value={employeeCount}
+                              value={employeeCount || ''}
                               onChange={(e) => {
-                                const value = parseInt(e.target.value) || 101;
-                                setEmployeeCount(Math.max(101, value));
+                                const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  setEmployeeCount(value);
+                                }
+                              }}
+                              onBlur={() => {
+                                if (employeeCount < 101) {
+                                  setEmployeeCount(101);
+                                }
                               }}
                               className="w-full"
                             />
