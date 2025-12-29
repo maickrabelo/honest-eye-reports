@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users } from "lucide-react";
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
+import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -918,7 +919,8 @@ const MasterDashboard = () => {
               <TabsList>
                 <TabsTrigger value="companies">Empresas</TabsTrigger>
                 <TabsTrigger value="sst">Gestoras SST</TabsTrigger>
-                <TabsTrigger value="partners">Parceiros/Afiliados</TabsTrigger>
+                <TabsTrigger value="active-partners">Parceiros Ativos</TabsTrigger>
+                <TabsTrigger value="partners">Aprovações Pendentes</TabsTrigger>
               </TabsList>
               
               <div className="flex gap-4">
@@ -1527,7 +1529,12 @@ const MasterDashboard = () => {
               </Card>
             </TabsContent>
 
-            {/* Partners/Affiliates Tab */}
+            {/* Active Partners Tab */}
+            <TabsContent value="active-partners" className="space-y-6">
+              <ActivePartnersManager />
+            </TabsContent>
+
+            {/* Pending Approvals Tab */}
             <TabsContent value="partners" className="space-y-6">
               <PendingPartnersManager />
               <PendingAffiliatesManager />
