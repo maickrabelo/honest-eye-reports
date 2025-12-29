@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealAuth } from '@/contexts/RealAuthContext';
 import { toast } from 'sonner';
 import { Check, X, Eye, Building2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -42,9 +43,19 @@ export const PendingPartnersManager = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  const { session, role, isLoading: authLoading } = useRealAuth();
+
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!session || role !== 'admin') {
+      setPartners([]);
+      setLoading(false);
+      return;
+    }
+
     fetchPartners();
-  }, []);
+  }, [authLoading, session, role]);
 
   const fetchPartners = async () => {
     try {

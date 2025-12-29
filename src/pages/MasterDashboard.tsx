@@ -13,6 +13,7 @@ import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesMa
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealAuth } from "@/contexts/RealAuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 
@@ -75,10 +76,32 @@ const MasterDashboard = () => {
   const [sstLogoFile, setSstLogoFile] = useState<File | null>(null);
   const [sstLogoPreview, setSstLogoPreview] = useState<string | null>(null);
   const { toast } = useToast();
+  const { session, role, isLoading: authLoading } = useRealAuth();
   
   useEffect(() => {
-    loadData();
-  }, []);
+    if (authLoading) return;
+
+    if (!session) {
+      return;
+    }
+
+    if (role && role !== 'admin') {
+      // Usuário autenticado mas sem permissão de admin
+      if (role === 'company') navigate('/dashboard');
+      else if (role === 'sst') navigate('/sst-dashboard');
+      else if (role === 'pending') navigate('/pending-approval');
+      else if (role === 'partner') navigate('/parceiro/dashboard');
+      else if (role === 'affiliate') navigate('/afiliado/dashboard');
+      else navigate('/');
+    }
+  }, [authLoading, session, role, navigate]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (session && role === 'admin') {
+      loadData();
+    }
+  }, [authLoading, session, role]);
 
   const loadData = async () => {
     setLoading(true);
@@ -524,6 +547,62 @@ const MasterDashboard = () => {
       });
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
+          <p>Verificando acesso...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
+          <div className="max-w-md w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle>Acesso restrito</CardTitle>
+                <CardDescription>Entre com uma conta de administrador para aprovar parceiros e afiliados.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-end">
+                <Button onClick={() => navigate('/auth')}>Entrar</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (role !== 'admin') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
+          <div className="max-w-md w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle>Acesso negado</CardTitle>
+                <CardDescription>Esta área é exclusiva para administradores.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-end">
+                <Button variant="outline" onClick={() => navigate('/')}>Voltar</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
