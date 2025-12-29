@@ -27,6 +27,7 @@ import CheckoutCanceled from "./pages/CheckoutCanceled";
 import PartnerRegistration from "./pages/PartnerRegistration";
 import AffiliateRegistration from "./pages/AffiliateRegistration";
 import PartnerDashboard from "./pages/PartnerDashboard";
+import AffiliateDashboard from "./pages/AffiliateDashboard";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/parceiro/cadastro" element={<PartnerRegistration />} />
             <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
             <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
+            <Route path="/afiliado/dashboard" element={<AffiliateDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>
