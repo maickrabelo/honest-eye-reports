@@ -32,3 +32,15 @@ verify_jwt = false
 
 [functions.customer-portal]
 # Requires authentication
+
+[functions.generate-partner-contract]
+verify_jwt = false
+
+[functions.send-partner-email]
+verify_jwt = false
+
+[functions.approve-partner]
+# Requires admin authentication
+
+[functions.sign-contract]
+verify_jwt = false
