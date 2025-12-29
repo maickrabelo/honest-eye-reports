@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Check, ArrowLeft, ArrowRight, Loader2, Users, Building2, CreditCard } from 'lucide-react';
+import { Check, ArrowLeft, ArrowRight, Loader2, Users, Building2, CreditCard, Search, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -39,65 +41,57 @@ const Checkout = () => {
     email: '',
     phone: '',
     responsibleName: '',
-    referralCode: searchParams.get('ref') || '',
   });
-  const [referralInfo, setReferralInfo] = useState<{
-    type: 'partner' | 'affiliate' | null;
-    name: string;
-  } | null>(null);
-  const [isValidatingReferral, setIsValidatingReferral] = useState(false);
+  
+  // Partner search states
+  const [partners, setPartners] = useState<{ id: string; nome_fantasia: string; referral_code: string }[]>([]);
+  const [selectedPartner, setSelectedPartner] = useState<{ id: string; nome_fantasia: string; referral_code: string } | null>(null);
+  const [partnerSearchOpen, setPartnerSearchOpen] = useState(false);
+  const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
+  const [isLoadingPartners, setIsLoadingPartners] = useState(false);
 
   useEffect(() => {
     fetchPlans();
-    // Validate referral code if provided via URL
-    if (searchParams.get('ref')) {
-      validateReferralCode(searchParams.get('ref')!);
+    fetchPartners();
+    // If referral code provided via URL, find the partner
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      findPartnerByCode(refCode);
     }
   }, []);
 
-  const validateReferralCode = async (code: string) => {
-    if (!code.trim()) {
-      setReferralInfo(null);
-      return;
-    }
-    
-    setIsValidatingReferral(true);
+  const findPartnerByCode = async (code: string) => {
     try {
-      // Check licensed_partners first
       const { data: partner } = await supabase
         .from('licensed_partners')
-        .select('nome_fantasia, status')
+        .select('id, nome_fantasia, referral_code')
         .eq('referral_code', code.toUpperCase())
         .eq('status', 'approved')
         .maybeSingle();
 
       if (partner) {
-        setReferralInfo({ type: 'partner', name: partner.nome_fantasia });
-        return;
-      }
-
-      // Check affiliates
-      const { data: affiliate } = await supabase
-        .from('affiliates')
-        .select('nome_completo, status')
-        .eq('referral_code', code.toUpperCase())
-        .eq('status', 'approved')
-        .maybeSingle();
-
-      if (affiliate) {
-        setReferralInfo({ type: 'affiliate', name: affiliate.nome_completo });
-        return;
-      }
-
-      setReferralInfo(null);
-      if (code.trim()) {
-        toast.error('Código de indicação não encontrado ou inválido');
+        setSelectedPartner(partner);
       }
     } catch (error) {
-      console.error('Error validating referral code:', error);
-      setReferralInfo(null);
+      console.error('Error finding partner by code:', error);
+    }
+  };
+
+  const fetchPartners = async () => {
+    setIsLoadingPartners(true);
+    try {
+      const { data, error } = await supabase
+        .from('licensed_partners')
+        .select('id, nome_fantasia, referral_code')
+        .eq('status', 'approved')
+        .order('nome_fantasia');
+
+      if (error) throw error;
+      setPartners(data || []);
+    } catch (error) {
+      console.error('Error fetching partners:', error);
     } finally {
-      setIsValidatingReferral(false);
+      setIsLoadingPartners(false);
     }
   };
 
@@ -209,7 +203,7 @@ const Checkout = () => {
           companyEmail: formData.email,
           companyPhone: formData.phone,
           responsibleName: formData.responsibleName,
-          referralCode: formData.referralCode.toUpperCase() || null,
+          referralCode: selectedPartner?.referral_code || null,
         },
       });
 
@@ -489,35 +483,83 @@ const Checkout = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="referralCode">Código de Indicação (opcional)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="referralCode"
-                      placeholder="Ex: ABC123"
-                      value={formData.referralCode}
-                      onChange={(e) => {
-                        handleInputChange('referralCode', e.target.value.toUpperCase());
-                        if (e.target.value.length >= 6) {
-                          validateReferralCode(e.target.value);
-                        } else {
-                          setReferralInfo(null);
-                        }
-                      }}
-                      className="uppercase"
-                    />
-                    {isValidatingReferral && (
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground self-center" />
-                    )}
-                  </div>
-                  {referralInfo && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                      <Check className="w-4 h-4" />
-                      <span>
-                        Indicado por: <strong>{referralInfo.name}</strong>
-                        {referralInfo.type === 'partner' ? ' (Parceiro)' : ' (Afiliado)'}
+                  <Label>Empresa que indicou (opcional)</Label>
+                  {selectedPartner ? (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md">
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <span className="flex-1 text-green-700 dark:text-green-300 font-medium">
+                        {selectedPartner.nome_fantasia}
                       </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedPartner(null)}
+                        className="h-6 w-6 p-0 text-green-600 hover:text-green-800 dark:text-green-400"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
+                  ) : (
+                    <Popover open={partnerSearchOpen} onOpenChange={setPartnerSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={partnerSearchOpen}
+                          className="w-full justify-between font-normal text-muted-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Search className="w-4 h-4" />
+                            <span>Buscar empresa parceira...</span>
+                          </div>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Digite o nome da empresa..." 
+                            value={partnerSearchQuery}
+                            onValueChange={setPartnerSearchQuery}
+                          />
+                          <CommandList>
+                            {isLoadingPartners ? (
+                              <div className="flex items-center justify-center p-4">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              </div>
+                            ) : (
+                              <>
+                                <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
+                                <CommandGroup heading="Empresas Parceiras">
+                                  {partners
+                                    .filter(p => 
+                                      p.nome_fantasia.toLowerCase().includes(partnerSearchQuery.toLowerCase())
+                                    )
+                                    .map((partner) => (
+                                      <CommandItem
+                                        key={partner.id}
+                                        value={partner.nome_fantasia}
+                                        onSelect={() => {
+                                          setSelectedPartner(partner);
+                                          setPartnerSearchOpen(false);
+                                          setPartnerSearchQuery('');
+                                        }}
+                                      >
+                                        <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                                        {partner.nome_fantasia}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Selecione a empresa que indicou você, se houver
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -582,10 +624,9 @@ const Checkout = () => {
                     <p><span className="text-muted-foreground">Email:</span> {formData.email}</p>
                     {formData.phone && <p><span className="text-muted-foreground">Telefone:</span> {formData.phone}</p>}
                     <p><span className="text-muted-foreground">Responsável:</span> {formData.responsibleName}</p>
-                    {referralInfo && (
+                    {selectedPartner && (
                       <p className="text-green-600 dark:text-green-400">
-                        <span className="text-muted-foreground">Indicado por:</span> {referralInfo.name}
-                        {referralInfo.type === 'partner' ? ' (Parceiro)' : ' (Afiliado)'}
+                        <span className="text-muted-foreground">Indicado por:</span> {selectedPartner.nome_fantasia} (Parceiro)
                       </p>
                     )}
                   </div>
