@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealAuth } from '@/contexts/RealAuthContext';
 import { toast } from 'sonner';
 import { Check, X, Eye, User, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -35,9 +36,19 @@ export const PendingAffiliatesManager = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  const { session, role, isLoading: authLoading } = useRealAuth();
+
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!session || role !== 'admin') {
+      setAffiliates([]);
+      setLoading(false);
+      return;
+    }
+
     fetchAffiliates();
-  }, []);
+  }, [authLoading, session, role]);
 
   const fetchAffiliates = async () => {
     try {
