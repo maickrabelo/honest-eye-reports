@@ -76,6 +76,8 @@ const MasterDashboard = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [sstLogoFile, setSstLogoFile] = useState<File | null>(null);
   const [sstLogoPreview, setSstLogoPreview] = useState<string | null>(null);
+  const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
+  const [testUsersResult, setTestUsersResult] = useState<any>(null);
   const { toast } = useToast();
   const { session, role, isLoading: authLoading } = useRealAuth();
   
@@ -549,6 +551,35 @@ const MasterDashboard = () => {
     }
   };
 
+  const handleCreateTestUsers = async () => {
+    setIsCreatingTestUsers(true);
+    setTestUsersResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-test-users');
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        setTestUsersResult(data.results);
+        toast({
+          title: "Usuários de teste criados!",
+          description: "Parceiro e afiliado de teste prontos para uso.",
+        });
+      } else {
+        throw new Error(data?.error || 'Erro desconhecido');
+      }
+    } catch (error) {
+      console.error('Error creating test users:', error);
+      toast({
+        title: "Erro ao criar usuários de teste",
+        description: getSafeErrorMessage(error),
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingTestUsers(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -909,6 +940,42 @@ const MasterDashboard = () => {
                     <BarChart3 className="mr-2 h-4 w-4" />
                     Ver Dashboard
                   </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-orange-500/20 hover:border-orange-500/40 transition-colors">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-orange-500" />
+                    <CardTitle className="text-lg">Usuários de Teste</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Crie usuários para testar dashboards
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button 
+                    onClick={handleCreateTestUsers} 
+                    className="w-full bg-orange-500 hover:bg-orange-600"
+                    disabled={isCreatingTestUsers}
+                  >
+                    {isCreatingTestUsers ? (
+                      <>Criando...</>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar Usuários Teste
+                      </>
+                    )}
+                  </Button>
+                  {testUsersResult && (
+                    <div className="text-xs space-y-1 p-2 bg-muted rounded">
+                      <p className="font-medium">Credenciais:</p>
+                      <p><strong>Parceiro:</strong> {testUsersResult.partner?.email}</p>
+                      <p><strong>Afiliado:</strong> {testUsersResult.affiliate?.email}</p>
+                      <p className="text-muted-foreground">Senha: Teste123!</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

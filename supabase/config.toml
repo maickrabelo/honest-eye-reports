@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.sign-contract]
 verify_jwt = false
+
+[functions.send-notification-email]
+verify_jwt = false
+
+[functions.create-test-users]
+# Requires admin authentication
