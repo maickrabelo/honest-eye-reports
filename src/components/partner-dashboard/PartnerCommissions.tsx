@@ -69,7 +69,7 @@ const PartnerCommissions = ({ partnerId }: PartnerCommissionsProps) => {
       companies?.forEach((company: any) => {
         company.subscriptions?.forEach((sub: any) => {
           const basePrice = sub.subscription_plans?.base_price_cents || 0;
-          const commissionAmount = (basePrice * 0.1) / 100; // 10% commission
+          const commissionAmount = (basePrice * 0.25) / 100; // 25% commission
 
           const isPaid = sub.status === "active";
           if (isPaid) {
@@ -220,7 +220,7 @@ const PartnerCommissions = ({ partnerId }: PartnerCommissionsProps) => {
       <Card className="bg-muted/50">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
-            <strong>Como funcionam as comissões:</strong> Você recebe 10% do
+            <strong>Como funcionam as comissões:</strong> Você recebe 25% do
             valor mensal de cada assinatura de empresa que indicou. As comissões
             são calculadas automaticamente e creditadas na sua conta após a
             confirmação do pagamento pela empresa.
