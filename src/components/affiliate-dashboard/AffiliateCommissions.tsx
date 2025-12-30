@@ -60,7 +60,7 @@ export const AffiliateCommissions = ({ affiliateId }: AffiliateCommissionsProps)
           const company = companies.find(c => c.id === sub.company_id);
           const plan = plans?.find(p => p.id === sub.plan_id);
           const basePrice = (plan?.base_price_cents || 0) / 100;
-          const commission = basePrice * 0.05; // 5% commission
+          const commission = basePrice * 0.25; // 25% commission
 
           return {
             companyName: company?.name || 'Empresa',
@@ -138,7 +138,7 @@ export const AffiliateCommissions = ({ affiliateId }: AffiliateCommissionsProps)
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totals.total)}</div>
-            <p className="text-xs text-muted-foreground">5% por assinatura</p>
+            <p className="text-xs text-muted-foreground">25% por assinatura</p>
           </CardContent>
         </Card>
       </div>
@@ -160,7 +160,7 @@ export const AffiliateCommissions = ({ affiliateId }: AffiliateCommissionsProps)
                   <TableHead>Empresa</TableHead>
                   <TableHead>Plano</TableHead>
                   <TableHead>Valor do Plano</TableHead>
-                  <TableHead>Comissão (5%)</TableHead>
+                  <TableHead>Comissão (25%)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
                 </TableRow>
