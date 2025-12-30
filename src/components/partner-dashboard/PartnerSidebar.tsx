@@ -45,7 +45,7 @@ const PartnerSidebar = ({ activeTab, onTabChange }: PartnerSidebarProps) => {
             <img
               src="/lovable-uploads/Logo_SOIA.png"
               alt="SOIA"
-              className="h-8 w-8"
+              className="h-8 w-auto object-contain"
             />
             {!collapsed && (
               <span className="font-bold text-primary">Portal Parceiro</span>
