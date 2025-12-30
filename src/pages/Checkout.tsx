@@ -44,8 +44,8 @@ const Checkout = () => {
   });
   
   // Partner search states
-  const [partners, setPartners] = useState<{ id: string; nome_fantasia: string; referral_code: string }[]>([]);
-  const [selectedPartner, setSelectedPartner] = useState<{ id: string; nome_fantasia: string; referral_code: string } | null>(null);
+  const [partners, setPartners] = useState<{ id: string; nome_fantasia: string; cnpj: string; referral_code: string }[]>([]);
+  const [selectedPartner, setSelectedPartner] = useState<{ id: string; nome_fantasia: string; cnpj: string; referral_code: string } | null>(null);
   const [partnerSearchOpen, setPartnerSearchOpen] = useState(false);
   const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
   const [isLoadingPartners, setIsLoadingPartners] = useState(false);
@@ -64,7 +64,7 @@ const Checkout = () => {
     try {
       const { data: partner } = await supabase
         .from('licensed_partners')
-        .select('id, nome_fantasia, referral_code')
+        .select('id, nome_fantasia, cnpj, referral_code')
         .eq('referral_code', code.toUpperCase())
         .eq('status', 'approved')
         .maybeSingle();
@@ -82,7 +82,7 @@ const Checkout = () => {
     try {
       const { data, error } = await supabase
         .from('licensed_partners')
-        .select('id, nome_fantasia, referral_code')
+        .select('id, nome_fantasia, cnpj, referral_code')
         .eq('status', 'approved')
         .order('nome_fantasia');
 
@@ -486,10 +486,11 @@ const Checkout = () => {
                   <Label>Empresa que indicou (opcional)</Label>
                   {selectedPartner ? (
                     <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md">
-                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-                      <span className="flex-1 text-green-700 dark:text-green-300 font-medium">
-                        {selectedPartner.nome_fantasia}
-                      </span>
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-green-700 dark:text-green-300 font-medium">{selectedPartner.nome_fantasia}</p>
+                        <p className="text-xs text-green-600 dark:text-green-400">{selectedPartner.cnpj}</p>
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"
@@ -544,9 +545,13 @@ const Checkout = () => {
                                           setPartnerSearchOpen(false);
                                           setPartnerSearchQuery('');
                                         }}
+                                        className="flex flex-col items-start py-2"
                                       >
-                                        <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-                                        {partner.nome_fantasia}
+                                        <div className="flex items-center gap-2">
+                                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                                          <span className="font-medium">{partner.nome_fantasia}</span>
+                                        </div>
+                                        <span className="text-xs text-muted-foreground ml-6">{partner.cnpj}</span>
                                       </CommandItem>
                                     ))}
                                 </CommandGroup>
