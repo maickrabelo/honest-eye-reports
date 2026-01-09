@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -179,24 +179,40 @@ const SSTDashboard = () => {
               <p className="text-gray-600">Monitore todas as empresas sob sua gestão</p>
             </div>
             
-            {selectedCompany && (
+            <div className="flex flex-wrap gap-3 items-center">
+              {selectedCompany && (
+                <Button 
+                  variant="outline"
+                  onClick={() => setSelectedCompany(null)}
+                >
+                  Voltar para lista de empresas
+                </Button>
+              )}
+              
               <Button 
+                onClick={() => navigate('/climate-dashboard')}
                 variant="outline"
-                onClick={() => setSelectedCompany(null)}
-                className="mb-4"
               >
-                Voltar para lista de empresas
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Pesquisas de Clima
               </Button>
-            )}
-            
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Buscar empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              
+              <Button 
+                onClick={() => navigate('/climate-survey/new')}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Pesquisa
+              </Button>
+              
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Buscar empresa..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
           
