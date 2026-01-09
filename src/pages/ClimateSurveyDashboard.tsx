@@ -126,21 +126,65 @@ export default function ClimateSurveyDashboard() {
         setCompanies(companiesData || []);
       }
 
-      // Fetch surveys
-      let query = supabase
-        .from('climate_surveys')
-        .select('*, companies(name, slug)')
-        .order('created_at', { ascending: false });
-
-      if (role === 'company' && profile?.company_id) {
-        query = query.eq('company_id', profile.company_id);
+      // For SST users, get assigned company IDs first
+      let assignedCompanyIds: string[] = [];
+      if (role === 'sst' && profile?.id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('sst_manager_id')
+          .eq('id', profile.id)
+          .single();
+        
+        if (profileData?.sst_manager_id) {
+          const { data: assignments } = await supabase
+            .from('company_sst_assignments')
+            .select('company_id')
+            .eq('sst_manager_id', profileData.sst_manager_id);
+          
+          assignedCompanyIds = assignments?.map(a => a.company_id) || [];
+          
+          // Also fetch companies for SST filter dropdown
+          if (assignedCompanyIds.length > 0) {
+            const { data: companiesData } = await supabase
+              .from('companies')
+              .select('id, name')
+              .in('id', assignedCompanyIds)
+              .order('name');
+            setCompanies(companiesData || []);
+          }
+        }
       }
 
-      const { data: surveysData, error } = await query;
-      if (error) throw error;
+      // Fetch surveys based on role
+      let surveysData: Survey[] = [];
+      
+      if (role === 'company' && profile?.company_id) {
+        const { data, error } = await supabase
+          .from('climate_surveys')
+          .select('*, companies(name, slug)')
+          .eq('company_id', profile.company_id)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        surveysData = data || [];
+      } else if (role === 'sst' && assignedCompanyIds.length > 0) {
+        const { data, error } = await supabase
+          .from('climate_surveys')
+          .select('*, companies(name, slug)')
+          .in('company_id', assignedCompanyIds)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        surveysData = data || [];
+      } else if (role === 'admin') {
+        const { data, error } = await supabase
+          .from('climate_surveys')
+          .select('*, companies(name, slug)')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        surveysData = data || [];
+      }
 
-      setSurveys(surveysData || []);
-      if (surveysData && surveysData.length > 0) {
+      setSurveys(surveysData);
+      if (surveysData.length > 0) {
         setSelectedSurvey(surveysData[0].id);
       }
     } catch (error) {
@@ -373,7 +417,7 @@ export default function ClimateSurveyDashboard() {
           </div>
           
           <div className="flex flex-wrap gap-3">
-            {role === 'admin' && (
+            {['admin', 'sst'].includes(role || '') && companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Todas empresas" />
