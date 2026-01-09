@@ -33,7 +33,7 @@ export default function ClimateSurveyManagement() {
   const isEditing = id && id !== 'new';
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { role, isLoading: authLoading } = useRealAuth();
+  const { role, profile, isLoading: authLoading } = useRealAuth();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -127,7 +127,7 @@ export default function ClimateSurveyManagement() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (role !== 'admin') {
+      if (!['admin', 'sst'].includes(role || '')) {
         toast({ title: "Acesso negado", variant: "destructive" });
         navigate('/climate-dashboard');
         return;
@@ -139,14 +139,45 @@ export default function ClimateSurveyManagement() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch companies
-      const { data: companiesData, error: companiesError } = await supabase
-        .from('companies')
-        .select('id, name, slug')
-        .order('name');
-
-      if (companiesError) throw companiesError;
-      setCompanies(companiesData || []);
+      // Fetch companies based on role
+      let companiesData: Company[] = [];
+      
+      if (role === 'admin') {
+        // Admin sees all companies
+        const { data, error: companiesError } = await supabase
+          .from('companies')
+          .select('id, name, slug')
+          .order('name');
+        if (companiesError) throw companiesError;
+        companiesData = data || [];
+      } else if (role === 'sst') {
+        // SST sees only assigned companies
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('sst_manager_id')
+          .eq('id', profile?.id)
+          .single();
+        
+        if (profileData?.sst_manager_id) {
+          const { data: assignments } = await supabase
+            .from('company_sst_assignments')
+            .select('company_id')
+            .eq('sst_manager_id', profileData.sst_manager_id);
+          
+          if (assignments && assignments.length > 0) {
+            const companyIds = assignments.map(a => a.company_id);
+            const { data, error: companiesError } = await supabase
+              .from('companies')
+              .select('id, name, slug')
+              .in('id', companyIds)
+              .order('name');
+            if (companiesError) throw companiesError;
+            companiesData = data || [];
+          }
+        }
+      }
+      
+      setCompanies(companiesData);
 
       // If editing, fetch survey data and questions
       if (isEditing) {
