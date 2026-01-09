@@ -1557,6 +1557,15 @@ const MasterDashboard = () => {
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
+                                    onClick={() => handleOpenEditSST(manager)}
+                                    title="Editar gestora SST"
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Editar
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
                                     onClick={() => handleOpenGeneratePassword(manager, 'sst')}
                                     title="Gerar senha de acesso"
                                   >
