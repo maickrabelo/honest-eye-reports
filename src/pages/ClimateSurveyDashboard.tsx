@@ -413,7 +413,7 @@ export default function ClimateSurveyDashboard() {
               />
             )}
             
-            {role === 'admin' && (
+            {['admin', 'sst'].includes(role || '') && (
               <Button onClick={handleCreateSurvey}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Pesquisa
@@ -430,7 +430,7 @@ export default function ClimateSurveyDashboard() {
               <p className="text-muted-foreground mb-4">
                 Crie sua primeira pesquisa de clima organizacional
               </p>
-              {role === 'admin' && (
+              {['admin', 'sst'].includes(role || '') && (
                 <Button onClick={handleCreateSurvey}>
                   <Plus className="mr-2 h-4 w-4" />
                   Criar Pesquisa
