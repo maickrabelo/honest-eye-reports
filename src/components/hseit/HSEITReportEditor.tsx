@@ -10,9 +10,11 @@ import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
 import { 
   HSEITCategory, 
   HSEIT_CATEGORY_LABELS, 
+  HSEIT_CATEGORY_COLORS,
   getHealthImpact, 
   HEALTH_IMPACT_LABELS,
-  HEALTH_IMPACT_COLORS
+  HEALTH_IMPACT_COLORS,
+  calculateCategoryAverage
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -388,7 +390,30 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         yPos += 25;
       });
 
-      // ========== PAGE 4: RESULTS BY DEPARTMENT ==========
+      // ========== DETAILED RESULTS BY DEPARTMENT ==========
+      // Calculate category averages for each department
+      const categories: HSEITCategory[] = ['demands', 'control', 'managerSupport', 'peerSupport', 'relationships', 'role', 'change'];
+      
+      const departmentData = departments.map(dept => {
+        const deptResponses = responses.filter(r => r.department === dept);
+        const deptAnswers = deptResponses.flatMap(r => r.answers);
+        
+        const categoryAvgs: Record<HSEITCategory, number> = {} as Record<HSEITCategory, number>;
+        categories.forEach(cat => {
+          categoryAvgs[cat] = calculateCategoryAverage(deptAnswers, cat);
+        });
+        
+        const overallDeptAvg = Object.values(categoryAvgs).reduce((a, b) => a + b, 0) / categories.length;
+        
+        return {
+          name: dept,
+          responseCount: deptResponses.length,
+          categoryAverages: categoryAvgs,
+          overallAverage: overallDeptAvg,
+          healthImpact: getHealthImpact(overallDeptAvg)
+        };
+      });
+
       pdf.addPage();
       yPos = margin;
 
@@ -398,23 +423,166 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
       addText('3. RESULTADOS POR SETOR', margin, yPos);
       yPos += 15;
 
-      departments.forEach((dept) => {
-        addNewPageIfNeeded(15);
+      // Department Health Summary Table (Traffic Light)
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      addText('3.1 Semáforo de Saúde Organizacional por Setor', margin, yPos);
+      yPos += 12;
+
+      // Table header
+      const colWidths = [55, 25, 25, 25, 25, 25];
+      const tableStartX = margin;
+      
+      pdf.setFillColor(0, 51, 102);
+      pdf.rect(tableStartX, yPos, pageWidth - 2 * margin, 10, 'F');
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('Setor', tableStartX + 3, yPos + 7);
+      pdf.text('Respostas', tableStartX + 57, yPos + 7);
+      pdf.text('Média', tableStartX + 84, yPos + 7);
+      pdf.text('Impacto', tableStartX + 110, yPos + 7);
+      pdf.text('Status', tableStartX + 140, yPos + 7);
+      yPos += 10;
+
+      departmentData.forEach((dept, index) => {
+        addNewPageIfNeeded(12);
         
-        const deptResponses = responses.filter(r => r.department === dept);
+        const bgColor = index % 2 === 0 ? 250 : 240;
+        pdf.setFillColor(bgColor, bgColor, bgColor);
+        pdf.rect(tableStartX, yPos, pageWidth - 2 * margin, 10, 'F');
         
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(`• ${dept}`, margin, yPos);
-        
-        pdf.setFontSize(10);
+        pdf.setFontSize(8);
         pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(80, 80, 80);
-        pdf.text(`${deptResponses.length} resposta(s)`, margin + 100, yPos);
+        pdf.setTextColor(0, 0, 0);
+        
+        const deptName = dept.name.length > 25 ? dept.name.substring(0, 25) + '...' : dept.name;
+        pdf.text(deptName, tableStartX + 3, yPos + 7);
+        pdf.text(String(dept.responseCount), tableStartX + 62, yPos + 7);
+        pdf.text(dept.overallAverage.toFixed(2), tableStartX + 86, yPos + 7);
+        pdf.text(HEALTH_IMPACT_LABELS[dept.healthImpact], tableStartX + 110, yPos + 7);
+        
+        // Traffic light indicator
+        const [sr, sg, sb] = getRiskColor(dept.overallAverage);
+        pdf.setFillColor(sr, sg, sb);
+        pdf.circle(tableStartX + 150, yPos + 5, 4, 'F');
         
         yPos += 10;
       });
+
+      yPos += 15;
+
+      // ========== DETAILED CATEGORY ANALYSIS PER DEPARTMENT ==========
+      for (const dept of departmentData) {
+        addNewPageIfNeeded(120);
+        
+        if (yPos > margin + 20) {
+          pdf.addPage();
+          yPos = margin;
+        }
+
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 51, 102);
+        addText(`Análise Detalhada: ${dept.name}`, margin, yPos);
+        yPos += 10;
+
+        // Department summary
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(`Total de respostas: ${dept.responseCount} | Média geral: ${dept.overallAverage.toFixed(2)} | Classificação: ${HEALTH_IMPACT_LABELS[dept.healthImpact]}`, margin, yPos);
+        yPos += 12;
+
+        // Category bar chart for this department
+        const chartHeight = 80;
+        const barWidth = (pageWidth - 2 * margin - 20) / categories.length;
+        const maxValue = 5;
+        const chartStartY = yPos + chartHeight;
+
+        // Y-axis
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, yPos, margin, chartStartY);
+        
+        // Y-axis labels
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 100, 100);
+        for (let i = 0; i <= 5; i++) {
+          const labelY = chartStartY - (i / maxValue) * chartHeight;
+          pdf.text(String(i), margin - 8, labelY + 2);
+          pdf.setDrawColor(230, 230, 230);
+          pdf.line(margin, labelY, pageWidth - margin, labelY);
+        }
+
+        // Risk threshold lines
+        pdf.setDrawColor(255, 193, 7);
+        pdf.setLineWidth(0.3);
+        const intermediateY = chartStartY - (2.33 / maxValue) * chartHeight;
+        pdf.line(margin, intermediateY, pageWidth - margin, intermediateY);
+        
+        pdf.setDrawColor(40, 167, 69);
+        const favorableY = chartStartY - (3.67 / maxValue) * chartHeight;
+        pdf.line(margin, favorableY, pageWidth - margin, favorableY);
+
+        // Draw bars for each category
+        categories.forEach((cat, catIndex) => {
+          const value = dept.categoryAverages[cat];
+          const barHeight = (value / maxValue) * chartHeight;
+          const barX = margin + 10 + catIndex * barWidth;
+          const barY = chartStartY - barHeight;
+          
+          const [cr, cg, cb] = getRiskColor(value);
+          pdf.setFillColor(cr, cg, cb);
+          pdf.rect(barX, barY, barWidth - 8, barHeight, 'F');
+          
+          // Value on top of bar
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(value.toFixed(1), barX + (barWidth - 8) / 2 - 4, barY - 3);
+          
+          // Category label below
+          pdf.setFontSize(6);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(60, 60, 60);
+          const catLabel = HSEIT_CATEGORY_LABELS[cat].length > 10 
+            ? HSEIT_CATEGORY_LABELS[cat].substring(0, 10) + '...' 
+            : HSEIT_CATEGORY_LABELS[cat];
+          pdf.text(catLabel, barX + 2, chartStartY + 8);
+        });
+
+        yPos = chartStartY + 18;
+
+        // Category details table for this department
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 0, 0);
+        addText('Detalhamento por Categoria:', margin, yPos);
+        yPos += 8;
+
+        categories.forEach((cat) => {
+          addNewPageIfNeeded(10);
+          
+          const value = dept.categoryAverages[cat];
+          const impact = getHealthImpact(value);
+          const [cr, cg, cb] = getRiskColor(value);
+          
+          // Color indicator
+          pdf.setFillColor(cr, cg, cb);
+          pdf.circle(margin + 4, yPos - 2, 3, 'F');
+          
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(`${HSEIT_CATEGORY_LABELS[cat]}: ${value.toFixed(2)} - ${HEALTH_IMPACT_LABELS[impact]}`, margin + 10, yPos);
+          
+          yPos += 8;
+        });
+
+        yPos += 10;
+      }
 
       // ========== PAGE 5: ACTION PLAN ==========
       pdf.addPage();
