@@ -95,6 +95,164 @@ export type Database = {
         }
         Relationships: []
       }
+      burnout_answers: {
+        Row: {
+          answer_value: number
+          created_at: string | null
+          id: string
+          question_number: number
+          response_id: string
+        }
+        Insert: {
+          answer_value: number
+          created_at?: string | null
+          id?: string
+          question_number: number
+          response_id: string
+        }
+        Update: {
+          answer_value?: number
+          created_at?: string | null
+          id?: string
+          question_number?: number
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burnout_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "burnout_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      burnout_assessments: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          start_date: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          start_date?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          start_date?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burnout_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      burnout_departments: {
+        Row: {
+          assessment_id: string
+          created_at: string | null
+          employee_count: number | null
+          id: string
+          name: string
+          order_index: number | null
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string | null
+          employee_count?: number | null
+          id?: string
+          name: string
+          order_index?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string | null
+          employee_count?: number | null
+          id?: string
+          name?: string
+          order_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burnout_departments_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "burnout_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      burnout_responses: {
+        Row: {
+          assessment_id: string
+          completed_at: string | null
+          created_at: string | null
+          demographics: Json | null
+          department: string | null
+          id: string
+          respondent_token: string
+          risk_level: string | null
+          total_score: number | null
+        }
+        Insert: {
+          assessment_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          respondent_token: string
+          risk_level?: string | null
+          total_score?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          respondent_token?: string
+          risk_level?: string | null
+          total_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burnout_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "burnout_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rate_limits: {
         Row: {
           company_id: string | null
