@@ -44,7 +44,9 @@ import {
   Users, 
   TrendingUp, 
   AlertTriangle,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import {
   BURNOUT_QUESTIONS_SORTED,
@@ -91,6 +93,8 @@ export default function BurnoutResults() {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
 
   useEffect(() => {
     if (!authLoading) {
@@ -597,56 +601,113 @@ export default function BurnoutResults() {
                 <CardDescription>Detalhamento de todas as {responses.length} respostas recebidas</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Setor</TableHead>
-                      <TableHead className="text-center">Pontuação</TableHead>
-                      <TableHead className="text-center">Nível de Risco</TableHead>
-                      <TableHead className="text-center">Idade</TableHead>
-                      <TableHead className="text-center">Tempo de Empresa</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {responses.slice(0, 50).map((response) => {
-                      const riskLevel = mapRiskLevel(response.risk_level);
-                      const demographics = response.demographics || {};
-                      return (
-                        <TableRow key={response.id}>
-                          <TableCell>
-                            {new Date(response.completed_at).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </TableCell>
-                          <TableCell>{response.department || '-'}</TableCell>
-                          <TableCell className="text-center font-medium">{response.total_score}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge 
-                              style={{ 
-                                backgroundColor: BURNOUT_RISK_COLORS[riskLevel], 
-                                color: 'white' 
-                              }}
+                {(() => {
+                  const totalPages = Math.ceil(responses.length / ITEMS_PER_PAGE);
+                  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                  const paginatedResponses = responses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+                  
+                  return (
+                    <>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Setor</TableHead>
+                            <TableHead className="text-center">Pontuação</TableHead>
+                            <TableHead className="text-center">Nível de Risco</TableHead>
+                            <TableHead className="text-center">Idade</TableHead>
+                            <TableHead className="text-center">Tempo de Empresa</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedResponses.map((response) => {
+                            const riskLevel = mapRiskLevel(response.risk_level);
+                            const demographics = response.demographics || {};
+                            return (
+                              <TableRow key={response.id}>
+                                <TableCell>
+                                  {new Date(response.completed_at).toLocaleDateString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </TableCell>
+                                <TableCell>{response.department || '-'}</TableCell>
+                                <TableCell className="text-center font-medium">{response.total_score}</TableCell>
+                                <TableCell className="text-center">
+                                  <Badge 
+                                    style={{ 
+                                      backgroundColor: BURNOUT_RISK_COLORS[riskLevel], 
+                                      color: 'white' 
+                                    }}
+                                  >
+                                    {BURNOUT_RISK_LABELS[riskLevel]}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-center">{demographics.age || '-'}</TableCell>
+                                <TableCell className="text-center">{demographics.tenure || '-'}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                      
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                          <p className="text-sm text-muted-foreground">
+                            Mostrando {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, responses.length)} de {responses.length} respostas
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
                             >
-                              {BURNOUT_RISK_LABELS[riskLevel]}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">{demographics.age || '-'}</TableCell>
-                          <TableCell className="text-center">{demographics.tenure || '-'}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-                {responses.length > 50 && (
-                  <p className="text-sm text-muted-foreground text-center mt-4">
-                    Mostrando 50 de {responses.length} respostas
-                  </p>
-                )}
+                              <ChevronLeft className="h-4 w-4 mr-1" />
+                              Anterior
+                            </Button>
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(page => {
+                                  if (totalPages <= 7) return true;
+                                  if (page === 1 || page === totalPages) return true;
+                                  if (Math.abs(page - currentPage) <= 1) return true;
+                                  return false;
+                                })
+                                .map((page, index, arr) => (
+                                  <span key={page} className="flex items-center">
+                                    {index > 0 && arr[index - 1] !== page - 1 && (
+                                      <span className="px-2 text-muted-foreground">...</span>
+                                    )}
+                                    <Button
+                                      variant={currentPage === page ? "default" : "outline"}
+                                      size="sm"
+                                      className="w-8 h-8 p-0"
+                                      onClick={() => setCurrentPage(page)}
+                                    >
+                                      {page}
+                                    </Button>
+                                  </span>
+                                ))}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                              disabled={currentPage === totalPages}
+                            >
+                              Próxima
+                              <ChevronRight className="h-4 w-4 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
 
