@@ -32,6 +32,10 @@ import HSEITDashboard from "./pages/HSEITDashboard";
 import HSEITManagement from "./pages/HSEITManagement";
 import HSEITForm from "./pages/HSEITForm";
 import HSEITResults from "./pages/HSEITResults";
+import BurnoutDashboard from "./pages/BurnoutDashboard";
+import BurnoutManagement from "./pages/BurnoutManagement";
+import BurnoutForm from "./pages/BurnoutForm";
+import BurnoutResults from "./pages/BurnoutResults";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +79,12 @@ const App = () => (
             <Route path="/hseit/:id" element={<HSEITManagement />} />
             <Route path="/hseit/:companySlug/:assessmentId" element={<HSEITForm />} />
             <Route path="/hseit/results/:id" element={<HSEITResults />} />
+            {/* Burnout Routes */}
+            <Route path="/burnout-dashboard" element={<BurnoutDashboard />} />
+            <Route path="/burnout/new" element={<BurnoutManagement />} />
+            <Route path="/burnout/:id" element={<BurnoutManagement />} />
+            <Route path="/burnout/:companySlug/:assessmentId" element={<BurnoutForm />} />
+            <Route path="/burnout/results/:id" element={<BurnoutResults />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>
