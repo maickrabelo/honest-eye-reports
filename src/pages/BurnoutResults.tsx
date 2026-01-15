@@ -44,10 +44,10 @@ import {
   Users, 
   TrendingUp, 
   AlertTriangle,
-  FileText,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
+import { BurnoutReportPDF } from "@/components/burnout/BurnoutReportPDF";
 import {
   BURNOUT_QUESTIONS_SORTED,
   BURNOUT_CATEGORY_LABELS,
@@ -316,10 +316,17 @@ export default function BurnoutResults() {
               {assessment?.companies?.name} • {responses.length} respostas
             </p>
           </div>
-          <Button variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Gerar Relatório PDF
-          </Button>
+          <BurnoutReportPDF
+            assessment={assessment}
+            responses={responses}
+            categoryData={categoryData}
+            departmentData={departmentData}
+            avgScore={avgScore}
+            overallRiskLevel={overallRiskLevel}
+            riskDistribution={riskDistribution}
+            questionAverages={questionAverages}
+            hasDetailedAnswers={hasDetailedAnswers}
+          />
         </div>
 
         {responses.length === 0 ? (
