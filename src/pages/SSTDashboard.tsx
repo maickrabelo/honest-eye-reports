@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -188,6 +188,14 @@ const SSTDashboard = () => {
                   Voltar para lista de empresas
                 </Button>
               )}
+              
+              <Button 
+                onClick={() => navigate('/hseit-dashboard')}
+                variant="outline"
+              >
+                <Brain className="mr-2 h-4 w-4" />
+                Avaliação HSE-IT
+              </Button>
               
               <Button 
                 onClick={() => navigate('/climate-dashboard')}

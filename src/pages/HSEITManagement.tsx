@@ -38,7 +38,7 @@ export default function HSEITManagement() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   
   const isEditing = !!id;
 
@@ -357,7 +357,7 @@ export default function HSEITManagement() {
               <CardContent>
                 <DepartmentManager
                   departments={departments}
-                  onDepartmentsChange={setDepartments}
+                  onChange={setDepartments}
                 />
               </CardContent>
             </Card>
@@ -386,11 +386,26 @@ export default function HSEITManagement() {
             </Card>
 
             {/* QR Code Preview */}
-            {isEditing && selectedCompany && (
-              <QRCodePreview
-                url={getFormUrl()}
-                title="Link do Formulário HSE-IT"
-              />
+            {isEditing && selectedCompany && getFormUrl() && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Link do Formulário HSE-IT</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center gap-4">
+                  <QRCodePreview url={getFormUrl()} size={150} />
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(getFormUrl());
+                      toast({ title: 'Link copiado!' });
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copiar Link
+                  </Button>
+                </CardContent>
+              </Card>
             )}
 
             {/* HSE-IT Info */}
