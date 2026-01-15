@@ -380,10 +380,10 @@ export default function BurnoutManagement() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DepartmentManager
-                  departments={departments}
-                  onDepartmentsChange={setDepartments}
-                />
+              <DepartmentManager
+                departments={departments}
+                onChange={setDepartments}
+              />
               </CardContent>
             </Card>
           </div>
