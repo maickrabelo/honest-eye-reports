@@ -45,12 +45,15 @@ import {
 } from '@/data/hseitQuestions';
 import { ChartConfig } from '@/components/ui/chart';
 import { CategoryRiskIndicators } from '@/components/hseit/CategoryRiskIndicators';
-import { HSEITReportPDF } from '@/components/hseit/HSEITReportPDF';
+import { HSEITReportEditor } from '@/components/hseit/HSEITReportEditor';
 
 interface Assessment {
   id: string;
   title: string;
+  description: string | null;
+  createdAt: string;
   companies: {
+    id: string;
     name: string;
   };
 }
@@ -63,6 +66,7 @@ interface Answer {
 interface Response {
   id: string;
   department: string | null;
+  completedAt: string | null;
   answers: Answer[];
 }
 
@@ -76,6 +80,9 @@ export default function HSEITResults() {
   const [responses, setResponses] = useState<Response[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
+  const [sstName, setSstName] = useState<string | null>(null);
+  const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -98,17 +105,47 @@ export default function HSEITResults() {
       // Fetch assessment
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('hseit_assessments')
-        .select('id, title, companies(name)')
+        .select('id, title, description, created_at, companies(id, name)')
         .eq('id', id)
         .single();
 
       if (assessmentError) throw assessmentError;
-      setAssessment(assessmentData as unknown as Assessment);
+      
+      const mappedAssessment = {
+        id: assessmentData.id,
+        title: assessmentData.title,
+        description: assessmentData.description,
+        createdAt: assessmentData.created_at,
+        companies: assessmentData.companies as unknown as { id: string; name: string }
+      };
+      setAssessment(mappedAssessment);
+
+      // Fetch SST manager logo for this company
+      if (mappedAssessment.companies?.id) {
+        const { data: assignmentData } = await supabase
+          .from('company_sst_assignments')
+          .select('sst_manager_id')
+          .eq('company_id', mappedAssessment.companies.id)
+          .single();
+
+        if (assignmentData?.sst_manager_id) {
+          const { data: sstData } = await supabase
+            .from('sst_managers')
+            .select('name, logo_url')
+            .eq('id', assignmentData.sst_manager_id)
+            .single();
+
+          if (sstData) {
+            setSstName(sstData.name);
+            setSstLogoUrl(sstData.logo_url);
+          }
+        }
+      }
 
       // Fetch responses with answers
       const { data: responsesData, error: responsesError } = await supabase
         .from('hseit_responses')
-        .select('id, department')
+        .select('id, department, completed_at')
         .eq('assessment_id', id)
         .not('completed_at', 'is', null);
 
@@ -131,6 +168,7 @@ export default function HSEITResults() {
       const mappedResponses: Response[] = (responsesData || []).map(r => ({
         id: r.id,
         department: r.department,
+        completedAt: r.completed_at,
         answers: allAnswers
           .filter(a => a.response_id === r.id)
           .map(a => ({ questionNumber: a.question_number, value: a.answer_value }))
@@ -348,16 +386,40 @@ export default function HSEITResults() {
               </Select>
             )}
             
-            <HSEITReportPDF
-              assessment={assessment}
-              responses={filteredResponses}
-              categoryAverages={categoryAverages}
-              overallAverage={overallAverage}
-              departments={departments}
-              questionAverages={questionAverages}
-            />
+            <Button onClick={() => setIsReportEditorOpen(true)}>
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Preparar Relatório PDF
+            </Button>
           </div>
         </div>
+
+        {/* Report Editor Modal */}
+        <HSEITReportEditor
+          open={isReportEditorOpen}
+          onOpenChange={setIsReportEditorOpen}
+          assessment={{
+            id: assessment.id,
+            title: assessment.title,
+            description: assessment.description,
+            companyName: assessment.companies?.name || '',
+            createdAt: assessment.createdAt
+          }}
+          responses={filteredResponses}
+          categoryAverages={Object.entries(categoryAverages).map(([category, average]) => ({
+            category: category as HSEITCategory,
+            average,
+            label: HSEIT_CATEGORY_LABELS[category as HSEITCategory]
+          }))}
+          departments={departments}
+          questionAverages={questionAverages.map(q => ({
+            questionNumber: q.number,
+            text: q.text,
+            category: q.category,
+            average: q.average
+          }))}
+          sstLogoUrl={sstLogoUrl}
+          sstName={sstName}
+        />
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
