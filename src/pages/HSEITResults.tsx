@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, ArrowLeft, Download, Users, AlertTriangle, TrendingUp, BarChart3, ClipboardList, Building2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, ClipboardList } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
   ResponsiveContainer,
@@ -32,7 +32,6 @@ import {
 import {
   HSEIT_QUESTIONS,
   HSEIT_CATEGORY_LABELS,
-  HSEIT_CATEGORY_COLORS,
   HSEITCategory,
   calculateCategoryAverage,
   calculateOverallAverage,
@@ -44,7 +43,9 @@ import {
   HEALTH_IMPACT_COLORS,
   normalizeScore
 } from '@/data/hseitQuestions';
-import { ChartContainer, ChartConfig } from '@/components/ui/chart';
+import { ChartConfig } from '@/components/ui/chart';
+import { CategoryRiskIndicators } from '@/components/hseit/CategoryRiskIndicators';
+import { HSEITReportPDF } from '@/components/hseit/HSEITReportPDF';
 
 interface Assessment {
   id: string;
@@ -332,7 +333,7 @@ export default function HSEITResults() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {departments.length > 0 && (
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                 <SelectTrigger className="w-[180px]">
@@ -346,6 +347,15 @@ export default function HSEITResults() {
                 </SelectContent>
               </Select>
             )}
+            
+            <HSEITReportPDF
+              assessment={assessment}
+              responses={filteredResponses}
+              categoryAverages={categoryAverages}
+              overallAverage={overallAverage}
+              departments={departments}
+              questionAverages={questionAverages}
+            />
           </div>
         </div>
 
@@ -506,6 +516,11 @@ export default function HSEITResults() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Risk Indicators with Recommendations */}
+        <div className="mb-8">
+          <CategoryRiskIndicators categoryAverages={categoryAverages} />
+        </div>
 
         {/* Question Table - Top 10 Critical */}
         <Card>
