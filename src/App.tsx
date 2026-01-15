@@ -28,6 +28,10 @@ import PartnerRegistration from "./pages/PartnerRegistration";
 import AffiliateRegistration from "./pages/AffiliateRegistration";
 import PartnerDashboard from "./pages/PartnerDashboard";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
+import HSEITDashboard from "./pages/HSEITDashboard";
+import HSEITManagement from "./pages/HSEITManagement";
+import HSEITForm from "./pages/HSEITForm";
+import HSEITResults from "./pages/HSEITResults";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +69,12 @@ const App = () => (
             <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
             <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
             <Route path="/afiliado/dashboard" element={<AffiliateDashboard />} />
+            {/* HSE-IT Routes */}
+            <Route path="/hseit-dashboard" element={<HSEITDashboard />} />
+            <Route path="/hseit/new" element={<HSEITManagement />} />
+            <Route path="/hseit/:id" element={<HSEITManagement />} />
+            <Route path="/hseit/:companySlug/:assessmentId" element={<HSEITForm />} />
+            <Route path="/hseit/results/:id" element={<HSEITResults />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RealAuthProvider>

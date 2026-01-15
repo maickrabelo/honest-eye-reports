@@ -277,6 +277,158 @@ export type Database = {
           },
         ]
       }
+      hseit_answers: {
+        Row: {
+          answer_value: number
+          created_at: string
+          id: string
+          question_number: number
+          response_id: string
+        }
+        Insert: {
+          answer_value: number
+          created_at?: string
+          id?: string
+          question_number: number
+          response_id: string
+        }
+        Update: {
+          answer_value?: number
+          created_at?: string
+          id?: string
+          question_number?: number
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hseit_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "hseit_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hseit_assessments: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          start_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          start_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          start_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hseit_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hseit_departments: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          employee_count: number
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hseit_departments_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "hseit_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hseit_responses: {
+        Row: {
+          assessment_id: string
+          completed_at: string | null
+          created_at: string
+          demographics: Json | null
+          department: string | null
+          id: string
+          respondent_token: string
+        }
+        Insert: {
+          assessment_id: string
+          completed_at?: string | null
+          created_at?: string
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          respondent_token: string
+        }
+        Update: {
+          assessment_id?: string
+          completed_at?: string | null
+          created_at?: string
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          respondent_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hseit_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "hseit_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licensed_partners: {
         Row: {
           approved_at: string | null
