@@ -441,12 +441,23 @@ const MasterDashboard = () => {
         logoUrl = await uploadLogo(sstLogoFile);
       }
 
+      const name = String(formData.get('sstName') ?? '').trim();
+      const email = String(formData.get('sstEmail') ?? '').trim();
+      // Compat: um dos modais estava usando `sstCnpj` em vez de `sstCNPJ`
+      const cnpj = String((formData.get('sstCNPJ') ?? formData.get('sstCnpj') ?? '')).trim();
+      const phone = String(formData.get('sstPhone') ?? '').trim();
+      const address = String(formData.get('sstAddress') ?? '').trim();
+
+      if (!name) {
+        throw new Error('Informe o nome da gestora SST.');
+      }
+
       const updateData = {
-        name: formData.get('sstName') as string,
-        email: formData.get('sstEmail') as string,
-        cnpj: formData.get('sstCNPJ') as string,
-        phone: formData.get('sstPhone') as string,
-        address: formData.get('sstAddress') as string,
+        name,
+        email: email || null,
+        cnpj: cnpj || null,
+        phone: phone || null,
+        address: address || null,
         logo_url: logoUrl,
       };
 
@@ -964,7 +975,7 @@ const MasterDashboard = () => {
                   <Label htmlFor="editSstCnpjDetail">CNPJ</Label>
                   <Input 
                     id="editSstCnpjDetail" 
-                    name="sstCnpj" 
+                    name="sstCNPJ" 
                     placeholder="00.000.000/0000-00"
                     defaultValue={editingSST?.cnpj || ''}
                   />
