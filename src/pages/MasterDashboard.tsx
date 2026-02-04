@@ -514,6 +514,7 @@ const MasterDashboard = () => {
       const notificationEmail1 = (formData.get('notificationEmail1') as string)?.trim();
       const notificationEmail2 = (formData.get('notificationEmail2') as string)?.trim();
       const notificationEmail3 = (formData.get('notificationEmail3') as string)?.trim();
+      const slug = (formData.get('companySlug') as string)?.trim();
 
       const updateData = {
         name: formData.get('companyName') as string,
@@ -521,6 +522,7 @@ const MasterDashboard = () => {
         cnpj: formData.get('companyCNPJ') as string,
         phone: formData.get('companyPhone') as string,
         address: formData.get('companyAddress') as string,
+        slug: slug || null,
         notification_email_1: notificationEmail1 || null,
         notification_email_2: notificationEmail2 || null,
         notification_email_3: notificationEmail3 || null,
@@ -1276,6 +1278,18 @@ const MasterDashboard = () => {
                                 placeholder="Endereço completo"
                                 defaultValue={editingCompany?.address || ''}
                               />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editCompanySlug">Slug (URL)</Label>
+                              <Input 
+                                id="editCompanySlug" 
+                                name="companySlug" 
+                                placeholder="nome-da-empresa"
+                                defaultValue={editingCompany?.slug || ''}
+                              />
+                              <p className="text-xs text-gray-500">
+                                Identificador único usado na URL da página de denúncias (ex: /report/nome-da-empresa)
+                              </p>
                             </div>
 
                             <div className="border-t pt-4 mt-2">
