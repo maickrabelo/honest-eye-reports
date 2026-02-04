@@ -1227,7 +1227,7 @@ const MasterDashboard = () => {
                         setSstLogoPreview(null);
                       }
                     }}>
-                      <DialogContent className="max-h-[90vh] overflow-y-auto">
+                      <DialogContent key={editingSST?.id} className="max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Editar Gestora SST</DialogTitle>
                           <DialogDescription>
