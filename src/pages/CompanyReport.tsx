@@ -21,8 +21,9 @@ const CompanyReport = () => {
       }
 
       try {
+        // Use public view to avoid exposing sensitive company data (LGPD compliant)
         const { data, error } = await supabase
-          .from('companies')
+          .from('companies_public' as any)
           .select('id, name, logo_url, slug')
           .eq('slug', companySlug)
           .maybeSingle();
@@ -30,10 +31,13 @@ const CompanyReport = () => {
         if (error) {
           console.error('Error fetching company:', error);
           setCompany(null);
+        } else if (data) {
+          const companyData = data as unknown as { id: string; name: string; logo_url: string | null; slug: string };
+          console.log('Company fetched successfully:', companyData);
+          console.log('Company ID that will be passed to ReportChat:', companyData.id);
+          setCompany(companyData);
         } else {
-          console.log('Company fetched successfully:', data);
-          console.log('Company ID that will be passed to ReportChat:', data?.id);
-          setCompany(data);
+          setCompany(null);
         }
       } catch (error) {
         console.error('Error fetching company:', error);
