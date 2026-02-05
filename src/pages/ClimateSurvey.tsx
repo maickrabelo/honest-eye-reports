@@ -87,20 +87,21 @@ export default function ClimateSurvey() {
   const fetchCompanyAndSurvey = async () => {
     setIsLoading(true);
     try {
-      // Fetch company by slug
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
+      // Fetch company by slug using public view (LGPD compliant)
+      const { data: rawCompanyData, error: companyError } = await supabase
+        .from('companies_public' as any)
         .select('id, name, logo_url')
         .eq('slug', companySlug)
         .maybeSingle();
 
       if (companyError) throw companyError;
-      if (!companyData) {
+      if (!rawCompanyData) {
         toast({ title: "Empresa não encontrada", variant: "destructive" });
         navigate('/');
         return;
       }
 
+      const companyData = rawCompanyData as unknown as { id: string; name: string; logo_url: string | null };
       setCompany(companyData);
 
       // Fetch active survey for the company

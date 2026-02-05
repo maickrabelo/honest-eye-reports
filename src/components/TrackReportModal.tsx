@@ -39,15 +39,16 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
     try {
       console.log('Searching for tracking code:', reportId.toUpperCase());
       
-      const { data: reportData, error: reportError } = await supabase
-        .from('reports')
-        .select('*')
+      // Use public view for tracking - hides sensitive reporter data (LGPD compliant)
+      const { data: rawReportData, error: reportError } = await supabase
+        .from('reports_public' as any)
+        .select('id, tracking_code, status, category, title, created_at, updated_at, company_id, is_anonymous, urgency, department')
         .eq('tracking_code', reportId.toUpperCase())
         .single();
 
-      console.log('Search result:', { reportData, reportError });
+      console.log('Search result:', { rawReportData, reportError });
 
-      if (reportError || !reportData) {
+      if (reportError || !rawReportData) {
         setReport(null);
         setError("Denúncia não encontrada. Verifique o código e tente novamente.");
         toast({
@@ -59,6 +60,21 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
         return;
       }
 
+      // Type assertion for the public view data
+      const reportData = rawReportData as unknown as {
+        id: string;
+        tracking_code: string;
+        status: string;
+        category: string;
+        title: string;
+        created_at: string;
+        updated_at: string;
+        company_id: string;
+        is_anonymous: boolean;
+        urgency: string;
+        department: string | null;
+      };
+
       const { data: updatesData } = await supabase
         .from('report_updates')
         .select('*')
@@ -68,7 +84,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
       const formattedReport = {
         id: reportData.tracking_code,
         title: reportData.title,
-        summary: reportData.description,
+        summary: "Detalhes da denúncia disponíveis apenas para usuários autorizados.", // Hide description from public
         status: reportData.status,
         date: new Date(reportData.created_at).toLocaleDateString('pt-BR'),
         updates: updatesData?.map(update => ({
