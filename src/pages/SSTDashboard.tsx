@@ -5,13 +5,15 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2 } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { useToast } from "@/hooks/use-toast";
+import AddCompanyDialog from '@/components/sst/AddCompanyDialog';
+import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
 
 interface Company {
   id: string;
@@ -27,6 +29,9 @@ const SSTDashboard = () => {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
+  const [sstManagerId, setSstManagerId] = useState<string | null>(null);
+  const [maxCompanies, setMaxCompanies] = useState(50);
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useRealAuth();
   const { toast } = useToast();
@@ -72,11 +77,25 @@ const SSTDashboard = () => {
         return;
       }
 
+      const currentSstManagerId = profileData.sst_manager_id;
+      setSstManagerId(currentSstManagerId);
+
+      // Get max_companies from sst_managers
+      const { data: sstData } = await supabase
+        .from('sst_managers')
+        .select('max_companies')
+        .eq('id', currentSstManagerId)
+        .single();
+
+      if (sstData?.max_companies) {
+        setMaxCompanies(sstData.max_companies);
+      }
+
       // Get companies assigned to this SST manager
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('company_sst_assignments')
         .select('company_id')
-        .eq('sst_manager_id', profileData.sst_manager_id);
+        .eq('sst_manager_id', currentSstManagerId);
 
       if (assignmentsError) throw assignmentsError;
 
@@ -215,9 +234,18 @@ const SSTDashboard = () => {
               
               <Button 
                 onClick={() => navigate('/climate-survey/new')}
+                variant="outline"
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <ClipboardList className="mr-2 h-4 w-4" />
                 Nova Pesquisa
+              </Button>
+
+              <Button 
+                onClick={() => setIsAddCompanyOpen(true)}
+                disabled={companies.length >= maxCompanies}
+              >
+                <Building2 className="mr-2 h-4 w-4" />
+                Nova Empresa
               </Button>
               
               <div className="relative w-full md:w-72">
@@ -235,103 +263,115 @@ const SSTDashboard = () => {
           {selectedCompany ? (
             <EmbeddedDashboard companyId={selectedCompany} />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCompanies.map((company) => (
-                <Card 
-                  key={company.id} 
-                  className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => handleCompanyClick(company.slug)}
-                >
-                  <div className="relative">
-                    {company.newReports > 0 && (
-                      <div className="absolute top-2 right-2">
-                        <Badge className="bg-red-500 text-white border-none">
-                          {company.newReports} {company.newReports === 1 ? 'nova denúncia' : 'novas denúncias'}
-                        </Badge>
-                      </div>
-                    )}
-                    <div className="h-32 bg-gray-100 flex items-center justify-center p-4">
-                      {company.logo_url ? (
-                        <img 
-                          src={company.logo_url} 
-                          alt={`Logo ${company.name}`} 
-                          className="max-h-full max-w-full object-contain"
-                        />
-                      ) : (
-                        <div className="text-gray-400 text-4xl font-bold">
-                          {company.name.substring(0, 2).toUpperCase()}
+            <>
+              <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCompanies.map((company) => (
+                  <Card 
+                    key={company.id} 
+                    className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleCompanyClick(company.slug)}
+                  >
+                    <div className="relative">
+                      {company.newReports > 0 && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-red-500 text-white border-none">
+                            {company.newReports} {company.newReports === 1 ? 'nova denúncia' : 'novas denúncias'}
+                          </Badge>
                         </div>
                       )}
+                      <div className="h-32 bg-gray-100 flex items-center justify-center p-4">
+                        {company.logo_url ? (
+                          <img 
+                            src={company.logo_url} 
+                            alt={`Logo ${company.name}`} 
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-gray-400 text-4xl font-bold">
+                            {company.name.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{company.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-2 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Total de denúncias:</span>
-                      <span className="font-medium">{company.reportCount}</span>
-                    </div>
-                    
-                    <div className="pt-2 border-t space-y-2">
-                      <p className="text-xs text-gray-500 font-medium">Canal de Denúncias:</p>
-                      <div className="flex items-center gap-2">
-                        <a 
-                          href={`${window.location.origin}/report/${company.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
-                        >
-                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{window.location.origin}/report/{company.slug}</span>
-                        </a>
-                        <Button
-                          variant="ghost"
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{company.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-2 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">Total de denúncias:</span>
+                        <span className="font-medium">{company.reportCount}</span>
+                      </div>
+                      
+                      <div className="pt-2 border-t space-y-2">
+                        <p className="text-xs text-gray-500 font-medium">Canal de Denúncias:</p>
+                        <div className="flex items-center gap-2">
+                          <a 
+                            href={`${window.location.origin}/report/${company.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                          >
+                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                          </a>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)}
+                            className="h-6 px-2"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <QRCodeDownloader
+                          url={`${window.location.origin}/report/${company.slug}`}
+                          filename={`qrcode-${company.slug}.png`}
                           size="sm"
-                          onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)}
-                          className="h-6 px-2"
-                        >
-                          <Copy className="h-3 w-3" />
+                          className="w-full"
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-0">
+                      {company.newReports > 0 ? (
+                        <div className="w-full py-2 text-sm flex items-center justify-center text-red-600 bg-red-50 rounded-md">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          Nova atividade detectada
+                        </div>
+                      ) : (
+                        <Button variant="outline" className="w-full">
+                          Ver dashboard
                         </Button>
-                      </div>
-                      <QRCodeDownloader
-                        url={`${window.location.origin}/report/${company.slug}`}
-                        filename={`qrcode-${company.slug}.png`}
-                        size="sm"
-                        className="w-full"
-                      />
+                      )}
+                    </CardFooter>
+                  </Card>
+                ))}
+                
+                {filteredCompanies.length === 0 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                    <div className="bg-gray-100 rounded-full p-4 mb-4">
+                      <Search className="h-8 w-8 text-gray-400" />
                     </div>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    {company.newReports > 0 ? (
-                      <div className="w-full py-2 text-sm flex items-center justify-center text-red-600 bg-red-50 rounded-md">
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        Nova atividade detectada
-                      </div>
-                    ) : (
-                      <Button variant="outline" className="w-full">
-                        Ver dashboard
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
-              
-              {filteredCompanies.length === 0 && (
-                <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                  <div className="bg-gray-100 rounded-full p-4 mb-4">
-                    <Search className="h-8 w-8 text-gray-400" />
+                    <h3 className="text-lg font-medium mb-1">Nenhuma empresa encontrada</h3>
+                    <p className="text-gray-500">Tente ajustar sua busca ou entre em contato com o suporte.</p>
                   </div>
-                  <h3 className="text-lg font-medium mb-1">Nenhuma empresa encontrada</h3>
-                  <p className="text-gray-500">Tente ajustar sua busca ou entre em contato com o suporte.</p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </main>
       <Footer />
+
+      {sstManagerId && (
+        <AddCompanyDialog
+          open={isAddCompanyOpen}
+          onOpenChange={setIsAddCompanyOpen}
+          sstManagerId={sstManagerId}
+          onCompanyAdded={fetchCompanies}
+        />
+      )}
     </div>
   );
 };
