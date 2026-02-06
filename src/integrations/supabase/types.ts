@@ -1011,6 +1011,7 @@ export type Database = {
           email: string | null
           id: string
           logo_url: string | null
+          max_companies: number
           name: string
           phone: string | null
           updated_at: string | null
@@ -1022,6 +1023,7 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          max_companies?: number
           name: string
           phone?: string | null
           updated_at?: string | null
@@ -1033,6 +1035,7 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          max_companies?: number
           name?: string
           phone?: string | null
           updated_at?: string | null
@@ -1414,7 +1417,16 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      count_sst_companies: {
+        Args: { _sst_manager_id: string }
+        Returns: number
+      }
       generate_tracking_code: { Args: never; Returns: string }
+      get_sst_max_companies: {
+        Args: { _sst_manager_id: string }
+        Returns: number
+      }
+      get_user_sst_manager_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
