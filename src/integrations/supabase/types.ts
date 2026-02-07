@@ -1063,6 +1063,7 @@ export type Database = {
           file_name: string
           file_url: string
           id: string
+          target_sst_manager_ids: string[] | null
           title: string
           updated_at: string
         }
@@ -1074,6 +1075,7 @@ export type Database = {
           file_name: string
           file_url: string
           id?: string
+          target_sst_manager_ids?: string[] | null
           title: string
           updated_at?: string
         }
@@ -1085,6 +1087,7 @@ export type Database = {
           file_name?: string
           file_url?: string
           id?: string
+          target_sst_manager_ids?: string[] | null
           title?: string
           updated_at?: string
         }
@@ -1097,6 +1100,7 @@ export type Database = {
           created_by: string | null
           id: string
           is_pinned: boolean | null
+          target_sst_manager_ids: string[] | null
           title: string
           updated_at: string
         }
@@ -1106,6 +1110,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_pinned?: boolean | null
+          target_sst_manager_ids?: string[] | null
           title: string
           updated_at?: string
         }
@@ -1115,6 +1120,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_pinned?: boolean | null
+          target_sst_manager_ids?: string[] | null
           title?: string
           updated_at?: string
         }
@@ -1129,6 +1135,7 @@ export type Database = {
           description: string | null
           duration_minutes: number | null
           id: string
+          target_sst_manager_ids: string[] | null
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -1141,6 +1148,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          target_sst_manager_ids?: string[] | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -1153,6 +1161,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          target_sst_manager_ids?: string[] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
