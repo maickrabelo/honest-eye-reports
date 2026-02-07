@@ -1,73 +1,84 @@
 
-# Criar usuario automatico para empresa no cadastro SST
+# White-Label para Gestores SST
 
 ## Resumo
-Quando um gestor SST cadastrar uma nova empresa pelo dashboard, o sistema vai automaticamente criar uma conta de acesso para essa empresa. A senha inicial sera o CNPJ informado no cadastro. No primeiro login, o usuario sera obrigado a criar uma nova senha antes de acessar o dashboard.
+Transformar a plataforma em white-label para gestores SST, substituindo a logo SOIA pela logo do gestor em todas as telas relevantes. Criar paginas de entrada personalizadas acessiveis via caminho na URL (ex: `/sst/nrsaude`).
+
+## O que muda para o usuario
+
+1. **Dashboard do gestor SST**: A logo SOIA no cabecalho e rodape sera substituida pela logo do gestor SST
+2. **Dashboard das empresas vinculadas**: Quando uma empresa cadastrada por um gestor SST acessar seu dashboard, a logo SOIA sera substituida pela logo do gestor SST
+3. **Pagina publica do gestor**: Cada gestor tera uma pagina de entrada personalizada em `/sst/slug-do-gestor` com sua propria logo, onde seus clientes podem acessar o sistema
+4. **Paginas de formularios publicos** (denuncias, HSE-IT, Burnout, Clima): A logo do gestor SST aparecera no cabecalho quando a empresa for vinculada a um gestor
 
 ## Mudancas necessarias
 
 ### 1. Banco de dados
-- Adicionar coluna `must_change_password` (boolean, default false) na tabela `profiles` para controlar se o usuario precisa trocar a senha no primeiro acesso.
+- Adicionar coluna `slug` (text, unique) na tabela `sst_managers` para gerar a URL personalizada
+- O slug sera gerado automaticamente a partir do nome do gestor no momento do cadastro
 
-### 2. Backend function - Criar empresa com usuario (nova edge function)
-Criar uma nova edge function `create-company-user` que:
-- Aceita chamadas de usuarios com role `sst` (alem de admin)
-- Recebe os dados da empresa (nome, CNPJ, email, etc.)
-- Valida que o CNPJ foi informado (obrigatorio para gerar a senha)
-- Valida que o email foi informado (obrigatorio para criar o usuario)
-- Usando o service role key:
-  - Cria o usuario no auth com email da empresa e senha = CNPJ (somente digitos)
-  - Confirma o email automaticamente
-  - Cria/atualiza o profile com `company_id` e `must_change_password = true`
-  - Atribui a role `company` ao usuario
-- Retorna o user_id criado
+### 2. Contexto de branding (novo arquivo)
+Criar um contexto React (`WhiteLabelContext`) que:
+- Detecta se a URL atual eh de um gestor SST (`/sst/:sstSlug`)
+- Detecta o gestor SST vinculado ao usuario logado (via profile -> sst_manager_id ou company -> company_sst_assignments)
+- Disponibiliza `brandLogo` e `brandName` para todos os componentes
+- Funciona tanto para usuarios logados quanto para visitantes em URLs de gestores
 
-### 3. Formulario de cadastro (AddCompanyDialog.tsx)
-- Tornar os campos **CNPJ** e **Email** obrigatorios (atualmente sao opcionais)
-- Adicionar validacao minima no CNPJ (pelo menos 11 digitos numericos)
-- Apos criar a empresa e o assignment, chamar a edge function para criar o usuario da empresa
-- Exibir mensagem de sucesso informando que o acesso foi criado com a senha sendo o CNPJ
+### 3. Componente Navbar
+- Usar o contexto de branding para decidir qual logo exibir
+- Se houver branding SST ativo, mostrar a logo do gestor SST em vez da logo SOIA
+- Remover a logica atual que mostra "SOIA + SST" lado a lado - agora sera so a logo SST
 
-### 4. Pagina de troca de senha obrigatoria (nova pagina)
-- Criar `/change-password` com um formulario simples:
-  - Campo "Nova senha"
-  - Campo "Confirmar nova senha"
-  - Botao "Salvar nova senha"
-- Ao salvar, atualiza a senha via `supabase.auth.updateUser({ password })` e define `must_change_password = false` no profile
-- Sem opcao de pular - o usuario so consegue acessar o sistema apos trocar a senha
+### 4. Componente Footer
+- Usar o contexto de branding para substituir a logo SOIA pela do gestor SST quando aplicavel
 
-### 5. Controle de redirecionamento (RealAuthContext.tsx)
-- Apos o login, verificar se `must_change_password` e `true` no profile
-- Se sim, redirecionar para `/change-password` ao inves do dashboard normal
-- Bloquear navegacao para outras paginas enquanto a senha nao for trocada
+### 5. Pagina de entrada do gestor SST (nova pagina)
+- Rota: `/sst/:sstSlug`
+- Pagina similar a landing page mas com a logo do gestor
+- Exibe botao de login para a area do cliente
+- Carrega dados do gestor pelo slug na URL
 
 ### 6. Rota no App.tsx
-- Adicionar rota `/change-password` apontando para a nova pagina
+- Adicionar rota `/sst/:sstSlug` para a pagina de entrada personalizada
+
+### 7. Pagina CompanyReport (formulario de denuncia)
+- Ja carrega logo SST via Navbar com companyId, mas substituir logo SOIA completamente
+
+### 8. Admin - Cadastro de SST
+- Ao cadastrar/editar um gestor SST no Master Dashboard, gerar slug automaticamente
+- Permitir editar o slug manualmente pelo admin
 
 ## Detalhes tecnicos
 
-### Edge function `create-company-user`
-```text
-Fluxo:
-1. Verificar auth token do chamador
-2. Verificar se o chamador tem role 'sst' ou 'admin'
-3. Extrair CNPJ somente digitos para usar como senha
-4. Criar usuario via supabaseAdmin.auth.admin.createUser()
-5. Atualizar profile com company_id e must_change_password = true
-6. Inserir role 'company' em user_roles
-7. Retornar user_id
-```
-
-### Validacao do CNPJ como senha
-- O CNPJ sera limpo (somente digitos): "12.345.678/0001-90" vira "12345678000190"
-- Minimo 11 caracteres numericos para funcionar como senha (supabase exige minimo 6)
-
 ### Migracao SQL
 ```text
-ALTER TABLE profiles ADD COLUMN must_change_password boolean DEFAULT false;
+ALTER TABLE sst_managers ADD COLUMN slug text UNIQUE;
+-- Gerar slugs para gestores existentes baseado no nome
 ```
 
-### Protecao da rota /change-password
-- A pagina verifica se o usuario esta autenticado
-- Se `must_change_password` for false, redireciona para o dashboard normalmente
-- Se o usuario tentar navegar para outra pagina com `must_change_password = true`, e redirecionado de volta
+### Contexto WhiteLabelContext
+```text
+Fluxo de deteccao:
+1. Verifica URL: se comeca com /sst/:slug, busca gestor pelo slug
+2. Verifica usuario logado:
+   - Se role = 'sst', busca sst_manager pelo profile.sst_manager_id
+   - Se role = 'company', busca sst_manager pela company_sst_assignments
+3. Exporta: { brandLogo, brandName, sstSlug, isWhiteLabel }
+```
+
+### Componentes afetados
+- `Navbar.tsx` - substituir logo SOIA por logo SST
+- `Footer.tsx` - substituir logo SOIA por logo SST  
+- `CompanyReport.tsx` - branding automatico via Navbar
+- `Dashboard.tsx` - branding automatico via Navbar
+- `SSTDashboard.tsx` - branding automatico via Navbar
+- `HSEITForm.tsx` - considerar branding nas paginas publicas
+- `BurnoutForm.tsx` - considerar branding nas paginas publicas
+- `ClimateSurvey.tsx` - considerar branding nas paginas publicas
+- `Auth.tsx` - quando acessado via `/sst/:slug`, mostrar logo do gestor
+
+### Lugares que referenciam o logo SOIA atualmente
+- `Navbar.tsx` (linha 61)
+- `Footer.tsx` (linha 13)
+- `PartnerSidebar.tsx` (linha 46)
+- `Checkout.tsx` (linha 250)
