@@ -1,19 +1,30 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
 const Footer = () => {
+  const { brandLogo, isWhiteLabel } = useWhiteLabel();
+
   return (
     <footer className="bg-audit-dark text-white">
       <div className="audit-container py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <img 
-              src="/lovable-uploads/Logo_SOIA.png" 
-              alt="SOIA Logo" 
-              className="h-10 brightness-0 invert mb-4"
-            />
+            {isWhiteLabel && brandLogo ? (
+              <img 
+                src={brandLogo} 
+                alt="Logo" 
+                className="h-10 object-contain mb-4"
+              />
+            ) : (
+              <img 
+                src="/lovable-uploads/Logo_SOIA.png" 
+                alt="SOIA Logo" 
+                className="h-10 brightness-0 invert mb-4"
+              />
+            )}
             <p className="text-white/60 text-sm mb-6">
               Plataforma completa para canal de denúncias, pesquisa de clima e gestão de riscos psicossociais.
             </p>

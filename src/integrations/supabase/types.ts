@@ -1017,6 +1017,7 @@ export type Database = {
           max_companies: number
           name: string
           phone: string | null
+          slug: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1029,6 +1030,7 @@ export type Database = {
           max_companies?: number
           name: string
           phone?: string | null
+          slug?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1041,6 +1043,7 @@ export type Database = {
           max_companies?: number
           name?: string
           phone?: string | null
+          slug?: string | null
           updated_at?: string | null
         }
         Relationships: []

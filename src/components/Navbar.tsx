@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Bell, Shield, ClipboardList } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
-import { supabase } from "@/integrations/supabase/client";
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,43 +13,10 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-const Navbar = ({ companyId }: { companyId?: string } = {}) => {
+const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
+  const { brandLogo, isWhiteLabel } = useWhiteLabel();
   const isLoggedIn = !!user;
-  const [sstLogo, setSstLogo] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSSTLogo = async () => {
-      const targetCompanyId = companyId || profile?.company_id;
-      if (!targetCompanyId) return;
-
-      try {
-        // Get SST manager assigned to this company
-        const { data: assignment } = await supabase
-          .from('company_sst_assignments')
-          .select('sst_manager_id')
-          .eq('company_id', targetCompanyId)
-          .maybeSingle();
-
-        if (assignment?.sst_manager_id) {
-          // Get SST manager logo
-          const { data: sstManager } = await supabase
-            .from('sst_managers')
-            .select('logo_url')
-            .eq('id', assignment.sst_manager_id)
-            .maybeSingle();
-
-          if (sstManager?.logo_url) {
-            setSstLogo(sstManager.logo_url);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching SST logo:', error);
-      }
-    };
-
-    fetchSSTLogo();
-  }, [companyId, profile?.company_id]);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -57,20 +24,18 @@ const Navbar = ({ companyId }: { companyId?: string } = {}) => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/Logo_SOIA.png" 
-                alt="SOIA Logo" 
-                className="h-8"
-              />
-              {sstLogo && (
-                <>
-                  <span className="text-muted-foreground mx-1 text-xl">+</span>
-                  <img 
-                    src={sstLogo} 
-                    alt="SST Logo" 
-                    className="h-16"
-                  />
-                </>
+              {isWhiteLabel && brandLogo ? (
+                <img 
+                  src={brandLogo} 
+                  alt="Logo" 
+                  className="h-10 object-contain"
+                />
+              ) : (
+                <img 
+                  src="/lovable-uploads/Logo_SOIA.png" 
+                  alt="SOIA Logo" 
+                  className="h-8"
+                />
               )}
             </Link>
           </div>
