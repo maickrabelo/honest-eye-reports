@@ -1,88 +1,73 @@
 
+# Criar usuario automatico para empresa no cadastro SST
 
-# Cadastro de Empresas pelo SST (Limite de 50)
+## Resumo
+Quando um gestor SST cadastrar uma nova empresa pelo dashboard, o sistema vai automaticamente criar uma conta de acesso para essa empresa. A senha inicial sera o CNPJ informado no cadastro. No primeiro login, o usuario sera obrigado a criar uma nova senha antes de acessar o dashboard.
 
-## Objetivo
-Permitir que gestores SST cadastrem empresas diretamente pelo seu dashboard, com limite de 50 empresas, sem depender do administrador.
+## Mudancas necessarias
 
-## O que muda para o usuario SST
-- Um contador visivel no topo do dashboard mostrando "X/50 empresas cadastradas"
-- Um botao "Nova Empresa" para abrir o formulario de cadastro
-- Ao cadastrar, a empresa aparece automaticamente como card no dashboard
-- A empresa ja fica vinculada automaticamente ao SST que a criou
+### 1. Banco de dados
+- Adicionar coluna `must_change_password` (boolean, default false) na tabela `profiles` para controlar se o usuario precisa trocar a senha no primeiro acesso.
 
-## Etapas Tecnicas
+### 2. Backend function - Criar empresa com usuario (nova edge function)
+Criar uma nova edge function `create-company-user` que:
+- Aceita chamadas de usuarios com role `sst` (alem de admin)
+- Recebe os dados da empresa (nome, CNPJ, email, etc.)
+- Valida que o CNPJ foi informado (obrigatorio para gerar a senha)
+- Valida que o email foi informado (obrigatorio para criar o usuario)
+- Usando o service role key:
+  - Cria o usuario no auth com email da empresa e senha = CNPJ (somente digitos)
+  - Confirma o email automaticamente
+  - Cria/atualiza o profile com `company_id` e `must_change_password = true`
+  - Atribui a role `company` ao usuario
+- Retorna o user_id criado
 
-### 1. Alteracoes no Banco de Dados
+### 3. Formulario de cadastro (AddCompanyDialog.tsx)
+- Tornar os campos **CNPJ** e **Email** obrigatorios (atualmente sao opcionais)
+- Adicionar validacao minima no CNPJ (pelo menos 11 digitos numericos)
+- Apos criar a empresa e o assignment, chamar a edge function para criar o usuario da empresa
+- Exibir mensagem de sucesso informando que o acesso foi criado com a senha sendo o CNPJ
 
-**Tabela `sst_managers`** - Adicionar coluna para controle do limite:
-- `max_companies` (integer, default 50) - permite personalizar o limite por SST no futuro
+### 4. Pagina de troca de senha obrigatoria (nova pagina)
+- Criar `/change-password` com um formulario simples:
+  - Campo "Nova senha"
+  - Campo "Confirmar nova senha"
+  - Botao "Salvar nova senha"
+- Ao salvar, atualiza a senha via `supabase.auth.updateUser({ password })` e define `must_change_password = false` no profile
+- Sem opcao de pular - o usuario so consegue acessar o sistema apos trocar a senha
 
-**Politicas de Seguranca (RLS) na tabela `companies`:**
-- Adicionar politica de INSERT para usuarios SST, permitindo criar empresas
-- Adicionar politica de UPDATE para usuarios SST, restrita as empresas atribuidas a eles
-- Adicionar politica de SELECT para usuarios SST, restrita as empresas atribuidas
+### 5. Controle de redirecionamento (RealAuthContext.tsx)
+- Apos o login, verificar se `must_change_password` e `true` no profile
+- Se sim, redirecionar para `/change-password` ao inves do dashboard normal
+- Bloquear navegacao para outras paginas enquanto a senha nao for trocada
 
-**Politicas de Seguranca (RLS) na tabela `company_sst_assignments`:**
-- Adicionar politica de INSERT para usuarios SST, restrita ao proprio `sst_manager_id`
+### 6. Rota no App.tsx
+- Adicionar rota `/change-password` apontando para a nova pagina
 
-**Trigger de validacao** no banco para impedir que o limite de 50 (ou o valor configurado em `max_companies`) seja ultrapassado, garantindo seguranca mesmo que o frontend falhe.
+## Detalhes tecnicos
 
-### 2. Alteracoes no Frontend (SSTDashboard.tsx)
-
-- Adicionar estado para controle do formulario de nova empresa (`isAddCompanyOpen`)
-- Buscar o `max_companies` do `sst_managers` para exibir o limite correto
-- Exibir barra/contador de empresas: **"X / 50 empresas cadastradas"** com barra de progresso
-- Botao "Nova Empresa" (desabilitado quando atingir o limite)
-- Dialog/modal com formulario de cadastro contendo:
-  - Nome da empresa (obrigatorio)
-  - CNPJ
-  - Email
-  - Telefone
-  - Endereco
-  - Upload de logo
-- Ao salvar:
-  1. Gerar slug automaticamente a partir do nome
-  2. Inserir na tabela `companies`
-  3. Criar automaticamente o registro em `company_sst_assignments`
-  4. Atualizar a lista de cards no dashboard
-
-### 3. Fluxo de Seguranca
-
+### Edge function `create-company-user`
 ```text
-SST clica "Nova Empresa"
-        |
-        v
-Frontend verifica count < max_companies
-        |
-        v
-Envia INSERT para tabela companies
-        |
-        v
-RLS verifica: usuario tem role 'sst'?
-        |
-        v
-Trigger verifica: count < max_companies?
-        |
-        v
-Empresa criada -> INSERT em company_sst_assignments
-        |
-        v
-Card aparece no dashboard
+Fluxo:
+1. Verificar auth token do chamador
+2. Verificar se o chamador tem role 'sst' ou 'admin'
+3. Extrair CNPJ somente digitos para usar como senha
+4. Criar usuario via supabaseAdmin.auth.admin.createUser()
+5. Atualizar profile com company_id e must_change_password = true
+6. Inserir role 'company' em user_roles
+7. Retornar user_id
 ```
 
-### 4. Arquivos Modificados
+### Validacao do CNPJ como senha
+- O CNPJ sera limpo (somente digitos): "12.345.678/0001-90" vira "12345678000190"
+- Minimo 11 caracteres numericos para funcionar como senha (supabase exige minimo 6)
 
-| Arquivo | Alteracao |
-|---------|----------|
-| Nova migracao SQL | Coluna `max_companies`, politicas RLS, trigger de limite |
-| `src/pages/SSTDashboard.tsx` | Formulario, contador, logica de cadastro |
+### Migracao SQL
+```text
+ALTER TABLE profiles ADD COLUMN must_change_password boolean DEFAULT false;
+```
 
-### 5. Validacoes
-
-- Nome da empresa obrigatorio
-- Slug unico (gerado automaticamente)
-- Limite de 50 empresas (validado no frontend E no banco)
-- Logo opcional com upload para storage existente
-- CNPJ, email, telefone opcionais
-
+### Protecao da rota /change-password
+- A pagina verifica se o usuario esta autenticado
+- Se `must_change_password` for false, redireciona para o dashboard normalmente
+- Se o usuario tentar navegar para outra pagina com `must_change_password = true`, e redirecionado de volta
