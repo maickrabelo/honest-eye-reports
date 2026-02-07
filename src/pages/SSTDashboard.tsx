@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, BookOpen } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -245,6 +245,14 @@ const SSTDashboard = () => {
               >
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Nova Pesquisa
+              </Button>
+
+              <Button 
+                onClick={() => navigate('/sst-portal')}
+                variant="outline"
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Portal do Parceiro
               </Button>
 
               <Button 

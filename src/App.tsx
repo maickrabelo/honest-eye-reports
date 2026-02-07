@@ -39,6 +39,7 @@ import BurnoutForm from "./pages/BurnoutForm";
 import BurnoutResults from "./pages/BurnoutResults";
 import ChangePassword from "./pages/ChangePassword";
 import SSTLandingPage from "./pages/SSTLandingPage";
+import SSTPortal from "./pages/SSTPortal";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/profile" element={<CompanyProfile />} />
             <Route path="/sst-dashboard" element={<SSTDashboard />} />
+            <Route path="/sst-portal" element={<SSTPortal />} />
             <Route path="/master-dashboard" element={<MasterDashboard />} />
             <Route path="/user-management" element={<UserManagement />} />
             <Route path="/company-dashboard/:id" element={<Dashboard />} />

@@ -1010,6 +1010,8 @@ export type Database = {
         Row: {
           address: string | null
           cnpj: string | null
+          contract_expires_at: string | null
+          contract_signed_at: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -1023,6 +1025,8 @@ export type Database = {
         Insert: {
           address?: string | null
           cnpj?: string | null
+          contract_expires_at?: string | null
+          contract_signed_at?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -1036,6 +1040,8 @@ export type Database = {
         Update: {
           address?: string | null
           cnpj?: string | null
+          contract_expires_at?: string | null
+          contract_signed_at?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -1045,6 +1051,111 @@ export type Database = {
           phone?: string | null
           slug?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sst_portal_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          file_name: string
+          file_url: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sst_portal_messages: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_pinned: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sst_portal_trainings: {
+        Row: {
+          category: string | null
+          content_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
