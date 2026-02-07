@@ -91,21 +91,23 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const userProfile = await fetchProfile(session.user.id);
             setProfile(userProfile);
             
-            // Check if user needs to change password first
-            if (userProfile?.must_change_password) {
-              navigate('/change-password');
-            } else if (userRole === 'pending') {
-              navigate('/pending-approval');
-            } else if (userRole === 'admin') {
-              navigate('/master-dashboard');
-            } else if (userRole === 'company') {
-              navigate('/dashboard');
-            } else if (userRole === 'sst') {
-              navigate('/sst-dashboard');
-            } else if (userRole === 'partner') {
-              navigate('/parceiro/dashboard');
-            } else if (userRole === 'affiliate') {
-              navigate('/afiliado/dashboard');
+            // Only navigate on actual sign-in, not on token refresh or initial session
+            if (event === 'SIGNED_IN') {
+              if (userProfile?.must_change_password) {
+                navigate('/change-password');
+              } else if (userRole === 'pending') {
+                navigate('/pending-approval');
+              } else if (userRole === 'admin') {
+                navigate('/master-dashboard');
+              } else if (userRole === 'company') {
+                navigate('/dashboard');
+              } else if (userRole === 'sst') {
+                navigate('/sst-dashboard');
+              } else if (userRole === 'partner') {
+                navigate('/parceiro/dashboard');
+              } else if (userRole === 'affiliate') {
+                navigate('/afiliado/dashboard');
+              }
             }
           }, 0);
         } else {
