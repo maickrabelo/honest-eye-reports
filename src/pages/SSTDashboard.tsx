@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2 } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import AddCompanyDialog from '@/components/sst/AddCompanyDialog';
+import EditCompanyDialog from '@/components/sst/EditCompanyDialog';
 import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
 
 interface Company {
@@ -20,6 +21,10 @@ interface Company {
   name: string;
   logo_url: string | null;
   slug: string;
+  cnpj: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
   reportCount: number;
   newReports: number;
 }
@@ -30,6 +35,8 @@ const SSTDashboard = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
   const navigate = useNavigate();
@@ -110,7 +117,7 @@ const SSTDashboard = () => {
       // Get company details
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, logo_url, slug')
+        .select('id, name, logo_url, slug, cnpj, email, phone, address')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;
@@ -295,7 +302,21 @@ const SSTDashboard = () => {
                       </div>
                     </div>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{company.name}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{company.name}</CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCompany(company);
+                            setIsEditCompanyOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent className="pb-2 space-y-3">
                       <div className="flex justify-between items-center">
@@ -372,6 +393,13 @@ const SSTDashboard = () => {
           onCompanyAdded={fetchCompanies}
         />
       )}
+
+      <EditCompanyDialog
+        open={isEditCompanyOpen}
+        onOpenChange={setIsEditCompanyOpen}
+        company={editingCompany}
+        onCompanyUpdated={fetchCompanies}
+      />
     </div>
   );
 };
