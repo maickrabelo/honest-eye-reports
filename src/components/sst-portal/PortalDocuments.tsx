@@ -42,25 +42,33 @@ const PortalDocuments = () => {
     }
   };
 
+  const extractStoragePath = (fileUrl: string): string => {
+    const marker = "/object/public/sst-portal-documents/";
+    const idx = fileUrl.indexOf(marker);
+    if (idx !== -1) {
+      return fileUrl.substring(idx + marker.length);
+    }
+    return fileUrl;
+  };
+
   const handleDownload = async (fileUrl: string, fileName: string) => {
     try {
+      const storagePath = extractStoragePath(fileUrl);
       const { data, error } = await supabase.storage
         .from("sst-portal-documents")
-        .download(fileUrl);
+        .createSignedUrl(storagePath, 60);
 
       if (error) throw error;
 
-      const url = URL.createObjectURL(data);
       const a = document.createElement("a");
-      a.href = url;
+      a.href = data.signedUrl;
       a.download = fileName;
+      a.target = "_blank";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading:", error);
-      // Fallback: open URL directly
       window.open(fileUrl, "_blank");
     }
   };
