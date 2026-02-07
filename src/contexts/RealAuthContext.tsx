@@ -77,67 +77,96 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   useEffect(() => {
-    // Set up auth state listener
+    let isMounted = true;
+
+    // Listener for ONGOING auth changes — does NOT control isLoading
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!isMounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Defer fetching role and profile
-          setTimeout(async () => {
-            const userRole = await fetchUserRole(session.user.id);
-            setRole(userRole);
-            const userProfile = await fetchProfile(session.user.id);
-            setProfile(userProfile);
-            
-            // Only navigate on actual sign-in, not on token refresh or initial session
-            if (event === 'SIGNED_IN') {
-              if (userProfile?.must_change_password) {
-                navigate('/change-password');
-              } else if (userRole === 'pending') {
-                navigate('/pending-approval');
-              } else if (userRole === 'admin') {
-                navigate('/master-dashboard');
-              } else if (userRole === 'company') {
-                navigate('/dashboard');
-              } else if (userRole === 'sst') {
-                navigate('/sst-dashboard');
-              } else if (userRole === 'partner') {
-                navigate('/parceiro/dashboard');
-              } else if (userRole === 'affiliate') {
-                navigate('/afiliado/dashboard');
-              }
-            }
-          }, 0);
-        } else {
+
+        if (event === 'SIGNED_OUT') {
           setRole(null);
           setProfile(null);
+          return;
         }
-        
-        setIsLoading(false);
+
+        // Only navigate on explicit sign-in
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Defer to avoid Supabase deadlock
+          setTimeout(async () => {
+            if (!isMounted) return;
+            const userRole = await fetchUserRole(session.user.id);
+            if (!isMounted) return;
+            setRole(userRole);
+            const userProfile = await fetchProfile(session.user.id);
+            if (!isMounted) return;
+            setProfile(userProfile);
+
+            if (userProfile?.must_change_password) {
+              navigate('/change-password');
+            } else if (userRole === 'pending') {
+              navigate('/pending-approval');
+            } else if (userRole === 'admin') {
+              navigate('/master-dashboard');
+            } else if (userRole === 'company') {
+              navigate('/dashboard');
+            } else if (userRole === 'sst') {
+              navigate('/sst-dashboard');
+            } else if (userRole === 'partner') {
+              navigate('/parceiro/dashboard');
+            } else if (userRole === 'affiliate') {
+              navigate('/afiliado/dashboard');
+            }
+          }, 0);
+        }
+
+        // For TOKEN_REFRESHED or other events: silently refresh role/profile
+        // without navigating or touching isLoading
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+          setTimeout(async () => {
+            if (!isMounted) return;
+            const userRole = await fetchUserRole(session.user.id);
+            if (!isMounted) return;
+            setRole(userRole);
+            const userProfile = await fetchProfile(session.user.id);
+            if (!isMounted) return;
+            setProfile(userProfile);
+          }, 0);
+        }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        setTimeout(async () => {
+    // INITIAL load — the only place that controls isLoading
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
           const userRole = await fetchUserRole(session.user.id);
+          if (!isMounted) return;
           setRole(userRole);
           const userProfile = await fetchProfile(session.user.id);
+          if (!isMounted) return;
           setProfile(userProfile);
-          setIsLoading(false);
-        }, 0);
-      } else {
-        setIsLoading(false);
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
