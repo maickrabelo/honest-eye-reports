@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { RealAuthProvider } from "./contexts/RealAuthContext";
+import { WhiteLabelProvider } from "./contexts/WhiteLabelContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -37,6 +38,7 @@ import BurnoutManagement from "./pages/BurnoutManagement";
 import BurnoutForm from "./pages/BurnoutForm";
 import BurnoutResults from "./pages/BurnoutResults";
 import ChangePassword from "./pages/ChangePassword";
+import SSTLandingPage from "./pages/SSTLandingPage";
 
 const queryClient = new QueryClient();
 
@@ -47,8 +49,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <RealAuthProvider>
+          <WhiteLabelProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/pending-approval" element={<PendingApproval />} />
@@ -89,6 +93,7 @@ const App = () => (
             <Route path="/burnout/results/:id" element={<BurnoutResults />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </WhiteLabelProvider>
         </RealAuthProvider>
       </BrowserRouter>
     </TooltipProvider>

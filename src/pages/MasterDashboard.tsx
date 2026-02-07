@@ -41,6 +41,7 @@ type SSTManager = {
   phone: string | null;
   address: string | null;
   logo_url: string | null;
+  slug: string | null;
   created_at: string;
 };
 
@@ -256,13 +257,26 @@ const MasterDashboard = () => {
         logoUrl = await uploadLogo(sstLogoFile);
       }
 
+      const sstName = formData.get('sstName') as string;
+      
+      // Auto-generate slug from name
+      const slug = sstName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+
       const { error } = await supabase.from('sst_managers').insert({
-        name: formData.get('sstName') as string,
+        name: sstName,
         email: formData.get('sstEmail') as string,
         cnpj: formData.get('sstCNPJ') as string,
         phone: formData.get('sstPhone') as string,
         address: formData.get('sstAddress') as string,
         logo_url: logoUrl,
+        slug: slug,
       });
 
       if (error) throw error;
@@ -459,6 +473,7 @@ const MasterDashboard = () => {
         phone: phone || null,
         address: address || null,
         logo_url: logoUrl,
+        slug: String(formData.get('sstSlug') ?? '').trim() || null,
       };
 
       const { data, error } = await supabase
@@ -848,6 +863,31 @@ const MasterDashboard = () => {
                     <Label className="text-sm font-medium text-gray-500">Endereço</Label>
                     <p className="text-base">{selectedSST.address || '-'}</p>
                   </div>
+                  <div className="col-span-2">
+                    <Label className="text-sm font-medium text-gray-500">Slug (URL White-Label)</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="text-base bg-gray-100 px-3 py-1 rounded">
+                        {selectedSST.slug || '-'}
+                      </code>
+                      {selectedSST.slug && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const url = `${window.location.origin}/sst/${selectedSST.slug}`;
+                            navigator.clipboard.writeText(url);
+                            toast({
+                              title: "URL copiada",
+                              description: "Link da página SST copiado."
+                            });
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copiar URL
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="border-t pt-4 mt-4">
@@ -999,6 +1039,18 @@ const MasterDashboard = () => {
                     placeholder="Rua, número, cidade - Estado"
                     defaultValue={editingSST?.address || ''}
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="editSstSlugDetail">Slug (URL White-Label)</Label>
+                  <Input 
+                    id="editSstSlugDetail" 
+                    name="sstSlug" 
+                    placeholder="nome-da-gestora"
+                    defaultValue={editingSST?.slug || ''}
+                  />
+                  <p className="text-xs text-gray-500">
+                    URL personalizada: /sst/slug-da-gestora
+                  </p>
                 </div>
               </div>
               <DialogFooter>
@@ -1432,6 +1484,18 @@ const MasterDashboard = () => {
                                 defaultValue={editingSST?.address || ''}
                               />
                             </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="editSstSlug">Slug (URL White-Label)</Label>
+                              <Input 
+                                id="editSstSlug" 
+                                name="sstSlug" 
+                                placeholder="nome-da-gestora"
+                                defaultValue={editingSST?.slug || ''}
+                              />
+                              <p className="text-xs text-gray-500">
+                                URL personalizada: /sst/slug-da-gestora
+                              </p>
+                            </div>
                           </div>
                           <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsEditSSTOpen(false)}>
@@ -1657,6 +1721,7 @@ const MasterDashboard = () => {
                           <th className="px-4 py-3 text-left font-medium">Gestora</th>
                           <th className="px-4 py-3 text-left font-medium">Email</th>
                           <th className="px-4 py-3 text-left font-medium">CNPJ</th>
+                          <th className="px-4 py-3 text-left font-medium">Slug</th>
                           <th className="px-4 py-3 text-left font-medium">Empresas geridas</th>
                           <th className="px-4 py-3 text-left font-medium">Ações</th>
                         </tr>
@@ -1676,6 +1741,11 @@ const MasterDashboard = () => {
                               </td>
                               <td className="px-4 py-4 text-gray-500">{manager.email || '-'}</td>
                               <td className="px-4 py-4 text-gray-500">{manager.cnpj || '-'}</td>
+                              <td className="px-4 py-4">
+                                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                  {manager.slug || '-'}
+                                </code>
+                              </td>
                               <td className="px-4 py-4">{assignedCompanies.length}</td>
                               <td className="px-4 py-4">
                                 <div className="flex gap-2">

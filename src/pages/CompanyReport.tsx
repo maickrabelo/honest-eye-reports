@@ -79,7 +79,7 @@ const CompanyReport = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar companyId={company.id} />
+      <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
         <div className="audit-container max-w-4xl">
           <div className="mb-8 text-center">
