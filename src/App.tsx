@@ -36,6 +36,7 @@ import BurnoutDashboard from "./pages/BurnoutDashboard";
 import BurnoutManagement from "./pages/BurnoutManagement";
 import BurnoutForm from "./pages/BurnoutForm";
 import BurnoutResults from "./pages/BurnoutResults";
+import ChangePassword from "./pages/ChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/pending-approval" element={<PendingApproval />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/report" element={<ReportChat />} />

@@ -14,6 +14,8 @@ interface AddCompanyDialogProps {
   onCompanyAdded: () => void;
 }
 
+const extractCnpjDigits = (cnpj: string): string => cnpj.replace(/\D/g, '');
+
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -75,6 +77,18 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
     if (trimmedName.length > 200) {
       toast({ title: "Nome muito longo", description: "O nome deve ter no máximo 200 caracteres.", variant: "destructive" });
+      return;
+    }
+
+    const trimmedEmail = formData.email.trim();
+    if (!trimmedEmail) {
+      toast({ title: "Email obrigatório", description: "Informe o email da empresa para criar o acesso.", variant: "destructive" });
+      return;
+    }
+
+    const cnpjDigits = extractCnpjDigits(formData.cnpj);
+    if (cnpjDigits.length < 11) {
+      toast({ title: "CNPJ inválido", description: "Informe um CNPJ válido com pelo menos 11 dígitos.", variant: "destructive" });
       return;
     }
 
@@ -152,7 +166,40 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
         throw assignmentError;
       }
 
-      toast({ title: "Empresa cadastrada!", description: `${trimmedName} foi adicionada com sucesso.` });
+      // Create user account for the company
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const response = await supabase.functions.invoke('create-company-user', {
+          body: {
+            company_id: newCompany.id,
+            email: trimmedEmail,
+            cnpj: formData.cnpj.trim(),
+            company_name: trimmedName,
+          },
+        });
+
+        if (response.error) {
+          console.error('Error creating company user:', response.error);
+          toast({
+            title: "Empresa cadastrada, mas sem usuário",
+            description: `A empresa foi criada, porém não foi possível criar o acesso automático: ${response.error.message}`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Empresa cadastrada com sucesso!",
+            description: `${trimmedName} foi adicionada. O acesso foi criado com email: ${trimmedEmail} e senha: CNPJ (${cnpjDigits.substring(0, 4)}****). No primeiro login será solicitada a troca de senha.`,
+          });
+        }
+      } catch (userError: any) {
+        console.error('Error creating company user:', userError);
+        toast({
+          title: "Empresa cadastrada, mas sem usuário",
+          description: "A empresa foi criada, porém houve um erro ao criar o acesso automático.",
+          variant: "destructive",
+        });
+      }
+
       resetForm();
       onOpenChange(false);
       onCompanyAdded();
@@ -190,7 +237,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ</Label>
+            <Label htmlFor="cnpj">CNPJ *</Label>
             <Input
               id="cnpj"
               name="cnpj"
@@ -198,12 +245,14 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
               onChange={handleInputChange}
               placeholder="00.000.000/0000-00"
               maxLength={18}
+              required
             />
+            <p className="text-xs text-muted-foreground">Será usado como senha do primeiro acesso.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 name="email"
@@ -212,6 +261,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                 onChange={handleInputChange}
                 placeholder="contato@empresa.com"
                 maxLength={255}
+                required
               />
             </div>
             <div className="space-y-2">
