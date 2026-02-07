@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.create-test-users]
 # Requires admin authentication
+
+[functions.create-company-user]
+verify_jwt = false
