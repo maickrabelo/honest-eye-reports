@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquareWarning, BarChart3, Brain, LayoutDashboard, ShieldCheck, FileText } from 'lucide-react';
+import { MessageSquareWarning, BarChart3, Brain, LayoutDashboard, ShieldCheck, FileText, Flame, HeartPulse } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const features = [
@@ -39,6 +39,18 @@ const features = [
     description: 'Gere relatórios completos para auditorias, reuniões e tomada de decisões estratégicas.',
     highlights: ['PDF/Excel', 'Personalizáveis', 'Agendamento']
   },
+  {
+    icon: Flame,
+    title: 'Avaliação de Burnout',
+    description: 'Questionários cientificamente validados para medir exaustão, despersonalização e realização profissional.',
+    highlights: ['Validado cientificamente', 'Relatório PDF', 'Dashboard']
+  },
+  {
+    icon: HeartPulse,
+    title: 'Riscos Psicossociais (HSEIT)',
+    description: 'Mapeamento de riscos psicossociais com 35 indicadores em 7 categorias, com plano de ação conforme NR-01.',
+    highlights: ['7 categorias', 'Plano de ação', 'Conforme NR-01']
+  },
 ];
 
 const FeaturesSection = () => {
@@ -53,7 +65,7 @@ const FeaturesSection = () => {
             Tudo que você precisa em uma plataforma
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            O SOIA integra canal de denúncias, pesquisa de clima e gestão de compliance em uma solução completa.
+            O SOIA integra canal de denúncias, pesquisa de clima, avaliação de burnout, gestão de riscos psicossociais e compliance em uma solução completa.
           </p>
         </div>
 
