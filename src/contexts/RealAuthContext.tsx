@@ -20,6 +20,8 @@ interface AuthContextType {
   profile: Profile | null;
   role: UserRole;
   isLoading: boolean;
+  isTrialExpired: boolean;
+  trialEndsAt: string | null;
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
 }
@@ -32,6 +34,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTrialExpired, setIsTrialExpired] = useState(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -67,12 +71,40 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const checkTrialStatus = async (companyId: string | null) => {
+    if (!companyId) {
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
+      return;
+    }
+    try {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('subscription_status, trial_ends_at')
+        .eq('id', companyId)
+        .single();
+
+      if (company?.subscription_status === 'trial' && company?.trial_ends_at) {
+        setTrialEndsAt(company.trial_ends_at);
+        const now = new Date();
+        const endDate = new Date(company.trial_ends_at);
+        setIsTrialExpired(now > endDate);
+      } else {
+        setIsTrialExpired(false);
+        setTrialEndsAt(null);
+      }
+    } catch (error) {
+      console.error('Error checking trial status:', error);
+    }
+  };
+
   const refreshRole = async () => {
     if (user) {
       const userRole = await fetchUserRole(user.id);
       setRole(userRole);
       const userProfile = await fetchProfile(user.id);
       setProfile(userProfile);
+      await checkTrialStatus(userProfile?.company_id ?? null);
     }
   };
 
@@ -90,6 +122,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (event === 'SIGNED_OUT') {
           setRole(null);
           setProfile(null);
+          setIsTrialExpired(false);
+          setTrialEndsAt(null);
           return;
         }
 
@@ -104,6 +138,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const userProfile = await fetchProfile(session.user.id);
             if (!isMounted) return;
             setProfile(userProfile);
+            await checkTrialStatus(userProfile?.company_id ?? null);
 
             if (userProfile?.must_change_password) {
               navigate('/change-password');
@@ -134,6 +169,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const userProfile = await fetchProfile(session.user.id);
             if (!isMounted) return;
             setProfile(userProfile);
+            await checkTrialStatus(userProfile?.company_id ?? null);
           }, 0);
         }
       }
@@ -155,6 +191,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const userProfile = await fetchProfile(session.user.id);
           if (!isMounted) return;
           setProfile(userProfile);
+          await checkTrialStatus(userProfile?.company_id ?? null);
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -176,6 +213,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSession(null);
       setRole(null);
       setProfile(null);
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
       navigate('/auth');
       toast({
         title: "Logout realizado",
@@ -191,7 +230,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, isLoading, signOut, refreshRole }}>
+    <AuthContext.Provider value={{ user, session, profile, role, isLoading, isTrialExpired, trialEndsAt, signOut, refreshRole }}>
       {children}
     </AuthContext.Provider>
   );

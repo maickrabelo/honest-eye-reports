@@ -223,9 +223,18 @@ const PricingSection = () => {
           </CardContent>
         </Card>
 
-        <p className={`text-center text-sm text-muted-foreground mt-8 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-          * Todos os planos incluem período de teste gratuito de 14 dias. Sem compromisso.
-        </p>
+        <div className={`text-center mt-8 space-y-4 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+          <Button
+            size="lg"
+            onClick={() => navigate('/teste-gratis')}
+            className="px-8"
+          >
+            Teste grátis por 7 dias
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            * Sem necessidade de cartão de crédito. Sem compromisso.
+          </p>
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, MessageCircle, Shield } from 'lucide-react';
+import { ArrowRight, Shield } from 'lucide-react';
 import heroIllustration from '@/assets/hero-illustration.png';
 
 const HeroSection = () => {
@@ -42,19 +42,19 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
               <Button 
                 size="lg" 
+                onClick={() => window.location.href = '/teste-gratis'}
+                className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold px-8 py-6 text-lg group"
+              >
+                Teste grátis por 7 dias
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button 
+                size="lg" 
                 onClick={scrollToContact}
                 className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group"
               >
                 Solicitar Demonstração
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                size="lg" 
-                className="bg-audit-accent hover:bg-audit-accent/80 text-white font-semibold px-8 py-6 text-lg"
-                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
-              >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Falar com Especialista
               </Button>
             </div>
 

@@ -40,6 +40,7 @@ import BurnoutResults from "./pages/BurnoutResults";
 import ChangePassword from "./pages/ChangePassword";
 import SSTLandingPage from "./pages/SSTLandingPage";
 import SSTPortal from "./pages/SSTPortal";
+import TrialSignup from "./pages/TrialSignup";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
+            <Route path="/teste-gratis" element={<TrialSignup />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/pending-approval" element={<PendingApproval />} />
