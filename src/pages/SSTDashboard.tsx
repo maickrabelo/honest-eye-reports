@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, BookOpen } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, BookOpen, Link2 } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -39,6 +39,7 @@ const SSTDashboard = () => {
   const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
+  const [sstSlug, setSstSlug] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useRealAuth();
   const { toast } = useToast();
@@ -90,12 +91,15 @@ const SSTDashboard = () => {
       // Get max_companies from sst_managers
       const { data: sstData } = await supabase
         .from('sst_managers')
-        .select('max_companies')
+        .select('max_companies, slug')
         .eq('id', currentSstManagerId)
         .single();
 
       if (sstData?.max_companies) {
         setMaxCompanies(sstData.max_companies);
+      }
+      if (sstData?.slug) {
+        setSstSlug(sstData.slug);
       }
 
       // Get companies assigned to this SST manager
@@ -240,14 +244,6 @@ const SSTDashboard = () => {
               </Button>
               
               <Button 
-                onClick={() => navigate('/climate-survey/new')}
-                variant="outline"
-              >
-                <ClipboardList className="mr-2 h-4 w-4" />
-                Nova Pesquisa
-              </Button>
-
-              <Button 
                 onClick={() => navigate('/sst-portal')}
                 variant="outline"
               >
@@ -275,6 +271,31 @@ const SSTDashboard = () => {
             </div>
           </div>
           
+          {sstSlug && (
+            <div className="mb-6 flex items-center gap-3 p-4 bg-muted rounded-lg">
+              <Link2 className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Link da sua página inicial</p>
+                <a 
+                  href={`${window.location.origin}/sst/${sstSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline truncate block"
+                >
+                  {window.location.origin}/sst/{sstSlug}
+                </a>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => copyToClipboard(`${window.location.origin}/sst/${sstSlug}`, e)}
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                Copiar
+              </Button>
+            </div>
+          )}
+
           {selectedCompany ? (
             <EmbeddedDashboard companyId={selectedCompany} />
           ) : (
