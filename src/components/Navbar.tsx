@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield, ClipboardList } from "lucide-react";
+import { Bell, Shield, ClipboardList, BookOpen } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import {
@@ -43,7 +43,15 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
               <>
-                <Button variant="ghost" size="icon" className="relative">
+              {role === 'sst' && (
+                <Link to="/sst-portal">
+                  <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-2 border-primary/30 text-primary hover:bg-primary/5">
+                    <BookOpen className="h-4 w-4" />
+                    Portal do Parceiro
+                  </Button>
+                </Link>
+              )}
+              <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
                 </Button>
