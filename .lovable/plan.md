@@ -1,34 +1,87 @@
 
 
-# Adicionar funcionalidades na pagina inicial
+# Estrutura de Contas Trial (7 dias de teste)
 
 ## Resumo
-Expandir a secao "Solucoes" (FeaturesSection) na landing page para incluir 2 novas funcionalidades: Avaliacao de Burnout e Gestao de Riscos Psicossociais (HSEIT). As funcionalidades de Portal do Parceiro SST e Rede de Parceiros serao ignoradas conforme solicitado.
+Criar um fluxo completo de contas Trial que permite empresas testarem a plataforma por 7 dias sem necessidade de pagamento. Ao final do periodo, a conta e desativada automaticamente e o usuario e direcionado para contratar um plano.
 
-## O que muda
+## Como vai funcionar
 
-A secao atual tem 6 cards. Serao adicionados mais 2 cards, totalizando 8 funcionalidades. O subtitulo da secao tambem sera atualizado para refletir o escopo mais amplo.
-
-### Novas funcionalidades
-
-1. **Avaliacao de Burnout** (icone: Flame) -- Questionarios cientificamente validados para medir exaustao, despersonalizacao e realizacao profissional, com relatorios em PDF e dashboard analitico.
-   - Tags: Validado cientificamente, Relatorio PDF, Dashboard
-
-2. **Riscos Psicossociais (HSEIT)** (icone: HeartPulse) -- Mapeamento de riscos psicossociais com 35 indicadores em 7 categorias, gerando plano de acao e cronograma conforme NR-01.
-   - Tags: 7 categorias, Plano de acao, Conforme NR-01
-
-### Texto atualizado
-
-- **Subtitulo atual**: "O SOIA integra canal de denuncias, pesquisa de clima e gestao de compliance em uma solucao completa."
-- **Novo subtitulo**: "O SOIA integra canal de denuncias, pesquisa de clima, avaliacao de burnout, gestao de riscos psicossociais e compliance em uma solucao completa."
+1. **Novo botao na landing page e na pagina comercial**: "Teste gratis por 7 dias"
+2. **Formulario de cadastro simplificado**: Nome da empresa, email, nome do responsavel e numero de colaboradores (sem CNPJ obrigatorio, sem pagamento)
+3. **Edge function cria a conta Trial**: Cria empresa, usuario, perfil e subscription com status "trial" e data de expiracao (7 dias)
+4. **Email de boas-vindas**: Envia credenciais de acesso por email
+5. **Verificacao de trial expirado**: No login e no dashboard, verifica se o trial expirou e mostra aviso/bloqueia acesso
+6. **Banner de trial ativo**: Mostra no dashboard quantos dias restam do teste
 
 ## Detalhes tecnicos
 
-### Arquivo editado
-- `src/components/landing/FeaturesSection.tsx`
-  - Adicionar imports dos icones `Flame` e `HeartPulse` do lucide-react
-  - Adicionar 2 novos objetos ao array `features`
-  - Atualizar o paragrafo descritivo da secao
+### 1. Migracao de banco de dados
 
-Nenhum novo arquivo sera criado. A mudanca e uma expansao natural do componente existente, mantendo o mesmo estilo visual, animacoes e layout em grid.
+Adicionar o valor `trial` ao enum de status da subscription e garantir que o campo `current_period_end` seja usado como data de expiracao do trial.
+
+```sql
+-- Permitir status 'trial' na tabela subscriptions (ja aceita texto livre)
+-- Nenhuma alteracao de schema necessaria, pois o campo status e do tipo text
+
+-- Adicionar coluna trial_ends_at na tabela companies para facilitar consultas
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS trial_ends_at timestamp with time zone;
+```
+
+### 2. Nova edge function: `create-trial-account`
+
+Recebe os dados basicos da empresa e:
+- Cria a empresa com `subscription_status = 'trial'` e `trial_ends_at = now() + 7 dias`
+- Cria o usuario com senha temporaria
+- Atualiza perfil com `company_id`
+- Atualiza role para `company`
+- Cria registro na tabela `subscriptions` com `status = 'trial'`
+- Envia email de boas-vindas com credenciais
+
+### 3. Nova pagina: `TrialSignup.tsx` (rota `/teste-gratis`)
+
+Formulario simplificado com:
+- Nome da empresa
+- Email
+- Nome do responsavel
+- Telefone (opcional)
+- Numero de colaboradores (slider ou input)
+- Botao "Iniciar teste gratis"
+
+### 4. Componente `TrialBanner.tsx`
+
+Banner que aparece no Dashboard quando a conta e trial:
+- Mostra "Voce esta no periodo de teste. Restam X dias."
+- Botao "Contratar agora" que leva para `/contratar`
+- Muda de cor conforme os dias restam (verde > amarelo > vermelho)
+
+### 5. Verificacao de trial expirado
+
+No `RealAuthContext.tsx`:
+- Apos carregar o perfil, verificar se `trial_ends_at` existe e se ja passou
+- Se expirou, setar um flag `isTrialExpired` no contexto
+- No Dashboard, se `isTrialExpired`, mostrar tela de "Trial expirado" com botao para contratar
+
+No `Dashboard.tsx`:
+- Se trial expirado, renderizar overlay/modal impedindo uso e direcionando para contratacao
+
+### 6. Atualizacoes na landing page
+
+- Adicionar botao "Teste gratis por 7 dias" no HeroSection
+- Adicionar botao similar no PricingSection
+- Nova rota `/teste-gratis` no App.tsx
+
+### Arquivos criados
+- `supabase/functions/create-trial-account/index.ts` -- edge function para criar conta trial
+- `src/pages/TrialSignup.tsx` -- pagina de cadastro trial
+- `src/components/TrialBanner.tsx` -- banner de aviso do trial no dashboard
+- `src/components/TrialExpiredOverlay.tsx` -- overlay quando trial expira
+
+### Arquivos editados
+- `src/App.tsx` -- adicionar rota `/teste-gratis`
+- `src/contexts/RealAuthContext.tsx` -- adicionar `isTrialExpired` e `trialEndsAt` ao contexto
+- `src/pages/Dashboard.tsx` -- renderizar TrialBanner e TrialExpiredOverlay
+- `src/components/landing/HeroSection.tsx` -- adicionar botao de teste gratis
+- `src/components/commercial/PricingSection.tsx` -- adicionar botao de teste gratis
+- `supabase/config.toml` -- configurar `verify_jwt = false` para a nova function
 
