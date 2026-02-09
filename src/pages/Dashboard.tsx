@@ -36,12 +36,14 @@ import AIAnalysisCard from '@/components/AIAnalysisCard';
 import TrackReportModal from '@/components/TrackReportModal';
 import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
+import TrialBanner from '@/components/TrialBanner';
+import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
 const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: string; hideNavigation?: boolean } = {}) => {
   const { id: urlCompanyParam } = useParams();
-  const { profile } = useRealAuth();
+  const { profile, isTrialExpired, trialEndsAt } = useRealAuth();
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseText, setResponseText] = useState("");
@@ -425,6 +427,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
   const dashboardContent = (
     <>
+      {isTrialExpired && <TrialExpiredOverlay />}
+      {!isTrialExpired && trialEndsAt && <TrialBanner trialEndsAt={trialEndsAt} />}
       <div className="flex justify-between items-start mb-8 gap-6">
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>

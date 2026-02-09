@@ -356,6 +356,7 @@ export type Database = {
           referred_by_partner_id: string | null
           slug: string | null
           subscription_status: string | null
+          trial_ends_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -375,6 +376,7 @@ export type Database = {
           referred_by_partner_id?: string | null
           slug?: string | null
           subscription_status?: string | null
+          trial_ends_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -394,6 +396,7 @@ export type Database = {
           referred_by_partner_id?: string | null
           slug?: string | null
           subscription_status?: string | null
+          trial_ends_at?: string | null
           updated_at?: string | null
         }
         Relationships: [
