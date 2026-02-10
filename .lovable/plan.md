@@ -1,87 +1,72 @@
 
-
-# Estrutura de Contas Trial (7 dias de teste)
+# Trial para Gestoras SST
 
 ## Resumo
-Criar um fluxo completo de contas Trial que permite empresas testarem a plataforma por 7 dias sem necessidade de pagamento. Ao final do periodo, a conta e desativada automaticamente e o usuario e direcionado para contratar um plano.
+Criar um fluxo de cadastro trial de 7 dias para empresas gestoras SST, permitindo que testem a plataforma com o limite de cadastro de apenas 1 empresa durante o periodo de teste.
 
 ## Como vai funcionar
 
-1. **Novo botao na landing page e na pagina comercial**: "Teste gratis por 7 dias"
-2. **Formulario de cadastro simplificado**: Nome da empresa, email, nome do responsavel e numero de colaboradores (sem CNPJ obrigatorio, sem pagamento)
-3. **Edge function cria a conta Trial**: Cria empresa, usuario, perfil e subscription com status "trial" e data de expiracao (7 dias)
-4. **Email de boas-vindas**: Envia credenciais de acesso por email
-5. **Verificacao de trial expirado**: No login e no dashboard, verifica se o trial expirou e mostra aviso/bloqueia acesso
-6. **Banner de trial ativo**: Mostra no dashboard quantos dias restam do teste
+1. Nova rota `/teste-gratis-sst` com formulario de cadastro simplificado para gestoras SST
+2. Uma nova Edge Function (`create-sst-trial-account`) cria automaticamente o registro na tabela `sst_managers`, o usuario com role `sst`, e configura `max_companies = 1`
+3. O SST Dashboard ja respeita o `max_companies` existente, entao o limite de 1 empresa funcionara automaticamente
+4. Adicionar campos `subscription_status` e `trial_ends_at` na tabela `sst_managers` para controlar a expiracao do trial
+5. Banner de trial e overlay de expiracao no SST Dashboard (similar ao que ja existe para empresas)
 
-## Detalhes tecnicos
+## O que muda
 
 ### 1. Migracao de banco de dados
 
-Adicionar o valor `trial` ao enum de status da subscription e garantir que o campo `current_period_end` seja usado como data de expiracao do trial.
+Adicionar colunas de controle de trial na tabela `sst_managers`:
 
 ```sql
--- Permitir status 'trial' na tabela subscriptions (ja aceita texto livre)
--- Nenhuma alteracao de schema necessaria, pois o campo status e do tipo text
-
--- Adicionar coluna trial_ends_at na tabela companies para facilitar consultas
-ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS trial_ends_at timestamp with time zone;
+ALTER TABLE public.sst_managers 
+  ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'inactive',
+  ADD COLUMN IF NOT EXISTS trial_ends_at timestamp with time zone;
 ```
 
-### 2. Nova edge function: `create-trial-account`
+### 2. Nova Edge Function: `create-sst-trial-account`
 
-Recebe os dados basicos da empresa e:
-- Cria a empresa com `subscription_status = 'trial'` e `trial_ends_at = now() + 7 dias`
-- Cria o usuario com senha temporaria
-- Atualiza perfil com `company_id`
-- Atualiza role para `company`
-- Cria registro na tabela `subscriptions` com `status = 'trial'`
-- Envia email de boas-vindas com credenciais
+Recebe os dados da gestora SST e:
+- Cria o registro em `sst_managers` com `max_companies = 1`, `subscription_status = 'trial'` e `trial_ends_at = now() + 7 dias`
+- Cria o usuario auth com senha temporaria
+- Atualiza o perfil com `sst_manager_id`
+- Define role como `sst`
+- Envia email de boas-vindas com credenciais via Resend
 
-### 3. Nova pagina: `TrialSignup.tsx` (rota `/teste-gratis`)
+### 3. Nova pagina: `SSTTrialSignup.tsx` (rota `/teste-gratis-sst`)
 
-Formulario simplificado com:
-- Nome da empresa
+Formulario com:
+- Nome da gestora SST
 - Email
 - Nome do responsavel
 - Telefone (opcional)
-- Numero de colaboradores (slider ou input)
 - Botao "Iniciar teste gratis"
 
-### 4. Componente `TrialBanner.tsx`
+### 4. Verificacao de trial SST no contexto de autenticacao
 
-Banner que aparece no Dashboard quando a conta e trial:
-- Mostra "Voce esta no periodo de teste. Restam X dias."
-- Botao "Contratar agora" que leva para `/contratar`
-- Muda de cor conforme os dias restam (verde > amarelo > vermelho)
+Atualizar `RealAuthContext.tsx` para tambem verificar trial de SST managers (usando `sst_manager_id` do perfil em vez de `company_id`).
 
-### 5. Verificacao de trial expirado
+### 5. Banner e overlay no SST Dashboard
 
-No `RealAuthContext.tsx`:
-- Apos carregar o perfil, verificar se `trial_ends_at` existe e se ja passou
-- Se expirou, setar um flag `isTrialExpired` no contexto
-- No Dashboard, se `isTrialExpired`, mostrar tela de "Trial expirado" com botao para contratar
+Reutilizar os componentes `TrialBanner` e `TrialExpiredOverlay` ja existentes no `SSTDashboard.tsx`, alimentados pelos dados de trial do SST manager.
 
-No `Dashboard.tsx`:
-- Se trial expirado, renderizar overlay/modal impedindo uso e direcionando para contratacao
+### 6. Links na landing page
 
-### 6. Atualizacoes na landing page
+Adicionar botao "Teste gratis para Gestoras SST" na landing page principal e/ou na pagina comercial.
 
-- Adicionar botao "Teste gratis por 7 dias" no HeroSection
-- Adicionar botao similar no PricingSection
-- Nova rota `/teste-gratis` no App.tsx
+## Detalhes tecnicos
 
 ### Arquivos criados
-- `supabase/functions/create-trial-account/index.ts` -- edge function para criar conta trial
-- `src/pages/TrialSignup.tsx` -- pagina de cadastro trial
-- `src/components/TrialBanner.tsx` -- banner de aviso do trial no dashboard
-- `src/components/TrialExpiredOverlay.tsx` -- overlay quando trial expira
+- `supabase/functions/create-sst-trial-account/index.ts` -- edge function para criar conta trial SST
+- `src/pages/SSTTrialSignup.tsx` -- pagina de cadastro trial para gestoras SST
 
 ### Arquivos editados
-- `src/App.tsx` -- adicionar rota `/teste-gratis`
-- `src/contexts/RealAuthContext.tsx` -- adicionar `isTrialExpired` e `trialEndsAt` ao contexto
-- `src/pages/Dashboard.tsx` -- renderizar TrialBanner e TrialExpiredOverlay
-- `src/components/landing/HeroSection.tsx` -- adicionar botao de teste gratis
-- `src/components/commercial/PricingSection.tsx` -- adicionar botao de teste gratis
-- `supabase/config.toml` -- configurar `verify_jwt = false` para a nova function
+- `src/App.tsx` -- adicionar rota `/teste-gratis-sst`
+- `src/contexts/RealAuthContext.tsx` -- expandir `checkTrialStatus` para verificar trial de SST managers
+- `src/pages/SSTDashboard.tsx` -- adicionar TrialBanner e TrialExpiredOverlay
+- `supabase/config.toml` -- configurar `verify_jwt = false` para nova function
+- `src/components/landing/HeroSection.tsx` ou `src/components/commercial/PricingSection.tsx` -- adicionar link para trial SST
 
+### Logica de limite
+
+O `SSTDashboard.tsx` ja usa `maxCompanies` da tabela `sst_managers` e desabilita o botao "Nova Empresa" quando `companies.length >= maxCompanies`. Como o trial sera criado com `max_companies = 1`, o limite sera automaticamente respeitado sem alteracoes adicionais. O trigger `validate_sst_company_limit` no banco de dados tambem ja impede a criacao acima do limite.
