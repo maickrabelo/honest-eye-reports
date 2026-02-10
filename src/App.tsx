@@ -41,6 +41,7 @@ import ChangePassword from "./pages/ChangePassword";
 import SSTLandingPage from "./pages/SSTLandingPage";
 import SSTPortal from "./pages/SSTPortal";
 import TrialSignup from "./pages/TrialSignup";
+import SSTTrialSignup from "./pages/SSTTrialSignup";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
             <Route path="/teste-gratis" element={<TrialSignup />} />
+            <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/pending-approval" element={<PendingApproval />} />

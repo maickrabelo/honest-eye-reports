@@ -71,31 +71,51 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const checkTrialStatus = async (companyId: string | null) => {
-    if (!companyId) {
-      setIsTrialExpired(false);
-      setTrialEndsAt(null);
-      return;
-    }
-    try {
-      const { data: company } = await supabase
-        .from('companies')
-        .select('subscription_status, trial_ends_at')
-        .eq('id', companyId)
-        .single();
+  const checkTrialStatus = async (companyId: string | null, sstManagerId: string | null) => {
+    // Check company trial
+    if (companyId) {
+      try {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('subscription_status, trial_ends_at')
+          .eq('id', companyId)
+          .single();
 
-      if (company?.subscription_status === 'trial' && company?.trial_ends_at) {
-        setTrialEndsAt(company.trial_ends_at);
-        const now = new Date();
-        const endDate = new Date(company.trial_ends_at);
-        setIsTrialExpired(now > endDate);
-      } else {
-        setIsTrialExpired(false);
-        setTrialEndsAt(null);
+        if (company?.subscription_status === 'trial' && company?.trial_ends_at) {
+          setTrialEndsAt(company.trial_ends_at);
+          const now = new Date();
+          const endDate = new Date(company.trial_ends_at);
+          setIsTrialExpired(now > endDate);
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking company trial status:', error);
       }
-    } catch (error) {
-      console.error('Error checking trial status:', error);
     }
+
+    // Check SST manager trial
+    if (sstManagerId) {
+      try {
+        const { data: sstManager } = await supabase
+          .from('sst_managers')
+          .select('subscription_status, trial_ends_at')
+          .eq('id', sstManagerId)
+          .single();
+
+        if (sstManager?.subscription_status === 'trial' && sstManager?.trial_ends_at) {
+          setTrialEndsAt(sstManager.trial_ends_at);
+          const now = new Date();
+          const endDate = new Date(sstManager.trial_ends_at);
+          setIsTrialExpired(now > endDate);
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking SST trial status:', error);
+      }
+    }
+
+    setIsTrialExpired(false);
+    setTrialEndsAt(null);
   };
 
   const refreshRole = async () => {
@@ -104,7 +124,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setRole(userRole);
       const userProfile = await fetchProfile(user.id);
       setProfile(userProfile);
-      await checkTrialStatus(userProfile?.company_id ?? null);
+      await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
   };
 
@@ -138,7 +158,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const userProfile = await fetchProfile(session.user.id);
             if (!isMounted) return;
             setProfile(userProfile);
-            await checkTrialStatus(userProfile?.company_id ?? null);
+            await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
             if (userProfile?.must_change_password) {
               navigate('/change-password');
@@ -169,7 +189,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const userProfile = await fetchProfile(session.user.id);
             if (!isMounted) return;
             setProfile(userProfile);
-            await checkTrialStatus(userProfile?.company_id ?? null);
+            await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
           }, 0);
         }
       }
@@ -191,7 +211,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const userProfile = await fetchProfile(session.user.id);
           if (!isMounted) return;
           setProfile(userProfile);
-          await checkTrialStatus(userProfile?.company_id ?? null);
+          await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
         }
       } finally {
         if (isMounted) setIsLoading(false);

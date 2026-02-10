@@ -1023,6 +1023,8 @@ export type Database = {
           name: string
           phone: string | null
           slug: string | null
+          subscription_status: string | null
+          trial_ends_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1038,6 +1040,8 @@ export type Database = {
           name: string
           phone?: string | null
           slug?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1053,6 +1057,8 @@ export type Database = {
           name?: string
           phone?: string | null
           slug?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
