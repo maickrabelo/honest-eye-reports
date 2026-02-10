@@ -131,7 +131,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return;
         }
 
-        // Only navigate on explicit sign-in
+        // Only navigate on explicit sign-in when user is on public pages
         if (event === 'SIGNED_IN' && session?.user) {
           // Defer to avoid Supabase deadlock
           setTimeout(async () => {
@@ -144,6 +144,15 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setRole(userRole);
             setProfile(userProfile);
             await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+
+            // Only redirect if user is on a public/auth page — avoid
+            // overriding navigation when the user is already inside the app
+            // (e.g. returning from another browser tab).
+            const publicPaths = ['/', '/auth', '/teste-gratis', '/teste-gratis-sst'];
+            const currentPath = window.location.pathname;
+            const isOnPublicPage = publicPaths.includes(currentPath) || currentPath.startsWith('/sst/');
+
+            if (!isOnPublicPage) return;
 
             if (userProfile?.must_change_password) {
               navigate('/change-password');
