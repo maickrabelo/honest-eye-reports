@@ -72,46 +72,28 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const checkTrialStatus = async (companyId: string | null, sstManagerId: string | null) => {
-    // Check company trial
-    if (companyId) {
-      try {
-        const { data: company } = await supabase
-          .from('companies')
-          .select('subscription_status, trial_ends_at')
-          .eq('id', companyId)
-          .single();
+    // Fetch both in parallel when both IDs exist
+    const [companyResult, sstResult] = await Promise.all([
+      companyId
+        ? supabase.from('companies').select('subscription_status, trial_ends_at').eq('id', companyId).single()
+        : Promise.resolve({ data: null }),
+      sstManagerId
+        ? supabase.from('sst_managers').select('subscription_status, trial_ends_at').eq('id', sstManagerId).single()
+        : Promise.resolve({ data: null }),
+    ]);
 
-        if (company?.subscription_status === 'trial' && company?.trial_ends_at) {
-          setTrialEndsAt(company.trial_ends_at);
-          const now = new Date();
-          const endDate = new Date(company.trial_ends_at);
-          setIsTrialExpired(now > endDate);
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking company trial status:', error);
-      }
+    const company = companyResult?.data;
+    if (company?.subscription_status === 'trial' && company?.trial_ends_at) {
+      setTrialEndsAt(company.trial_ends_at);
+      setIsTrialExpired(new Date() > new Date(company.trial_ends_at));
+      return;
     }
 
-    // Check SST manager trial
-    if (sstManagerId) {
-      try {
-        const { data: sstManager } = await supabase
-          .from('sst_managers')
-          .select('subscription_status, trial_ends_at')
-          .eq('id', sstManagerId)
-          .single();
-
-        if (sstManager?.subscription_status === 'trial' && sstManager?.trial_ends_at) {
-          setTrialEndsAt(sstManager.trial_ends_at);
-          const now = new Date();
-          const endDate = new Date(sstManager.trial_ends_at);
-          setIsTrialExpired(now > endDate);
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking SST trial status:', error);
-      }
+    const sstManager = sstResult?.data;
+    if (sstManager?.subscription_status === 'trial' && sstManager?.trial_ends_at) {
+      setTrialEndsAt(sstManager.trial_ends_at);
+      setIsTrialExpired(new Date() > new Date(sstManager.trial_ends_at));
+      return;
     }
 
     setIsTrialExpired(false);
@@ -120,9 +102,11 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const refreshRole = async () => {
     if (user) {
-      const userRole = await fetchUserRole(user.id);
+      const [userRole, userProfile] = await Promise.all([
+        fetchUserRole(user.id),
+        fetchProfile(user.id),
+      ]);
       setRole(userRole);
-      const userProfile = await fetchProfile(user.id);
       setProfile(userProfile);
       await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
@@ -152,11 +136,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           // Defer to avoid Supabase deadlock
           setTimeout(async () => {
             if (!isMounted) return;
-            const userRole = await fetchUserRole(session.user.id);
+            const [userRole, userProfile] = await Promise.all([
+              fetchUserRole(session.user.id),
+              fetchProfile(session.user.id),
+            ]);
             if (!isMounted) return;
             setRole(userRole);
-            const userProfile = await fetchProfile(session.user.id);
-            if (!isMounted) return;
             setProfile(userProfile);
             await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
@@ -183,11 +168,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (event === 'TOKEN_REFRESHED' && session?.user) {
           setTimeout(async () => {
             if (!isMounted) return;
-            const userRole = await fetchUserRole(session.user.id);
+            const [userRole, userProfile] = await Promise.all([
+              fetchUserRole(session.user.id),
+              fetchProfile(session.user.id),
+            ]);
             if (!isMounted) return;
             setRole(userRole);
-            const userProfile = await fetchProfile(session.user.id);
-            if (!isMounted) return;
             setProfile(userProfile);
             await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
           }, 0);
@@ -205,11 +191,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          const userRole = await fetchUserRole(session.user.id);
+          const [userRole, userProfile] = await Promise.all([
+            fetchUserRole(session.user.id),
+            fetchProfile(session.user.id),
+          ]);
           if (!isMounted) return;
           setRole(userRole);
-          const userProfile = await fetchProfile(session.user.id);
-          if (!isMounted) return;
           setProfile(userProfile);
           await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
         }
