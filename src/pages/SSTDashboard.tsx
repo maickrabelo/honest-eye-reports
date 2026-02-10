@@ -90,12 +90,21 @@ const SSTDashboard = () => {
       const currentSstManagerId = profileData.sst_manager_id;
       setSstManagerId(currentSstManagerId);
 
-      // Get max_companies from sst_managers
-      const { data: sstData } = await supabase
-        .from('sst_managers')
-        .select('max_companies, slug')
-        .eq('id', currentSstManagerId)
-        .single();
+      // Fetch SST manager info and assignments in parallel
+      const [sstResult, assignmentsResult] = await Promise.all([
+        supabase
+          .from('sst_managers')
+          .select('max_companies, slug')
+          .eq('id', currentSstManagerId)
+          .single(),
+        supabase
+          .from('company_sst_assignments')
+          .select('company_id')
+          .eq('sst_manager_id', currentSstManagerId),
+      ]);
+
+      const { data: sstData } = sstResult;
+      const { data: assignmentsData, error: assignmentsError } = assignmentsResult;
 
       if (sstData?.max_companies) {
         setMaxCompanies(sstData.max_companies);
@@ -103,12 +112,6 @@ const SSTDashboard = () => {
       if (sstData?.slug) {
         setSstSlug(sstData.slug);
       }
-
-      // Get companies assigned to this SST manager
-      const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from('company_sst_assignments')
-        .select('company_id')
-        .eq('sst_manager_id', currentSstManagerId);
 
       if (assignmentsError) throw assignmentsError;
 
