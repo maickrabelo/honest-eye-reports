@@ -98,7 +98,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Canal de Denúncias</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Fazer login no portal</CardTitle>
           <CardDescription className="text-center">
             Entre ou crie sua conta para acessar o sistema
           </CardDescription>
