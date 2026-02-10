@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import AddCompanyDialog from '@/components/sst/AddCompanyDialog';
 import EditCompanyDialog from '@/components/sst/EditCompanyDialog';
 import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
+import TrialBanner from '@/components/TrialBanner';
+import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 
 interface Company {
   id: string;
@@ -41,7 +43,7 @@ const SSTDashboard = () => {
   const [maxCompanies, setMaxCompanies] = useState(50);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user, role, isLoading: authLoading } = useRealAuth();
+  const { user, role, isLoading: authLoading, isTrialExpired, trialEndsAt } = useRealAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -203,6 +205,12 @@ const SSTDashboard = () => {
       <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
         <div className="audit-container">
+          {isTrialExpired && <TrialExpiredOverlay />}
+          
+          {trialEndsAt && !isTrialExpired && (
+            <TrialBanner trialEndsAt={trialEndsAt} />
+          )}
+
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h1 className="text-3xl font-bold text-green-800">Gestão SST</h1>

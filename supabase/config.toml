@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.create-trial-account]
 verify_jwt = false
+
+[functions.create-sst-trial-account]
+verify_jwt = false

@@ -50,6 +50,14 @@ const HeroSection = () => {
               </Button>
               <Button 
                 size="lg" 
+                onClick={() => window.location.href = '/teste-gratis-sst'}
+                className="bg-white/10 backdrop-blur-sm border border-white/30 text-white hover:bg-white/20 font-semibold px-8 py-6 text-lg group"
+              >
+                Gestora SST? Teste grátis
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button 
+                size="lg" 
                 onClick={scrollToContact}
                 className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group"
               >
