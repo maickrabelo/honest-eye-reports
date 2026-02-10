@@ -17,6 +17,7 @@ const SSTTrialSignup = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
     sst_name: '',
+    cnpj: '',
     email: '',
     responsible_name: '',
     phone: '',
@@ -30,10 +31,20 @@ const SSTTrialSignup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.sst_name || !formData.email || !formData.responsible_name) {
+    if (!formData.sst_name || !formData.cnpj || !formData.email || !formData.responsible_name) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha o nome da gestora, email e nome do responsável.',
+        description: 'Preencha o nome da gestora, CNPJ, email e nome do responsável.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const cnpjDigits = formData.cnpj.replace(/\D/g, '');
+    if (cnpjDigits.length !== 14) {
+      toast({
+        title: 'CNPJ inválido',
+        description: 'O CNPJ deve conter 14 dígitos.',
         variant: 'destructive',
       });
       return;
@@ -77,9 +88,11 @@ const SSTTrialSignup = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
+              <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground space-y-2">
                 <p>📅 Seu período de teste é de <strong>7 dias gratuitos</strong>.</p>
-                <p className="mt-1">Durante o trial, você pode cadastrar <strong>1 empresa</strong> para testar a plataforma.</p>
+                <p>Durante o trial, você pode cadastrar <strong>1 empresa</strong> para testar a plataforma.</p>
+                <p className="font-medium text-foreground">🔑 Sua senha inicial é o <strong>CNPJ (apenas números)</strong>.</p>
+                <p>No primeiro acesso, você será solicitado a criar uma nova senha.</p>
               </div>
               <Button className="w-full" onClick={() => navigate('/auth')}>
                 Ir para o Login
@@ -134,6 +147,18 @@ const SSTTrialSignup = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="cnpj">CNPJ *</Label>
+                  <Input
+                    id="cnpj"
+                    name="cnpj"
+                    value={formData.cnpj}
+                    onChange={handleChange}
+                    placeholder="00.000.000/0000-00"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="email">Email corporativo *</Label>
                   <Input
                     id="email"
@@ -175,6 +200,7 @@ const SSTTrialSignup = () => {
                   <p>✅ 7 dias de acesso completo</p>
                   <p>✅ Cadastre 1 empresa durante o trial</p>
                   <p>✅ Acesso a todas as ferramentas SST</p>
+                  <p>🔑 Sua senha inicial será o CNPJ (apenas números)</p>
                 </div>
 
                 <Button type="submit" className="w-full" size="lg" disabled={isLoading}>

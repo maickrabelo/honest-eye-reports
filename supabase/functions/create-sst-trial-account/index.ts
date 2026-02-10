@@ -26,12 +26,21 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { sst_name, email, responsible_name, phone } = await req.json();
+    const { sst_name, cnpj, email, responsible_name, phone } = await req.json();
 
     // Validation
-    if (!sst_name || !email || !responsible_name) {
+    if (!sst_name || !cnpj || !email || !responsible_name) {
       return new Response(
-        JSON.stringify({ error: "Nome da gestora, email e nome do responsável são obrigatórios." }),
+        JSON.stringify({ error: "Nome da gestora, CNPJ, email e nome do responsável são obrigatórios." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Extract only digits from CNPJ for password
+    const cnpjDigits = cnpj.replace(/\D/g, "");
+    if (cnpjDigits.length !== 14) {
+      return new Response(
+        JSON.stringify({ error: "CNPJ inválido. Deve conter 14 dígitos." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -51,9 +60,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate temporary password
-    const tempPassword = `SSTTrial${Math.random().toString(36).substring(2, 8)}!${Math.floor(Math.random() * 100)}`;
-    logStep("Temporary password generated");
+    // Use CNPJ digits as initial password
+    const tempPassword = cnpjDigits;
+    logStep("Password set to CNPJ digits");
 
     // Generate slug from SST name
     const slug = sst_name
@@ -81,6 +90,7 @@ Deno.serve(async (req) => {
       .from("sst_managers")
       .insert({
         name: sst_name,
+        cnpj: cnpjDigits,
         email: email.trim().toLowerCase(),
         phone: phone || null,
         slug: finalSlug,
@@ -172,8 +182,8 @@ Deno.serve(async (req) => {
               <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
                 <h2 style="color: #333; margin-top: 0;">Seus dados de acesso:</h2>
                 <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Senha temporária:</strong> ${tempPassword}</p>
-                <p style="color: #dc3545; font-size: 14px;">⚠️ Você será solicitado a alterar a senha no primeiro acesso.</p>
+                <p><strong>Senha inicial:</strong> Seu CNPJ (apenas números)</p>
+                <p style="color: #dc3545; font-size: 14px;">⚠️ No primeiro acesso, você será solicitado a criar uma nova senha por segurança.</p>
               </div>
               
               <div style="background: #e8f5e9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
