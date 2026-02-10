@@ -501,7 +501,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               <TabsTrigger value="status">Status</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="overview">
+            <TabsContent value="overview" forceMount className="data-[state=inactive]:hidden">
               <Card>
                 <CardHeader>
                   <CardTitle>Denúncias por Mês</CardTitle>
@@ -527,7 +527,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               </Card>
             </TabsContent>
             
-            <TabsContent value="departments">
+            <TabsContent value="departments" forceMount className="data-[state=inactive]:hidden">
               <Card>
                 <CardHeader>
                   <CardTitle>Denúncias por Departamento</CardTitle>
@@ -557,7 +557,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               </Card>
             </TabsContent>
             
-            <TabsContent value="status">
+            <TabsContent value="status" forceMount className="data-[state=inactive]:hidden">
               <Card>
                 <CardHeader>
                   <CardTitle>Status das Denúncias</CardTitle>
