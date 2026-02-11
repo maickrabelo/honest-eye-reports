@@ -123,11 +123,12 @@ async function seedDemoData(supabaseAdmin: any, sstManagerId: string, sstName: s
     }))
   );
 
-  // 3. Seed all assessments in parallel
+  // 3. Seed all assessments and reports in parallel
   await Promise.all([
     seedHSEIT(supabaseAdmin, companyId, userId, respondents),
     seedBurnout(supabaseAdmin, companyId, userId, respondents),
     seedClimateSurvey(supabaseAdmin, companyId, respondents),
+    seedReports(supabaseAdmin, companyId),
   ]);
 
   logStep("Demo data seed completed");
@@ -391,6 +392,163 @@ async function seedClimateSurvey(supabaseAdmin: any, companyId: string, responde
   }
 
   logStep("Climate Survey seeded", { responses: responses.length, answers: answerInserts.length });
+}
+
+const DEMO_REPORTS = [
+  {
+    title: "Assédio moral por parte de gestor",
+    description: "Venho relatar situações recorrentes de humilhação e constrangimento por parte do meu gestor direto. Em diversas ocasiões, fui exposto(a) a críticas desrespeitosas na frente de colegas, com gritos e palavras ofensivas. Isso tem afetado minha saúde mental e meu desempenho no trabalho.",
+    category: "assedio_moral",
+    department: "Operacional",
+    urgency: "high",
+    is_anonymous: true,
+    status: "pending",
+  },
+  {
+    title: "Discriminação por gênero no setor comercial",
+    description: "Gostaria de reportar que mulheres do setor comercial são sistematicamente preteridas em promoções e oportunidades de liderança. Colegas do sexo masculino com menos experiência e qualificação são promovidos antes. Já ouvi comentários depreciativos sobre a capacidade feminina em reuniões.",
+    category: "discriminacao",
+    department: "Comercial",
+    urgency: "high",
+    is_anonymous: true,
+    status: "in_progress",
+  },
+  {
+    title: "Condições inseguras no galpão de produção",
+    description: "O galpão de produção apresenta vazamentos no telhado que deixam o piso escorregadio. Além disso, alguns EPIs estão danificados e não foram substituídos mesmo após múltiplas solicitações. Temos medo de que ocorra um acidente grave.",
+    category: "seguranca",
+    department: "Operacional",
+    urgency: "critical",
+    is_anonymous: false,
+    reporter_name: "Carlos Mendes",
+    reporter_email: "carlos.mendes@exemplo.com",
+    status: "in_progress",
+  },
+  {
+    title: "Desvio de materiais do almoxarifado",
+    description: "Notei que materiais como ferramentas e insumos estão desaparecendo do almoxarifado com frequência. Um colega foi visto levando caixas para seu veículo particular após o expediente em pelo menos três ocasiões no último mês.",
+    category: "fraude",
+    department: "Operacional",
+    urgency: "medium",
+    is_anonymous: true,
+    status: "pending",
+  },
+  {
+    title: "Assédio sexual no ambiente de trabalho",
+    description: "Uma colega do setor administrativo tem recebido mensagens de cunho sexual de um supervisor. Ela já pediu para que parasse, mas o comportamento continua. As mensagens incluem convites insistentes e comentários sobre sua aparência física.",
+    category: "assedio_sexual",
+    department: "Administrativo",
+    urgency: "critical",
+    is_anonymous: true,
+    status: "resolved",
+  },
+  {
+    title: "Sobrecarga de trabalho e horas extras não pagas",
+    description: "Há meses sou obrigado(a) a fazer horas extras que não são registradas no ponto. Meu gestor pede para que eu finalize tarefas depois do horário e nos finais de semana, sem qualquer compensação. Quando questiono, sou ameaçado(a) de demissão.",
+    category: "trabalho_irregular",
+    department: "TI",
+    urgency: "medium",
+    is_anonymous: true,
+    status: "pending",
+  },
+  {
+    title: "Conflito entre equipes e clima hostil",
+    description: "O clima no setor de RH está insustentável. Há disputas constantes entre dois grupos de funcionários, com fofocas, boicotes e exclusão deliberada de colegas em reuniões e decisões importantes. A liderança não intervém.",
+    category: "clima_organizacional",
+    department: "RH",
+    urgency: "low",
+    is_anonymous: false,
+    reporter_name: "Ana Paula Silva",
+    reporter_email: "ana.silva@exemplo.com",
+    status: "in_progress",
+  },
+  {
+    title: "Uso de substâncias no horário de trabalho",
+    description: "Um funcionário do setor operacional tem demonstrado sinais de uso de álcool durante o expediente. Em diversas ocasiões, apresentou hálito etílico, fala arrastada e dificuldade de coordenação motora, colocando em risco a segurança dos demais.",
+    category: "conduta_inadequada",
+    department: "Operacional",
+    urgency: "high",
+    is_anonymous: true,
+    status: "pending",
+  },
+  {
+    title: "Favorecimento em processos seletivos internos",
+    description: "As últimas três vagas internas do setor comercial foram preenchidas por indicações pessoais do gerente, sem divulgação ampla ou processo seletivo justo. Funcionários qualificados de outros setores sequer ficaram sabendo das oportunidades.",
+    category: "etica",
+    department: "Comercial",
+    urgency: "low",
+    is_anonymous: true,
+    status: "resolved",
+  },
+  {
+    title: "Vazamento de dados pessoais de funcionários",
+    description: "Descobri que uma planilha contendo dados pessoais de todos os funcionários (CPF, endereço, salário) está sendo compartilhada abertamente em uma pasta de rede sem restrição de acesso. Qualquer pessoa na empresa consegue visualizar essas informações sensíveis.",
+    category: "seguranca_informacao",
+    department: "TI",
+    urgency: "critical",
+    is_anonymous: false,
+    reporter_name: "Ricardo Oliveira",
+    reporter_email: "ricardo.oliveira@exemplo.com",
+    reporter_phone: "(11) 98765-4321",
+    status: "in_progress",
+  },
+];
+
+async function seedReports(supabaseAdmin: any, companyId: string) {
+  logStep("Seeding Reports");
+
+  const now = new Date();
+  const reportInserts = DEMO_REPORTS.map((r, i) => {
+    const createdAt = new Date(now.getTime() - (i * 2 + 1) * 24 * 60 * 60 * 1000); // spread over past days
+    return {
+      company_id: companyId,
+      title: r.title,
+      description: r.description,
+      category: r.category,
+      department: r.department,
+      urgency: r.urgency,
+      is_anonymous: r.is_anonymous,
+      reporter_name: (r as any).reporter_name || null,
+      reporter_email: (r as any).reporter_email || null,
+      reporter_phone: (r as any).reporter_phone || null,
+      status: r.status,
+      created_at: createdAt.toISOString(),
+      updated_at: createdAt.toISOString(),
+    };
+  });
+
+  const { data: reports, error } = await supabaseAdmin
+    .from("reports")
+    .insert(reportInserts)
+    .select("id, status, created_at");
+
+  if (error) {
+    logStep("Error seeding reports", error);
+    return;
+  }
+
+  // Add status update notes for non-pending reports
+  const updateInserts: any[] = [];
+  reports.forEach((report: any) => {
+    const matchingDemo = DEMO_REPORTS.find((_, i) => i === reports.indexOf(report));
+    if (matchingDemo && matchingDemo.status !== "pending") {
+      updateInserts.push({
+        report_id: report.id,
+        old_status: "pending",
+        new_status: matchingDemo.status,
+        notes: matchingDemo.status === "in_progress"
+          ? "Denúncia recebida e encaminhada para investigação interna."
+          : "Caso investigado e medidas corretivas aplicadas.",
+        created_at: new Date(new Date(report.created_at).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+    }
+  });
+
+  if (updateInserts.length > 0) {
+    await supabaseAdmin.from("report_updates").insert(updateInserts);
+  }
+
+  logStep("Reports seeded", { count: reports.length });
 }
 
 Deno.serve(async (req) => {
