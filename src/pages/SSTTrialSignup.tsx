@@ -90,7 +90,8 @@ const SSTTrialSignup = () => {
             <CardContent className="space-y-4">
               <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground space-y-2">
                 <p>📅 Seu período de teste é de <strong>7 dias gratuitos</strong>.</p>
-                <p>Durante o trial, você pode cadastrar <strong>1 empresa</strong> para testar a plataforma.</p>
+                <p>Já criamos uma <strong>Empresa Demo</strong> com avaliações preenchidas para você explorar os dashboards.</p>
+                <p>Você também pode cadastrar <strong>mais 1 empresa</strong> para testar a plataforma.</p>
                 <p className="font-medium text-foreground">🔑 Sua senha inicial é o <strong>CNPJ (apenas números)</strong>.</p>
                 <p>No primeiro acesso, você será solicitado a criar uma nova senha.</p>
               </div>
@@ -198,7 +199,8 @@ const SSTTrialSignup = () => {
                 <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground space-y-1">
                   <p>✅ Sem cartão de crédito</p>
                   <p>✅ 7 dias de acesso completo</p>
-                  <p>✅ Cadastre 1 empresa durante o trial</p>
+                  <p>✅ Empresa Demo com dashboards já preenchidos</p>
+                  <p>✅ Cadastre mais 1 empresa para testar</p>
                   <p>✅ Acesso a todas as ferramentas SST</p>
                   <p>🔑 Sua senha inicial será o CNPJ (apenas números)</p>
                 </div>
