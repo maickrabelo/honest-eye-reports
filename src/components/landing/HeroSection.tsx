@@ -42,16 +42,8 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
               <Button 
                 size="lg" 
-                onClick={() => window.location.href = '/teste-gratis'}
-                className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold px-8 py-6 text-lg group"
-              >
-                Teste grátis por 7 dias
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                size="lg" 
                 onClick={() => window.location.href = '/teste-gratis-sst'}
-                className="bg-white/10 backdrop-blur-sm border border-white/30 text-white hover:bg-white/20 font-semibold px-8 py-6 text-lg group"
+                className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold px-8 py-6 text-lg group"
               >
                 Gestora SST? Teste grátis
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
