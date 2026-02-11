@@ -41,14 +41,6 @@ const TrialBanner: React.FC<TrialBannerProps> = ({ trialEndsAt }) => {
           </strong>
         </p>
       </div>
-      <Button
-        size="sm"
-        onClick={() => navigate('/contratar')}
-        className="whitespace-nowrap"
-      >
-        Contratar agora
-        <ArrowRight className="ml-1 h-4 w-4" />
-      </Button>
     </div>
   );
 };
