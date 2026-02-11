@@ -214,64 +214,61 @@ const SSTDashboard = () => {
             <TrialBanner trialEndsAt={trialEndsAt} />
           )}
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
               <h1 className="text-3xl font-bold text-green-800">Gestão SST</h1>
               <p className="text-gray-600">Monitore todas as empresas sob sua gestão</p>
             </div>
+            {selectedCompany && (
+              <Button 
+                variant="outline"
+                onClick={() => setSelectedCompany(null)}
+              >
+                Voltar para lista de empresas
+              </Button>
+            )}
+          </div>
+
+          {/* Suas Ferramentas */}
+          <div className="bg-green-700 text-white rounded-lg px-5 py-3 mb-4">
+            <h2 className="text-lg font-semibold tracking-wide">🛠 Suas Ferramentas</h2>
+          </div>
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Button 
+              onClick={() => navigate('/hseit-dashboard')}
+              variant="outline"
+              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+            >
+              <Brain className="mr-2 h-4 w-4" />
+              Avaliação HSE-IT
+            </Button>
             
-            <div className="flex flex-wrap gap-3 items-center">
-              {selectedCompany && (
-                <Button 
-                  variant="outline"
-                  onClick={() => setSelectedCompany(null)}
-                >
-                  Voltar para lista de empresas
-                </Button>
-              )}
-              
-              <Button 
-                onClick={() => navigate('/hseit-dashboard')}
-                variant="outline"
-              >
-                <Brain className="mr-2 h-4 w-4" />
-                Avaliação HSE-IT
-              </Button>
-              
-              <Button 
-                onClick={() => navigate('/burnout-dashboard')}
-                variant="outline"
-              >
-                <Flame className="mr-2 h-4 w-4" />
-                Avaliação Burnout
-              </Button>
-              
-              <Button 
-                onClick={() => navigate('/climate-dashboard')}
-                variant="outline"
-              >
-                <ClipboardList className="mr-2 h-4 w-4" />
-                Pesquisas de Clima
-              </Button>
-              
-              <Button 
-                onClick={() => setIsAddCompanyOpen(true)}
-                disabled={companies.length >= maxCompanies}
-              >
-                <Building2 className="mr-2 h-4 w-4" />
-                Nova Empresa
-              </Button>
-              
-              <div className="relative w-full md:w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar empresa..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+            <Button 
+              onClick={() => navigate('/burnout-dashboard')}
+              variant="outline"
+              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+            >
+              <Flame className="mr-2 h-4 w-4" />
+              Avaliação Burnout
+            </Button>
+            
+            <Button 
+              onClick={() => navigate('/climate-dashboard')}
+              variant="outline"
+              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+            >
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Pesquisas de Clima
+            </Button>
+            
+            <Button 
+              onClick={() => setIsAddCompanyOpen(true)}
+              disabled={companies.length >= maxCompanies}
+              className="bg-green-700 hover:bg-green-800 text-white font-semibold shadow-sm"
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Nova Empresa
+            </Button>
           </div>
           
           {sstSlug && (
@@ -303,6 +300,21 @@ const SSTDashboard = () => {
             <EmbeddedDashboard companyId={selectedCompany} />
           ) : (
             <>
+              <div className="mb-4">
+                <h2 className="text-2xl font-bold text-green-800">Portal de Ouvidoria das Empresas</h2>
+                <p className="text-gray-500">Clique para visualizar as informações do canal de ouvidoria de cada empresa</p>
+              </div>
+              <div className="flex justify-end mb-4">
+                <div className="relative w-full md:w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar empresa..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
               <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCompanies.map((company) => (
