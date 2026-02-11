@@ -39,6 +39,29 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+
+const burnoutSteps: TourStep[] = [
+  {
+    targetId: 'burnout-new-btn',
+    title: '➕ Nova Avaliação',
+    description: 'Crie uma nova avaliação de Burnout para monitorar o risco de esgotamento dos colaboradores.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'burnout-filters',
+    title: '🔍 Filtros',
+    description: 'Filtre as avaliações por título ou empresa.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'burnout-table',
+    title: '📊 Tabela de Avaliações',
+    description: 'Gerencie suas avaliações, copie links para compartilhar e acompanhe os resultados.',
+    position: 'top',
+  },
+];
 
 interface BurnoutAssessment {
   id: string;
@@ -64,6 +87,7 @@ export default function BurnoutDashboard() {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useRealAuth();
   const { toast } = useToast();
+  const { shouldShowTour, completeTour } = useOnboarding('burnout-dashboard');
   
   const [assessments, setAssessments] = useState<BurnoutAssessment[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -227,7 +251,7 @@ export default function BurnoutDashboard() {
               Gerencie as avaliações de risco de Síndrome de Burnout
             </p>
           </div>
-          <Button onClick={() => navigate('/burnout/new')} className="gap-2">
+          <Button id="burnout-new-btn" onClick={() => navigate('/burnout/new')} className="gap-2">
             <Plus className="h-4 w-4" />
             Nova Avaliação
           </Button>
@@ -274,7 +298,7 @@ export default function BurnoutDashboard() {
         </div>
 
         {/* Filters */}
-        <Card className="mb-6">
+        <Card id="burnout-filters" className="mb-6">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
@@ -304,7 +328,7 @@ export default function BurnoutDashboard() {
         </Card>
 
         {/* Assessments Table */}
-        <Card>
+        <Card id="burnout-table">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -417,6 +441,13 @@ export default function BurnoutDashboard() {
         )}
       </main>
       <Footer />
+
+      {shouldShowTour && (
+        <OnboardingTour
+          steps={burnoutSteps}
+          onComplete={() => completeTour()}
+        />
+      )}
     </div>
   );
 }

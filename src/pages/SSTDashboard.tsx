@@ -17,6 +17,53 @@ import EditCompanyDialog from '@/components/sst/EditCompanyDialog';
 import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
+import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
+import { useOnboarding } from '@/hooks/useOnboarding';
+
+const sstDashboardSteps: TourStep[] = [
+  {
+    targetId: 'sst-tools-bar',
+    title: '🛠️ Suas Ferramentas',
+    description: 'Aqui ficam todas as ferramentas disponíveis para você gerenciar a saúde ocupacional das suas empresas.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'tool-hseit',
+    title: '🧠 Avaliação HSE-IT',
+    description: 'Avalie os riscos psicossociais das empresas usando a metodologia HSE-IT, reconhecida internacionalmente.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'tool-burnout',
+    title: '🔥 Avaliação Burnout',
+    description: 'Aplique questionários de avaliação de risco de Síndrome de Burnout nos colaboradores.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'tool-climate',
+    title: '📋 Pesquisas de Clima',
+    description: 'Crie e gerencie pesquisas de clima organizacional personalizadas.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'tool-new-company',
+    title: '🏢 Nova Empresa',
+    description: 'Cadastre novas empresas para gerenciar. No plano trial, você pode ter até 2 empresas.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'sst-link',
+    title: '🔗 Link da Página Inicial',
+    description: 'Este é o link da sua página pública. Compartilhe com suas empresas clientes para que acessem o canal de ouvidoria.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'company-cards',
+    title: '📊 Empresas Cadastradas',
+    description: 'Aqui você visualiza todas as empresas cadastradas e acessa o portal de ouvidoria de cada uma.',
+    position: 'top',
+  },
+];
 
 interface Company {
   id: string;
@@ -45,6 +92,7 @@ const SSTDashboard = () => {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading, isTrialExpired, trialEndsAt } = useRealAuth();
   const { toast } = useToast();
+  const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
 
   useEffect(() => {
     if (!authLoading) {
@@ -230,11 +278,12 @@ const SSTDashboard = () => {
           </div>
 
           {/* Suas Ferramentas */}
-          <div className="bg-green-700 text-white rounded-lg px-5 py-3 mb-4">
+          <div id="sst-tools-bar" className="bg-green-700 text-white rounded-lg px-5 py-3 mb-4">
             <h2 className="text-lg font-semibold tracking-wide">Suas Ferramentas</h2>
           </div>
           <div className="flex flex-wrap gap-3 mb-8">
             <Button 
+              id="tool-hseit"
               onClick={() => navigate('/hseit-dashboard')}
               variant="outline"
               className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
@@ -244,6 +293,7 @@ const SSTDashboard = () => {
             </Button>
             
             <Button 
+              id="tool-burnout"
               onClick={() => navigate('/burnout-dashboard')}
               variant="outline"
               className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
@@ -253,6 +303,7 @@ const SSTDashboard = () => {
             </Button>
             
             <Button 
+              id="tool-climate"
               onClick={() => navigate('/climate-dashboard')}
               variant="outline"
               className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
@@ -262,6 +313,7 @@ const SSTDashboard = () => {
             </Button>
             
             <Button 
+              id="tool-new-company"
               onClick={() => setIsAddCompanyOpen(true)}
               disabled={companies.length >= maxCompanies}
               className="bg-green-700 hover:bg-green-800 text-white font-semibold shadow-sm"
@@ -272,7 +324,7 @@ const SSTDashboard = () => {
           </div>
           
           {sstSlug && (
-            <div className="mb-6 flex items-center gap-3 p-4 bg-muted rounded-lg">
+            <div id="sst-link" className="mb-6 flex items-center gap-3 p-4 bg-muted rounded-lg">
               <Link2 className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">Link da sua página inicial</p>
@@ -316,7 +368,7 @@ const SSTDashboard = () => {
                 </div>
               </div>
               <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div id="company-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCompanies.map((company) => (
                   <Card 
                     key={company.id} 
@@ -444,6 +496,12 @@ const SSTDashboard = () => {
         company={editingCompany}
         onCompanyUpdated={fetchCompanies}
       />
+      {shouldShowTour && (
+        <OnboardingTour
+          steps={sstDashboardSteps}
+          onComplete={() => completeTour()}
+        />
+      )}
     </div>
   );
 };

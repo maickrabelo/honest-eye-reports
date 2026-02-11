@@ -49,6 +49,29 @@ import { ClimateSurveyExportButton } from "@/components/climate-survey/ClimateSu
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AIInsightsCard } from "@/components/climate-survey/AIInsightsCard";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
+import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+
+const climateSteps: TourStep[] = [
+  {
+    targetId: 'climate-new-btn',
+    title: '➕ Nova Pesquisa',
+    description: 'Crie pesquisas de clima personalizadas com perguntas Likert, NPS e abertas.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'climate-survey-selector',
+    title: '📋 Seletor de Pesquisa',
+    description: 'Selecione uma pesquisa para visualizar seus resultados detalhados.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'climate-share-link',
+    title: '🔗 Link de Compartilhamento',
+    description: 'Copie o link ou baixe o QR Code para distribuir a pesquisa aos colaboradores.',
+    position: 'bottom',
+  },
+];
 
 interface Survey {
   id: string;
@@ -89,6 +112,7 @@ export default function ClimateSurveyDashboard() {
   const { role, profile, isLoading: authLoading } = useRealAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { shouldShowTour, completeTour } = useOnboarding('climate-dashboard');
 
   const [isLoading, setIsLoading] = useState(true);
   const [surveys, setSurveys] = useState<Survey[]>([]);
@@ -439,18 +463,20 @@ export default function ClimateSurveyDashboard() {
             )}
             
             {surveys.length > 0 && (
-              <Select value={selectedSurvey} onValueChange={setSelectedSurvey}>
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="Selecione uma pesquisa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {surveys.map(survey => (
-                    <SelectItem key={survey.id} value={survey.id}>
-                      {survey.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div id="climate-survey-selector">
+                <Select value={selectedSurvey} onValueChange={setSelectedSurvey}>
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="Selecione uma pesquisa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {surveys.map(survey => (
+                      <SelectItem key={survey.id} value={survey.id}>
+                        {survey.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
 
             {getSelectedSurvey() && getSurveyUrl(getSelectedSurvey()!) && (
@@ -463,7 +489,7 @@ export default function ClimateSurveyDashboard() {
             )}
             
             {['admin', 'sst'].includes(role || '') && (
-              <Button onClick={handleCreateSurvey}>
+              <Button id="climate-new-btn" onClick={handleCreateSurvey}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Pesquisa
               </Button>
@@ -491,7 +517,7 @@ export default function ClimateSurveyDashboard() {
           <>
             {/* Share Link Card */}
             {getSelectedSurvey() && getSurveyUrl(getSelectedSurvey()!) && (
-              <Card className="mb-6">
+              <Card id="climate-share-link" className="mb-6">
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <LinkIcon className="h-5 w-5 text-primary shrink-0" />
@@ -851,6 +877,13 @@ export default function ClimateSurveyDashboard() {
       </main>
 
       <Footer />
+
+      {shouldShowTour && (
+        <OnboardingTour
+          steps={climateSteps}
+          onComplete={() => completeTour()}
+        />
+      )}
     </div>
   );
 }

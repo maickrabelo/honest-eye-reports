@@ -14,6 +14,29 @@ import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, Aler
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
+import { useOnboarding } from '@/hooks/useOnboarding';
+
+const hseitSteps: TourStep[] = [
+  {
+    targetId: 'hseit-new-btn',
+    title: '➕ Nova Avaliação',
+    description: 'Clique aqui para criar uma nova avaliação HSE-IT para uma das suas empresas.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'hseit-filters',
+    title: '🔍 Filtros',
+    description: 'Use os filtros para buscar avaliações por nome ou filtrar por empresa.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'hseit-table',
+    title: '📊 Tabela de Avaliações',
+    description: 'Aqui você vê todas as avaliações criadas, com links para compartilhar, ver resultados e editar.',
+    position: 'top',
+  },
+];
 
 interface HSEITAssessment {
   id: string;
@@ -39,6 +62,7 @@ interface Company {
 export default function HSEITDashboard() {
   const navigate = useNavigate();
   const { user, role, profile, isLoading: authLoading } = useRealAuth();
+  const { shouldShowTour, completeTour } = useOnboarding('hseit-dashboard');
   
   const [assessments, setAssessments] = useState<HSEITAssessment[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -199,7 +223,7 @@ export default function HSEITDashboard() {
             </p>
           </div>
           
-          <Button onClick={() => navigate('/hseit/new')} className="gap-2">
+          <Button id="hseit-new-btn" onClick={() => navigate('/hseit/new')} className="gap-2">
             <Plus className="h-4 w-4" />
             Nova Avaliação
           </Button>
@@ -265,7 +289,7 @@ export default function HSEITDashboard() {
         </div>
 
         {/* Filters */}
-        <Card className="mb-6">
+        <Card id="hseit-filters" className="mb-6">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
@@ -298,7 +322,7 @@ export default function HSEITDashboard() {
         </Card>
 
         {/* Assessments Table */}
-        <Card>
+        <Card id="hseit-table">
           <CardHeader>
             <CardTitle>Avaliações HSE-IT</CardTitle>
           </CardHeader>
@@ -410,6 +434,13 @@ export default function HSEITDashboard() {
       </main>
       
       <Footer />
+
+      {shouldShowTour && (
+        <OnboardingTour
+          steps={hseitSteps}
+          onComplete={() => completeTour()}
+        />
+      )}
     </div>
   );
 }
