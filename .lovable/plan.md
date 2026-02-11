@@ -1,69 +1,110 @@
 
 
-# Empresa Demo com Dados Pre-preenchidos no Trial SST
+# Tutorial Guiado de Primeiro Acesso para Contas Trial SST
 
-## Resumo
-Ao criar uma conta trial SST, alem de liberar o cadastro de 1 empresa adicional, a edge function vai automaticamente criar uma "Empresa Demo" ja vinculada a gestora, com 3 avaliacoes completas (HSE-IT, Burnout e Pesquisa de Clima), cada uma com 30 respostas variadas distribuidas por diferentes setores.
+## Objetivo
+Criar um sistema de tutorial passo-a-passo (tipo "product tour") que aparece automaticamente no primeiro acesso de contas trial SST. O tutorial destaca cada elemento importante da interface, com um overlay escuro ao redor e uma caixa de texto explicativa com botao "Proximo", guiando o usuario por todos os botoes e funcionalidades.
 
-## O que muda
+## Paginas que terao tutorial
+1. **SSTDashboard** (pagina principal) - explicar ferramentas, link da pagina, cards de empresas
+2. **HSEITDashboard** - explicar como criar e gerenciar avaliacoes HSE-IT
+3. **BurnoutDashboard** - explicar como criar e gerenciar avaliacoes de Burnout
+4. **ClimateSurveyDashboard** - explicar como criar e gerenciar pesquisas de clima
 
-### 1. Alterar `max_companies` de 1 para 2
-O trial passa a permitir 2 empresas: 1 demo (criada automaticamente) + 1 que o usuario pode cadastrar para testar. Isso sera ajustado na edge function.
+## Como funciona
+- No primeiro acesso, o tutorial inicia automaticamente
+- Um overlay escuro cobre toda a tela, exceto o elemento destacado
+- Uma caixa com titulo, descricao e botao "Proximo" aparece ao lado do elemento
+- O usuario precisa clicar "Proximo" para avancar
+- No ultimo passo, o botao mostra "Concluir"
+- Apos concluir, o status e salvo no banco para nao mostrar novamente
 
-### 2. Expandir a Edge Function `create-sst-trial-account`
-Apos criar o SST manager e o usuario, a function vai executar os seguintes passos adicionais:
+## Detalhes Tecnicos
 
-**a) Criar empresa demo**
-- Nome: "Empresa Demo - [Nome da Gestora]"
-- Slug: "demo-[slug-da-gestora]"
-- Email: demo@exemplo.com
-- max_employees: 50
+### 1. Banco de Dados
+- Adicionar coluna `onboarding_completed_pages` (tipo `jsonb`, default `[]`) na tabela `sst_managers` para rastrear quais paginas ja tiveram o tutorial concluido
+- Isso permite controlar individualmente cada pagina (ex: `["sst-dashboard", "hseit-dashboard"]`)
 
-**b) Vincular empresa ao SST manager**
-- Inserir em `company_sst_assignments`
+### 2. Componente `OnboardingTour`
+Criar um componente reutilizavel `src/components/OnboardingTour.tsx` que:
+- Recebe uma lista de "steps" (cada step tem: `targetId`, `title`, `description`, `position`)
+- Usa `document.getElementById()` para localizar o elemento alvo
+- Renderiza um overlay com recorte (usando box-shadow ou clip-path) para destacar o elemento
+- Posiciona um tooltip explicativo (acima, abaixo, esquerda ou direita do elemento)
+- Tem botoes "Proximo" e indicador de progresso (ex: "2 de 6")
+- Ao concluir, chama um callback `onComplete`
 
-**c) Criar avaliacao HSE-IT com 30 respostas**
-- Criar 1 registro em `hseit_assessments` (titulo: "Avaliacao HSE-IT Demo")
-- Criar 5 departamentos em `hseit_departments` (Administrativo, Operacional, Comercial, RH, TI)
-- Criar 30 registros em `hseit_responses` (6 por departamento)
-- Criar 30x35 = 1050 registros em `hseit_answers` com valores variados (1-5)
+### 3. Hook `useOnboarding`
+Criar `src/hooks/useOnboarding.ts` que:
+- Verifica se o usuario e SST e se e trial (usando `useRealAuth`)
+- Consulta `sst_managers.onboarding_completed_pages` para saber quais tutoriais ja foram concluidos
+- Retorna `shouldShowTour` (boolean) e `completeTour(pageId)` (funcao)
+- `completeTour` atualiza o campo jsonb adicionando a pagina concluida
 
-**d) Criar avaliacao Burnout com 30 respostas**
-- Criar 1 registro em `burnout_assessments` (titulo: "Avaliacao Burnout Demo")
-- Criar 5 departamentos em `burnout_departments`
-- Criar 30 registros em `burnout_responses` com scores totais calculados
-- Criar 30x20 = 600 registros em `burnout_answers` com valores variados (1-6)
+### 4. IDs nos elementos-alvo
+Adicionar atributos `id` nos elementos que serao destacados em cada pagina:
+- **SSTDashboard**: `id="tool-hseit"`, `id="tool-burnout"`, `id="tool-climate"`, `id="tool-new-company"`, `id="sst-link"`, `id="company-cards"`
+- **HSEITDashboard**: `id="hseit-new-btn"`, `id="hseit-filters"`, `id="hseit-table"`
+- **BurnoutDashboard**: `id="burnout-new-btn"`, `id="burnout-filters"`, `id="burnout-table"`
+- **ClimateSurveyDashboard**: `id="climate-new-btn"`, `id="climate-filters"`, `id="climate-survey-selector"`
 
-**e) Criar pesquisa de clima com 30 respostas**
-- Criar 1 registro em `climate_surveys` (titulo: "Pesquisa de Clima Demo")
-- Criar 5 departamentos em `survey_departments`
-- Criar perguntas em `survey_questions` (modelo SOIA com 12 likert + 5 abertas)
-- Criar 30 registros em `survey_responses`
-- Criar respostas em `survey_answers` com valores variados
+### 5. Steps por pagina
 
-### 3. Logica de geracao de dados variados
-Para simular dados realistas:
-- **Departamentos**: Administrativo, Operacional, Comercial, RH, TI (6 respondentes por setor)
-- **Respostas**: Distribuicao variada usando uma funcao pseudo-aleatoria com tendencias diferentes por departamento (ex: TI com melhor controle, Operacional com mais demandas)
-- **Tokens**: Gerados como UUID v4 para cada respondente
+**SSTDashboard (6 passos):**
+1. Faixa "Suas Ferramentas" - "Aqui ficam todas as ferramentas disponiveis para voce gerenciar a saude ocupacional das suas empresas."
+2. Botao HSE-IT - "Avalie os riscos psicossociais das empresas usando a metodologia HSE-IT, reconhecida internacionalmente."
+3. Botao Burnout - "Aplique questionarios de avaliacao de risco de Sindrome de Burnout nos colaboradores."
+4. Botao Pesquisas de Clima - "Crie e gerencie pesquisas de clima organizacional personalizadas."
+5. Botao Nova Empresa - "Cadastre novas empresas para gerenciar. No plano trial, voce pode ter ate 2 empresas."
+6. Link da pagina inicial - "Este e o link da sua pagina publica. Compartilhe com suas empresas clientes."
+7. Cards de empresas - "Aqui voce visualiza todas as empresas cadastradas e acessa o portal de ouvidoria de cada uma."
 
-## Detalhes tecnicos
+**HSEITDashboard (3 passos):**
+1. Botao Nova Avaliacao - "Clique aqui para criar uma nova avaliacao HSE-IT para uma das suas empresas."
+2. Filtros - "Use os filtros para buscar avaliacoes por nome ou filtrar por empresa."
+3. Tabela - "Aqui voce ve todas as avaliacoes criadas, com links para compartilhar, ver resultados e editar."
 
-### Arquivos editados
-- `supabase/functions/create-sst-trial-account/index.ts` -- adicionar toda a logica de criacao da empresa demo e dados de avaliacao
+**BurnoutDashboard (3 passos):**
+1. Botao Nova Avaliacao - "Crie uma nova avaliacao de Burnout para monitorar o risco de esgotamento dos colaboradores."
+2. Filtros - "Filtre as avaliacoes por titulo ou empresa."
+3. Tabela - "Gerencie suas avaliacoes, copie links para compartilhar e acompanhe os resultados."
 
-### Estrutura da geracao de dados na edge function
+**ClimateSurveyDashboard (3 passos):**
+1. Botao Nova Pesquisa - "Crie pesquisas de clima personalizadas com perguntas Likert, NPS e abertas."
+2. Seletor de pesquisa - "Selecione uma pesquisa para visualizar seus resultados detalhados."
+3. Link de compartilhamento - "Copie o link ou baixe o QR Code para distribuir a pesquisa aos colaboradores."
 
-A funcao tera uma secao "Seed Demo Data" apos a criacao do usuario, que:
-1. Cria a empresa e vincula ao SST manager
-2. Gera os 3 tipos de avaliacao com departamentos
-3. Loop de 30 respondentes (6 por departamento), gerando respostas para cada avaliacao
-4. Usa `crypto.randomUUID()` para tokens
-5. Insere em batch para performance
+### 6. Integracao nas paginas
+Em cada pagina, importar o hook e o componente:
+```tsx
+const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
 
-### Observacoes
-- A empresa demo ficara marcada como `is_active: false` nas avaliacoes para nao interferir com avaliacoes reais que o usuario crie
-- Na verdade, melhor deixar `is_active: true` para que o usuario ja veja os dashboards populados
-- Nenhum usuario de login sera criado para a empresa demo (ela e apenas para visualizacao pelo SST)
-- O `max_companies` sobe de 1 para 2, permitindo que o usuario crie mais 1 empresa propria alem da demo
+return (
+  <>
+    {shouldShowTour && (
+      <OnboardingTour
+        steps={sstDashboardSteps}
+        onComplete={() => completeTour('sst-dashboard')}
+      />
+    )}
+    {/* resto da pagina */}
+  </>
+);
+```
+
+### 7. Estilo visual
+- Overlay: fundo preto semi-transparente (`rgba(0,0,0,0.7)`) cobrindo toda a tela
+- Elemento destacado: recortado do overlay com borda brilhante
+- Tooltip: card branco com sombra, titulo em negrito, descricao, indicador de progresso e botao verde "Proximo"
+- Animacao suave de transicao entre passos
+- Botao "Pular tutorial" discreto no canto para quem quiser ignorar
+
+## Resumo dos arquivos a criar/modificar
+- **Criar**: `src/components/OnboardingTour.tsx` - componente visual do tour
+- **Criar**: `src/hooks/useOnboarding.ts` - hook de controle
+- **Modificar**: `src/pages/SSTDashboard.tsx` - adicionar IDs e integrar tour
+- **Modificar**: `src/pages/HSEITDashboard.tsx` - adicionar IDs e integrar tour
+- **Modificar**: `src/pages/BurnoutDashboard.tsx` - adicionar IDs e integrar tour
+- **Modificar**: `src/pages/ClimateSurveyDashboard.tsx` - adicionar IDs e integrar tour
+- **Banco**: adicionar coluna `onboarding_completed_pages` na tabela `sst_managers`
 
