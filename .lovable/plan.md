@@ -1,72 +1,69 @@
 
-# Trial para Gestoras SST
+
+# Empresa Demo com Dados Pre-preenchidos no Trial SST
 
 ## Resumo
-Criar um fluxo de cadastro trial de 7 dias para empresas gestoras SST, permitindo que testem a plataforma com o limite de cadastro de apenas 1 empresa durante o periodo de teste.
-
-## Como vai funcionar
-
-1. Nova rota `/teste-gratis-sst` com formulario de cadastro simplificado para gestoras SST
-2. Uma nova Edge Function (`create-sst-trial-account`) cria automaticamente o registro na tabela `sst_managers`, o usuario com role `sst`, e configura `max_companies = 1`
-3. O SST Dashboard ja respeita o `max_companies` existente, entao o limite de 1 empresa funcionara automaticamente
-4. Adicionar campos `subscription_status` e `trial_ends_at` na tabela `sst_managers` para controlar a expiracao do trial
-5. Banner de trial e overlay de expiracao no SST Dashboard (similar ao que ja existe para empresas)
+Ao criar uma conta trial SST, alem de liberar o cadastro de 1 empresa adicional, a edge function vai automaticamente criar uma "Empresa Demo" ja vinculada a gestora, com 3 avaliacoes completas (HSE-IT, Burnout e Pesquisa de Clima), cada uma com 30 respostas variadas distribuidas por diferentes setores.
 
 ## O que muda
 
-### 1. Migracao de banco de dados
+### 1. Alterar `max_companies` de 1 para 2
+O trial passa a permitir 2 empresas: 1 demo (criada automaticamente) + 1 que o usuario pode cadastrar para testar. Isso sera ajustado na edge function.
 
-Adicionar colunas de controle de trial na tabela `sst_managers`:
+### 2. Expandir a Edge Function `create-sst-trial-account`
+Apos criar o SST manager e o usuario, a function vai executar os seguintes passos adicionais:
 
-```sql
-ALTER TABLE public.sst_managers 
-  ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'inactive',
-  ADD COLUMN IF NOT EXISTS trial_ends_at timestamp with time zone;
-```
+**a) Criar empresa demo**
+- Nome: "Empresa Demo - [Nome da Gestora]"
+- Slug: "demo-[slug-da-gestora]"
+- Email: demo@exemplo.com
+- max_employees: 50
 
-### 2. Nova Edge Function: `create-sst-trial-account`
+**b) Vincular empresa ao SST manager**
+- Inserir em `company_sst_assignments`
 
-Recebe os dados da gestora SST e:
-- Cria o registro em `sst_managers` com `max_companies = 1`, `subscription_status = 'trial'` e `trial_ends_at = now() + 7 dias`
-- Cria o usuario auth com senha temporaria
-- Atualiza o perfil com `sst_manager_id`
-- Define role como `sst`
-- Envia email de boas-vindas com credenciais via Resend
+**c) Criar avaliacao HSE-IT com 30 respostas**
+- Criar 1 registro em `hseit_assessments` (titulo: "Avaliacao HSE-IT Demo")
+- Criar 5 departamentos em `hseit_departments` (Administrativo, Operacional, Comercial, RH, TI)
+- Criar 30 registros em `hseit_responses` (6 por departamento)
+- Criar 30x35 = 1050 registros em `hseit_answers` com valores variados (1-5)
 
-### 3. Nova pagina: `SSTTrialSignup.tsx` (rota `/teste-gratis-sst`)
+**d) Criar avaliacao Burnout com 30 respostas**
+- Criar 1 registro em `burnout_assessments` (titulo: "Avaliacao Burnout Demo")
+- Criar 5 departamentos em `burnout_departments`
+- Criar 30 registros em `burnout_responses` com scores totais calculados
+- Criar 30x20 = 600 registros em `burnout_answers` com valores variados (1-6)
 
-Formulario com:
-- Nome da gestora SST
-- Email
-- Nome do responsavel
-- Telefone (opcional)
-- Botao "Iniciar teste gratis"
+**e) Criar pesquisa de clima com 30 respostas**
+- Criar 1 registro em `climate_surveys` (titulo: "Pesquisa de Clima Demo")
+- Criar 5 departamentos em `survey_departments`
+- Criar perguntas em `survey_questions` (modelo SOIA com 12 likert + 5 abertas)
+- Criar 30 registros em `survey_responses`
+- Criar respostas em `survey_answers` com valores variados
 
-### 4. Verificacao de trial SST no contexto de autenticacao
-
-Atualizar `RealAuthContext.tsx` para tambem verificar trial de SST managers (usando `sst_manager_id` do perfil em vez de `company_id`).
-
-### 5. Banner e overlay no SST Dashboard
-
-Reutilizar os componentes `TrialBanner` e `TrialExpiredOverlay` ja existentes no `SSTDashboard.tsx`, alimentados pelos dados de trial do SST manager.
-
-### 6. Links na landing page
-
-Adicionar botao "Teste gratis para Gestoras SST" na landing page principal e/ou na pagina comercial.
+### 3. Logica de geracao de dados variados
+Para simular dados realistas:
+- **Departamentos**: Administrativo, Operacional, Comercial, RH, TI (6 respondentes por setor)
+- **Respostas**: Distribuicao variada usando uma funcao pseudo-aleatoria com tendencias diferentes por departamento (ex: TI com melhor controle, Operacional com mais demandas)
+- **Tokens**: Gerados como UUID v4 para cada respondente
 
 ## Detalhes tecnicos
 
-### Arquivos criados
-- `supabase/functions/create-sst-trial-account/index.ts` -- edge function para criar conta trial SST
-- `src/pages/SSTTrialSignup.tsx` -- pagina de cadastro trial para gestoras SST
-
 ### Arquivos editados
-- `src/App.tsx` -- adicionar rota `/teste-gratis-sst`
-- `src/contexts/RealAuthContext.tsx` -- expandir `checkTrialStatus` para verificar trial de SST managers
-- `src/pages/SSTDashboard.tsx` -- adicionar TrialBanner e TrialExpiredOverlay
-- `supabase/config.toml` -- configurar `verify_jwt = false` para nova function
-- `src/components/landing/HeroSection.tsx` ou `src/components/commercial/PricingSection.tsx` -- adicionar link para trial SST
+- `supabase/functions/create-sst-trial-account/index.ts` -- adicionar toda a logica de criacao da empresa demo e dados de avaliacao
 
-### Logica de limite
+### Estrutura da geracao de dados na edge function
 
-O `SSTDashboard.tsx` ja usa `maxCompanies` da tabela `sst_managers` e desabilita o botao "Nova Empresa" quando `companies.length >= maxCompanies`. Como o trial sera criado com `max_companies = 1`, o limite sera automaticamente respeitado sem alteracoes adicionais. O trigger `validate_sst_company_limit` no banco de dados tambem ja impede a criacao acima do limite.
+A funcao tera uma secao "Seed Demo Data" apos a criacao do usuario, que:
+1. Cria a empresa e vincula ao SST manager
+2. Gera os 3 tipos de avaliacao com departamentos
+3. Loop de 30 respondentes (6 por departamento), gerando respostas para cada avaliacao
+4. Usa `crypto.randomUUID()` para tokens
+5. Insere em batch para performance
+
+### Observacoes
+- A empresa demo ficara marcada como `is_active: false` nas avaliacoes para nao interferir com avaliacoes reais que o usuario crie
+- Na verdade, melhor deixar `is_active: true` para que o usuario ja veja os dashboards populados
+- Nenhum usuario de login sera criado para a empresa demo (ela e apenas para visualizacao pelo SST)
+- O `max_companies` sobe de 1 para 2, permitindo que o usuario crie mais 1 empresa propria alem da demo
+
