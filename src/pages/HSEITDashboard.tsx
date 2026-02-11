@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, AlertTriangle, Eye, Copy, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, AlertTriangle, Eye, Copy, ExternalLink, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -183,6 +183,10 @@ export default function HSEITDashboard() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8">
+        <Button variant="outline" size="sm" onClick={() => navigate('/sst-dashboard')} className="mb-4 gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao Dashboard
+        </Button>
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>

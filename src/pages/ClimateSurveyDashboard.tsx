@@ -39,7 +39,8 @@ import {
   Link as LinkIcon,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -410,6 +411,10 @@ export default function ClimateSurveyDashboard() {
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 py-8">
+        <Button variant="outline" size="sm" onClick={() => navigate('/sst-dashboard')} className="mb-4 gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao Dashboard
+        </Button>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Pesquisa de Clima</h1>
