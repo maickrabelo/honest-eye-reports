@@ -83,12 +83,21 @@ async function seedDemoData(supabaseAdmin: any, sstManagerId: string, sstName: s
 
   // 1. Create demo company
   const demoSlug = `demo-${slug}`;
+  // Fetch the SST manager's email to use for the demo company
+  const { data: sstManagerData } = await supabaseAdmin
+    .from("sst_managers")
+    .select("email")
+    .eq("id", sstManagerId)
+    .single();
+
+  const demoEmail = sstManagerData?.email || "demo@exemplo.com";
+
   const { data: demoCompany, error: companyError } = await supabaseAdmin
     .from("companies")
     .insert({
       name: `Empresa Demo - ${sstName}`,
       slug: demoSlug,
-      email: "demo@exemplo.com",
+      email: demoEmail,
       max_employees: 50,
       subscription_status: "active",
     })
