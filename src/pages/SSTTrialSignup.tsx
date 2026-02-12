@@ -56,7 +56,18 @@ const SSTTrialSignup = () => {
         body: formData,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to extract the actual error message from the response
+        let errorMsg = 'Tente novamente mais tarde.';
+        try {
+          const context = (error as any).context;
+          if (context && typeof context.json === 'function') {
+            const body = await context.json();
+            if (body?.error) errorMsg = body.error;
+          }
+        } catch {}
+        throw new Error(errorMsg);
+      }
       if (data?.error) throw new Error(data.error);
 
       setIsSuccess(true);
