@@ -94,10 +94,10 @@ const PricingSection = () => {
             Investimento
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Planos que cabem no seu orçamento
+            Valores contratação direto para empresas
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Escolha o plano ideal para o tamanho da sua empresa. Todos incluem suporte completo e atualizações constantes.
+            Quer fazer a gestão de Riscos direto na sua empresa? Confira os planos PJ
           </p>
         </div>
 
