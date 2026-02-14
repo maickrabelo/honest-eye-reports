@@ -48,7 +48,7 @@ const SSTHighlightSection = () => {
             </Button>
             <Button
               size="lg"
-              onClick={scrollToContact}
+              onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de agendar uma demonstração do SOIA para minha empresa de SST.', '_blank')}
               className="bg-emerald-500/30 hover:bg-emerald-500/40 text-white border border-white/30 font-semibold px-8 py-6 text-lg group"
             >
               Solicitar Demonstração

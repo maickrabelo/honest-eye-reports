@@ -50,7 +50,7 @@ const HeroSection = () => {
               </Button>
               <Button 
                 size="lg" 
-                onClick={scrollToContact}
+                onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de solicitar uma demonstração do SOIA.', '_blank')}
                 className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group"
               >
                 Solicitar Demonstração

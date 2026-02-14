@@ -226,13 +226,13 @@ const PricingSection = () => {
         <div className={`text-center mt-8 space-y-4 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
           <Button
             size="lg"
-            onClick={() => navigate('/teste-gratis')}
+            onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de solicitar uma demonstração do SOIA.', '_blank')}
             className="px-8"
           >
-            Teste grátis por 7 dias
+            Solicitar Demonstração
           </Button>
           <p className="text-sm text-muted-foreground">
-            * Sem necessidade de cartão de crédito. Sem compromisso.
+            * Fale com nosso time comercial pelo WhatsApp.
           </p>
         </div>
       </div>
