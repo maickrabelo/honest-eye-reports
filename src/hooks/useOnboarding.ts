@@ -1,6 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
+
+const ONBOARDING_STORAGE_KEY = 'soia_onboarding_completed';
+
+function getLocalCompleted(): string[] {
+  try {
+    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setLocalCompleted(pages: string[]) {
+  try {
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(pages));
+  } catch {}
+}
 
 export function useOnboarding(pageId: string) {
   const { role, profile, isLoading: authLoading } = useRealAuth();
@@ -9,6 +26,14 @@ export function useOnboarding(pageId: string) {
 
   useEffect(() => {
     if (authLoading || !profile?.sst_manager_id || role !== 'sst') {
+      setShouldShowTour(false);
+      setIsReady(true);
+      return;
+    }
+
+    // Quick check: if already completed locally, skip DB call
+    const localCompleted = getLocalCompleted();
+    if (localCompleted.includes(pageId)) {
       setShouldShowTour(false);
       setIsReady(true);
       return;
@@ -32,7 +57,15 @@ export function useOnboarding(pageId: string) {
         }
 
         const completedPages = (data?.onboarding_completed_pages as string[]) || [];
-        setShouldShowTour(!completedPages.includes(pageId));
+        
+        // Sync DB state to localStorage
+        if (completedPages.length > 0) {
+          const merged = [...new Set([...localCompleted, ...completedPages])];
+          setLocalCompleted(merged);
+        }
+
+        const alreadyCompleted = completedPages.includes(pageId);
+        setShouldShowTour(!alreadyCompleted);
       } catch (err) {
         console.error('Error checking onboarding status:', err);
         setShouldShowTour(false);
@@ -44,11 +77,18 @@ export function useOnboarding(pageId: string) {
     checkOnboarding();
   }, [authLoading, profile?.sst_manager_id, role, pageId]);
 
-  const completeTour = async () => {
+  const completeTour = useCallback(async () => {
     if (!profile?.sst_manager_id) return;
 
+    // Immediately hide the tour and save to localStorage
+    setShouldShowTour(false);
+    const localCompleted = getLocalCompleted();
+    if (!localCompleted.includes(pageId)) {
+      setLocalCompleted([...localCompleted, pageId]);
+    }
+
     try {
-      // Fetch current completed pages
+      // Persist to DB
       const { data } = await supabase
         .from('sst_managers')
         .select('onboarding_completed_pages')
@@ -64,13 +104,28 @@ export function useOnboarding(pageId: string) {
           .update({ onboarding_completed_pages: updated })
           .eq('id', profile.sst_manager_id);
       }
-
-      setShouldShowTour(false);
     } catch (err) {
       console.error('Error completing tour:', err);
-      setShouldShowTour(false);
     }
-  };
+  }, [profile?.sst_manager_id, pageId]);
 
-  return { shouldShowTour, completeTour, isReady };
+  const resetTour = useCallback(async () => {
+    if (!profile?.sst_manager_id) return;
+
+    // Clear localStorage
+    setLocalCompleted([]);
+    setShouldShowTour(true);
+
+    try {
+      // Clear DB
+      await supabase
+        .from('sst_managers')
+        .update({ onboarding_completed_pages: [] })
+        .eq('id', profile.sst_manager_id);
+    } catch (err) {
+      console.error('Error resetting tour:', err);
+    }
+  }, [profile?.sst_manager_id]);
+
+  return { shouldShowTour, completeTour, resetTour, isReady };
 }
