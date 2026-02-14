@@ -6,6 +6,11 @@ const RelatorioDemo = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6">
+        <img 
+          src="/lovable-uploads/Logo_SOIA.png" 
+          alt="SOIA Logo" 
+          className="h-10 mx-auto"
+        />
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
           <FileText className="h-8 w-8 text-primary" />
         </div>
