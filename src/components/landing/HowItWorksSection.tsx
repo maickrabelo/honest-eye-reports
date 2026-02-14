@@ -39,7 +39,7 @@ const HowItWorksSection = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
 
   return (
-    <section className="py-20 bg-muted/30">
+    <section id="como-funciona" className="py-20 bg-muted/30" aria-label="Como funciona o sistema NR-01 de riscos psicossociais">
       <div className="audit-container" ref={ref}>
         <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Processo</span>

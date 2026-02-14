@@ -9,8 +9,13 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import usePageSEO from '@/hooks/usePageSEO';
 
 const TrialSignup = () => {
+  usePageSEO({
+    title: 'Teste Grátis | Sistema de Riscos Psicossociais NR-01 | SOIA',
+    description: 'Teste grátis por 7 dias o sistema NR-01 para levantamento de riscos psicossociais. Canal de denúncias, pesquisa de clima e compliance.',
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);

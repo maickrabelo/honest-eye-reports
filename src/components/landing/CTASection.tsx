@@ -7,11 +7,11 @@ const CTASection = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
   return (
-    <section id="cta-section" className="py-20 bg-gradient-to-br from-audit-accent via-audit-primary to-audit-dark">
+    <section id="contato" className="py-20 bg-gradient-to-br from-audit-accent via-audit-primary to-audit-dark" aria-label="Implemente seu sistema NR-01 de riscos psicossociais">
       <div className="audit-container" ref={ref}>
         <div className="max-w-4xl mx-auto text-center">
           <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            Pronto para proteger sua empresa?
+            Implemente seu sistema NR-01 de riscos psicossociais
           </h2>
           <p className={`text-white/70 text-lg md:text-xl mb-10 max-w-2xl mx-auto transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
             style={{ transitionDelay: isVisible ? '100ms' : '0ms' }}

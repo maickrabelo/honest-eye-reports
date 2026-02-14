@@ -6,28 +6,28 @@ const painPoints = [
   {
     icon: Scale,
     title: 'Processos Trabalhistas',
-    description: 'Casos de assédio não reportados podem resultar em processos milionários e danos irreparáveis à empresa.',
+    description: 'Casos de assédio e riscos psicossociais não reportados podem resultar em processos milionários e danos irreparáveis à empresa.',
     stat: 'R$ 50mi+',
     statLabel: 'em indenizações/ano no Brasil'
   },
   {
     icon: AlertTriangle,
     title: 'Multas por NR-01',
-    description: 'A nova NR-01 exige gestão de riscos psicossociais. O não cumprimento gera multas pesadas.',
+    description: 'A NR-01 exige o levantamento de riscos psicossociais. O não cumprimento gera multas pesadas e interdições.',
     stat: 'R$ 6.708',
     statLabel: 'a R$ 6,7 milhões por infração'
   },
   {
     icon: Users,
     title: 'Perda de Talentos',
-    description: 'Ambientes tóxicos causam alta rotatividade. Substituir um funcionário custa até 200% do salário.',
+    description: 'Ambientes com riscos psicossociais não gerenciados causam alta rotatividade. Substituir um funcionário custa até 200% do salário.',
     stat: '87%',
     statLabel: 'deixam por cultura ruim'
   },
   {
     icon: TrendingDown,
     title: 'Danos Reputacionais',
-    description: 'Escândalos de assédio destroem a imagem da empresa em horas. A reconstrução leva anos.',
+    description: 'Escândalos de assédio e falta de gestão de riscos psicossociais destroem a imagem da empresa em horas.',
     stat: '66%',
     statLabel: 'perdem valor de mercado'
   },
@@ -37,15 +37,15 @@ const PainPointsSection = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
 
   return (
-    <section className="py-20 bg-muted/50">
+    <section id="riscos-psicossociais" className="py-20 bg-muted/50" aria-label="Riscos psicossociais que a NR-01 exige gerenciar">
       <div className="audit-container" ref={ref}>
         <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">O Problema</span>
+          <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Riscos Psicossociais</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-3 mb-4">
-            Os riscos que sua empresa corre
+            Riscos psicossociais que sua empresa precisa gerenciar
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Sem um canal de denúncias eficiente, problemas graves passam despercebidos até se tornarem crises.
+            Sem um sistema NR-01 eficiente para levantamento de riscos psicossociais, problemas graves passam despercebidos até se tornarem crises.
           </p>
         </div>
 

@@ -5,11 +5,11 @@ import heroIllustration from '@/assets/hero-illustration.png';
 
 const HeroSection = () => {
   const scrollToContact = () => {
-    document.getElementById('cta-section')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-audit-dark via-audit-primary to-audit-accent">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-audit-dark via-audit-primary to-audit-accent" aria-label="Sistema NR-01 para levantamento de riscos psicossociais">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-72 h-72 bg-audit-secondary rounded-full blur-3xl" />
@@ -30,13 +30,13 @@ const HeroSection = () => {
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Proteja sua empresa.
+              Sistema NR-01 para
               <br />
-              <span className="text-audit-secondary">Cuide das pessoas.</span>
+              <span className="text-audit-secondary">Levantamento de Riscos Psicossociais</span>
             </h1>
             
             <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto lg:mx-0 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              Canal de denúncias com inteligência artificial, pesquisas de clima organizacional e gestão de riscos psicossociais em uma única plataforma.
+              Plataforma completa para gestão de riscos psicossociais, canal de denúncias e pesquisa de clima organizacional conforme a NR-01.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
@@ -77,7 +77,7 @@ const HeroSection = () => {
           <div className="hidden lg:flex items-center justify-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <img 
               src={heroIllustration} 
-              alt="Equipe profissional trabalhando em compliance e ética corporativa"
+              alt="Sistema NR-01 para levantamento e gestão de riscos psicossociais no trabalho"
               className="max-w-full h-auto"
             />
           </div>

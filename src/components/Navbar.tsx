@@ -113,13 +113,20 @@ const Navbar = () => {
               </>
             ) : (
               <div className="flex items-center gap-4">
-                <Button 
-                  variant="ghost" 
-                  className="hidden sm:inline-flex"
-                  onClick={() => document.getElementById('cta-section')?.scrollIntoView({ behavior: 'smooth' })}
-                >
-                  Contato
-                </Button>
+                <a href="/#sistema-nr01" className="hidden md:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                  Soluções
+                </a>
+                <a href="/#beneficios" className="hidden md:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                  Benefícios
+                </a>
+                <a href="/#faq" className="hidden lg:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                  FAQ
+                </a>
+                <a href="/#contato" className="hidden sm:inline-flex">
+                  <Button variant="ghost">
+                    Contato
+                  </Button>
+                </a>
                 <Link to="/auth">
                   <Button className="bg-audit-primary hover:bg-audit-primary/90">
                     Área do Cliente
