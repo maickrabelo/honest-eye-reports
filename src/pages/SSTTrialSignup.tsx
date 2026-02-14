@@ -9,8 +9,13 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import usePageSEO from '@/hooks/usePageSEO';
 
 const SSTTrialSignup = () => {
+  usePageSEO({
+    title: 'Gestora SST | Sistema NR-01 Riscos Psicossociais | SOIA',
+    description: 'Teste grátis para gestoras SST. Sistema NR-01 completo para levantamento e gestão de riscos psicossociais no trabalho.',
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);

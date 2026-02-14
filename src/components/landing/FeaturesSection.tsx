@@ -12,31 +12,31 @@ const features = [
   {
     icon: BarChart3,
     title: 'Pesquisa de Clima',
-    description: 'Questionários personalizáveis com análise NPS para medir o pulso da organização.',
+    description: 'Questionários personalizáveis com análise NPS para medir o pulso da organização e identificar riscos psicossociais.',
     highlights: ['Personalizável', 'Análise NPS', 'Relatórios detalhados']
   },
   {
     icon: Brain,
     title: 'Análise com IA',
-    description: 'Inteligência artificial classifica, prioriza e identifica padrões nas denúncias.',
+    description: 'Inteligência artificial classifica, prioriza e identifica padrões nos riscos psicossociais reportados.',
     highlights: ['Classificação automática', 'Priorização', 'Detecção de padrões']
   },
   {
     icon: LayoutDashboard,
     title: 'Dashboard Analítico',
-    description: 'Visualize métricas em tempo real, tendências e indicadores de risco organizacional.',
+    description: 'Visualize métricas de riscos psicossociais em tempo real, tendências e indicadores de risco organizacional.',
     highlights: ['Tempo real', 'Gráficos interativos', 'Exportação de dados']
   },
   {
     icon: ShieldCheck,
     title: 'Compliance NR-01',
-    description: 'Gestão completa de riscos psicossociais conforme exigido pela nova norma regulamentadora.',
-    highlights: ['Gestão de riscos', 'Documentação', 'Auditoria']
+    description: 'Sistema NR-01 completo para levantamento, avaliação e gestão de riscos psicossociais conforme a norma regulamentadora.',
+    highlights: ['Levantamento NR-01', 'Documentação', 'Auditoria']
   },
   {
     icon: FileText,
     title: 'Relatórios Automáticos',
-    description: 'Gere relatórios completos para auditorias, reuniões e tomada de decisões estratégicas.',
+    description: 'Gere relatórios de riscos psicossociais para auditorias, reuniões e tomada de decisões estratégicas.',
     highlights: ['PDF/Excel', 'Personalizáveis', 'Agendamento']
   },
   {
@@ -48,7 +48,7 @@ const features = [
   {
     icon: HeartPulse,
     title: 'Riscos Psicossociais (HSEIT)',
-    description: 'Mapeamento de riscos psicossociais com 35 indicadores em 7 categorias, com plano de ação conforme NR-01.',
+    description: 'Levantamento de riscos psicossociais com 35 indicadores em 7 categorias, com plano de ação conforme NR-01.',
     highlights: ['7 categorias', 'Plano de ação', 'Conforme NR-01']
   },
 ];
@@ -57,15 +57,15 @@ const FeaturesSection = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
 
   return (
-    <section className="py-20 bg-background">
+    <section id="sistema-nr01" className="py-20 bg-background" aria-label="Sistema NR-01 completo para gestão de riscos psicossociais">
       <div className="audit-container" ref={ref}>
         <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Soluções</span>
+          <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Sistema NR-01</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-3 mb-4">
-            Tudo que você precisa em uma plataforma
+            Sistema completo para gestão de riscos psicossociais
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            O SOIA integra canal de denúncias, pesquisa de clima, avaliação de burnout, gestão de riscos psicossociais e compliance em uma solução completa.
+            O SOIA integra canal de denúncias, pesquisa de clima, avaliação de burnout, levantamento de riscos psicossociais e compliance NR-01 em uma solução completa.
           </p>
         </div>
 

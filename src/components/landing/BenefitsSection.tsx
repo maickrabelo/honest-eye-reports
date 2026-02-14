@@ -40,7 +40,7 @@ const BenefitsSection = () => {
   const { ref: rightRef, isVisible: rightVisible } = useScrollAnimation({ threshold: 0.1 });
 
   return (
-    <section className="py-20 bg-gradient-to-br from-audit-primary to-audit-dark text-white">
+    <section id="beneficios" className="py-20 bg-gradient-to-br from-audit-primary to-audit-dark text-white" aria-label="Benefícios do sistema NR-01 para gestão de riscos psicossociais">
       <div className="audit-container">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div ref={leftRef} className={`transition-all duration-700 ${leftVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
