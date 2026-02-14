@@ -36,10 +36,10 @@ const SSTTrialSignup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.sst_name || !formData.cnpj || !formData.email || !formData.responsible_name) {
+    if (!formData.sst_name || !formData.cnpj || !formData.email || !formData.responsible_name || !formData.phone) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha o nome da gestora, CNPJ, email e nome do responsável.',
+        description: 'Preencha todos os campos obrigatórios.',
         variant: 'destructive',
       });
       return;
@@ -201,7 +201,7 @@ const SSTTrialSignup = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone (opcional)</Label>
+                  <Label htmlFor="phone">Telefone *</Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -209,6 +209,7 @@ const SSTTrialSignup = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="(11) 99999-9999"
+                    required
                   />
                 </div>
 
