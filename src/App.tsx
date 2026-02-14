@@ -42,6 +42,7 @@ import SSTLandingPage from "./pages/SSTLandingPage";
 import SSTPortal from "./pages/SSTPortal";
 import TrialSignup from "./pages/TrialSignup";
 import SSTTrialSignup from "./pages/SSTTrialSignup";
+import RelatorioDemo from "./pages/RelatorioDemo";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +98,7 @@ const App = () => (
             <Route path="/burnout/:id" element={<BurnoutManagement />} />
             <Route path="/burnout/:companySlug/:assessmentId" element={<BurnoutForm />} />
             <Route path="/burnout/results/:id" element={<BurnoutResults />} />
+            <Route path="/relatoriodemo" element={<RelatorioDemo />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </WhiteLabelProvider>
