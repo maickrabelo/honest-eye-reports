@@ -25,7 +25,7 @@ const CTASection = () => {
             <Button 
               size="lg" 
               className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group w-full sm:w-auto"
-              onClick={() => window.open('mailto:contato@soia.com.br?subject=Solicitação de Demonstração', '_blank')}
+              onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de agendar uma demonstração do SOIA.', '_blank')}
             >
               Agendar Demonstração
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -33,7 +33,7 @@ const CTASection = () => {
             <Button 
               size="lg" 
               className="bg-audit-accent hover:bg-audit-accent/80 text-white font-semibold px-8 py-6 text-lg w-full sm:w-auto"
-              onClick={() => window.open('https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o SOIA.', '_blank')}
+              onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de saber mais sobre o SOIA.', '_blank')}
             >
               <MessageCircle className="mr-2 h-5 w-5" />
               WhatsApp
@@ -49,11 +49,11 @@ const CTASection = () => {
             </div>
             <div className="flex items-center justify-center gap-2">
               <Phone className="h-4 w-4" />
-              <span>+55 (11) 99999-9999</span>
+              <span>+55 11 9 9602-9222</span>
             </div>
             <div className="flex items-center justify-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              <span>Suporte 24/7</span>
+              <Phone className="h-4 w-4" />
+              <span>+55 34 9 9199-3722</span>
             </div>
           </div>
         </div>
