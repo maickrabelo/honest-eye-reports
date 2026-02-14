@@ -2,9 +2,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield, ClipboardList, BookOpen } from "lucide-react";
+import { Bell, Shield, ClipboardList, BookOpen, HelpCircle } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
+import { useOnboarding } from '@/hooks/useOnboarding';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +18,13 @@ import {
 const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
   const { brandLogo, isWhiteLabel } = useWhiteLabel();
+  const { resetTour } = useOnboarding('sst-dashboard');
   const isLoggedIn = !!user;
+
+  const handleResetTour = () => {
+    resetTour();
+    toast.success('Tutorial reiniciado! Navegue pelas páginas para revê-lo.');
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -44,12 +52,23 @@ const Navbar = () => {
             {isLoggedIn ? (
               <>
               {role === 'sst' && (
-                <Link to="/sst-portal">
-                  <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-2 border-primary/30 text-primary hover:bg-primary/5">
-                    <BookOpen className="h-4 w-4" />
-                    Portal do Parceiro
+                <div className="flex items-center gap-1">
+                  <Link to="/sst-portal">
+                    <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-2 border-primary/30 text-primary hover:bg-primary/5">
+                      <BookOpen className="h-4 w-4" />
+                      Portal do Parceiro
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={handleResetTour}
+                    title="Rever tutorial"
+                  >
+                    <HelpCircle className="h-4 w-4" />
                   </Button>
-                </Link>
+                </div>
               )}
               <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />

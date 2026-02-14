@@ -48,6 +48,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { BurnoutReportPDF } from "@/components/burnout/BurnoutReportPDF";
+import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import {
   BURNOUT_QUESTIONS_SORTED,
   BURNOUT_CATEGORY_LABELS,
@@ -60,6 +62,27 @@ import {
   calculateCategoryPercentage,
   getBurnoutRiskLevel
 } from "@/data/burnoutQuestions";
+
+const burnoutResultsSteps: TourStep[] = [
+  {
+    targetId: 'burnout-results-summary',
+    title: '📊 Resumo da Avaliação',
+    description: 'Veja o total de respostas, pontuação média, nível de risco geral e setores avaliados.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'burnout-results-charts',
+    title: '📈 Gráficos de Distribuição',
+    description: 'Analise a distribuição de níveis de risco e a média por categoria de Burnout.',
+    position: 'top',
+  },
+  {
+    targetId: 'burnout-report-btn',
+    title: '📄 Relatório PDF',
+    description: 'Gere o relatório PDF completo com análise por setor, recomendações e plano de ação.',
+    position: 'bottom',
+  },
+];
 
 interface Assessment {
   id: string;
@@ -95,6 +118,7 @@ export default function BurnoutResults() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
+  const { shouldShowTour, completeTour } = useOnboarding('burnout-results');
 
   useEffect(() => {
     if (!authLoading) {
@@ -316,17 +340,19 @@ export default function BurnoutResults() {
               {assessment?.companies?.name} • {responses.length} respostas
             </p>
           </div>
-          <BurnoutReportPDF
-            assessment={assessment}
-            responses={responses}
-            categoryData={categoryData}
-            departmentData={departmentData}
-            avgScore={avgScore}
-            overallRiskLevel={overallRiskLevel}
-            riskDistribution={riskDistribution}
-            questionAverages={questionAverages}
-            hasDetailedAnswers={hasDetailedAnswers}
-          />
+          <div id="burnout-report-btn">
+            <BurnoutReportPDF
+              assessment={assessment}
+              responses={responses}
+              categoryData={categoryData}
+              departmentData={departmentData}
+              avgScore={avgScore}
+              overallRiskLevel={overallRiskLevel}
+              riskDistribution={riskDistribution}
+              questionAverages={questionAverages}
+              hasDetailedAnswers={hasDetailedAnswers}
+            />
+          </div>
         </div>
 
         {responses.length === 0 ? (
@@ -342,7 +368,7 @@ export default function BurnoutResults() {
         ) : (
           <div className="space-y-8">
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div id="burnout-results-summary" className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total de Respostas</CardTitle>
@@ -387,7 +413,7 @@ export default function BurnoutResults() {
             </div>
 
             {/* Risk Distribution & Category Chart */}
-            <div className="grid gap-6 md:grid-cols-2">
+            <div id="burnout-results-charts" className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Distribuição de Níveis de Risco</CardTitle>
@@ -751,6 +777,13 @@ export default function BurnoutResults() {
         )}
       </main>
       <Footer />
+
+      {shouldShowTour && (
+        <OnboardingTour
+          steps={burnoutResultsSteps}
+          onComplete={() => completeTour()}
+        />
+      )}
     </div>
   );
 }

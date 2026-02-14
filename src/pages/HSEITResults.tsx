@@ -46,6 +46,29 @@ import {
 import { ChartConfig } from '@/components/ui/chart';
 import { CategoryRiskIndicators } from '@/components/hseit/CategoryRiskIndicators';
 import { HSEITReportEditor } from '@/components/hseit/HSEITReportEditor';
+import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
+import { useOnboarding } from '@/hooks/useOnboarding';
+
+const hseitResultsSteps: TourStep[] = [
+  {
+    targetId: 'hseit-results-summary',
+    title: '📊 Resumo Geral',
+    description: 'Veja a quantidade de respostas, média geral, impacto na saúde e categorias em risco de forma rápida.',
+    position: 'bottom',
+  },
+  {
+    targetId: 'hseit-results-charts',
+    title: '🕸️ Gráficos de Análise',
+    description: 'O gráfico radar mostra o perfil por categoria e o gráfico de pizza mostra a distribuição de riscos.',
+    position: 'top',
+  },
+  {
+    targetId: 'hseit-report-btn',
+    title: '📄 Relatório PDF',
+    description: 'Gere um relatório PDF completo com análise detalhada, plano de ação e recomendações personalizadas.',
+    position: 'bottom',
+  },
+];
 
 interface Assessment {
   id: string;
@@ -83,6 +106,7 @@ export default function HSEITResults() {
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sstName, setSstName] = useState<string | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+  const { shouldShowTour, completeTour } = useOnboarding('hseit-results');
 
   useEffect(() => {
     if (!authLoading) {
@@ -386,7 +410,7 @@ export default function HSEITResults() {
               </Select>
             )}
             
-            <Button onClick={() => setIsReportEditorOpen(true)}>
+            <Button id="hseit-report-btn" onClick={() => setIsReportEditorOpen(true)}>
               <ClipboardList className="h-4 w-4 mr-2" />
               Preparar Relatório PDF
             </Button>
@@ -422,7 +446,7 @@ export default function HSEITResults() {
         />
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div id="hseit-results-summary" className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -486,7 +510,7 @@ export default function HSEITResults() {
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div id="hseit-results-charts" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Radar Chart */}
           <Card>
             <CardHeader>
@@ -635,6 +659,13 @@ export default function HSEITResults() {
       </main>
 
       <Footer />
+
+      {shouldShowTour && (
+        <OnboardingTour
+          steps={hseitResultsSteps}
+          onComplete={() => completeTour()}
+        />
+      )}
     </div>
   );
 }
