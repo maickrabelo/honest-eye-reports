@@ -1,110 +1,137 @@
 
-
-# Tutorial Guiado de Primeiro Acesso para Contas Trial SST
+# Plano de SEO Focado em NR-01 e Riscos Psicossociais
 
 ## Objetivo
-Criar um sistema de tutorial passo-a-passo (tipo "product tour") que aparece automaticamente no primeiro acesso de contas trial SST. O tutorial destaca cada elemento importante da interface, com um overlay escuro ao redor e uma caixa de texto explicativa com botao "Proximo", guiando o usuario por todos os botoes e funcionalidades.
 
-## Paginas que terao tutorial
-1. **SSTDashboard** (pagina principal) - explicar ferramentas, link da pagina, cards de empresas
-2. **HSEITDashboard** - explicar como criar e gerenciar avaliacoes HSE-IT
-3. **BurnoutDashboard** - explicar como criar e gerenciar avaliacoes de Burnout
-4. **ClimateSurveyDashboard** - explicar como criar e gerenciar pesquisas de clima
+Otimizar o site para ranquear nos termos:
+- **Sistema NR-01**
+- **Sistema Riscos Psicossociais**
+- **Levantamento de Riscos Psicossociais**
+- Derivados: "gestao de riscos psicossociais NR-01", "avaliacao riscos psicossociais", "software NR-01", "plataforma riscos psicossociais", "mapeamento riscos psicossociais"
 
-## Como funciona
-- No primeiro acesso, o tutorial inicia automaticamente
-- Um overlay escuro cobre toda a tela, exceto o elemento destacado
-- Uma caixa com titulo, descricao e botao "Proximo" aparece ao lado do elemento
-- O usuario precisa clicar "Proximo" para avancar
-- No ultimo passo, o botao mostra "Concluir"
-- Apos concluir, o status e salvo no banco para nao mostrar novamente
+---
 
-## Detalhes Tecnicos
+## 1. Correcoes Tecnicas Base
 
-### 1. Banco de Dados
-- Adicionar coluna `onboarding_completed_pages` (tipo `jsonb`, default `[]`) na tabela `sst_managers` para rastrear quais paginas ja tiveram o tutorial concluido
-- Isso permite controlar individualmente cada pagina (ex: `["sst-dashboard", "hseit-dashboard"]`)
+### `index.html`
+- Trocar `lang="en"` para `lang="pt-BR"`
+- Titulo: "Sistema NR-01 | Levantamento de Riscos Psicossociais | SOIA"
+- Meta description: "Sistema completo para NR-01 e levantamento de riscos psicossociais. Avaliacao, mapeamento e gestao de riscos psicossociais no trabalho com inteligencia artificial."
+- Adicionar meta keywords focadas nos termos-alvo
+- Adicionar canonical URL, OG locale (`pt_BR`), OG URL, OG site_name
+- Trocar OG image para logo propria do SOIA
 
-### 2. Componente `OnboardingTour`
-Criar um componente reutilizavel `src/components/OnboardingTour.tsx` que:
-- Recebe uma lista de "steps" (cada step tem: `targetId`, `title`, `description`, `position`)
-- Usa `document.getElementById()` para localizar o elemento alvo
-- Renderiza um overlay com recorte (usando box-shadow ou clip-path) para destacar o elemento
-- Posiciona um tooltip explicativo (acima, abaixo, esquerda ou direita do elemento)
-- Tem botoes "Proximo" e indicador de progresso (ex: "2 de 6")
-- Ao concluir, chama um callback `onComplete`
+### `public/robots.txt`
+- Adicionar referencia ao sitemap
+- Bloquear rotas internas (dashboard, reports, admin, etc.)
 
-### 3. Hook `useOnboarding`
-Criar `src/hooks/useOnboarding.ts` que:
-- Verifica se o usuario e SST e se e trial (usando `useRealAuth`)
-- Consulta `sst_managers.onboarding_completed_pages` para saber quais tutoriais ja foram concluidos
-- Retorna `shouldShowTour` (boolean) e `completeTour(pageId)` (funcao)
-- `completeTour` atualiza o campo jsonb adicionando a pagina concluida
+### `public/sitemap.xml` (novo)
+- Listar paginas publicas: `/`, `/teste-gratis`, `/teste-gratis-sst`, `/auth`, `/apresentacao`, `/parceiro/cadastro`, `/afiliado/cadastro`
+- Homepage com prioridade 1.0
 
-### 4. IDs nos elementos-alvo
-Adicionar atributos `id` nos elementos que serao destacados em cada pagina:
-- **SSTDashboard**: `id="tool-hseit"`, `id="tool-burnout"`, `id="tool-climate"`, `id="tool-new-company"`, `id="sst-link"`, `id="company-cards"`
-- **HSEITDashboard**: `id="hseit-new-btn"`, `id="hseit-filters"`, `id="hseit-table"`
-- **BurnoutDashboard**: `id="burnout-new-btn"`, `id="burnout-filters"`, `id="burnout-table"`
-- **ClimateSurveyDashboard**: `id="climate-new-btn"`, `id="climate-filters"`, `id="climate-survey-selector"`
+---
 
-### 5. Steps por pagina
+## 2. Conteudo da Landing Page Otimizado para os Termos
 
-**SSTDashboard (6 passos):**
-1. Faixa "Suas Ferramentas" - "Aqui ficam todas as ferramentas disponiveis para voce gerenciar a saude ocupacional das suas empresas."
-2. Botao HSE-IT - "Avalie os riscos psicossociais das empresas usando a metodologia HSE-IT, reconhecida internacionalmente."
-3. Botao Burnout - "Aplique questionarios de avaliacao de risco de Sindrome de Burnout nos colaboradores."
-4. Botao Pesquisas de Clima - "Crie e gerencie pesquisas de clima organizacional personalizadas."
-5. Botao Nova Empresa - "Cadastre novas empresas para gerenciar. No plano trial, voce pode ter ate 2 empresas."
-6. Link da pagina inicial - "Este e o link da sua pagina publica. Compartilhe com suas empresas clientes."
-7. Cards de empresas - "Aqui voce visualiza todas as empresas cadastradas e acessa o portal de ouvidoria de cada uma."
+### HeroSection
+- H1 atual: "Proteja sua empresa. Cuide das pessoas."
+- **Novo H1**: "Sistema NR-01 para Levantamento de Riscos Psicossociais"
+- Subtitulo mantendo a proposta de valor mas incluindo os termos: "Plataforma completa para gestao de riscos psicossociais, canal de denuncias e pesquisa de clima organizacional conforme a NR-01."
+- Badge: manter "Conformidade total com a NR-01"
+- Alt da imagem hero: "Sistema NR-01 para levantamento e gestao de riscos psicossociais no trabalho"
 
-**HSEITDashboard (3 passos):**
-1. Botao Nova Avaliacao - "Clique aqui para criar uma nova avaliacao HSE-IT para uma das suas empresas."
-2. Filtros - "Use os filtros para buscar avaliacoes por nome ou filtrar por empresa."
-3. Tabela - "Aqui voce ve todas as avaliacoes criadas, com links para compartilhar, ver resultados e editar."
+### PainPointsSection
+- Titulo da section (span): mudar de "O Problema" para "Riscos Psicossociais"
+- H2: "Riscos psicossociais que sua empresa precisa gerenciar"
+- Reforcar nos textos dos cards termos como "riscos psicossociais", "NR-01", "levantamento"
 
-**BurnoutDashboard (3 passos):**
-1. Botao Nova Avaliacao - "Crie uma nova avaliacao de Burnout para monitorar o risco de esgotamento dos colaboradores."
-2. Filtros - "Filtre as avaliacoes por titulo ou empresa."
-3. Tabela - "Gerencie suas avaliacoes, copie links para compartilhar e acompanhe os resultados."
+### FeaturesSection
+- Titulo (span): mudar de "Solucoes" para "Sistema NR-01"
+- H2: "Sistema completo para gestao de riscos psicossociais"
+- No card de "Riscos Psicossociais (HSEIT)": reforcar "levantamento de riscos psicossociais conforme NR-01"
+- No card de "Compliance NR-01": expandir descricao com termos-alvo
 
-**ClimateSurveyDashboard (3 passos):**
-1. Botao Nova Pesquisa - "Crie pesquisas de clima personalizadas com perguntas Likert, NPS e abertas."
-2. Seletor de pesquisa - "Selecione uma pesquisa para visualizar seus resultados detalhados."
-3. Link de compartilhamento - "Copie o link ou baixe o QR Code para distribuir a pesquisa aos colaboradores."
+### FAQSection
+- Adicionar 2-3 novas perguntas focadas nos termos:
+  - "O que e levantamento de riscos psicossociais?"
+  - "Como o SOIA funciona como sistema NR-01?"
+  - "Quais riscos psicossociais a NR-01 exige mapear?"
+- Estas perguntas virao como rich snippets no Google via dados estruturados
 
-### 6. Integracao nas paginas
-Em cada pagina, importar o hook e o componente:
-```tsx
-const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
+### CTASection
+- H2: "Implemente seu sistema NR-01 de riscos psicossociais"
 
-return (
-  <>
-    {shouldShowTour && (
-      <OnboardingTour
-        steps={sstDashboardSteps}
-        onComplete={() => completeTour('sst-dashboard')}
-      />
-    )}
-    {/* resto da pagina */}
-  </>
-);
-```
+---
 
-### 7. Estilo visual
-- Overlay: fundo preto semi-transparente (`rgba(0,0,0,0.7)`) cobrindo toda a tela
-- Elemento destacado: recortado do overlay com borda brilhante
-- Tooltip: card branco com sombra, titulo em negrito, descricao, indicador de progresso e botao verde "Proximo"
-- Animacao suave de transicao entre passos
-- Botao "Pular tutorial" discreto no canto para quem quiser ignorar
+## 3. Dados Estruturados (JSON-LD)
 
-## Resumo dos arquivos a criar/modificar
-- **Criar**: `src/components/OnboardingTour.tsx` - componente visual do tour
-- **Criar**: `src/hooks/useOnboarding.ts` - hook de controle
-- **Modificar**: `src/pages/SSTDashboard.tsx` - adicionar IDs e integrar tour
-- **Modificar**: `src/pages/HSEITDashboard.tsx` - adicionar IDs e integrar tour
-- **Modificar**: `src/pages/BurnoutDashboard.tsx` - adicionar IDs e integrar tour
-- **Modificar**: `src/pages/ClimateSurveyDashboard.tsx` - adicionar IDs e integrar tour
-- **Banco**: adicionar coluna `onboarding_completed_pages` na tabela `sst_managers`
+### Novo componente: `src/components/SEOStructuredData.tsx`
+- **Organization**: nome, logo, URL, contato do SOIA
+- **WebSite**: nome do site com searchAction
+- **SoftwareApplication**: tipo "Sistema NR-01", categoria "BusinessApplication"
+- **FAQPage**: todas as perguntas do FAQ como rich snippets (aparecem diretamente nos resultados do Google)
 
+### Aplicar na `Index.tsx`
+- Importar e renderizar o componente de dados estruturados
+
+---
+
+## 4. Meta Tags Dinamicas
+
+### Novo hook: `src/hooks/usePageSEO.ts`
+- Atualiza `document.title` e meta description por pagina
+- Aplicar na landing page, trial signup, SST trial signup
+
+### Titulos por pagina
+- `/` -> "Sistema NR-01 | Levantamento de Riscos Psicossociais | SOIA"
+- `/teste-gratis` -> "Teste Gratis | Sistema de Riscos Psicossociais NR-01 | SOIA"
+- `/teste-gratis-sst` -> "Gestora SST | Sistema NR-01 Riscos Psicossociais | SOIA"
+
+---
+
+## 5. Navegacao e Links Internos
+
+### Navbar (quando usuario nao logado)
+- Adicionar links de ancoragem: "Solucoes", "Beneficios", "Precos", "FAQ"
+- Cada link aponta para section com ID na landing page
+- Melhora SEO interno e experiencia do usuario
+
+### Footer
+- Atualizar links de "Solucoes" para apontar para anchors reais
+- Adicionar textos com termos-alvo: "Sistema NR-01", "Levantamento de Riscos Psicossociais"
+
+### Sections da Landing
+- Adicionar `id` em cada section: `id="riscos-psicossociais"`, `id="sistema-nr01"`, `id="como-funciona"`, `id="precos"`, `id="faq"`
+
+---
+
+## 6. Semantica HTML
+
+- Adicionar atributos `aria-label` nas sections com termos-chave
+- Garantir hierarquia correta: um unico H1 por pagina, H2 para sections, H3 para cards
+- Adicionar `loading="lazy"` na imagem hero (abaixo do fold nao se aplica, mas manter performance)
+
+---
+
+## Resumo dos Arquivos
+
+### Criar
+- `public/sitemap.xml`
+- `src/hooks/usePageSEO.ts`
+- `src/components/SEOStructuredData.tsx`
+
+### Modificar
+- `index.html` - lang, titulo, meta tags, canonical, OG
+- `public/robots.txt` - sitemap + bloqueio de rotas internas
+- `src/pages/Index.tsx` - importar SEO components
+- `src/components/landing/HeroSection.tsx` - H1 e textos otimizados
+- `src/components/landing/PainPointsSection.tsx` - titulos e ID
+- `src/components/landing/FeaturesSection.tsx` - titulos e ID
+- `src/components/landing/BenefitsSection.tsx` - ID
+- `src/components/landing/HowItWorksSection.tsx` - ID
+- `src/components/landing/FAQSection.tsx` - novas perguntas + ID
+- `src/components/landing/CTASection.tsx` - titulo otimizado
+- `src/components/Navbar.tsx` - links de ancoragem
+- `src/components/Footer.tsx` - textos com termos-alvo
+- `src/pages/SSTTrialSignup.tsx` - meta tags
+- `src/pages/TrialSignup.tsx` - meta tags
