@@ -205,9 +205,16 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
       onCompanyAdded();
     } catch (error: any) {
       console.error('Error creating company:', error);
-      const message = error.message?.includes('Limite de')
-        ? error.message
-        : 'Não foi possível cadastrar a empresa. Tente novamente.';
+      let message = 'Não foi possível cadastrar a empresa. Tente novamente.';
+      const errMsg = error.message || '';
+      const errCode = error.code || '';
+      if (errMsg.includes('Limite de')) {
+        message = errMsg;
+      } else if (errMsg.includes('companies_cnpj_key') || errMsg.includes('duplicate key') && errMsg.includes('cnpj') || errCode === '23505' && errMsg.includes('cnpj')) {
+        message = 'Este CNPJ já está cadastrado no sistema. Verifique o número informado.';
+      } else if (errCode === '23505' || errMsg.includes('duplicate key') || errMsg.includes('unique constraint')) {
+        message = 'Este registro já existe no sistema. Verifique os dados informados.';
+      }
       toast({ title: "Erro ao cadastrar empresa", description: message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
