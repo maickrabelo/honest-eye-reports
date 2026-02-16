@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +38,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Track whether the initial session has been loaded.
+  // SIGNED_IN events that fire BEFORE init completes (or right after)
+  // are NOT explicit user logins — they are Supabase replaying the session.
+  const hasInitializedRef = useRef(false);
+  const hasRedirectedRef = useRef(false);
 
   const fetchUserRole = async (userId: string) => {
     try {
@@ -72,7 +78,6 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const checkTrialStatus = async (companyId: string | null, sstManagerId: string | null) => {
-    // Fetch both in parallel when both IDs exist
     const [companyResult, sstResult] = await Promise.all([
       companyId
         ? supabase.from('companies').select('subscription_status, trial_ends_at').eq('id', companyId).single()
@@ -112,28 +117,62 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const navigateByRole = (userRole: UserRole, userProfile: Profile | null) => {
+    if (userProfile?.must_change_password) {
+      navigate('/change-password');
+    } else if (userRole === 'pending') {
+      navigate('/pending-approval');
+    } else if (userRole === 'admin') {
+      navigate('/master-dashboard');
+    } else if (userRole === 'company') {
+      navigate('/dashboard');
+    } else if (userRole === 'sst') {
+      navigate('/sst-dashboard');
+    } else if (userRole === 'partner') {
+      navigate('/parceiro/dashboard');
+    } else if (userRole === 'affiliate') {
+      navigate('/afiliado/dashboard');
+    }
+  };
+
+  // Pages where an EXPLICIT login redirect should happen
+  const isLoginPage = (path: string) => {
+    return path === '/auth';
+  };
+
   useEffect(() => {
     let isMounted = true;
 
-    // Listener for ONGOING auth changes — does NOT control isLoading
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
 
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Update session/user only if actually changed to avoid unnecessary re-renders
+        setSession(prev => {
+          if (prev?.access_token === session?.access_token) return prev;
+          return session;
+        });
+        setUser(prev => {
+          if (prev?.id === session?.user?.id) return prev;
+          return session?.user ?? null;
+        });
 
         if (event === 'SIGNED_OUT') {
           setRole(null);
           setProfile(null);
           setIsTrialExpired(false);
           setTrialEndsAt(null);
+          hasRedirectedRef.current = false;
           return;
         }
 
-        // Only navigate on explicit sign-in when user is on public pages
+        // Only redirect on EXPLICIT sign-in (user clicked login).
+        // We know it's explicit if:
+        //   1. The event is SIGNED_IN
+        //   2. Init has already completed (so this isn't the session-replay event)
+        //   3. User is on the /auth page
+        //   4. We haven't already redirected for this session
         if (event === 'SIGNED_IN' && session?.user) {
-          // Defer to avoid Supabase deadlock
           setTimeout(async () => {
             if (!isMounted) return;
             const [userRole, userProfile] = await Promise.all([
@@ -145,35 +184,16 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setProfile(userProfile);
             await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
 
-            // Only redirect if user is on a public/auth page — avoid
-            // overriding navigation when the user is already inside the app
-            // (e.g. returning from another browser tab).
-            const publicPaths = ['/', '/auth', '/teste-gratis', '/teste-gratis-sst'];
+            // Only redirect if user is on the login page (explicit login action)
             const currentPath = window.location.pathname;
-            const isOnPublicPage = publicPaths.includes(currentPath) || currentPath.startsWith('/sst/');
-
-            if (!isOnPublicPage) return;
-
-            if (userProfile?.must_change_password) {
-              navigate('/change-password');
-            } else if (userRole === 'pending') {
-              navigate('/pending-approval');
-            } else if (userRole === 'admin') {
-              navigate('/master-dashboard');
-            } else if (userRole === 'company') {
-              navigate('/dashboard');
-            } else if (userRole === 'sst') {
-              navigate('/sst-dashboard');
-            } else if (userRole === 'partner') {
-              navigate('/parceiro/dashboard');
-            } else if (userRole === 'affiliate') {
-              navigate('/afiliado/dashboard');
+            if (hasInitializedRef.current && !hasRedirectedRef.current && isLoginPage(currentPath)) {
+              hasRedirectedRef.current = true;
+              navigateByRole(userRole, userProfile);
             }
           }, 0);
         }
 
-        // For TOKEN_REFRESHED or other events: silently refresh role/profile
-        // without navigating or touching isLoading
+        // Silently refresh data on token refresh (no navigation, no re-render churn)
         if (event === 'TOKEN_REFRESHED' && session?.user) {
           setTimeout(async () => {
             if (!isMounted) return;
@@ -210,7 +230,10 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          hasInitializedRef.current = true;
+          setIsLoading(false);
+        }
       }
     };
 
@@ -231,6 +254,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setProfile(null);
       setIsTrialExpired(false);
       setTrialEndsAt(null);
+      hasRedirectedRef.current = false;
       navigate('/auth');
       toast({
         title: "Logout realizado",
