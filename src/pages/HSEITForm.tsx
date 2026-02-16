@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, ClipboardList, Building2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS } from '@/data/hseitQuestions';
+import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, type HSEITQuestion } from '@/data/hseitQuestions';
 
 interface Assessment {
   id: string;
@@ -27,8 +26,59 @@ interface Department {
   name: string;
 }
 
+// Memoized question card to prevent unnecessary re-renders
+const QuestionCard = memo(({ 
+  question, 
+  selectedValue, 
+  onAnswer 
+}: { 
+  question: HSEITQuestion; 
+  selectedValue: number | undefined; 
+  onAnswer: (questionNumber: number, value: number) => void;
+}) => {
+  return (
+    <Card className={selectedValue !== undefined ? 'border-primary/30' : ''}>
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-3 mb-4">
+          <span className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium text-primary">
+            {question.number}
+          </span>
+          <div className="flex-1">
+            <p className="text-foreground font-medium mb-1">{question.text}</p>
+            <p className="text-xs text-muted-foreground">
+              Categoria: {HSEIT_CATEGORY_LABELS[question.category]}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+          {HSEIT_LIKERT_OPTIONS.map(option => {
+            const isSelected = selectedValue === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => onAnswer(question.number, option.value)}
+                className={`flex items-center justify-center px-4 py-2 rounded-lg border-2 cursor-pointer transition-all
+                  ${isSelected 
+                    ? 'border-primary bg-primary/10 text-primary font-medium' 
+                    : 'border-border hover:border-primary/50 hover:bg-muted'
+                  }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+QuestionCard.displayName = 'QuestionCard';
+
 export default function HSEITForm() {
   const { companySlug, assessmentId } = useParams();
+  const topRef = useRef<HTMLDivElement>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,11 +89,15 @@ export default function HSEITForm() {
   const [currentPage, setCurrentPage] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDepartmentError, setShowDepartmentError] = useState(false);
 
   const questionsPerPage = 7;
   const totalPages = Math.ceil(HSEIT_QUESTIONS_SORTED.length / questionsPerPage);
-  const startIndex = currentPage * questionsPerPage;
-  const currentQuestions = HSEIT_QUESTIONS_SORTED.slice(startIndex, startIndex + questionsPerPage);
+  
+  const currentQuestions = useMemo(() => {
+    const startIndex = currentPage * questionsPerPage;
+    return HSEIT_QUESTIONS_SORTED.slice(startIndex, startIndex + questionsPerPage);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchAssessment();
@@ -74,7 +128,6 @@ export default function HSEITForm() {
 
       setAssessment(assessment as unknown as Assessment);
 
-      // Fetch departments
       const { data: depts } = await supabase
         .from('hseit_departments')
         .select('id, name')
@@ -90,12 +143,12 @@ export default function HSEITForm() {
     }
   };
 
-  const handleAnswer = (questionNumber: number, value: number) => {
+  const handleAnswer = useCallback((questionNumber: number, value: number) => {
     setAnswers(prev => ({
       ...prev,
       [questionNumber]: value
     }));
-  };
+  }, []);
 
   const getProgress = () => {
     const answered = Object.keys(answers).length;
@@ -103,25 +156,66 @@ export default function HSEITForm() {
   };
 
   const canGoNext = () => {
+    // On first page, department is mandatory if departments exist
+    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+      return false;
+    }
     return currentQuestions.every(q => answers[q.number] !== undefined);
   };
 
+  const scrollToTop = useCallback(() => {
+    // Try multiple methods for compatibility (iframe + standalone)
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
   const handleNext = () => {
+    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+      setShowDepartmentError(true);
+      toast({
+        title: 'Setor obrigatório',
+        description: 'Por favor, selecione o setor em que você trabalha.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!canGoNext()) {
+      toast({
+        title: 'Questões obrigatórias',
+        description: 'Por favor, responda todas as questões antes de avançar.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     if (currentPage < totalPages - 1) {
       setCurrentPage(prev => prev + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(scrollToTop, 50);
     }
   };
 
   const handlePrev = () => {
     if (currentPage > 0) {
       setCurrentPage(prev => prev - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(scrollToTop, 50);
     }
   };
 
   const handleSubmit = async () => {
     if (!assessment) return;
+
+    // Check department
+    if (departments.length > 0 && !selectedDepartment) {
+      toast({
+        title: 'Setor obrigatório',
+        description: 'Por favor, selecione o setor em que você trabalha.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     // Check if all questions are answered
     const unanswered = HSEIT_QUESTIONS_SORTED.filter(q => answers[q.number] === undefined);
@@ -137,10 +231,8 @@ export default function HSEITForm() {
     try {
       setIsSubmitting(true);
 
-      // Generate unique token
       const respondentToken = crypto.randomUUID();
 
-      // Create response
       const { data: response, error: responseError } = await supabase
         .from('hseit_responses')
         .insert({
@@ -155,7 +247,6 @@ export default function HSEITForm() {
 
       if (responseError) throw responseError;
 
-      // Insert answers
       const answersData = Object.entries(answers).map(([questionNumber, value]) => ({
         response_id: response.id,
         question_number: parseInt(questionNumber),
@@ -231,6 +322,9 @@ export default function HSEITForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      {/* Scroll anchor */}
+      <div ref={topRef} />
+
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
@@ -271,9 +365,17 @@ export default function HSEITForm() {
             <CardContent>
               {departments.length > 0 && (
                 <div className="space-y-2">
-                  <Label htmlFor="department">Selecione seu setor (opcional)</Label>
-                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                    <SelectTrigger>
+                  <Label htmlFor="department" className="flex items-center gap-1">
+                    Selecione seu setor <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={selectedDepartment} 
+                    onValueChange={(val) => {
+                      setSelectedDepartment(val);
+                      setShowDepartmentError(false);
+                    }}
+                  >
+                    <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Escolha seu setor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -284,6 +386,9 @@ export default function HSEITForm() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {showDepartmentError && !selectedDepartment && (
+                    <p className="text-sm text-destructive">Selecione o setor em que você trabalha.</p>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -299,48 +404,15 @@ export default function HSEITForm() {
           <Progress value={getProgress()} className="h-2" />
         </div>
 
-        {/* Questions */}
+        {/* Questions - Memoized */}
         <div className="space-y-4">
-          {currentQuestions.map((question, index) => (
-            <Card key={question.number} className={answers[question.number] ? 'border-primary/30' : ''}>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium text-primary">
-                    {question.number}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-foreground font-medium mb-1">{question.text}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Categoria: {HSEIT_CATEGORY_LABELS[question.category]}
-                    </p>
-                  </div>
-                </div>
-                
-                <RadioGroup
-                  value={answers[question.number]?.toString()}
-                  onValueChange={(value) => handleAnswer(question.number, parseInt(value))}
-                  className="flex flex-col sm:flex-row sm:flex-wrap gap-2"
-                >
-                  {HSEIT_LIKERT_OPTIONS.map(option => (
-                    <div key={option.value} className="flex items-center">
-                      <RadioGroupItem
-                        value={option.value.toString()}
-                        id={`q${question.number}-${option.value}`}
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor={`q${question.number}-${option.value}`}
-                        className="flex items-center justify-center px-4 py-2 rounded-lg border-2 cursor-pointer transition-all
-                          peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary
-                          hover:border-primary/50 hover:bg-muted"
-                      >
-                        {option.label}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </CardContent>
-            </Card>
+          {currentQuestions.map((question) => (
+            <QuestionCard
+              key={question.number}
+              question={question}
+              selectedValue={answers[question.number]}
+              onAnswer={handleAnswer}
+            />
           ))}
         </div>
 
@@ -376,7 +448,6 @@ export default function HSEITForm() {
           ) : (
             <Button
               onClick={handleNext}
-              disabled={!canGoNext()}
               className="gap-2"
             >
               Próximo
