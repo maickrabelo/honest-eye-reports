@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity } from "lucide-react";
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
 import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
+import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -1155,6 +1156,10 @@ const MasterDashboard = () => {
                 <TabsTrigger value="portal">Portal</TabsTrigger>
                 <TabsTrigger value="active-partners">Parceiros Ativos</TabsTrigger>
                 <TabsTrigger value="partners">Aprovações Pendentes</TabsTrigger>
+                <TabsTrigger value="logs" className="flex items-center gap-1">
+                  <Activity className="h-3.5 w-3.5" />
+                  Logs
+                </TabsTrigger>
               </TabsList>
               
               <div className="flex gap-4">
@@ -1816,6 +1821,11 @@ const MasterDashboard = () => {
             <TabsContent value="partners" className="space-y-6">
               <PendingPartnersManager />
               <PendingAffiliatesManager />
+            </TabsContent>
+
+            {/* Logs Tab */}
+            <TabsContent value="logs" className="space-y-6">
+              <AccessLogsTab />
             </TabsContent>
           </Tabs>
         </div>

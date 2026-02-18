@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          error_stack: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_path: string | null
+          user_email: string | null
+          user_id: string | null
+          user_role: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          error_stack?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          page_path?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_role?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          error_stack?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_path?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_role?: string | null
+        }
+        Relationships: []
+      }
       affiliates: {
         Row: {
           approved_at: string | null
