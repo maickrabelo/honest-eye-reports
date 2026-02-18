@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { sendAccessLog } from '@/hooks/useAccessLogger';
 
 type UserRole = 'admin' | 'company' | 'sst' | 'pending' | 'partner' | 'affiliate' | null;
 
@@ -158,6 +159,13 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
 
         if (event === 'SIGNED_OUT') {
+          // Log logout (fire-and-forget, use previous user data still in state)
+          sendAccessLog({
+            event_type: 'logout',
+            page_path: window.location.pathname,
+            user_id: session?.user?.id ?? null,
+            user_email: session?.user?.email ?? null,
+          });
           setRole(null);
           setProfile(null);
           setIsTrialExpired(false);
@@ -183,6 +191,15 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setRole(userRole);
             setProfile(userProfile);
             await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+
+            // Log login event
+            sendAccessLog({
+              event_type: 'login',
+              page_path: window.location.pathname,
+              user_id: session.user.id,
+              user_email: session.user.email ?? null,
+              user_role: userRole ?? null,
+            });
 
             // Only redirect if user is on the login page (explicit login action)
             const currentPath = window.location.pathname;

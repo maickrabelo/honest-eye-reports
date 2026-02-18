@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { RealAuthProvider } from "./contexts/RealAuthContext";
 import { WhiteLabelProvider } from "./contexts/WhiteLabelContext";
+import { useRealAuth } from "./contexts/RealAuthContext";
+import { useAccessLogger } from "./hooks/useAccessLogger";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -46,6 +48,13 @@ import RelatorioDemo from "./pages/RelatorioDemo";
 
 const queryClient = new QueryClient();
 
+// Inner component so it has access to auth context and router (for useLocation)
+const AppContent = () => {
+  const { user, profile, role } = useRealAuth();
+  useAccessLogger(user?.id, user?.email, role);
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -54,53 +63,54 @@ const App = () => (
       <BrowserRouter>
         <RealAuthProvider>
           <WhiteLabelProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
-            <Route path="/teste-gratis" element={<TrialSignup />} />
-            <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/pending-approval" element={<PendingApproval />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/report" element={<ReportChat />} />
-            <Route path="/report-form" element={<ReportForm />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/profile" element={<CompanyProfile />} />
-            <Route path="/sst-dashboard" element={<SSTDashboard />} />
-            <Route path="/sst-portal" element={<SSTPortal />} />
-            <Route path="/master-dashboard" element={<MasterDashboard />} />
-            <Route path="/user-management" element={<UserManagement />} />
-            <Route path="/company-dashboard/:id" element={<Dashboard />} />
-            <Route path="/report/:companySlug" element={<CompanyReport />} />
-            <Route path="/pesquisa/:companySlug" element={<ClimateSurvey />} />
-            <Route path="/pesquisa/:companySlug/:surveyId" element={<ClimateSurvey />} />
-            <Route path="/climate-dashboard" element={<ClimateSurveyDashboard />} />
-            <Route path="/climate-survey/new" element={<ClimateSurveyManagement />} />
-            <Route path="/climate-survey/:id" element={<ClimateSurveyManagement />} />
-            <Route path="/apresentacao" element={<CommercialPresentation />} />
-            <Route path="/contratar" element={<Checkout />} />
-            <Route path="/checkout/sucesso" element={<CheckoutSuccess />} />
-            <Route path="/checkout/cancelado" element={<CheckoutCanceled />} />
-            <Route path="/parceiro/cadastro" element={<PartnerRegistration />} />
-            <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
-            <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
-            <Route path="/afiliado/dashboard" element={<AffiliateDashboard />} />
-            {/* HSE-IT Routes */}
-            <Route path="/hseit-dashboard" element={<HSEITDashboard />} />
-            <Route path="/hseit/new" element={<HSEITManagement />} />
-            <Route path="/hseit/:id" element={<HSEITManagement />} />
-            <Route path="/hseit/:companySlug/:assessmentId" element={<HSEITForm />} />
-            <Route path="/hseit/results/:id" element={<HSEITResults />} />
-            {/* Burnout Routes */}
-            <Route path="/burnout-dashboard" element={<BurnoutDashboard />} />
-            <Route path="/burnout/new" element={<BurnoutManagement />} />
-            <Route path="/burnout/:id" element={<BurnoutManagement />} />
-            <Route path="/burnout/:companySlug/:assessmentId" element={<BurnoutForm />} />
-            <Route path="/burnout/results/:id" element={<BurnoutResults />} />
-            <Route path="/relatoriodemo" element={<RelatorioDemo />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+            <AppContent />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
+              <Route path="/teste-gratis" element={<TrialSignup />} />
+              <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/pending-approval" element={<PendingApproval />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/report" element={<ReportChat />} />
+              <Route path="/report-form" element={<ReportForm />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/profile" element={<CompanyProfile />} />
+              <Route path="/sst-dashboard" element={<SSTDashboard />} />
+              <Route path="/sst-portal" element={<SSTPortal />} />
+              <Route path="/master-dashboard" element={<MasterDashboard />} />
+              <Route path="/user-management" element={<UserManagement />} />
+              <Route path="/company-dashboard/:id" element={<Dashboard />} />
+              <Route path="/report/:companySlug" element={<CompanyReport />} />
+              <Route path="/pesquisa/:companySlug" element={<ClimateSurvey />} />
+              <Route path="/pesquisa/:companySlug/:surveyId" element={<ClimateSurvey />} />
+              <Route path="/climate-dashboard" element={<ClimateSurveyDashboard />} />
+              <Route path="/climate-survey/new" element={<ClimateSurveyManagement />} />
+              <Route path="/climate-survey/:id" element={<ClimateSurveyManagement />} />
+              <Route path="/apresentacao" element={<CommercialPresentation />} />
+              <Route path="/contratar" element={<Checkout />} />
+              <Route path="/checkout/sucesso" element={<CheckoutSuccess />} />
+              <Route path="/checkout/cancelado" element={<CheckoutCanceled />} />
+              <Route path="/parceiro/cadastro" element={<PartnerRegistration />} />
+              <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
+              <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
+              <Route path="/afiliado/dashboard" element={<AffiliateDashboard />} />
+              {/* HSE-IT Routes */}
+              <Route path="/hseit-dashboard" element={<HSEITDashboard />} />
+              <Route path="/hseit/new" element={<HSEITManagement />} />
+              <Route path="/hseit/:id" element={<HSEITManagement />} />
+              <Route path="/hseit/:companySlug/:assessmentId" element={<HSEITForm />} />
+              <Route path="/hseit/results/:id" element={<HSEITResults />} />
+              {/* Burnout Routes */}
+              <Route path="/burnout-dashboard" element={<BurnoutDashboard />} />
+              <Route path="/burnout/new" element={<BurnoutManagement />} />
+              <Route path="/burnout/:id" element={<BurnoutManagement />} />
+              <Route path="/burnout/:companySlug/:assessmentId" element={<BurnoutForm />} />
+              <Route path="/burnout/results/:id" element={<BurnoutResults />} />
+              <Route path="/relatoriodemo" element={<RelatorioDemo />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </WhiteLabelProvider>
         </RealAuthProvider>
       </BrowserRouter>
