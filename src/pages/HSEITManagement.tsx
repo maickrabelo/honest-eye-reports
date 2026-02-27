@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
@@ -42,19 +42,25 @@ export default function HSEITManagement() {
   
   const isEditing = !!id;
 
+  // Auth guard - only for redirects
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
         navigate('/auth');
-        return;
-      }
-      if (!['admin', 'sst'].includes(role || '')) {
+      } else if (!['admin', 'sst'].includes(role || '')) {
         navigate('/dashboard');
-        return;
       }
+    }
+  }, [user, role, authLoading]);
+
+  // Data fetching - only on mount and when assessment id changes
+  const hasFetchedRef = useRef(false);
+  useEffect(() => {
+    if (!authLoading && user && ['admin', 'sst'].includes(role || '') && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       fetchData();
     }
-  }, [user, role, authLoading, profile, id]);
+  }, [authLoading, user, role, id]);
 
   const fetchData = async () => {
     try {
