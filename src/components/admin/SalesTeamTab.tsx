@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
 import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
 import { SalesClosingDialog } from '@/components/sales/SalesClosingDialog';
 import { SalesDenialDialog } from '@/components/sales/SalesDenialDialog';
@@ -23,6 +24,8 @@ import { SalesHistoryList } from '@/components/sales/SalesHistoryList';
 export const SalesTeamTab = () => {
   const [leads, setLeads] = useState<SalesLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingStep, setLoadingStep] = useState('Iniciando...');
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [search, setSearch] = useState('');
   const [view, setView] = useState<string>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -51,15 +54,30 @@ export const SalesTeamTab = () => {
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
+    setLoadingProgress(10);
+    setLoadingStep('Conectando ao servidor...');
+    await new Promise(r => setTimeout(r, 200));
+    
+    setLoadingProgress(30);
+    setLoadingStep('Buscando leads do CRM...');
     const { data, error } = await (supabase
       .from('sales_leads' as any)
       .select('*') as any)
       .order('created_at', { ascending: false });
+    
+    setLoadingProgress(70);
+    setLoadingStep('Organizando dados...');
+    await new Promise(r => setTimeout(r, 150));
+    
     if (error) {
       toast({ title: 'Erro ao carregar leads', description: getSafeErrorMessage(error), variant: 'destructive' });
     } else {
       setLeads((data as SalesLead[]) || []);
     }
+    
+    setLoadingProgress(100);
+    setLoadingStep('Pronto!');
+    await new Promise(r => setTimeout(r, 200));
     setLoading(false);
   }, [toast]);
 
@@ -283,7 +301,15 @@ export const SalesTeamTab = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-full max-w-xs space-y-3">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{loadingStep}</span>
+              <span>{loadingProgress}%</span>
+            </div>
+            <Progress value={loadingProgress} className="h-2" />
+          </div>
+        </div>
       ) : view === 'history' ? (
         <SalesHistoryList leads={historyLeads} />
       ) : view === 'kanban' ? (
