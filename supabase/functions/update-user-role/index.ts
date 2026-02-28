@@ -62,7 +62,7 @@ serve(async (req) => {
       );
     }
 
-    const validRoles = ['admin', 'company', 'sst', 'pending'];
+    const validRoles = ['admin', 'company', 'sst', 'pending', 'sales'];
     if (!validRoles.includes(newRole)) {
       return new Response(
         JSON.stringify({ success: false, error: 'Papel inválido' }),
