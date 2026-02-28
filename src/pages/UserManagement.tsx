@@ -183,6 +183,7 @@ const UserManagement = () => {
       admin: <Badge className="bg-red-500">Admin</Badge>,
       company: <Badge className="bg-blue-500">Empresa</Badge>,
       sst: <Badge className="bg-green-500">SST</Badge>,
+      sales: <Badge className="bg-orange-500">Comercial</Badge>,
       pending: <Badge variant="outline" className="border-yellow-500 text-yellow-600">Pendente</Badge>,
     };
     return badges[role as keyof typeof badges] || <Badge>Desconhecido</Badge>;
@@ -243,6 +244,7 @@ const UserManagement = () => {
                           <SelectItem value="pending">Pendente</SelectItem>
                           <SelectItem value="company">Empresa</SelectItem>
                           <SelectItem value="sst">SST</SelectItem>
+                          <SelectItem value="sales">Comercial</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
