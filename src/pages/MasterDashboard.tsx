@@ -13,6 +13,7 @@ import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesMa
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
 import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
 import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
+import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -1156,6 +1157,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="portal">Portal</TabsTrigger>
                 <TabsTrigger value="active-partners">Parceiros Ativos</TabsTrigger>
                 <TabsTrigger value="partners">Aprovações Pendentes</TabsTrigger>
+                <TabsTrigger value="sales">Time de Vendas</TabsTrigger>
                 <TabsTrigger value="logs" className="flex items-center gap-1">
                   <Activity className="h-3.5 w-3.5" />
                   Logs
@@ -1821,6 +1823,11 @@ const MasterDashboard = () => {
             <TabsContent value="partners" className="space-y-6">
               <PendingPartnersManager />
               <PendingAffiliatesManager />
+            </TabsContent>
+
+            {/* Sales Team Tab */}
+            <TabsContent value="sales" className="space-y-6">
+              <SalesTeamTab />
             </TabsContent>
 
             {/* Logs Tab */}
