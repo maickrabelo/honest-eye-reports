@@ -14,30 +14,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock } from 'lucide-react';
-
-type SalesLead = {
-  id: string;
-  company_name: string;
-  phone: string | null;
-  contact_name: string | null;
-  city: string | null;
-  status: string;
-  notes: string | null;
-  meeting_date: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-const STATUSES = [
-  { value: 'prospect', label: 'Prospect', color: 'bg-muted border-muted-foreground/20' },
-  { value: 'meeting_scheduled', label: 'Reunião Agendada', color: 'bg-blue-50 border-blue-300 dark:bg-blue-950 dark:border-blue-700' },
-  { value: 'meeting_done', label: 'Reunião Realizada', color: 'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700' },
-  { value: 'closed', label: 'Fechamento', color: 'bg-green-50 border-green-300 dark:bg-green-950 dark:border-green-700' },
-] as const;
-
-const STATUS_LABEL: Record<string, string> = Object.fromEntries(STATUSES.map(s => [s.value, s.label]));
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle } from 'lucide-react';
+import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
+import { SalesClosingDialog } from '@/components/sales/SalesClosingDialog';
+import { SalesDenialDialog } from '@/components/sales/SalesDenialDialog';
+import { SalesHistoryList } from '@/components/sales/SalesHistoryList';
 
 export const SalesTeamTab = () => {
   const [leads, setLeads] = useState<SalesLead[]>([]);
@@ -57,6 +38,15 @@ export const SalesTeamTab = () => {
   const [meetingTime, setMeetingTime] = useState('09:00');
   const [savingMeeting, setSavingMeeting] = useState(false);
 
+  // Closing dialog
+  const [closingDialogOpen, setClosingDialogOpen] = useState(false);
+  const [closingLeadId, setClosingLeadId] = useState<string | null>(null);
+  const [closingContactName, setClosingContactName] = useState('');
+
+  // Denial dialog
+  const [denialDialogOpen, setDenialDialogOpen] = useState(false);
+  const [denialLeadId, setDenialLeadId] = useState<string | null>(null);
+
   const { toast } = useToast();
 
   const fetchLeads = useCallback(async () => {
@@ -75,7 +65,12 @@ export const SalesTeamTab = () => {
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
-  const filtered = leads.filter(l =>
+  // Active leads (no result) for kanban/table
+  const activeLeads = leads.filter(l => !l.result);
+  // History leads (with result)
+  const historyLeads = leads.filter(l => !!l.result);
+
+  const filtered = activeLeads.filter(l =>
     l.company_name.toLowerCase().includes(search.toLowerCase()) ||
     (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
   );
@@ -149,12 +144,21 @@ export const SalesTeamTab = () => {
   };
 
   const moveToStatus = async (leadId: string, newStatus: string) => {
-    // If moving to meeting_scheduled, open scheduling dialog instead
+    // If moving to meeting_scheduled, open scheduling dialog
     if (newStatus === 'meeting_scheduled') {
       setMeetingLeadId(leadId);
       setMeetingDate(undefined);
       setMeetingTime('09:00');
       setMeetingDialogOpen(true);
+      return;
+    }
+
+    // If moving to closed (fechamento), open closing dialog
+    if (newStatus === 'closed') {
+      const lead = leads.find(l => l.id === leadId);
+      setClosingLeadId(leadId);
+      setClosingContactName(lead?.contact_name || '');
+      setClosingDialogOpen(true);
       return;
     }
 
@@ -167,25 +171,17 @@ export const SalesTeamTab = () => {
   };
 
   const handleSaveMeeting = async () => {
-    if (!meetingDate) {
-      toast({ title: 'Selecione a data da reunião', variant: 'destructive' });
-      return;
-    }
-    if (!meetingLeadId) return;
-
+    if (!meetingDate || !meetingLeadId) return;
     setSavingMeeting(true);
     try {
       const [hours, minutes] = meetingTime.split(':').map(Number);
       const dateTime = new Date(meetingDate);
       dateTime.setHours(hours, minutes, 0, 0);
-
       const { error } = await (supabase.from('sales_leads' as any).update({
         status: 'meeting_scheduled',
         meeting_date: dateTime.toISOString(),
       }).eq('id', meetingLeadId) as any);
-
       if (error) throw error;
-
       toast({ title: 'Reunião agendada com sucesso' });
       setMeetingDialogOpen(false);
       fetchLeads();
@@ -193,6 +189,59 @@ export const SalesTeamTab = () => {
       toast({ title: 'Erro ao agendar reunião', description: getSafeErrorMessage(error), variant: 'destructive' });
     } finally {
       setSavingMeeting(false);
+    }
+  };
+
+  const handleSaveClosing = async (data: any) => {
+    if (!closingLeadId) return;
+    try {
+      const { error } = await (supabase.from('sales_leads' as any).update({
+        status: 'closed',
+        closing_meeting_date: data.closing_meeting_date,
+        cnpj: data.cnpj || null,
+        contact_name: data.contact_name || null,
+        contact_role: data.contact_role || null,
+        assisted_companies_count: data.assisted_companies_count,
+        total_assisted_employees: data.total_assisted_employees,
+        large_companies: data.large_companies || null,
+        large_companies_employees: data.large_companies_employees || null,
+      }).eq('id', closingLeadId) as any);
+      if (error) throw error;
+      toast({ title: 'Informações de fechamento salvas' });
+      setClosingDialogOpen(false);
+      fetchLeads();
+    } catch (error) {
+      toast({ title: 'Erro ao salvar', description: getSafeErrorMessage(error), variant: 'destructive' });
+    }
+  };
+
+  const handleContractClosed = async (leadId: string) => {
+    const { error } = await (supabase.from('sales_leads' as any).update({ result: 'contract_closed' }).eq('id', leadId) as any);
+    if (error) {
+      toast({ title: 'Erro', description: getSafeErrorMessage(error), variant: 'destructive' });
+    } else {
+      toast({ title: 'Contrato fechado!' });
+      fetchLeads();
+    }
+  };
+
+  const handleDenied = (leadId: string) => {
+    setDenialLeadId(leadId);
+    setDenialDialogOpen(true);
+  };
+
+  const handleConfirmDenial = async (reason: string) => {
+    if (!denialLeadId) return;
+    const { error } = await (supabase.from('sales_leads' as any).update({
+      result: 'denied',
+      denial_reason: reason,
+    }).eq('id', denialLeadId) as any);
+    if (error) {
+      toast({ title: 'Erro', description: getSafeErrorMessage(error), variant: 'destructive' });
+    } else {
+      toast({ title: 'Lead marcado como negado' });
+      setDenialDialogOpen(false);
+      fetchLeads();
     }
   };
 
@@ -212,11 +261,7 @@ export const SalesTeamTab = () => {
 
   const formatMeetingDate = (dateStr: string | null) => {
     if (!dateStr) return null;
-    try {
-      return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm");
-    } catch {
-      return null;
-    }
+    try { return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm"); } catch { return null; }
   };
 
   return (
@@ -231,6 +276,7 @@ export const SalesTeamTab = () => {
           <ToggleGroup type="single" value={view} onValueChange={v => v && setView(v)} size="sm">
             <ToggleGroupItem value="kanban" aria-label="Kanban"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
             <ToggleGroupItem value="table" aria-label="Tabela"><List className="h-4 w-4" /></ToggleGroupItem>
+            <ToggleGroupItem value="history" aria-label="Histórico"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
@@ -238,6 +284,8 @@ export const SalesTeamTab = () => {
 
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+      ) : view === 'history' ? (
+        <SalesHistoryList leads={historyLeads} />
       ) : view === 'kanban' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {STATUSES.map(col => {
@@ -291,6 +339,31 @@ export const SalesTeamTab = () => {
                           <CalendarIcon className="h-3 w-3" />{formatMeetingDate(lead.meeting_date)}
                         </div>
                       )}
+                      {lead.closing_meeting_date && (
+                        <div className="flex items-center gap-1 mt-0.5 text-xs font-medium text-green-600 dark:text-green-400">
+                          <CalendarIcon className="h-3 w-3" />Fechamento: {formatMeetingDate(lead.closing_meeting_date)}
+                        </div>
+                      )}
+                      {/* Result buttons for leads in "closed" status */}
+                      {lead.status === 'closed' && !lead.result && (
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
+                            onClick={(e) => { e.stopPropagation(); handleContractClosed(lead.id); }}
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />Fechado
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1 h-7 text-xs"
+                            onClick={(e) => { e.stopPropagation(); handleDenied(lead.id); }}
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />Negado
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -310,7 +383,7 @@ export const SalesTeamTab = () => {
                   <TableHead>Telefone</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Reunião</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
+                  <TableHead className="w-32">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -326,6 +399,16 @@ export const SalesTeamTab = () => {
                     <TableCell className="text-xs">{formatMeetingDate(lead.meeting_date) || '—'}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        {lead.status === 'closed' && !lead.result && (
+                          <>
+                            <Button size="icon" className="h-7 w-7 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleContractClosed(lead.id)}>
+                              <CheckCircle className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => handleDenied(lead.id)}>
+                              <XCircle className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(lead)}><Edit className="h-3.5 w-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(lead.id)}><Trash className="h-3.5 w-3.5" /></Button>
                       </div>
@@ -376,9 +459,7 @@ export const SalesTeamTab = () => {
       </Dialog>
 
       {/* Meeting Scheduling Dialog */}
-      <Dialog open={meetingDialogOpen} onOpenChange={(open) => {
-        if (!open) setMeetingDialogOpen(false);
-      }}>
+      <Dialog open={meetingDialogOpen} onOpenChange={open => !open && setMeetingDialogOpen(false)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Agendar Reunião</DialogTitle>
@@ -388,22 +469,13 @@ export const SalesTeamTab = () => {
               <Label>Data da Reunião *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !meetingDate && "text-muted-foreground")}
-                  >
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !meetingDate && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {meetingDate ? format(meetingDate, "dd/MM/yyyy") : "Selecione a data"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={meetingDate}
-                    onSelect={setMeetingDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
+                  <Calendar mode="single" selected={meetingDate} onSelect={setMeetingDate} initialFocus className={cn("p-3 pointer-events-auto")} />
                 </PopoverContent>
               </Popover>
             </div>
@@ -411,12 +483,7 @@ export const SalesTeamTab = () => {
               <Label>Horário *</Label>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="time"
-                  value={meetingTime}
-                  onChange={e => setMeetingTime(e.target.value)}
-                  className="w-36"
-                />
+                <Input type="time" value={meetingTime} onChange={e => setMeetingTime(e.target.value)} className="w-36" />
               </div>
             </div>
           </div>
@@ -428,6 +495,21 @@ export const SalesTeamTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Closing Info Dialog */}
+      <SalesClosingDialog
+        open={closingDialogOpen}
+        onOpenChange={setClosingDialogOpen}
+        onSave={handleSaveClosing}
+        existingContactName={closingContactName}
+      />
+
+      {/* Denial Dialog */}
+      <SalesDenialDialog
+        open={denialDialogOpen}
+        onOpenChange={setDenialDialogOpen}
+        onConfirm={handleConfirmDenial}
+      />
     </div>
   );
 };

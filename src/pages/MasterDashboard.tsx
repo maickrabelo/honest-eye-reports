@@ -93,12 +93,12 @@ const MasterDashboard = () => {
     }
 
     if (role && role !== 'admin') {
-      // Usuário autenticado mas sem permissão de admin
       if (role === 'company') navigate('/dashboard');
       else if (role === 'sst') navigate('/sst-dashboard');
       else if (role === 'pending') navigate('/pending-approval');
       else if (role === 'partner') navigate('/parceiro/dashboard');
       else if (role === 'affiliate') navigate('/afiliado/dashboard');
+      else if ((role as string) === 'sales') navigate('/sales-dashboard');
       else navigate('/');
     }
   }, [authLoading, session, role, navigate]);

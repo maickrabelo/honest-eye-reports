@@ -133,6 +133,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       navigate('/parceiro/dashboard');
     } else if (userRole === 'affiliate') {
       navigate('/afiliado/dashboard');
+    } else if ((userRole as string) === 'sales') {
+      navigate('/sales-dashboard');
     }
   };
 
