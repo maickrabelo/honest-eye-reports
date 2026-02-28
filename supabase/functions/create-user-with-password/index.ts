@@ -31,7 +31,7 @@ interface CreateUserRequest {
   email: string;
   password: string;
   full_name: string;
-  role: 'company' | 'sst';
+  role: 'company' | 'sst' | 'sales' | 'admin' | 'pending';
   company_id?: string;
   sst_manager_id?: string;
 }
