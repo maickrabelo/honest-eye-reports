@@ -1056,6 +1056,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          meeting_date: string | null
           notes: string | null
           phone: string | null
           status: string
@@ -1068,6 +1069,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          meeting_date?: string | null
           notes?: string | null
           phone?: string | null
           status?: string
@@ -1080,6 +1082,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          meeting_date?: string | null
           notes?: string | null
           phone?: string | null
           status?: string

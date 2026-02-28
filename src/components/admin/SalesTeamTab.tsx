@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,9 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, Building, GripVertical } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock } from 'lucide-react';
 
 type SalesLead = {
   id: string;
@@ -20,6 +24,7 @@ type SalesLead = {
   city: string | null;
   status: string;
   notes: string | null;
+  meeting_date: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -44,6 +49,14 @@ export const SalesTeamTab = () => {
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  // Meeting scheduling dialog
+  const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
+  const [meetingLeadId, setMeetingLeadId] = useState<string | null>(null);
+  const [meetingDate, setMeetingDate] = useState<Date | undefined>(undefined);
+  const [meetingTime, setMeetingTime] = useState('09:00');
+  const [savingMeeting, setSavingMeeting] = useState(false);
+
   const { toast } = useToast();
 
   const fetchLeads = useCallback(async () => {
@@ -136,11 +149,50 @@ export const SalesTeamTab = () => {
   };
 
   const moveToStatus = async (leadId: string, newStatus: string) => {
+    // If moving to meeting_scheduled, open scheduling dialog instead
+    if (newStatus === 'meeting_scheduled') {
+      setMeetingLeadId(leadId);
+      setMeetingDate(undefined);
+      setMeetingTime('09:00');
+      setMeetingDialogOpen(true);
+      return;
+    }
+
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
     const { error } = await (supabase.from('sales_leads' as any).update({ status: newStatus }).eq('id', leadId) as any);
     if (error) {
       toast({ title: 'Erro ao mover lead', description: getSafeErrorMessage(error), variant: 'destructive' });
       fetchLeads();
+    }
+  };
+
+  const handleSaveMeeting = async () => {
+    if (!meetingDate) {
+      toast({ title: 'Selecione a data da reunião', variant: 'destructive' });
+      return;
+    }
+    if (!meetingLeadId) return;
+
+    setSavingMeeting(true);
+    try {
+      const [hours, minutes] = meetingTime.split(':').map(Number);
+      const dateTime = new Date(meetingDate);
+      dateTime.setHours(hours, minutes, 0, 0);
+
+      const { error } = await (supabase.from('sales_leads' as any).update({
+        status: 'meeting_scheduled',
+        meeting_date: dateTime.toISOString(),
+      }).eq('id', meetingLeadId) as any);
+
+      if (error) throw error;
+
+      toast({ title: 'Reunião agendada com sucesso' });
+      setMeetingDialogOpen(false);
+      fetchLeads();
+    } catch (error) {
+      toast({ title: 'Erro ao agendar reunião', description: getSafeErrorMessage(error), variant: 'destructive' });
+    } finally {
+      setSavingMeeting(false);
     }
   };
 
@@ -155,6 +207,15 @@ export const SalesTeamTab = () => {
     if (draggedId) {
       moveToStatus(draggedId, status);
       setDraggedId(null);
+    }
+  };
+
+  const formatMeetingDate = (dateStr: string | null) => {
+    if (!dateStr) return null;
+    try {
+      return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm");
+    } catch {
+      return null;
     }
   };
 
@@ -178,7 +239,6 @@ export const SalesTeamTab = () => {
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Carregando...</div>
       ) : view === 'kanban' ? (
-        /* Kanban View */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {STATUSES.map(col => {
             const colLeads = filtered.filter(l => l.status === col.value);
@@ -226,6 +286,11 @@ export const SalesTeamTab = () => {
                           <Phone className="h-3 w-3" />{lead.phone}
                         </div>
                       )}
+                      {lead.meeting_date && (
+                        <div className="flex items-center gap-1 mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                          <CalendarIcon className="h-3 w-3" />{formatMeetingDate(lead.meeting_date)}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -234,7 +299,6 @@ export const SalesTeamTab = () => {
           })}
         </div>
       ) : (
-        /* Table View */
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -245,12 +309,13 @@ export const SalesTeamTab = () => {
                   <TableHead>Cidade</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Reunião</TableHead>
                   <TableHead className="w-24">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum lead encontrado</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum lead encontrado</TableCell></TableRow>
                 ) : filtered.map(lead => (
                   <TableRow key={lead.id}>
                     <TableCell className="font-medium">{lead.company_name}</TableCell>
@@ -258,6 +323,7 @@ export const SalesTeamTab = () => {
                     <TableCell>{lead.city || '—'}</TableCell>
                     <TableCell>{lead.phone || '—'}</TableCell>
                     <TableCell>{STATUS_LABEL[lead.status] || lead.status}</TableCell>
+                    <TableCell className="text-xs">{formatMeetingDate(lead.meeting_date) || '—'}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(lead)}><Edit className="h-3.5 w-3.5" /></Button>
@@ -305,6 +371,60 @@ export const SalesTeamTab = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Meeting Scheduling Dialog */}
+      <Dialog open={meetingDialogOpen} onOpenChange={(open) => {
+        if (!open) setMeetingDialogOpen(false);
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Agendar Reunião</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Data da Reunião *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal", !meetingDate && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {meetingDate ? format(meetingDate, "dd/MM/yyyy") : "Selecione a data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={meetingDate}
+                    onSelect={setMeetingDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label>Horário *</Label>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="time"
+                  value={meetingTime}
+                  onChange={e => setMeetingTime(e.target.value)}
+                  className="w-36"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMeetingDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveMeeting} disabled={savingMeeting}>
+              {savingMeeting ? 'Agendando...' : 'Confirmar Agendamento'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
