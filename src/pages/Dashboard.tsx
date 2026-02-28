@@ -66,7 +66,6 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   useEffect(() => {
     const initCompanyId = async () => {
       const fetchCompanyId = async (identifier: string) => {
-        // Check if identifier is a valid UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const isUuid = uuidRegex.test(identifier);
         
@@ -89,27 +88,34 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         }
       };
 
-      // Prioritize embedded company ID
+      let found = false;
+
       if (embeddedCompanyId) {
         const result = await fetchCompanyId(embeddedCompanyId);
         if (result) {
           setCompanyId(result.id);
           setCompanySlug(result.slug);
+          found = true;
         }
       } else if (urlCompanyParam) {
-        // URL has company parameter (slug or id), fetch company
         const result = await fetchCompanyId(urlCompanyParam);
         if (result) {
           setCompanyId(result.id);
           setCompanySlug(result.slug);
+          found = true;
         }
       } else if (profile?.company_id) {
-        // Use profile company_id and fetch slug
         const result = await fetchCompanyId(profile.company_id);
         if (result) {
           setCompanyId(result.id);
           setCompanySlug(result.slug);
+          found = true;
         }
+      }
+
+      // If no company found, stop loading
+      if (!found) {
+        setIsLoading(false);
       }
     };
 
@@ -419,6 +425,25 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         <Navbar />
         <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-audit-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!companyId) {
+    return hideNavigation ? (
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <p>Nenhuma empresa vinculada a esta conta.</p>
+      </div>
+    ) : (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 py-8 flex items-center justify-center">
+          <div className="text-center space-y-2">
+            <p className="text-muted-foreground">Nenhuma empresa vinculada a esta conta.</p>
+            <p className="text-sm text-muted-foreground">Para acessar o dashboard demo, vincule uma empresa ao seu perfil.</p>
+          </div>
         </main>
         <Footer />
       </div>
