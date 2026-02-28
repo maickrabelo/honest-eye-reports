@@ -1050,42 +1050,69 @@ export type Database = {
       }
       sales_leads: {
         Row: {
+          assisted_companies_count: number | null
           city: string | null
+          closing_meeting_date: string | null
+          cnpj: string | null
           company_name: string
           contact_name: string | null
+          contact_role: string | null
           created_at: string
           created_by: string | null
+          denial_reason: string | null
           id: string
+          large_companies: string | null
+          large_companies_employees: string | null
           meeting_date: string | null
           notes: string | null
           phone: string | null
+          result: string | null
           status: string
+          total_assisted_employees: number | null
           updated_at: string
         }
         Insert: {
+          assisted_companies_count?: number | null
           city?: string | null
+          closing_meeting_date?: string | null
+          cnpj?: string | null
           company_name: string
           contact_name?: string | null
+          contact_role?: string | null
           created_at?: string
           created_by?: string | null
+          denial_reason?: string | null
           id?: string
+          large_companies?: string | null
+          large_companies_employees?: string | null
           meeting_date?: string | null
           notes?: string | null
           phone?: string | null
+          result?: string | null
           status?: string
+          total_assisted_employees?: number | null
           updated_at?: string
         }
         Update: {
+          assisted_companies_count?: number | null
           city?: string | null
+          closing_meeting_date?: string | null
+          cnpj?: string | null
           company_name?: string
           contact_name?: string | null
+          contact_role?: string | null
           created_at?: string
           created_by?: string | null
+          denial_reason?: string | null
           id?: string
+          large_companies?: string | null
+          large_companies_employees?: string | null
           meeting_date?: string | null
           notes?: string | null
           phone?: string | null
+          result?: string | null
           status?: string
+          total_assisted_employees?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1662,6 +1689,7 @@ export type Database = {
         | "pending"
         | "partner"
         | "affiliate"
+        | "sales"
       survey_question_type:
         | "likert"
         | "single_choice"
@@ -1795,7 +1823,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "company", "sst", "pending", "partner", "affiliate"],
+      app_role: [
+        "admin",
+        "company",
+        "sst",
+        "pending",
+        "partner",
+        "affiliate",
+        "sales",
+      ],
       survey_question_type: [
         "likert",
         "single_choice",
