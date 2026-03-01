@@ -214,6 +214,34 @@ const DEMO_REPORTS = [
   { title: "Vazamento de dados pessoais de funcionários", description: "Uma planilha contendo dados pessoais de todos os funcionários está sendo compartilhada abertamente.", category: "seguranca_informacao", department: "TI", urgency: "critical", is_anonymous: false, reporter_name: "Ricardo Oliveira", reporter_email: "ricardo.oliveira@exemplo.com", status: "in_progress" },
 ];
 
+async function seedCOPSOQ(supabaseAdmin: any, companyId: string, userId: string, respondents: any[]) {
+  logStep("Seeding COPSOQ");
+  const { data: assessment, error } = await supabaseAdmin
+    .from("copsoq_assessments")
+    .insert({ company_id: companyId, title: "Avaliação COPSOQ II Demo", description: "Avaliação demonstrativa com dados simulados", is_active: true, created_by: userId })
+    .select().single();
+  if (error) { logStep("Error creating COPSOQ assessment", error); return; }
+
+  const deptInserts = DEPARTMENTS.map((name, i) => ({ assessment_id: assessment.id, name, employee_count: 10, order_index: i }));
+  await supabaseAdmin.from("copsoq_departments").insert(deptInserts);
+
+  const responseInserts = respondents.map(r => ({ assessment_id: assessment.id, department: r.department, respondent_token: r.token, completed_at: new Date().toISOString() }));
+  const { data: responses, error: respError } = await supabaseAdmin.from("copsoq_responses").insert(responseInserts).select("id");
+  if (respError) { logStep("Error creating COPSOQ responses", respError); return; }
+
+  const answerInserts: any[] = [];
+  responses.forEach((resp: any, ri: number) => {
+    const r = respondents[ri];
+    for (let q = 1; q <= 41; q++) {
+      answerInserts.push({ response_id: resp.id, question_number: q, answer_value: variedValue(1, 5, r.bias, r.seed * 41 + q) });
+    }
+  });
+  for (let i = 0; i < answerInserts.length; i += 500) {
+    await supabaseAdmin.from("copsoq_answers").insert(answerInserts.slice(i, i + 500));
+  }
+  logStep("COPSOQ seeded", { responses: responses.length, answers: answerInserts.length });
+}
+
 async function seedReports(supabaseAdmin: any, companyId: string) {
   logStep("Seeding Reports");
   const now = new Date();
@@ -322,6 +350,7 @@ Deno.serve(async (req) => {
       seedHSEIT(supabaseAdmin, companyId, user.id, respondents),
       seedBurnout(supabaseAdmin, companyId, user.id, respondents),
       seedClimateSurvey(supabaseAdmin, companyId, respondents),
+      seedCOPSOQ(supabaseAdmin, companyId, user.id, respondents),
       seedReports(supabaseAdmin, companyId),
     ]);
 
