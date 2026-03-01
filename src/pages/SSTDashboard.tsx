@@ -29,8 +29,8 @@ const sstDashboardSteps: TourStep[] = [
   },
   {
     targetId: 'tool-hseit',
-    title: '🧠 Avaliação HSE-IT',
-    description: 'Avalie os riscos psicossociais das empresas usando a metodologia HSE-IT, reconhecida internacionalmente.',
+    title: '🧠 Riscos Psicossociais',
+    description: 'Avalie os riscos psicossociais das empresas usando metodologias HSE-IT e COPSOQ, reconhecidas internacionalmente.',
     position: 'bottom',
   },
   {
@@ -284,12 +284,12 @@ const SSTDashboard = () => {
           <div className="flex flex-wrap gap-3 mb-8">
             <Button 
               id="tool-hseit"
-              onClick={() => navigate('/hseit-dashboard')}
+              onClick={() => navigate('/psychosocial-dashboard')}
               variant="outline"
               className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
             >
               <Brain className="mr-2 h-4 w-4" />
-              Avaliação HSE-IT
+              Avaliação de Riscos Psicossociais
             </Button>
             
             <Button 
