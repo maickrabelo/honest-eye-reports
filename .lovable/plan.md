@@ -1,54 +1,47 @@
 
 
-## Plano: Área de Time de Vendas com CRM e Kanban
+## Plano: Unificar HSE-IT e COPSOQ em uma página "Avaliação de Riscos Psicossociais"
 
-### Escopo
-Criar uma nova seção "Time de Vendas" no Master Dashboard com:
-1. Tabela de banco de dados para os leads do time de vendas
-2. Nova aba no Master Dashboard
-3. Componente CRM com formulário de cadastro (nome da empresa, telefone, responsável, cidade)
-4. Visualização Kanban com 4 colunas: Prospect → Reunião Agendada → Reunião Realizada → Fechamento
+### Mudança principal
+Substituir o botão "Avaliação HSE-IT" na barra de ferramentas por um botão único **"Avaliação de Riscos Psicossociais"** que navega para uma nova página hub (`/psychosocial-dashboard`). Essa página terá duas abas (Tabs): **HSE-IT** e **COPSOQ**.
 
-### Mudanças no Banco de Dados
+### Arquivos a criar
 
-Criar tabela `sales_leads`:
-- `id` (uuid, PK)
-- `company_name` (text, not null)
-- `phone` (text)
-- `contact_name` (text)
-- `city` (text)
-- `status` (text, default 'prospect') — valores: prospect, meeting_scheduled, meeting_done, closed
-- `notes` (text)
-- `created_by` (uuid, ref auth.users)
-- `created_at`, `updated_at` (timestamptz)
+1. **`src/pages/PsychosocialDashboard.tsx`** — Nova página hub com `Tabs` contendo:
+   - Aba **HSE-IT**: renderiza o conteúdo atual do `HSEITDashboard` (extraído como componente interno ou reutilizado)
+   - Aba **COPSOQ**: placeholder inicial com descrição da metodologia e botão para criar avaliações (será populado quando o módulo COPSOQ for implementado)
 
-RLS: apenas admins podem CRUD.
+### Arquivos a editar
 
-### Novos Arquivos
+1. **`src/pages/SSTDashboard.tsx`** — Trocar o botão `Avaliação HSE-IT` (id `tool-hseit`) por `Avaliação de Riscos Psicossociais` navegando para `/psychosocial-dashboard`. Atualizar o ícone e o texto do onboarding tour correspondente.
 
-1. **`src/components/admin/SalesTeamTab.tsx`** — Componente principal com:
-   - Botão "Novo Lead" abrindo dialog com campos: nome empresa, telefone, responsável, cidade, observações
-   - Visualização alternável: Tabela / Kanban
-   - **Kanban** com 4 colunas drag-and-drop (usando estado local + update no banco ao mover):
-     - Prospect (cinza)
-     - Reunião Agendada (azul)
-     - Reunião Realizada (amarelo)
-     - Fechamento (verde)
-   - Cards no kanban mostrando nome empresa, responsável, cidade, telefone
-   - Editar/excluir leads
-   - Busca por nome da empresa
+2. **`src/pages/SalesDashboard.tsx`** — Mesma troca do botão HSE-IT para o novo botão unificado.
 
-### Arquivos Modificados
+3. **`src/App.tsx`** — Adicionar rota `/psychosocial-dashboard` apontando para `PsychosocialDashboard`.
 
-2. **`src/pages/MasterDashboard.tsx`**:
-   - Importar `SalesTeamTab`
-   - Adicionar nova `TabsTrigger value="sales"` com label "Time de Vendas"
-   - Adicionar `TabsContent value="sales"` renderizando `<SalesTeamTab />`
+### Estrutura da nova página
 
-### Detalhes Técnicos
+```text
+┌──────────────────────────────────────┐
+│  ← Voltar ao Dashboard              │
+│                                      │
+│  Avaliação de Riscos Psicossociais   │
+│                                      │
+│  ┌──────────┐ ┌──────────┐           │
+│  │  HSE-IT  │ │  COPSOQ  │  (Tabs)  │
+│  └──────────┘ └──────────┘           │
+│                                      │
+│  [Conteúdo da aba selecionada]       │
+│  - HSE-IT: redireciona/embute o      │
+│    dashboard existente               │
+│  - COPSOQ: placeholder "Em breve"   │
+│    ou conteúdo quando implementado   │
+└──────────────────────────────────────┘
+```
 
-- Drag-and-drop no Kanban implementado com HTML5 drag events nativos (sem lib extra)
-- Ao soltar card em outra coluna, faz `UPDATE sales_leads SET status = 'novo_status'` via Supabase
-- Dialog de edição reutiliza mesmo formulário do cadastro
-- Contadores de leads por coluna no header do kanban
+### Detalhes técnicos
+- A aba HSE-IT renderizará o conteúdo do `HSEITDashboard` existente (importando e reutilizando sua lógica interna)
+- A aba COPSOQ será um placeholder preparado para receber o módulo completo quando for implementado
+- As rotas existentes do HSE-IT (`/hseit/new`, `/hseit/:id`, etc.) continuam funcionando normalmente
+- Não há alterações no banco de dados
 
