@@ -46,6 +46,7 @@ import TrialSignup from "./pages/TrialSignup";
 import SSTTrialSignup from "./pages/SSTTrialSignup";
 import RelatorioDemo from "./pages/RelatorioDemo";
 import SalesDashboard from "./pages/SalesDashboard";
+import PsychosocialDashboard from "./pages/PsychosocialDashboard";
 
 const queryClient = new QueryClient();
 
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/burnout/results/:id" element={<BurnoutResults />} />
               <Route path="/relatoriodemo" element={<RelatorioDemo />} />
               <Route path="/sales-dashboard" element={<SalesDashboard />} />
+              <Route path="/psychosocial-dashboard" element={<PsychosocialDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </WhiteLabelProvider>

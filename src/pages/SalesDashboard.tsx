@@ -231,12 +231,12 @@ const SalesDashboard = () => {
                   </div>
                   <div className="flex flex-wrap gap-3 mb-8">
                     <Button
-                      onClick={() => navigate('/hseit-dashboard')}
+                      onClick={() => navigate('/psychosocial-dashboard')}
                       variant="outline"
                       className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
                     >
                       <Brain className="mr-2 h-4 w-4" />
-                      Avaliação HSE-IT
+                      Avaliação de Riscos Psicossociais
                     </Button>
 
                     <Button
