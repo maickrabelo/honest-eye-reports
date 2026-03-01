@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Brain, FileText, Loader2 } from 'lucide-react';
 import HSEITDashboardContent from '@/components/psychosocial/HSEITDashboardContent';
+import COPSOQDashboardContent from '@/components/psychosocial/COPSOQDashboardContent';
 import { useEffect } from 'react';
 
 export default function PsychosocialDashboard() {
@@ -74,19 +75,7 @@ export default function PsychosocialDashboard() {
           </TabsContent>
 
           <TabsContent value="copsoq">
-            <div className="text-center py-16 space-y-4">
-              <FileText className="h-16 w-16 mx-auto text-muted-foreground opacity-40" />
-              <h3 className="text-xl font-semibold text-foreground">COPSOQ II — Versão Curta</h3>
-              <p className="text-muted-foreground max-w-lg mx-auto">
-                O Copenhagen Psychosocial Questionnaire (COPSOQ II) é um instrumento validado internacionalmente 
-                para avaliação dos fatores psicossociais no trabalho. A versão curta contém aproximadamente 40 itens 
-                distribuídos em dimensões como Exigências Quantitativas, Ritmo de Trabalho, Influência no Trabalho, 
-                Significado do Trabalho, Qualidade da Liderança, Apoio Social, entre outras.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                🚧 Módulo em implementação — em breve disponível.
-              </p>
-            </div>
+            <COPSOQDashboardContent />
           </TabsContent>
         </Tabs>
       </main>

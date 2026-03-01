@@ -47,6 +47,9 @@ import SSTTrialSignup from "./pages/SSTTrialSignup";
 import RelatorioDemo from "./pages/RelatorioDemo";
 import SalesDashboard from "./pages/SalesDashboard";
 import PsychosocialDashboard from "./pages/PsychosocialDashboard";
+import COPSOQManagement from "./pages/COPSOQManagement";
+import COPSOQForm from "./pages/COPSOQForm";
+import COPSOQResults from "./pages/COPSOQResults";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +116,11 @@ const App = () => (
               <Route path="/relatoriodemo" element={<RelatorioDemo />} />
               <Route path="/sales-dashboard" element={<SalesDashboard />} />
               <Route path="/psychosocial-dashboard" element={<PsychosocialDashboard />} />
+              {/* COPSOQ Routes */}
+              <Route path="/copsoq/new" element={<COPSOQManagement />} />
+              <Route path="/copsoq/:id" element={<COPSOQManagement />} />
+              <Route path="/copsoq/:companySlug/:assessmentId" element={<COPSOQForm />} />
+              <Route path="/copsoq/results/:id" element={<COPSOQResults />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </WhiteLabelProvider>
