@@ -140,7 +140,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Pages where an EXPLICIT login redirect should happen
   const isLoginPage = (path: string) => {
-    return path === '/auth';
+    return path === '/auth' || path === '/';
   };
 
   useEffect(() => {
