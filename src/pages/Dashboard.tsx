@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AIAnalysisCard from '@/components/AIAnalysisCard';
+import HSEITParticipationCard from '@/components/HSEITParticipationCard';
 import TrackReportModal from '@/components/TrackReportModal';
 import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
@@ -516,6 +517,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           </Card>
         ))}
       </div>
+
+      <HSEITParticipationCard companyId={companyId} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
