@@ -612,17 +612,37 @@ export default function HSEITResults() {
 
         {/* Per-Department Breakdown */}
         {departments.length >= 2 && (
-          <div className="mb-8 space-y-8">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Users className="h-6 w-6 text-primary" />
-              Resultados por Setor
-            </h2>
-            {departments.map(dept => {
+          <div className="mb-8 space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Users className="h-6 w-6 text-primary" />
+                Resultados por Setor
+              </h2>
+              <Select value={sectorViewDepartment} onValueChange={setSectorViewDepartment}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Selecione um setor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map(dept => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {sectorViewDepartment ? (() => {
+              const dept = sectorViewDepartment;
               const deptResponses = responses.filter(r => r.department === dept);
               const deptAnswers: Answer[] = [];
               deptResponses.forEach(r => deptAnswers.push(...r.answers));
 
-              if (deptAnswers.length === 0) return null;
+              if (deptAnswers.length === 0) return (
+                <Card>
+                  <CardContent className="pt-6 text-center text-muted-foreground">
+                    Nenhuma resposta encontrada para este setor.
+                  </CardContent>
+                </Card>
+              );
 
               const categories: HSEITCategory[] = ['demands', 'control', 'managerSupport', 'peerSupport', 'relationships', 'role', 'change'];
               const deptCategoryAverages: Record<string, number> = {};
@@ -651,9 +671,9 @@ export default function HSEITResults() {
               })();
 
               return (
-                <Card key={dept}>
+                <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
+                    <CardTitle className="flex items-center justify-between flex-wrap gap-2">
                       <span>📍 {dept}</span>
                       <div className="flex items-center gap-3">
                         <Badge variant="outline">{deptResponses.length} respostas</Badge>
@@ -671,9 +691,7 @@ export default function HSEITResults() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Charts row */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Radar */}
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground mb-2">Perfil por Categoria</h4>
                         <div className="h-[300px]">
@@ -688,8 +706,6 @@ export default function HSEITResults() {
                           </ResponsiveContainer>
                         </div>
                       </div>
-
-                      {/* Health Pie */}
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground mb-2">Semáforo de Saúde</h4>
                         <div className="h-[300px]">
@@ -717,7 +733,6 @@ export default function HSEITResults() {
                       </div>
                     </div>
 
-                    {/* Bar chart */}
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground mb-2">Detalhamento por Categoria</h4>
                       <div className="h-[250px]">
@@ -737,12 +752,17 @@ export default function HSEITResults() {
                       </div>
                     </div>
 
-                    {/* Semáforo indicators */}
                     <CategoryRiskIndicators categoryAverages={deptCategoryAverages} />
                   </CardContent>
                 </Card>
               );
-            })}
+            })() : (
+              <Card>
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                  Selecione um setor acima para visualizar os resultados detalhados.
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
