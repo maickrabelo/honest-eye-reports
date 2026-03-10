@@ -145,7 +145,6 @@ export default function COPSOQDashboardContent() {
               <Input placeholder="Buscar por título ou empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
             <PeriodFilter value={selectedPeriod} onChange={setSelectedPeriod} />
-            </div>
             {companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger className="w-[200px]"><SelectValue placeholder="Todas empresas" /></SelectTrigger>
