@@ -12,6 +12,7 @@ import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, Eye,
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 
 interface HSEITAssessment {
   id: string;
