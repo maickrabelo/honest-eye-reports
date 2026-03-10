@@ -106,7 +106,9 @@ export default function COPSOQDashboardContent() {
   const filteredAssessments = assessments.filter(a => {
     const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase()) || a.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCompany = selectedCompany === 'all' || a.company_id === selectedCompany;
-    return matchesSearch && matchesCompany;
+    const periodDate = getDateFromPeriod(selectedPeriod);
+    const matchesPeriod = !periodDate || new Date(a.created_at) >= periodDate;
+    return matchesSearch && matchesCompany && matchesPeriod;
   });
 
   const activeCount = assessments.filter(a => a.is_active).length;
