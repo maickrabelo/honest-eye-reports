@@ -316,7 +316,7 @@ const SSTDashboard = () => {
               id="tool-new-company"
               onClick={() => setIsAddCompanyOpen(true)}
               disabled={companies.length >= maxCompanies}
-              className="bg-green-700 hover:bg-green-800 text-white font-semibold shadow-sm"
+              className="sst-bg-primary hover:sst-bg-primary-dark text-white font-semibold shadow-sm"
             >
               <Building2 className="mr-2 h-4 w-4" />
               Nova Empresa
