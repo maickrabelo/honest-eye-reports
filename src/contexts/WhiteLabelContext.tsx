@@ -109,12 +109,17 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [brandColor]);
 
   const setBrandColorDB = useCallback(async (color: BrandColorTheme) => {
-    if (!sstManagerId) return;
+    if (!sstManagerId) {
+      console.error('No SST manager ID found, cannot save color');
+      return;
+    }
     const { error } = await supabase
       .from('sst_managers')
-      .update({ brand_color: color } as any)
+      .update({ brand_color: color })
       .eq('id', sstManagerId);
-    if (!error) {
+    if (error) {
+      console.error('Error saving brand color:', error);
+    } else {
       setBrandColor(color);
       applyColorTheme(color);
     }
@@ -140,7 +145,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setBrandName(sstManager.name);
             setSstSlug(sstManager.slug);
             setSstManagerId(sstManager.id);
-            const color = (sstManager as any).brand_color as BrandColorTheme | null;
+            const color = sstManager.brand_color as BrandColorTheme | null;
             setBrandColor(color);
             applyColorTheme(color);
             setIsLoading(false);
@@ -163,7 +168,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               setBrandName(sstManager.name);
               setSstSlug(sstManager.slug);
               setSstManagerId(sstManager.id);
-              const color = (sstManager as any).brand_color as BrandColorTheme | null;
+              const color = sstManager.brand_color as BrandColorTheme | null;
               setBrandColor(color);
               applyColorTheme(color);
               setIsLoading(false);
@@ -191,7 +196,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setBrandName(sstManager.name);
                 setSstSlug(sstManager.slug);
                 setSstManagerId(sstManager.id);
-                const color = (sstManager as any).brand_color as BrandColorTheme | null;
+                const color = sstManager.brand_color as BrandColorTheme | null;
                 setBrandColor(color);
                 applyColorTheme(color);
                 setIsLoading(false);
