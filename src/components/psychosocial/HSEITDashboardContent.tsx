@@ -265,6 +265,7 @@ export default function HSEITDashboardContent() {
                 className="pl-10"
               />
             </div>
+            <PeriodFilter value={selectedPeriod} onChange={setSelectedPeriod} />
             {companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger className="w-[200px]">
