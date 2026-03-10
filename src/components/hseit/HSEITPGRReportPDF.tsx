@@ -760,52 +760,59 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   y += 8;
 
   if (data.actionItems.length > 0) {
-    // Action items table with monthly grid
-    const gridColW = 12;
-    const descColW = pw - 2 * m - 12 * MONTHS.length - 30;
+    // Action items table with monthly grid — landscape-style layout
+    const gridColW = 10;
+    const monthsW = 12 * gridColW;
+    const respColW = 22;
+    const descColW = pw - 2 * m - monthsW - respColW;
+    const monthsStartX = m + descColW + respColW;
     
     // Header
     checkPage(30);
     pdf.setFillColor(0, 51, 102);
     pdf.rect(m, y, pw - 2 * m, 14, 'F');
-    pdf.setFontSize(7);
+    pdf.setFontSize(6.5);
     pdf.setFont('helvetica', 'bold');
     setColor(255, 255, 255);
     pdf.text('Ação / Medida', m + 2, y + 6);
-    pdf.text('Resp.', m + descColW, y + 6);
+    pdf.text('Resp.', m + descColW + 2, y + 6);
     
     MONTHS.forEach((month, i) => {
-      pdf.text(month, m + descColW + 30 + i * gridColW, y + 6);
+      pdf.text(month, monthsStartX + i * gridColW + 1, y + 6);
     });
     y += 16;
 
     data.actionItems.forEach((item, idx) => {
-      checkPage(12);
+      // Wrap recommendation text to fit column
+      pdf.setFontSize(6.5);
+      pdf.setFont('helvetica', 'normal');
+      const wrappedLines = pdf.splitTextToSize(item.recommendation, descColW - 4);
+      const rowH = Math.max(10, wrappedLines.length * 4 + 4);
+
+      checkPage(rowH + 2);
       const bgCol = idx % 2 === 0 ? 250 : 240;
       pdf.setFillColor(bgCol, bgCol, bgCol);
-      pdf.rect(m, y - 3, pw - 2 * m, 10, 'F');
+      pdf.rect(m, y - 3, pw - 2 * m, rowH, 'F');
 
-      pdf.setFontSize(7);
-      pdf.setFont('helvetica', 'normal');
       setColor(0, 0, 0);
-
-      const actionText = item.recommendation.length > 40 ? item.recommendation.substring(0, 40) + '...' : item.recommendation;
-      pdf.text(actionText, m + 2, y + 3);
-      pdf.text('RH/SST', m + descColW, y + 3);
+      wrappedLines.forEach((line: string, li: number) => {
+        pdf.text(line, m + 2, y + 3 + li * 4);
+      });
+      pdf.text('RH/SST', m + descColW + 2, y + 3);
 
       // Mark months based on priority
       const startMonth = item.priority === 'immediate' ? 0 : item.priority === 'short_term' ? 1 : 3;
       const endMonth = item.priority === 'immediate' ? 2 : item.priority === 'short_term' ? 5 : 8;
       
       MONTHS.forEach((_, i) => {
-        const cx = m + descColW + 30 + i * gridColW + 4;
+        const cx = monthsStartX + i * gridColW + 2;
         if (i >= startMonth && i <= endMonth) {
           pdf.setFillColor(0, 128, 0);
-          pdf.rect(cx - 2, y - 1, 6, 6, 'F');
+          pdf.rect(cx, y - 1, 6, 6, 'F');
         }
       });
       
-      y += 10;
+      y += rowH;
     });
   } else {
     drawText('Nenhuma ação foi definida no plano.', 5);
