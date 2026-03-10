@@ -104,6 +104,7 @@ export default function HSEITResults() {
   const [responses, setResponses] = useState<Response[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [sectorViewDepartment, setSectorViewDepartment] = useState<string>('');
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sstName, setSstName] = useState<string | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
