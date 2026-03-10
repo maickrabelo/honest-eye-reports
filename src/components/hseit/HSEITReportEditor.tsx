@@ -3,10 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, ClipboardList, Calendar, Download, Loader2, Eye } from "lucide-react";
+import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2 } from "lucide-react";
 import { HSEITActionPlanEditor, ActionItem } from "./HSEITActionPlanEditor";
 import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
+import { generatePGRReport } from "./HSEITPGRReportPDF";
 import { 
   HSEITCategory, 
   HSEIT_CATEGORY_LABELS, 
@@ -17,7 +19,6 @@ import {
   calculateCategoryAverage
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
 
 interface CategoryAverage {
   category: HSEITCategory;
