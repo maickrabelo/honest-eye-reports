@@ -223,7 +223,7 @@ const SSTDashboard = () => {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow bg-gray-50 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-green-800" />
+          <Loader2 className="h-8 w-8 animate-spin sst-text-primary" />
         </main>
         <Footer />
       </div>
