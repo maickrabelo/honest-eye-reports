@@ -15,7 +15,7 @@ const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, max
   return (
     <div className="bg-white border rounded-lg p-4 mb-6">
       <div className="flex items-center gap-3 mb-2">
-        <Building2 className="h-5 w-5 text-green-700" />
+        <Building2 className="h-5 w-5 sst-text-primary" />
         <span className="font-semibold text-lg">
           {currentCount} / {maxCompanies} empresas cadastradas
         </span>
@@ -32,7 +32,8 @@ const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, max
       </div>
       <Progress
         value={percentage}
-        className={`h-2 ${isAtLimit ? '[&>div]:bg-red-500' : isNearLimit ? '[&>div]:bg-yellow-500' : '[&>div]:bg-green-600'}`}
+        className={`h-2 ${isAtLimit ? '[&>div]:bg-red-500' : isNearLimit ? '[&>div]:bg-yellow-500' : ''}`}
+        style={!isAtLimit && !isNearLimit ? { ['--progress-color' as any]: 'hsl(var(--sst-primary))' } : undefined}
       />
     </div>
   );

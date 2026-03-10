@@ -88,3 +88,52 @@
 .card-hover {
   @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
 }
+
+/* SST Theme Variables - defaults to green */
+:root {
+  --sst-primary: 158 75% 22%;
+  --sst-primary-dark: 158 75% 15%;
+  --sst-primary-mid: 158 56% 42%;
+  --sst-primary-light: 138 76% 97%;
+  --sst-primary-50: 138 76% 93%;
+  --sst-gradient-from: #14532d;
+  --sst-gradient-via: #166534;
+  --sst-gradient-to: #15803d;
+}
+
+.sst-bg-primary {
+  background-color: hsl(var(--sst-primary));
+}
+.sst-bg-primary-dark {
+  background-color: hsl(var(--sst-primary-dark));
+}
+.sst-bg-primary-mid {
+  background-color: hsl(var(--sst-primary-mid));
+}
+.sst-bg-primary-light {
+  background-color: hsl(var(--sst-primary-light));
+}
+.sst-bg-primary-50 {
+  background-color: hsl(var(--sst-primary-50));
+}
+.sst-text-primary {
+  color: hsl(var(--sst-primary));
+}
+.sst-text-primary-dark {
+  color: hsl(var(--sst-primary-dark));
+}
+.sst-text-primary-mid {
+  color: hsl(var(--sst-primary-mid));
+}
+.sst-border-primary {
+  border-color: hsl(var(--sst-primary));
+}
+.sst-border-primary-mid {
+  border-color: hsl(var(--sst-primary-mid));
+}
+.hover\:sst-bg-primary-light:hover {
+  background-color: hsl(var(--sst-primary-light));
+}
+.hover\:sst-bg-primary-dark:hover {
+  background-color: hsl(var(--sst-primary-dark));
+}

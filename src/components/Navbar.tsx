@@ -2,9 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield, ClipboardList, BookOpen, HelpCircle } from "lucide-react";
+import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
-import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
+import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import {
@@ -14,16 +14,33 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] = [
+  { value: 'navy', label: 'Azul Marinho', color: '#1e3a5f' },
+  { value: 'green', label: 'Verde', color: '#166534' },
+  { value: 'orange', label: 'Laranja', color: '#ea580c' },
+  { value: 'purple', label: 'Roxo', color: '#7c3aed' },
+];
 
 const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
-  const { brandLogo, isWhiteLabel } = useWhiteLabel();
+  const { brandLogo, isWhiteLabel, brandColor, setBrandColorDB } = useWhiteLabel();
   const { resetTour } = useOnboarding('sst-dashboard');
   const isLoggedIn = !!user;
 
   const handleResetTour = () => {
     resetTour();
     toast.success('Tutorial reiniciado! Navegue pelas páginas para revê-lo.');
+  };
+
+  const handleColorChange = async (color: BrandColorTheme) => {
+    await setBrandColorDB(color);
+    toast.success('Esquema de cores atualizado!');
   };
 
   return (
@@ -53,6 +70,40 @@ const Navbar = () => {
               <>
               {role === 'sst' && (
                 <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        title="Esquema de cores"
+                      >
+                        <Palette className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-52 p-3" align="end">
+                      <p className="text-sm font-medium mb-3">Esquema de cores</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {COLOR_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => handleColorChange(opt.value)}
+                            className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors text-left"
+                          >
+                            <div
+                              className="w-6 h-6 rounded-full border-2 border-white shadow-sm flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: opt.color }}
+                            >
+                              {(brandColor || 'green') === opt.value && (
+                                <Check className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                            <span className="text-xs font-medium">{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Link to="/sst-portal">
                     <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-2 border-primary/30 text-primary hover:bg-primary/5">
                       <BookOpen className="h-4 w-4" />
