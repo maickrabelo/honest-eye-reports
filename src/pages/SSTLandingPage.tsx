@@ -203,7 +203,54 @@ const SSTLandingPage = () => {
         </div>
       </section>
 
-      <Footer />
+      <footer
+        className="text-white"
+        style={{ backgroundColor: palette.gradientFrom }}
+      >
+        <div className="audit-container py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div className="lg:col-span-1">
+              {sstManager?.logo_url ? (
+                <img src={sstManager.logo_url} alt={`${sstManager.name} Logo`} className="h-10 object-contain brightness-0 invert mb-4" />
+              ) : (
+                <span className="text-xl font-bold text-white mb-4 block">{sstManager?.name}</span>
+              )}
+              <p className="text-white/60 text-sm mb-6">
+                Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Sistema NR-01</h3>
+              <ul className="space-y-3 text-sm">
+                <li><span className="text-white/60">Levantamento de Riscos Psicossociais</span></li>
+                <li><span className="text-white/60">Canal de Denúncias</span></li>
+                <li><span className="text-white/60">Pesquisa de Clima Organizacional</span></li>
+                <li><span className="text-white/60">Gestão de Riscos Psicossociais</span></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Empresa</h3>
+              <ul className="space-y-3 text-sm">
+                <li><Link to="/auth" className="text-white/60 hover:text-white transition-colors">Área do Cliente</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contato</h3>
+              <ul className="space-y-4 text-sm">
+                <li className="text-white/60">contato@soia.com.br</li>
+                <li className="text-white/60">+55 11 9 9602-9222</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-white/10">
+          <div className="audit-container py-6">
+            <p className="text-sm text-white/50 text-center">
+              &copy; {new Date().getFullYear()} {sstManager?.name || 'SOIA'}. Todos os direitos reservados.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
