@@ -1,23 +1,47 @@
 
 
-# Plan: Add Per-Department Charts & Semáforos to HSE-IT Results
+## Plano: Unificar HSE-IT e COPSOQ em uma página "Avaliação de Riscos Psicossociais"
 
-## Problem
-The HSE-IT results page currently only shows overall charts (radar, pie, bar) and semáforos. Per-department/sector breakdowns with their own charts and traffic lights are missing.
+### Mudança principal
+Substituir o botão "Avaliação HSE-IT" na barra de ferramentas por um botão único **"Avaliação de Riscos Psicossociais"** que navega para uma nova página hub (`/psychosocial-dashboard`). Essa página terá duas abas (Tabs): **HSE-IT** e **COPSOQ**.
 
-## Changes
+### Arquivos a criar
 
-### File: `src/pages/HSEITResults.tsx`
+1. **`src/pages/PsychosocialDashboard.tsx`** — Nova página hub com `Tabs` contendo:
+   - Aba **HSE-IT**: renderiza o conteúdo atual do `HSEITDashboard` (extraído como componente interno ou reutilizado)
+   - Aba **COPSOQ**: placeholder inicial com descrição da metodologia e botão para criar avaliações (será populado quando o módulo COPSOQ for implementado)
 
-Add a new section between the `CategoryRiskIndicators` and `AssessmentComparison` blocks that iterates over each department and renders:
+### Arquivos a editar
 
-1. **Per-department category averages calculation** — For each department, compute category averages from that department's responses only
-2. **Radar chart** — Department-specific radar showing the 7 HSE-IT dimensions
-3. **Health impact pie chart (semáforo)** — Donut chart showing favorable/intermediate/risk distribution for that department
-4. **Horizontal bar chart** — Category averages with risk-colored bars
-5. **CategoryRiskIndicators component** — Reuse the existing component, passing department-specific averages
+1. **`src/pages/SSTDashboard.tsx`** — Trocar o botão `Avaliação HSE-IT` (id `tool-hseit`) por `Avaliação de Riscos Psicossociais` navegando para `/psychosocial-dashboard`. Atualizar o ícone e o texto do onboarding tour correspondente.
 
-Each department section will be wrapped in a Card with the department name as header and response count. The section only renders when there are 2+ departments (otherwise it would duplicate the overall view).
+2. **`src/pages/SalesDashboard.tsx`** — Mesma troca do botão HSE-IT para o novo botão unificado.
 
-No new files needed — only modifying `HSEITResults.tsx`.
+3. **`src/App.tsx`** — Adicionar rota `/psychosocial-dashboard` apontando para `PsychosocialDashboard`.
+
+### Estrutura da nova página
+
+```text
+┌──────────────────────────────────────┐
+│  ← Voltar ao Dashboard              │
+│                                      │
+│  Avaliação de Riscos Psicossociais   │
+│                                      │
+│  ┌──────────┐ ┌──────────┐           │
+│  │  HSE-IT  │ │  COPSOQ  │  (Tabs)  │
+│  └──────────┘ └──────────┘           │
+│                                      │
+│  [Conteúdo da aba selecionada]       │
+│  - HSE-IT: redireciona/embute o      │
+│    dashboard existente               │
+│  - COPSOQ: placeholder "Em breve"   │
+│    ou conteúdo quando implementado   │
+└──────────────────────────────────────┘
+```
+
+### Detalhes técnicos
+- A aba HSE-IT renderizará o conteúdo do `HSEITDashboard` existente (importando e reutilizando sua lógica interna)
+- A aba COPSOQ será um placeholder preparado para receber o módulo completo quando for implementado
+- As rotas existentes do HSE-IT (`/hseit/new`, `/hseit/:id`, etc.) continuam funcionando normalmente
+- Não há alterações no banco de dados
 
