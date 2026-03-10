@@ -252,21 +252,25 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="preview" className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="preview" className="flex items-center gap-1 text-xs">
+              <Eye className="h-3 w-3" />
               Preview
             </TabsTrigger>
-            <TabsTrigger value="action-plan" className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
+            <TabsTrigger value="company" className="flex items-center gap-1 text-xs">
+              <Building2 className="h-3 w-3" />
+              Empresa
+            </TabsTrigger>
+            <TabsTrigger value="action-plan" className="flex items-center gap-1 text-xs">
+              <ClipboardList className="h-3 w-3" />
               Plano de Ação
             </TabsTrigger>
-            <TabsTrigger value="schedule" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+            <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs">
+              <Calendar className="h-3 w-3" />
               Cronograma
             </TabsTrigger>
-            <TabsTrigger value="finalize" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
+            <TabsTrigger value="finalize" className="flex items-center gap-1 text-xs">
+              <Download className="h-3 w-3" />
               Finalizar
             </TabsTrigger>
           </TabsList>
