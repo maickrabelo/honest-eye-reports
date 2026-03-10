@@ -20,6 +20,7 @@ import {
   calculateCategoryAverage, calculateOverallAverage, getRiskLevel, normalizeScore,
   RISK_LEVEL_LABELS, RISK_LEVEL_COLORS, ALL_CATEGORIES, CATEGORY_GROUPS
 } from '@/data/copsoqQuestions';
+import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
 
 interface Assessment { id: string; title: string; description: string | null; createdAt: string; companies: { id: string; name: string; }; }
 interface Answer { questionNumber: number; value: number; }
