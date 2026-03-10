@@ -609,6 +609,142 @@ export default function HSEITResults() {
           <CategoryRiskIndicators categoryAverages={categoryAverages} />
         </div>
 
+        {/* Per-Department Breakdown */}
+        {departments.length >= 2 && (
+          <div className="mb-8 space-y-8">
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Users className="h-6 w-6 text-primary" />
+              Resultados por Setor
+            </h2>
+            {departments.map(dept => {
+              const deptResponses = responses.filter(r => r.department === dept);
+              const deptAnswers: Answer[] = [];
+              deptResponses.forEach(r => deptAnswers.push(...r.answers));
+
+              if (deptAnswers.length === 0) return null;
+
+              const categories: HSEITCategory[] = ['demands', 'control', 'managerSupport', 'peerSupport', 'relationships', 'role', 'change'];
+              const deptCategoryAverages: Record<string, number> = {};
+              categories.forEach(cat => {
+                deptCategoryAverages[cat] = calculateCategoryAverage(deptAnswers, cat);
+              });
+
+              const deptOverallAvg = calculateOverallAverage(deptAnswers);
+
+              const deptRadarData = Object.entries(deptCategoryAverages).map(([cat, value]) => ({
+                category: HSEIT_CATEGORY_LABELS[cat as HSEITCategory],
+                value,
+                fullMark: 5
+              }));
+
+              const deptHealthDist = (() => {
+                const dist = { favorable: 0, intermediate: 0, risk: 0 };
+                Object.values(deptCategoryAverages).forEach(avg => {
+                  dist[getHealthImpact(avg)]++;
+                });
+                return Object.entries(dist).map(([impact, count]) => ({
+                  name: HEALTH_IMPACT_LABELS[impact as keyof typeof HEALTH_IMPACT_LABELS],
+                  value: count,
+                  color: HEALTH_IMPACT_COLORS[impact as keyof typeof HEALTH_IMPACT_COLORS]
+                }));
+              })();
+
+              return (
+                <Card key={dept}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>📍 {dept}</span>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline">{deptResponses.length} respostas</Badge>
+                        <Badge
+                          style={{
+                            backgroundColor: `${HEALTH_IMPACT_COLORS[getHealthImpact(deptOverallAvg)]}20`,
+                            color: HEALTH_IMPACT_COLORS[getHealthImpact(deptOverallAvg)],
+                            borderColor: HEALTH_IMPACT_COLORS[getHealthImpact(deptOverallAvg)]
+                          }}
+                          variant="outline"
+                        >
+                          Média: {deptOverallAvg.toFixed(2)} — {HEALTH_IMPACT_LABELS[getHealthImpact(deptOverallAvg)]}
+                        </Badge>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Charts row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Radar */}
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Perfil por Categoria</h4>
+                        <div className="h-[300px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart data={deptRadarData}>
+                              <PolarGrid />
+                              <PolarAngleAxis dataKey="category" tick={{ fontSize: 10 }} />
+                              <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fontSize: 9 }} />
+                              <Radar name="Média" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                              <Tooltip />
+                            </RadarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* Health Pie */}
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Semáforo de Saúde</h4>
+                        <div className="h-[300px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={deptHealthDist}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={50}
+                                outerRadius={85}
+                                paddingAngle={5}
+                                dataKey="value"
+                                label={({ name, value }) => `${name}: ${value}`}
+                              >
+                                {deptHealthDist.map((entry, i) => (
+                                  <Cell key={`dept-cell-${i}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bar chart */}
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Detalhamento por Categoria</h4>
+                      <div className="h-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={deptRadarData} layout="vertical" margin={{ left: 100 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis type="number" domain={[0, 5]} />
+                            <YAxis dataKey="category" type="category" width={100} tick={{ fontSize: 11 }} />
+                            <Tooltip />
+                            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                              {deptRadarData.map((entry, i) => (
+                                <Cell key={`bar-${i}`} fill={RISK_LEVEL_COLORS[getRiskLevel(entry.value)]} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Semáforo indicators */}
+                    <CategoryRiskIndicators categoryAverages={deptCategoryAverages} />
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
         {/* Assessment Comparison */}
         {assessment?.companies?.id && (
           <div className="mb-8">
