@@ -145,7 +145,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setBrandName(sstManager.name);
             setSstSlug(sstManager.slug);
             setSstManagerId(sstManager.id);
-            const color = (sstManager as any).brand_color as BrandColorTheme | null;
+            const color = sstManager.brand_color as BrandColorTheme | null;
             setBrandColor(color);
             applyColorTheme(color);
             setIsLoading(false);
