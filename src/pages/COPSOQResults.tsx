@@ -20,6 +20,7 @@ import {
   calculateCategoryAverage, calculateOverallAverage, getRiskLevel, normalizeScore,
   RISK_LEVEL_LABELS, RISK_LEVEL_COLORS, ALL_CATEGORIES, CATEGORY_GROUPS
 } from '@/data/copsoqQuestions';
+import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
 
 interface Assessment { id: string; title: string; description: string | null; createdAt: string; companies: { id: string; name: string; }; }
 interface Answer { questionNumber: number; value: number; }
@@ -223,6 +224,22 @@ export default function COPSOQResults() {
           </Card>
         ))}
 
+        {/* Assessment Comparison */}
+        {assessment?.companies?.id && (
+          <div className="mb-6">
+            <AssessmentComparison
+              currentAssessmentId={assessment.id}
+              companyId={assessment.companies.id}
+              currentCategoryAverages={Object.entries(categoryAverages).map(([cat, avg]) => ({
+                category: cat,
+                label: COPSOQ_CATEGORY_LABELS[cat as COPSOQCategory],
+                average: avg,
+              }))}
+              assessmentType="copsoq"
+              currentTitle={assessment.title}
+            />
+          </div>
+        )}
         {/* Top 10 Critical Questions */}
         <Card>
           <CardHeader><CardTitle>Questões Mais Críticas</CardTitle><CardDescription>Top 10 questões com menor pontuação</CardDescription></CardHeader>

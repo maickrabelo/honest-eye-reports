@@ -48,6 +48,7 @@ import { CategoryRiskIndicators } from '@/components/hseit/CategoryRiskIndicator
 import { HSEITReportEditor } from '@/components/hseit/HSEITReportEditor';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
 
 const hseitResultsSteps: TourStep[] = [
   {
@@ -607,6 +608,23 @@ export default function HSEITResults() {
         <div className="mb-8">
           <CategoryRiskIndicators categoryAverages={categoryAverages} />
         </div>
+
+        {/* Assessment Comparison */}
+        {assessment?.companies?.id && (
+          <div className="mb-8">
+            <AssessmentComparison
+              currentAssessmentId={assessment.id}
+              companyId={assessment.companies.id}
+              currentCategoryAverages={Object.entries(categoryAverages).map(([cat, avg]) => ({
+                category: cat,
+                label: HSEIT_CATEGORY_LABELS[cat as HSEITCategory],
+                average: avg,
+              }))}
+              assessmentType="hseit"
+              currentTitle={assessment.title}
+            />
+          </div>
+        )}
 
         {/* Question Table - Top 10 Critical */}
         <Card>

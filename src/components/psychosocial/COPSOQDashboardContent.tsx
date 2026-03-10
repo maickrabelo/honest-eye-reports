@@ -12,6 +12,7 @@ import { Loader2, Plus, Search, FileText, BarChart3, Building2, Users, Eye, Copy
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 
 interface COPSOQAssessment {
   id: string;
@@ -36,6 +37,7 @@ export default function COPSOQDashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>('all');
 
   useEffect(() => {
     if (!authLoading && user) fetchData();
@@ -104,7 +106,9 @@ export default function COPSOQDashboardContent() {
   const filteredAssessments = assessments.filter(a => {
     const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase()) || a.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCompany = selectedCompany === 'all' || a.company_id === selectedCompany;
-    return matchesSearch && matchesCompany;
+    const periodDate = getDateFromPeriod(selectedPeriod);
+    const matchesPeriod = !periodDate || new Date(a.created_at) >= periodDate;
+    return matchesSearch && matchesCompany && matchesPeriod;
   });
 
   const activeCount = assessments.filter(a => a.is_active).length;
@@ -140,6 +144,7 @@ export default function COPSOQDashboardContent() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por título ou empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
+            <PeriodFilter value={selectedPeriod} onChange={setSelectedPeriod} />
             {companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger className="w-[200px]"><SelectValue placeholder="Todas empresas" /></SelectTrigger>

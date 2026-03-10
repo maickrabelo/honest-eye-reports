@@ -12,6 +12,7 @@ import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, Eye,
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 
 interface HSEITAssessment {
   id: string;
@@ -43,6 +44,7 @@ export default function HSEITDashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>('all');
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -162,7 +164,9 @@ export default function HSEITDashboardContent() {
     const matchesSearch = assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       assessment.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCompany = selectedCompany === 'all' || assessment.company_id === selectedCompany;
-    return matchesSearch && matchesCompany;
+    const periodDate = getDateFromPeriod(selectedPeriod);
+    const matchesPeriod = !periodDate || new Date(assessment.created_at) >= periodDate;
+    return matchesSearch && matchesCompany && matchesPeriod;
   });
 
   const activeCount = assessments.filter(a => a.is_active).length;
@@ -261,6 +265,7 @@ export default function HSEITDashboardContent() {
                 className="pl-10"
               />
             </div>
+            <PeriodFilter value={selectedPeriod} onChange={setSelectedPeriod} />
             {companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger className="w-[200px]">
