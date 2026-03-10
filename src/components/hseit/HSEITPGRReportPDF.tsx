@@ -634,7 +634,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.setFont('helvetica', 'normal');
     setColor(0, 0, 0);
     let x = m + 8;
-    const dimName = cat.label.length > 20 ? cat.label.substring(0, 20) + '...' : cat.label;
+    const dimName = cat.label;
     pdf.text(dimName, x, y + 3); x += colW[0] - 6;
     pdf.text(cat.average.toFixed(2), x, y + 3); x += colW[1];
     pdf.text(getSeverity(cat.average), x, y + 3); x += colW[2];
