@@ -12,6 +12,7 @@ import { Loader2, Plus, Search, FileText, BarChart3, Building2, Users, Eye, Copy
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
 
 interface COPSOQAssessment {
   id: string;
