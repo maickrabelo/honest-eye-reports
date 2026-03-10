@@ -306,7 +306,7 @@ const SSTDashboard = () => {
               id="tool-climate"
               onClick={() => navigate('/climate-dashboard')}
               variant="outline"
-              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+              className="sst-border-primary-mid sst-text-primary font-semibold hover:sst-bg-primary-light shadow-sm"
             >
               <ClipboardList className="mr-2 h-4 w-4" />
               Pesquisas de Clima
