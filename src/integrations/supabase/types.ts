@@ -1279,6 +1279,7 @@ export type Database = {
       sst_managers: {
         Row: {
           address: string | null
+          brand_color: string | null
           cnpj: string | null
           contract_expires_at: string | null
           contract_signed_at: string | null
@@ -1297,6 +1298,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          brand_color?: string | null
           cnpj?: string | null
           contract_expires_at?: string | null
           contract_signed_at?: string | null
@@ -1315,6 +1317,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          brand_color?: string | null
           cnpj?: string | null
           contract_expires_at?: string | null
           contract_signed_at?: string | null

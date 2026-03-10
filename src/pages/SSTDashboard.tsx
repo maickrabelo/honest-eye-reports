@@ -223,7 +223,7 @@ const SSTDashboard = () => {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow bg-gray-50 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-green-800" />
+          <Loader2 className="h-8 w-8 animate-spin sst-text-primary" />
         </main>
         <Footer />
       </div>
@@ -264,7 +264,7 @@ const SSTDashboard = () => {
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-green-800">Gestão SST</h1>
+              <h1 className="text-3xl font-bold sst-text-primary">Gestão SST</h1>
               <p className="text-gray-600">Monitore todas as empresas sob sua gestão</p>
             </div>
             {selectedCompany && (
@@ -278,7 +278,7 @@ const SSTDashboard = () => {
           </div>
 
           {/* Suas Ferramentas */}
-          <div id="sst-tools-bar" className="bg-green-700 text-white rounded-lg px-5 py-3 mb-4">
+          <div id="sst-tools-bar" className="sst-bg-primary text-white rounded-lg px-5 py-3 mb-4">
             <h2 className="text-lg font-semibold tracking-wide">Suas Ferramentas</h2>
           </div>
           <div className="flex flex-wrap gap-3 mb-8">
@@ -286,7 +286,7 @@ const SSTDashboard = () => {
               id="tool-hseit"
               onClick={() => navigate('/psychosocial-dashboard')}
               variant="outline"
-              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+               className="sst-border-primary-mid sst-text-primary font-semibold hover:sst-bg-primary-light shadow-sm"
             >
               <Brain className="mr-2 h-4 w-4" />
               Avaliação de Riscos Psicossociais
@@ -296,7 +296,7 @@ const SSTDashboard = () => {
               id="tool-burnout"
               onClick={() => navigate('/burnout-dashboard')}
               variant="outline"
-              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+               className="sst-border-primary-mid sst-text-primary font-semibold hover:sst-bg-primary-light shadow-sm"
             >
               <Flame className="mr-2 h-4 w-4" />
               Avaliação Burnout
@@ -306,7 +306,7 @@ const SSTDashboard = () => {
               id="tool-climate"
               onClick={() => navigate('/climate-dashboard')}
               variant="outline"
-              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+              className="sst-border-primary-mid sst-text-primary font-semibold hover:sst-bg-primary-light shadow-sm"
             >
               <ClipboardList className="mr-2 h-4 w-4" />
               Pesquisas de Clima
@@ -316,7 +316,7 @@ const SSTDashboard = () => {
               id="tool-new-company"
               onClick={() => setIsAddCompanyOpen(true)}
               disabled={companies.length >= maxCompanies}
-              className="bg-green-700 hover:bg-green-800 text-white font-semibold shadow-sm"
+              className="sst-bg-primary hover:sst-bg-primary-dark text-white font-semibold shadow-sm"
             >
               <Building2 className="mr-2 h-4 w-4" />
               Nova Empresa
@@ -353,7 +353,7 @@ const SSTDashboard = () => {
           ) : (
             <>
               <div className="mb-4">
-                <h2 className="text-2xl font-bold text-green-800">Portal de Ouvidoria das Empresas</h2>
+                <h2 className="text-2xl font-bold sst-text-primary">Portal de Ouvidoria das Empresas</h2>
                 <p className="text-gray-500">Clique para visualizar as informações do canal de ouvidoria de cada empresa</p>
               </div>
               <div className="flex justify-end mb-4">

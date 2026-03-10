@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Footer from '@/components/Footer';
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
 interface SSTManagerInfo {
   name: string;
@@ -16,6 +17,8 @@ const SSTLandingPage = () => {
   const [sstManager, setSstManager] = useState<SSTManagerInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const { getColorPalette } = useWhiteLabel();
+  const palette = getColorPalette();
 
   useEffect(() => {
     const fetchSST = async () => {
@@ -52,7 +55,7 @@ const SSTLandingPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-audit-primary" />
+        <Loader2 className="h-8 w-8 animate-spin sst-text-primary" />
       </div>
     );
   }
@@ -85,13 +88,16 @@ const SSTLandingPage = () => {
                   className="h-10 object-contain"
                 />
               ) : (
-                <span className="text-xl font-bold text-audit-primary">
+                <span className="text-xl font-bold sst-text-primary">
                   {sstManager?.name}
                 </span>
               )}
             </div>
             <Link to="/auth">
-              <Button className="bg-audit-primary hover:bg-audit-primary/90">
+              <Button
+                className="text-white"
+                style={{ backgroundColor: palette.gradientVia }}
+              >
                 Área do Cliente
               </Button>
             </Link>
@@ -100,10 +106,15 @@ const SSTLandingPage = () => {
       </nav>
 
       {/* Hero */}
-      <section className="relative min-h-[80vh] flex items-center overflow-hidden bg-gradient-to-br from-audit-dark via-audit-primary to-audit-accent">
+      <section
+        className="relative min-h-[80vh] flex items-center overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${palette.gradientFrom}, ${palette.gradientVia}, ${palette.gradientTo})`,
+        }}
+      >
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-audit-secondary rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-audit-accent rounded-full blur-3xl" />
+          <div className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl" style={{ backgroundColor: palette.gradientTo }} />
+          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: palette.gradientVia }} />
         </div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
 
@@ -127,7 +138,7 @@ const SSTLandingPage = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
               Proteja sua empresa.
               <br />
-              <span className="text-audit-secondary">Cuide das pessoas.</span>
+              <span style={{ color: palette.gradientTo }} className="opacity-80">Cuide das pessoas.</span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -138,7 +149,8 @@ const SSTLandingPage = () => {
               <Link to="/auth">
                 <Button
                   size="lg"
-                  className="bg-white text-audit-primary hover:bg-white/90 font-semibold px-8 py-6 text-lg group"
+                  className="font-semibold px-8 py-6 text-lg group"
+                  style={{ backgroundColor: 'white', color: palette.gradientVia }}
                 >
                   Acessar Área do Cliente
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -166,7 +178,7 @@ const SSTLandingPage = () => {
       {/* Features */}
       <section className="py-20 bg-white">
         <div className="audit-container">
-          <h2 className="text-3xl font-bold text-center mb-12 text-audit-primary">Soluções Integradas</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 sst-text-primary">Soluções Integradas</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
@@ -183,7 +195,7 @@ const SSTLandingPage = () => {
               },
             ].map((feature, idx) => (
               <div key={idx} className="p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-semibold mb-3 text-audit-primary">{feature.title}</h3>
+                <h3 className="text-xl font-semibold mb-3 sst-text-primary">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
             ))}
