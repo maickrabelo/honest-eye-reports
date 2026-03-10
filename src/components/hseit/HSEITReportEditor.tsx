@@ -322,6 +322,53 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
               </div>
             </TabsContent>
 
+            <TabsContent value="company" className="mt-0 h-full">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Dados da Empresa (PGR)</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">CNPJ</label>
+                        <Input value={companyCnpj} onChange={(e) => setCompanyCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">CNAE</label>
+                        <Input value={companyCnae} onChange={(e) => setCompanyCnae(e.target.value)} placeholder="Ex: 8630-5/03" />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <label className="text-sm font-medium">Endereço Completo</label>
+                        <Input value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} placeholder="Rua, número, bairro, cidade - UF" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Grau de Risco (NR-4)</label>
+                        <Input value={companyRiskGrade} onChange={(e) => setCompanyRiskGrade(e.target.value)} placeholder="Ex: 2" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Responsável Técnico SST</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">CPF do Responsável</label>
+                        <Input value={sstCpf} onChange={(e) => setSstCpf(e.target.value)} placeholder="000.000.000-00" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Registro MTE / CREA / CRP</label>
+                        <Input value={sstRegistration} onChange={(e) => setSstRegistration(e.target.value)} placeholder="Nº do registro profissional" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
             <TabsContent value="action-plan" className="mt-0 h-full">
               <HSEITActionPlanEditor 
                 actionItems={actionItems}
