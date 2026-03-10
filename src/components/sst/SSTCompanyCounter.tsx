@@ -32,8 +32,7 @@ const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, max
       </div>
       <Progress
         value={percentage}
-        className={`h-2 ${isAtLimit ? '[&>div]:bg-red-500' : isNearLimit ? '[&>div]:bg-yellow-500' : ''}`}
-        style={!isAtLimit && !isNearLimit ? { ['--progress-color' as any]: 'hsl(var(--sst-primary))' } : undefined}
+        className={`h-2 ${isAtLimit ? '[&>div]:bg-red-500' : isNearLimit ? '[&>div]:bg-yellow-500' : '[&>div]:sst-bg-primary'}`}
       />
     </div>
   );
