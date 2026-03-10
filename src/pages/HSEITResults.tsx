@@ -610,6 +610,23 @@ export default function HSEITResults() {
           <CategoryRiskIndicators categoryAverages={categoryAverages} />
         </div>
 
+        {/* Assessment Comparison */}
+        {assessment?.companies?.id && (
+          <div className="mb-8">
+            <AssessmentComparison
+              currentAssessmentId={assessment.id}
+              companyId={assessment.companies.id}
+              currentCategoryAverages={Object.entries(categoryAverages).map(([cat, avg]) => ({
+                category: cat,
+                label: HSEIT_CATEGORY_LABELS[cat as HSEITCategory],
+                average: avg,
+              }))}
+              assessmentType="hseit"
+              currentTitle={assessment.title}
+            />
+          </div>
+        )}
+
         {/* Question Table - Top 10 Critical */}
         <Card>
           <CardHeader>

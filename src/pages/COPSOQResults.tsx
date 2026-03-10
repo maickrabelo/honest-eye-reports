@@ -224,6 +224,22 @@ export default function COPSOQResults() {
           </Card>
         ))}
 
+        {/* Assessment Comparison */}
+        {assessment?.companies?.id && (
+          <div className="mb-6">
+            <AssessmentComparison
+              currentAssessmentId={assessment.id}
+              companyId={assessment.companies.id}
+              currentCategoryAverages={Object.entries(categoryAverages).map(([cat, avg]) => ({
+                category: cat,
+                label: COPSOQ_CATEGORY_LABELS[cat as COPSOQCategory],
+                average: avg,
+              }))}
+              assessmentType="copsoq"
+              currentTitle={assessment.title}
+            />
+          </div>
+        )}
         {/* Top 10 Critical Questions */}
         <Card>
           <CardHeader><CardTitle>Questões Mais Críticas</CardTitle><CardDescription>Top 10 questões com menor pontuação</CardDescription></CardHeader>
