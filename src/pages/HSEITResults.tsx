@@ -49,7 +49,6 @@ import { HSEITReportEditor } from '@/components/hseit/HSEITReportEditor';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
-import { useOnboarding } from '@/hooks/useOnboarding';
 
 const hseitResultsSteps: TourStep[] = [
   {
