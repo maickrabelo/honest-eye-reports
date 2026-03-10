@@ -247,7 +247,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Preparar Relatório HSE-IT
+            Preparar Relatório PGR — Riscos Psicossociais
           </DialogTitle>
         </DialogHeader>
 
