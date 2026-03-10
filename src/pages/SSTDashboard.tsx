@@ -286,7 +286,7 @@ const SSTDashboard = () => {
               id="tool-hseit"
               onClick={() => navigate('/psychosocial-dashboard')}
               variant="outline"
-              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+               className="sst-border-primary-mid sst-text-primary font-semibold hover:sst-bg-primary-light shadow-sm"
             >
               <Brain className="mr-2 h-4 w-4" />
               Avaliação de Riscos Psicossociais
