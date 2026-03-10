@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import Footer from '@/components/Footer';
+
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
 interface SSTManagerInfo {
