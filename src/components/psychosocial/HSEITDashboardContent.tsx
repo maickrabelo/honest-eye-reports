@@ -44,6 +44,7 @@ export default function HSEITDashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>('all');
 
   useEffect(() => {
     if (!authLoading && user) {
