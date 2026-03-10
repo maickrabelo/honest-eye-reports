@@ -296,7 +296,7 @@ const SSTDashboard = () => {
               id="tool-burnout"
               onClick={() => navigate('/burnout-dashboard')}
               variant="outline"
-              className="border-green-600 text-green-800 font-semibold hover:bg-green-50 shadow-sm"
+               className="sst-border-primary-mid sst-text-primary font-semibold hover:sst-bg-primary-light shadow-sm"
             >
               <Flame className="mr-2 h-4 w-4" />
               Avaliação Burnout
