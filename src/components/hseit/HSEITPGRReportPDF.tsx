@@ -681,7 +681,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       pdf.setFont('helvetica', 'bold');
       setColor(255, 255, 255);
       const deptCols = ['Agente de Risco', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Nível', 'Medida'];
-      const deptColW = [40, 30, 15, 18, 18, 22, pw - 2 * m - 143];
+      const deptColW = [48, 25, 15, 18, 18, 22, pw - 2 * m - 146];
       let dx = m + 2;
       deptCols.forEach((h, i) => { pdf.text(h, dx, y + 7); dx += deptColW[i]; });
       y += 12;
