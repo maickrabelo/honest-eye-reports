@@ -1,0 +1,1 @@
+ALTER TABLE public.sst_managers ADD COLUMN brand_color text DEFAULT null;
