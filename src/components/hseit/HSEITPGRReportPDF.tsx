@@ -604,7 +604,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawSubSection('5.1 Visão Geral — Resultado por Dimensão');
   
   // Table header
-  const colW = [45, 20, 25, 25, 25, pw - 2 * m - 140];
+  const colW = [50, 18, 23, 25, 25, pw - 2 * m - 141];
   const headers = ['Dimensão', 'Média', 'Severidade', 'Probabilidade', 'Classificação', 'Medida Proposta'];
   
   pdf.setFillColor(0, 51, 102);
@@ -634,7 +634,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.setFont('helvetica', 'normal');
     setColor(0, 0, 0);
     let x = m + 8;
-    const dimName = cat.label.length > 20 ? cat.label.substring(0, 20) + '...' : cat.label;
+    const dimName = cat.label;
     pdf.text(dimName, x, y + 3); x += colW[0] - 6;
     pdf.text(cat.average.toFixed(2), x, y + 3); x += colW[1];
     pdf.text(getSeverity(cat.average), x, y + 3); x += colW[2];
@@ -681,7 +681,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       pdf.setFont('helvetica', 'bold');
       setColor(255, 255, 255);
       const deptCols = ['Agente de Risco', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Nível', 'Medida'];
-      const deptColW = [40, 30, 15, 18, 18, 22, pw - 2 * m - 143];
+      const deptColW = [48, 25, 15, 18, 18, 22, pw - 2 * m - 146];
       let dx = m + 2;
       deptCols.forEach((h, i) => { pdf.text(h, dx, y + 7); dx += deptColW[i]; });
       y += 12;
@@ -702,7 +702,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         
         let x2 = m + 2;
         const agentInfo = RISK_AGENTS[cat];
-        const agentName = agentInfo.agent.length > 18 ? agentInfo.agent.substring(0, 18) + '..' : agentInfo.agent;
+        const agentName = agentInfo.agent;
         pdf.text(agentName, x2, y + 3); x2 += deptColW[0];
         pdf.text('Habitual', x2, y + 3); x2 += deptColW[1];
         pdf.text(catAvg.toFixed(2), x2, y + 3); x2 += deptColW[2];

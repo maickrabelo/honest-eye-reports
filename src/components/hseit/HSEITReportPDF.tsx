@@ -384,7 +384,7 @@ export function HSEITReportPDF({
         
         pdf.text(q.number.toString(), margin + 2, yPos + 2);
         
-        const questionText = q.text.length > 55 ? q.text.substring(0, 55) + '...' : q.text;
+        const questionText = q.text.length > 65 ? q.text.substring(0, 65) + '...' : q.text;
         pdf.text(questionText, margin + 12, yPos + 2);
         
         const catShort = q.category.substring(0, 12);
