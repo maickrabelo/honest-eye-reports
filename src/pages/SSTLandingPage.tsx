@@ -138,7 +138,7 @@ const SSTLandingPage = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
               Proteja sua empresa.
               <br />
-              <span style={{ color: palette.gradientTo }} className="opacity-80">Cuide das pessoas.</span>
+              <span className="text-white/90">Cuide das pessoas.</span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s' }}>
