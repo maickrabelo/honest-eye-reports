@@ -353,7 +353,7 @@ const SSTDashboard = () => {
           ) : (
             <>
               <div className="mb-4">
-                <h2 className="text-2xl font-bold text-green-800">Portal de Ouvidoria das Empresas</h2>
+                <h2 className="text-2xl font-bold sst-text-primary">Portal de Ouvidoria das Empresas</h2>
                 <p className="text-gray-500">Clique para visualizar as informações do canal de ouvidoria de cada empresa</p>
               </div>
               <div className="flex justify-end mb-4">
