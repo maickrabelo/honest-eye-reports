@@ -111,6 +111,12 @@ export function HSEITReportEditor({
   const [executiveSummary, setExecutiveSummary] = useState("");
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [companyCnpj, setCompanyCnpj] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyCnae, setCompanyCnae] = useState("");
+  const [companyRiskGrade, setCompanyRiskGrade] = useState("");
+  const [sstCpf, setSstCpf] = useState("");
+  const [sstRegistration, setSstRegistration] = useState("");
 
   // Initialize default values based on assessment data
   useEffect(() => {
