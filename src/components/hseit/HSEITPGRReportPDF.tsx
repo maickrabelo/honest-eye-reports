@@ -720,6 +720,33 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         
         y += 10;
       });
+
+      // Department charts page
+      pdf.addPage(); y = m;
+      
+      pdf.setFillColor(0, 76, 153);
+      pdf.rect(m, y, pw - 2 * m, 10, 'F');
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      setColor(255, 255, 255);
+      pdf.text(`Gráficos — ${dept}`, m + 4, y + 7);
+      y += 16;
+
+      // Build department category averages array
+      const deptCatAvgs: { category: HSEITCategory; average: number; label: string }[] = CATEGORIES.map(cat => ({
+        category: cat,
+        average: calculateCategoryAverage(deptAnswers, cat),
+        label: HSEIT_CATEGORY_LABELS[cat]
+      }));
+
+      // Radar (left) + Semaphore (right)
+      drawRadarChart(pdf, deptCatAvgs, pw / 4 + 5, y + 45, 32, 'Perfil por Categoria');
+      drawSemaphore(pdf, deptCatAvgs, pw / 2 + 15, y, 'Semáforo de Saúde');
+      y += 95;
+
+      // Bar chart
+      const deptBarEnd = drawHorizontalBarChart(pdf, deptCatAvgs, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
+      y = deptBarEnd + 5;
     }
   }
 
