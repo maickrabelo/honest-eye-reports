@@ -278,7 +278,7 @@ const SSTDashboard = () => {
           </div>
 
           {/* Suas Ferramentas */}
-          <div id="sst-tools-bar" className="bg-green-700 text-white rounded-lg px-5 py-3 mb-4">
+          <div id="sst-tools-bar" className="sst-bg-primary text-white rounded-lg px-5 py-3 mb-4">
             <h2 className="text-lg font-semibold tracking-wide">Suas Ferramentas</h2>
           </div>
           <div className="flex flex-wrap gap-3 mb-8">
