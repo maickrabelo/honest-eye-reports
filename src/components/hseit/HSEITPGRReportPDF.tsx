@@ -573,6 +573,25 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawText(`Data da avaliação: ${new Date(data.assessment.createdAt).toLocaleDateString('pt-BR')}`);
 
   // ═══════════════════════════════
+  // CHARTS PAGE: VISÃO GERAL GRÁFICA
+  // ═══════════════════════════════
+  pdf.addPage(); y = m;
+  drawSection('Análise Gráfica — Visão Geral', '4A');
+  y += 5;
+
+  // Radar chart (left side)
+  drawRadarChart(pdf, data.categoryAverages, pw / 4 + 5, y + 45, 35, 'Perfil por Categoria');
+
+  // Semaphore (right side)
+  drawSemaphore(pdf, data.categoryAverages, pw / 2 + 15, y, 'Semáforo de Saúde');
+
+  y += 95;
+
+  // Horizontal bar chart
+  const barEndY = drawHorizontalBarChart(pdf, data.categoryAverages, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
+  y = barEndY + 10;
+
+  // ═══════════════════════════════
   // SECTION 5: INVENTÁRIO POR GHE/SETOR
   // ═══════════════════════════════
   pdf.addPage(); y = m;
