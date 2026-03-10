@@ -463,7 +463,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
                   ) : (
                     <>
                       <Download className="h-4 w-4 mr-2" />
-                      Gerar Relatório PDF Final
+                      Gerar Relatório PGR (PDF)
                     </>
                   )}
                 </Button>
