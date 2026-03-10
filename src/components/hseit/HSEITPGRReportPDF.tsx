@@ -702,7 +702,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         
         let x2 = m + 2;
         const agentInfo = RISK_AGENTS[cat];
-        const agentName = agentInfo.agent.length > 18 ? agentInfo.agent.substring(0, 18) + '..' : agentInfo.agent;
+        const agentName = agentInfo.agent;
         pdf.text(agentName, x2, y + 3); x2 += deptColW[0];
         pdf.text('Habitual', x2, y + 3); x2 += deptColW[1];
         pdf.text(catAvg.toFixed(2), x2, y + 3); x2 += deptColW[2];
