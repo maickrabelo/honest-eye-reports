@@ -264,7 +264,7 @@ const SSTDashboard = () => {
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-green-800">Gestão SST</h1>
+              <h1 className="text-3xl font-bold sst-text-primary">Gestão SST</h1>
               <p className="text-gray-600">Monitore todas as empresas sob sua gestão</p>
             </div>
             {selectedCompany && (
