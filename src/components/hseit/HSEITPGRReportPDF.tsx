@@ -604,7 +604,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawSubSection('5.1 Visão Geral — Resultado por Dimensão');
   
   // Table header
-  const colW = [45, 20, 25, 25, 25, pw - 2 * m - 140];
+  const colW = [50, 18, 23, 25, 25, pw - 2 * m - 141];
   const headers = ['Dimensão', 'Média', 'Severidade', 'Probabilidade', 'Classificação', 'Medida Proposta'];
   
   pdf.setFillColor(0, 51, 102);
