@@ -65,6 +65,205 @@ const RISK_AGENTS: Record<HSEITCategory, { agent: string; risks: string[] }> = {
 
 const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
+// ═══ Chart Drawing Helpers ═══
+
+function drawRadarChart(
+  pdf: jsPDF,
+  categoryAverages: { category: HSEITCategory; average: number; label: string }[],
+  centerX: number,
+  centerY: number,
+  radius: number,
+  title: string
+) {
+  const n = categoryAverages.length;
+  const angleStep = (2 * Math.PI) / n;
+  const levels = 5;
+
+  // Title
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 51, 102);
+  pdf.text(title, centerX, centerY - radius - 8, { align: 'center' });
+
+  // Grid circles and labels
+  pdf.setDrawColor(200, 200, 200);
+  for (let lvl = 1; lvl <= levels; lvl++) {
+    const r = (radius * lvl) / levels;
+    // Draw polygon for grid
+    for (let i = 0; i < n; i++) {
+      const angle1 = -Math.PI / 2 + i * angleStep;
+      const angle2 = -Math.PI / 2 + ((i + 1) % n) * angleStep;
+      const x1 = centerX + r * Math.cos(angle1);
+      const y1 = centerY + r * Math.sin(angle1);
+      const x2 = centerX + r * Math.cos(angle2);
+      const y2 = centerY + r * Math.sin(angle2);
+      pdf.setDrawColor(220, 220, 220);
+      pdf.line(x1, y1, x2, y2);
+    }
+  }
+
+  // Axis lines and labels
+  for (let i = 0; i < n; i++) {
+    const angle = -Math.PI / 2 + i * angleStep;
+    const xEnd = centerX + radius * Math.cos(angle);
+    const yEnd = centerY + radius * Math.sin(angle);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(centerX, centerY, xEnd, yEnd);
+
+    // Label
+    const labelR = radius + 6;
+    const lx = centerX + labelR * Math.cos(angle);
+    const ly = centerY + labelR * Math.sin(angle);
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    const label = categoryAverages[i].label.length > 12 
+      ? categoryAverages[i].label.substring(0, 12) + '.'
+      : categoryAverages[i].label;
+    pdf.text(label, lx, ly + 1, { align: 'center' });
+  }
+
+  // Data polygon (filled)
+  const points: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const angle = -Math.PI / 2 + i * angleStep;
+    const val = Math.min(categoryAverages[i].average, 5);
+    const r = (radius * val) / 5;
+    points.push([centerX + r * Math.cos(angle), centerY + r * Math.sin(angle)]);
+  }
+
+  // Fill polygon with semi-transparent color
+  pdf.setFillColor(0, 102, 204);
+  pdf.setDrawColor(0, 76, 153);
+  // Draw filled polygon
+  if (points.length > 0) {
+    const path = points.map((p, i) => 
+      i === 0 ? `${p[0]} ${p[1]} m` : `${p[0]} ${p[1]} l`
+    ).join(' ') + ' h';
+    // Use low-level PDF path drawing
+    (pdf as any).internal.write('q');
+    (pdf as any).internal.write('0.2 0.4 0.8 rg'); // Fill color with opacity simulation
+    (pdf as any).internal.write('0.0 0.3 0.6 RG'); // Stroke color
+    (pdf as any).internal.write('1 w'); // Line width
+    
+    // Build path manually
+    const scale = 72 / 25.4; // mm to points
+    let pathStr = '';
+    points.forEach((p, i) => {
+      const px = p[0] * scale;
+      const py = (pdf.internal.pageSize.getHeight() - p[1]) * scale;
+      pathStr += i === 0 ? `${px.toFixed(2)} ${py.toFixed(2)} m ` : `${px.toFixed(2)} ${py.toFixed(2)} l `;
+    });
+    pathStr += 'h B';
+    (pdf as any).internal.write(pathStr);
+    (pdf as any).internal.write('Q');
+  }
+
+  // Data points
+  for (const p of points) {
+    pdf.setFillColor(0, 76, 153);
+    pdf.circle(p[0], p[1], 1, 'F');
+  }
+}
+
+function drawHorizontalBarChart(
+  pdf: jsPDF,
+  categoryAverages: { category: HSEITCategory; average: number; label: string }[],
+  startX: number,
+  startY: number,
+  width: number,
+  barHeight: number,
+  title: string
+) {
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 51, 102);
+  pdf.text(title, startX, startY);
+  let y = startY + 6;
+
+  const labelWidth = 35;
+  const barWidth = width - labelWidth - 25;
+  const maxVal = 5;
+
+  categoryAverages.forEach(cat => {
+    const impact = getHealthImpact(cat.average);
+    const [r, g, b] = impact === 'risk' ? [220, 53, 69] : impact === 'intermediate' ? [255, 152, 0] : [40, 167, 69];
+
+    // Label
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    const label = cat.label.length > 16 ? cat.label.substring(0, 16) + '.' : cat.label;
+    pdf.text(label, startX, y + barHeight / 2 + 1);
+
+    // Background bar
+    pdf.setFillColor(235, 235, 235);
+    pdf.rect(startX + labelWidth, y, barWidth, barHeight, 'F');
+
+    // Value bar
+    const valWidth = (cat.average / maxVal) * barWidth;
+    pdf.setFillColor(r, g, b);
+    pdf.roundedRect(startX + labelWidth, y, valWidth, barHeight, 1, 1, 'F');
+
+    // Value text
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(r, g, b);
+    pdf.text(cat.average.toFixed(2), startX + labelWidth + barWidth + 2, y + barHeight / 2 + 1);
+
+    y += barHeight + 2;
+  });
+
+  return y;
+}
+
+function drawSemaphore(
+  pdf: jsPDF,
+  categoryAverages: { category: HSEITCategory; average: number; label: string }[],
+  startX: number,
+  startY: number,
+  title: string
+) {
+  const counts = { favorable: 0, intermediate: 0, risk: 0 };
+  categoryAverages.forEach(cat => {
+    counts[getHealthImpact(cat.average)]++;
+  });
+
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 51, 102);
+  pdf.text(title, startX, startY);
+
+  let y = startY + 8;
+  const items: [string, number, [number, number, number]][] = [
+    ['Favorável', counts.favorable, [40, 167, 69]],
+    ['Intermediário', counts.intermediate, [255, 152, 0]],
+    ['Risco', counts.risk, [220, 53, 69]],
+  ];
+
+  items.forEach(([label, count, [r, g, b]]) => {
+    // Traffic light circle
+    pdf.setFillColor(r, g, b);
+    pdf.circle(startX + 5, y, 4, 'F');
+
+    // Count inside circle
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(count.toString(), startX + 5, y + 2.5, { align: 'center' });
+
+    // Label
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    pdf.text(`${label} (${count})`, startX + 12, y + 2);
+
+    y += 12;
+  });
+
+  return y;
+}
+
 export async function generatePGRReport(data: PGRReportData): Promise<void> {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pw = pdf.internal.pageSize.getWidth();
@@ -374,6 +573,25 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawText(`Data da avaliação: ${new Date(data.assessment.createdAt).toLocaleDateString('pt-BR')}`);
 
   // ═══════════════════════════════
+  // CHARTS PAGE: VISÃO GERAL GRÁFICA
+  // ═══════════════════════════════
+  pdf.addPage(); y = m;
+  drawSection('Análise Gráfica — Visão Geral', '4A');
+  y += 5;
+
+  // Radar chart (left side)
+  drawRadarChart(pdf, data.categoryAverages, pw / 4 + 5, y + 45, 35, 'Perfil por Categoria');
+
+  // Semaphore (right side)
+  drawSemaphore(pdf, data.categoryAverages, pw / 2 + 15, y, 'Semáforo de Saúde');
+
+  y += 95;
+
+  // Horizontal bar chart
+  const barEndY = drawHorizontalBarChart(pdf, data.categoryAverages, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
+  y = barEndY + 10;
+
+  // ═══════════════════════════════
   // SECTION 5: INVENTÁRIO POR GHE/SETOR
   // ═══════════════════════════════
   pdf.addPage(); y = m;
@@ -502,6 +720,33 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         
         y += 10;
       });
+
+      // Department charts page
+      pdf.addPage(); y = m;
+      
+      pdf.setFillColor(0, 76, 153);
+      pdf.rect(m, y, pw - 2 * m, 10, 'F');
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      setColor(255, 255, 255);
+      pdf.text(`Gráficos — ${dept}`, m + 4, y + 7);
+      y += 16;
+
+      // Build department category averages array
+      const deptCatAvgs: { category: HSEITCategory; average: number; label: string }[] = CATEGORIES.map(cat => ({
+        category: cat,
+        average: calculateCategoryAverage(deptAnswers, cat),
+        label: HSEIT_CATEGORY_LABELS[cat]
+      }));
+
+      // Radar (left) + Semaphore (right)
+      drawRadarChart(pdf, deptCatAvgs, pw / 4 + 5, y + 45, 32, 'Perfil por Categoria');
+      drawSemaphore(pdf, deptCatAvgs, pw / 2 + 15, y, 'Semáforo de Saúde');
+      y += 95;
+
+      // Bar chart
+      const deptBarEnd = drawHorizontalBarChart(pdf, deptCatAvgs, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
+      y = deptBarEnd + 5;
     }
   }
 
