@@ -164,7 +164,9 @@ export default function HSEITDashboardContent() {
     const matchesSearch = assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       assessment.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCompany = selectedCompany === 'all' || assessment.company_id === selectedCompany;
-    return matchesSearch && matchesCompany;
+    const periodDate = getDateFromPeriod(selectedPeriod);
+    const matchesPeriod = !periodDate || new Date(assessment.created_at) >= periodDate;
+    return matchesSearch && matchesCompany && matchesPeriod;
   });
 
   const activeCount = assessments.filter(a => a.is_active).length;
