@@ -264,6 +264,38 @@ function drawSemaphore(
   return y;
 }
 
+export async function generatePGRReport(data: PGRReportData): Promise<void> {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pw = pdf.internal.pageSize.getWidth();
+  const ph = pdf.internal.pageSize.getHeight();
+  const m = 20;
+  let y = m;
+
+  // ═══ Helpers ═══
+  const checkPage = (need: number) => {
+    if (y + need > ph - 25) { pdf.addPage(); y = m; return true; }
+    return false;
+  };
+  const setColor = (r: number, g: number, b: number) => { pdf.setTextColor(r, g, b); };
+  const getRiskColor = (avg: number): [number, number, number] => {
+    const impact = getHealthImpact(avg);
+    return impact === 'risk' ? [220, 53, 69] : impact === 'intermediate' ? [255, 152, 0] : [40, 167, 69];
+  };
+  const getSeverity = (avg: number): string => {
+    if (avg >= 3.67) return 'Baixa';
+    if (avg >= 2.33) return 'Moderada';
+    return 'Alta';
+  };
+  const getProbability = (avg: number): string => {
+    if (avg >= 3.67) return 'Improvável';
+    if (avg >= 2.33) return 'Possível';
+    return 'Provável';
+  };
+  const getRiskClassification = (avg: number): string => {
+    const impact = getHealthImpact(avg);
+    return impact === 'risk' ? 'Intolerável' : impact === 'intermediate' ? 'Moderado' : 'Tolerável';
+  };
+
   const drawSection = (title: string, number: string) => {
     checkPage(20);
     pdf.setFillColor(0, 51, 102);
