@@ -120,24 +120,42 @@ export default function COPSOQDashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Avaliações COPSOQ II</h2>
           <p className="text-muted-foreground text-sm">Copenhagen Psychosocial Questionnaire — Versão Curta</p>
         </div>
         <Button onClick={() => navigate('/copsoq/new')} className="gap-2">
-          <Plus className="h-4 w-4" />Nova Avaliação
+          <Plus className="h-4 w-4" /> Nova Avaliação
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-4"><div className="p-3 bg-primary/10 rounded-lg"><FileText className="h-6 w-6 text-primary" /></div><div><p className="text-sm text-muted-foreground">Total Avaliações</p><p className="text-2xl font-bold">{assessments.length}</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-4"><div className="p-3 bg-green-500/10 rounded-lg"><BarChart3 className="h-6 w-6 text-green-600" /></div><div><p className="text-sm text-muted-foreground">Ativas</p><p className="text-2xl font-bold">{activeCount}</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-4"><div className="p-3 bg-blue-500/10 rounded-lg"><Building2 className="h-6 w-6 text-blue-600" /></div><div><p className="text-sm text-muted-foreground">Empresas</p><p className="text-2xl font-bold">{companies.length}</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-4"><div className="p-3 bg-purple-500/10 rounded-lg"><Users className="h-6 w-6 text-purple-600" /></div><div><p className="text-sm text-muted-foreground">Respostas</p><p className="text-2xl font-bold">{totalResponses}</p></div></div></CardContent></Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        {[
+          { value: assessments.length, label: 'Total Avaliações', icon: FileText, gradient: 'from-primary/10 to-secondary/10', iconColor: 'text-primary' },
+          { value: activeCount, label: 'Ativas', icon: BarChart3, gradient: 'from-emerald-500/10 to-green-500/10', iconColor: 'text-emerald-600' },
+          { value: companies.length, label: 'Empresas', icon: Building2, gradient: 'from-blue-500/10 to-cyan-500/10', iconColor: 'text-blue-600' },
+          { value: totalResponses, label: 'Respostas', icon: Users, gradient: 'from-purple-500/10 to-violet-500/10', iconColor: 'text-purple-600' },
+        ].map((stat, idx) => (
+          <Card key={idx} className="border border-border hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+                  <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <Card>
+      {/* Filters */}
+      <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -158,15 +176,18 @@ export default function COPSOQDashboardContent() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Table */}
+      <Card className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
         <CardHeader><CardTitle>Avaliações COPSOQ II</CardTitle></CardHeader>
         <CardContent>
           {filteredAssessments.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground">Nenhuma avaliação encontrada</h3>
-              <p className="text-sm text-muted-foreground mt-1">Crie uma nova avaliação COPSOQ II para começar.</p>
-              <Button onClick={() => navigate('/copsoq/new')} className="mt-4 gap-2"><Plus className="h-4 w-4" />Nova Avaliação</Button>
+            <div className="text-center py-16">
+              <div className="inline-flex p-5 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl mb-4">
+                <FileText className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Nenhuma avaliação encontrada</h3>
+              <p className="text-muted-foreground mb-4">Crie uma nova avaliação COPSOQ II para começar.</p>
+              <Button onClick={() => navigate('/copsoq/new')} className="gap-2"><Plus className="h-4 w-4" /> Nova Avaliação</Button>
             </div>
           ) : (
             <Table>
@@ -184,7 +205,7 @@ export default function COPSOQDashboardContent() {
                 {filteredAssessments.map(a => {
                   const formUrl = `${window.location.origin}/copsoq/${a.companies?.slug}/${a.id}`;
                   return (
-                    <TableRow key={a.id}>
+                    <TableRow key={a.id} className="group">
                       <TableCell className="font-medium">{a.title}</TableCell>
                       <TableCell><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" />{a.companies?.name}</div></TableCell>
                       <TableCell>
@@ -195,7 +216,7 @@ export default function COPSOQDashboardContent() {
                       <TableCell><Badge variant="secondary">{a.response_count || 0} respostas</Badge></TableCell>
                       <TableCell><Badge variant={a.is_active ? 'default' : 'outline'}>{a.is_active ? 'Ativa' : 'Inativa'}</Badge></TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => copyToClipboard(formUrl)} title="Copiar link"><Copy className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => window.open(formUrl, '_blank')} title="Abrir formulário"><ExternalLink className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => navigate(`/copsoq/results/${a.id}`)} title="Ver resultados"><BarChart3 className="h-4 w-4" /></Button>

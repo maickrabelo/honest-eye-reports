@@ -13,26 +13,33 @@ const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, max
   const isAtLimit = currentCount >= maxCompanies;
 
   return (
-    <div className="bg-white border rounded-lg p-4 mb-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Building2 className="h-5 w-5 sst-text-primary" />
-        <span className="font-semibold text-lg">
-          {currentCount} / {maxCompanies} empresas cadastradas
-        </span>
+    <div className="bg-card border border-border rounded-xl p-5 mb-6 animate-fade-in">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${isAtLimit ? 'bg-destructive/10' : isNearLimit ? 'bg-yellow-500/10' : 'bg-primary/10'}`}>
+            <Building2 className={`h-5 w-5 ${isAtLimit ? 'text-destructive' : isNearLimit ? 'text-yellow-600' : 'text-primary'}`} />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">
+              {currentCount} / {maxCompanies} empresas
+            </p>
+            <p className="text-xs text-muted-foreground">Empresas cadastradas no seu plano</p>
+          </div>
+        </div>
         {isAtLimit && (
-          <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-destructive/10 text-destructive px-3 py-1 rounded-full font-medium">
             Limite atingido
           </span>
         )}
         {isNearLimit && !isAtLimit && (
-          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-yellow-500/10 text-yellow-700 px-3 py-1 rounded-full font-medium">
             Próximo do limite
           </span>
         )}
       </div>
       <Progress
         value={percentage}
-        className={`h-2 ${isAtLimit ? '[&>div]:bg-red-500' : isNearLimit ? '[&>div]:bg-yellow-500' : '[&>div]:sst-bg-primary'}`}
+        className={`h-2.5 rounded-full ${isAtLimit ? '[&>div]:bg-destructive' : isNearLimit ? '[&>div]:bg-yellow-500' : '[&>div]:bg-primary'}`}
       />
     </div>
   );

@@ -23,22 +23,15 @@ interface HSEITAssessment {
   end_date: string | null;
   is_active: boolean;
   created_at: string;
-  companies: {
-    name: string;
-    slug: string;
-  };
+  companies: { name: string; slug: string };
   response_count?: number;
 }
 
-interface Company {
-  id: string;
-  name: string;
-}
+interface Company { id: string; name: string; }
 
 export default function HSEITDashboardContent() {
   const navigate = useNavigate();
   const { user, role, profile, isLoading: authLoading } = useRealAuth();
-
   const [assessments, setAssessments] = useState<HSEITAssessment[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,106 +40,59 @@ export default function HSEITDashboardContent() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>('all');
 
   useEffect(() => {
-    if (!authLoading && user) {
-      fetchData();
-    }
+    if (!authLoading && user) fetchData();
   }, [user, role, authLoading, profile]);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-
       let assignedCompanyIds: string[] = [];
       const currentRole = role as string;
 
       if (currentRole === 'admin') {
-        const { data: companiesData } = await supabase
-          .from('companies')
-          .select('id, name')
-          .order('name');
-        setCompanies(companiesData || []);
+        const { data } = await supabase.from('companies').select('id, name').order('name');
+        setCompanies(data || []);
       } else if ((currentRole === 'sst' || currentRole === 'sales') && profile?.id) {
-        // For sales users, use company_id directly
         if (currentRole === 'sales' && profile?.company_id) {
           assignedCompanyIds = [profile.company_id];
-          const { data: companiesData } = await supabase
-            .from('companies')
-            .select('id, name')
-            .eq('id', profile.company_id);
-          setCompanies(companiesData || []);
+          const { data } = await supabase.from('companies').select('id, name').eq('id', profile.company_id);
+          setCompanies(data || []);
         } else {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('sst_manager_id')
-            .eq('id', profile!.id)
-            .single();
-
+          const { data: profileData } = await supabase.from('profiles').select('sst_manager_id').eq('id', profile!.id).single();
           if (profileData?.sst_manager_id) {
-            const { data: assignments } = await supabase
-              .from('company_sst_assignments')
-              .select('company_id')
-              .eq('sst_manager_id', profileData.sst_manager_id);
-
+            const { data: assignments } = await supabase.from('company_sst_assignments').select('company_id').eq('sst_manager_id', profileData.sst_manager_id);
             assignedCompanyIds = assignments?.map(a => a.company_id) || [];
-
             if (assignedCompanyIds.length > 0) {
-              const { data: companiesData } = await supabase
-                .from('companies')
-                .select('id, name')
-                .in('id', assignedCompanyIds)
-                .order('name');
-              setCompanies(companiesData || []);
+              const { data } = await supabase.from('companies').select('id, name').in('id', assignedCompanyIds).order('name');
+              setCompanies(data || []);
             }
           }
         }
       }
 
       let assessmentsData: HSEITAssessment[] = [];
-
       if (currentRole === 'admin') {
-        const { data, error } = await supabase
-          .from('hseit_assessments')
-          .select('*, companies(name, slug)')
-          .order('created_at', { ascending: false });
+        const { data, error } = await supabase.from('hseit_assessments').select('*, companies(name, slug)').order('created_at', { ascending: false });
         if (error) throw error;
         assessmentsData = (data || []) as unknown as HSEITAssessment[];
       } else if (assignedCompanyIds.length > 0) {
-        const { data, error } = await supabase
-          .from('hseit_assessments')
-          .select('*, companies(name, slug)')
-          .in('company_id', assignedCompanyIds)
-          .order('created_at', { ascending: false });
+        const { data, error } = await supabase.from('hseit_assessments').select('*, companies(name, slug)').in('company_id', assignedCompanyIds).order('created_at', { ascending: false });
         if (error) throw error;
         assessmentsData = (data || []) as unknown as HSEITAssessment[];
       }
 
       const assessmentIds = assessmentsData.map(a => a.id);
       if (assessmentIds.length > 0) {
-        const { data: responseCounts } = await supabase
-          .from('hseit_responses')
-          .select('assessment_id')
-          .in('assessment_id', assessmentIds)
-          .not('completed_at', 'is', null);
-
+        const { data: responseCounts } = await supabase.from('hseit_responses').select('assessment_id').in('assessment_id', assessmentIds).not('completed_at', 'is', null);
         const counts: Record<string, number> = {};
-        responseCounts?.forEach(r => {
-          counts[r.assessment_id] = (counts[r.assessment_id] || 0) + 1;
-        });
-
-        assessmentsData = assessmentsData.map(a => ({
-          ...a,
-          response_count: counts[a.id] || 0
-        }));
+        responseCounts?.forEach(r => { counts[r.assessment_id] = (counts[r.assessment_id] || 0) + 1; });
+        assessmentsData = assessmentsData.map(a => ({ ...a, response_count: counts[a.id] || 0 }));
       }
 
       setAssessments(assessmentsData);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast({
-        title: 'Erro ao carregar dados',
-        description: 'Não foi possível carregar as avaliações HSE-IT.',
-        variant: 'destructive'
-      });
+      toast({ title: 'Erro ao carregar dados', description: 'Não foi possível carregar as avaliações HSE-IT.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -154,18 +100,14 @@ export default function HSEITDashboardContent() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: 'Link copiado!',
-      description: 'O link foi copiado para a área de transferência.'
-    });
+    toast({ title: 'Link copiado!', description: 'O link foi copiado para a área de transferência.' });
   };
 
-  const filteredAssessments = assessments.filter(assessment => {
-    const matchesSearch = assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assessment.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCompany = selectedCompany === 'all' || assessment.company_id === selectedCompany;
+  const filteredAssessments = assessments.filter(a => {
+    const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase()) || a.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCompany = selectedCompany === 'all' || a.company_id === selectedCompany;
     const periodDate = getDateFromPeriod(selectedPeriod);
-    const matchesPeriod = !periodDate || new Date(assessment.created_at) >= periodDate;
+    const matchesPeriod = !periodDate || new Date(a.created_at) >= periodDate;
     return matchesSearch && matchesCompany && matchesPeriod;
   });
 
@@ -173,111 +115,60 @@ export default function HSEITDashboardContent() {
   const totalResponses = assessments.reduce((sum, a) => sum + (a.response_count || 0), 0);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="flex items-center justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Avaliações HSE-IT</h2>
-          <p className="text-muted-foreground text-sm">
-            Health and Safety Executive Indicator Tool
-          </p>
+          <p className="text-muted-foreground text-sm">Health and Safety Executive Indicator Tool</p>
         </div>
         <Button id="hseit-new-btn" onClick={() => navigate('/hseit/new')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Avaliação
+          <Plus className="h-4 w-4" /> Nova Avaliação
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <ClipboardList className="h-6 w-6 text-primary" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        {[
+          { value: assessments.length, label: 'Total Avaliações', icon: ClipboardList, gradient: 'from-primary/10 to-secondary/10', iconColor: 'text-primary' },
+          { value: activeCount, label: 'Ativas', icon: BarChart3, gradient: 'from-emerald-500/10 to-green-500/10', iconColor: 'text-emerald-600' },
+          { value: companies.length, label: 'Empresas', icon: Building2, gradient: 'from-blue-500/10 to-cyan-500/10', iconColor: 'text-blue-600' },
+          { value: totalResponses, label: 'Respostas', icon: Users, gradient: 'from-purple-500/10 to-violet-500/10', iconColor: 'text-purple-600' },
+        ].map((stat, idx) => (
+          <Card key={idx} className="border border-border hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+                  <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Avaliações</p>
-                <p className="text-2xl font-bold">{assessments.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Ativas</p>
-                <p className="text-2xl font-bold">{activeCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <Building2 className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Empresas</p>
-                <p className="text-2xl font-bold">{companies.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-500/10 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Respostas</p>
-                <p className="text-2xl font-bold">{totalResponses}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <Card id="hseit-filters">
+      <Card id="hseit-filters" className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título ou empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Buscar por título ou empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
             <PeriodFilter value={selectedPeriod} onChange={setSelectedPeriod} />
             {companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Todas empresas" />
-                </SelectTrigger>
+                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Todas empresas" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas empresas</SelectItem>
-                  {companies.map(company => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
+                  {companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             )}
@@ -285,25 +176,18 @@ export default function HSEITDashboardContent() {
         </CardContent>
       </Card>
 
-      {/* Assessments Table */}
-      <Card id="hseit-table">
-        <CardHeader>
-          <CardTitle>Avaliações HSE-IT</CardTitle>
-        </CardHeader>
+      {/* Table */}
+      <Card id="hseit-table" className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+        <CardHeader><CardTitle>Avaliações HSE-IT</CardTitle></CardHeader>
         <CardContent>
           {filteredAssessments.length === 0 ? (
-            <div className="text-center py-12">
-              <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground">
-                Nenhuma avaliação encontrada
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Crie uma nova avaliação HSE-IT para começar.
-              </p>
-              <Button onClick={() => navigate('/hseit/new')} className="mt-4 gap-2">
-                <Plus className="h-4 w-4" />
-                Nova Avaliação
-              </Button>
+            <div className="text-center py-16">
+              <div className="inline-flex p-5 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl mb-4">
+                <ClipboardList className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Nenhuma avaliação encontrada</h3>
+              <p className="text-muted-foreground mb-4">Crie uma nova avaliação HSE-IT para começar.</p>
+              <Button onClick={() => navigate('/hseit/new')} className="gap-2"><Plus className="h-4 w-4" /> Nova Avaliação</Button>
             </div>
           ) : (
             <Table>
@@ -318,48 +202,25 @@ export default function HSEITDashboardContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAssessments.map((assessment) => {
-                  const formUrl = `${window.location.origin}/hseit/${assessment.companies?.slug}/${assessment.id}`;
+                {filteredAssessments.map(a => {
+                  const formUrl = `${window.location.origin}/hseit/${a.companies?.slug}/${a.id}`;
                   return (
-                    <TableRow key={assessment.id}>
-                      <TableCell className="font-medium">{assessment.title}</TableCell>
+                    <TableRow key={a.id} className="group">
+                      <TableCell className="font-medium">{a.title}</TableCell>
+                      <TableCell><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" />{a.companies?.name}</div></TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          {assessment.companies?.name}
-                        </div>
+                        {a.start_date && a.end_date ? (
+                          <span className="text-sm">{format(new Date(a.start_date), 'dd/MM/yy', { locale: ptBR })} - {format(new Date(a.end_date), 'dd/MM/yy', { locale: ptBR })}</span>
+                        ) : <span className="text-muted-foreground text-sm">Sem período</span>}
                       </TableCell>
-                      <TableCell>
-                        {assessment.start_date && assessment.end_date ? (
-                          <span className="text-sm">
-                            {format(new Date(assessment.start_date), 'dd/MM/yy', { locale: ptBR })} - {format(new Date(assessment.end_date), 'dd/MM/yy', { locale: ptBR })}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Sem período</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{assessment.response_count || 0} respostas</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={assessment.is_active ? 'default' : 'outline'}>
-                          {assessment.is_active ? 'Ativa' : 'Inativa'}
-                        </Badge>
-                      </TableCell>
+                      <TableCell><Badge variant="secondary">{a.response_count || 0} respostas</Badge></TableCell>
+                      <TableCell><Badge variant={a.is_active ? 'default' : 'outline'}>{a.is_active ? 'Ativa' : 'Inativa'}</Badge></TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => copyToClipboard(formUrl)} title="Copiar link">
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => window.open(formUrl, '_blank')} title="Abrir formulário">
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/hseit/results/${assessment.id}`)} title="Ver resultados">
-                            <BarChart3 className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/hseit/${assessment.id}`)} title="Editar">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => copyToClipboard(formUrl)} title="Copiar link"><Copy className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => window.open(formUrl, '_blank')} title="Abrir formulário"><ExternalLink className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/hseit/results/${a.id}`)} title="Ver resultados"><BarChart3 className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/hseit/${a.id}`)} title="Editar"><Eye className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
