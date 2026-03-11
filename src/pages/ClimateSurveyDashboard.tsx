@@ -893,6 +893,7 @@ export default function ClimateSurveyDashboard() {
             </div>
           </>
         )}
+        </div>
       </main>
 
       <Footer />
