@@ -430,22 +430,58 @@ export default function ClimateSurveyDashboard() {
     );
   }
 
+  const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <Button variant="outline" size="sm" onClick={() => navigate('/sst-dashboard')} className="mb-4 gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Voltar ao Dashboard
-        </Button>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Pesquisa de Clima</h1>
-            <p className="text-muted-foreground">Dashboard de resultados</p>
+      <main className="flex-grow">
+        {/* Hero Header */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary via-accent to-secondary py-10 md:py-14">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-10 left-10 w-72 h-72 bg-secondary rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary rounded-full blur-3xl" />
           </div>
-          
-          <div className="flex flex-wrap gap-3">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+          <div className="container mx-auto px-4 relative z-10">
+            <Button variant="ghost" size="sm" onClick={() => navigate(backPath)} className="mb-4 gap-2 text-white/70 hover:text-white hover:bg-white/10">
+              <ArrowLeft className="h-4 w-4" /> Voltar ao Dashboard
+            </Button>
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-4">
+                  <ClipboardList className="h-4 w-4" />
+                  <span>Pesquisa de Clima</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Pesquisa de Clima</h1>
+                <p className="text-white/70 mt-1">Dashboard de resultados</p>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {getSelectedSurvey() && getSurveyUrl(getSelectedSurvey()!) && (
+                  <QRCodeDownloader
+                    url={getSurveyUrl(getSelectedSurvey()!)}
+                    filename={`qrcode-pesquisa-${getSelectedSurvey()?.companies?.slug || 'clima'}.png`}
+                    variant="outline"
+                    size="default"
+                  />
+                )}
+                {['admin', 'sst'].includes(role || '') && (
+                  <Button id="climate-new-btn" onClick={handleCreateSurvey} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+                    <Plus className="h-4 w-4" /> Nova Pesquisa
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto px-4 py-8">
+          {/* Filters row */}
+          <div className="flex flex-wrap gap-3 mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             {['admin', 'sst'].includes(role || '') && companies.length > 0 && (
               <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger className="w-[200px]">
@@ -478,24 +514,7 @@ export default function ClimateSurveyDashboard() {
                 </Select>
               </div>
             )}
-
-            {getSelectedSurvey() && getSurveyUrl(getSelectedSurvey()!) && (
-              <QRCodeDownloader
-                url={getSurveyUrl(getSelectedSurvey()!)}
-                filename={`qrcode-pesquisa-${getSelectedSurvey()?.companies?.slug || 'clima'}.png`}
-                variant="outline"
-                size="default"
-              />
-            )}
-            
-            {['admin', 'sst'].includes(role || '') && (
-              <Button id="climate-new-btn" onClick={handleCreateSurvey}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Pesquisa
-              </Button>
-            )}
           </div>
-        </div>
 
         {surveys.length === 0 ? (
           <Card>
