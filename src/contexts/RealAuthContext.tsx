@@ -132,9 +132,6 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         title: "Empresa alterada",
         description: `Agora acessando: ${selected?.name || 'Empresa'}`,
       });
-
-      // Force reload dashboard data
-      window.location.reload();
     } catch (error: any) {
       console.error('Error switching company:', error);
       toast({

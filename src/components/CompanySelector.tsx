@@ -23,6 +23,12 @@ const CompanySelector: React.FC = () => {
 
   const handleSelect = async (company: UserCompany) => {
     await switchCompany(company.id);
+    // Navigate based on role after selecting company
+    if (role === 'admin') navigate('/master-dashboard');
+    else if (role === 'sst') navigate('/sst-dashboard');
+    else if (role === 'partner') navigate('/parceiro/dashboard');
+    else if (role === 'affiliate') navigate('/afiliado/dashboard');
+    else navigate('/dashboard');
   };
 
   return (
