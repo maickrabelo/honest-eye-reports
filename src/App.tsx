@@ -50,6 +50,7 @@ import PsychosocialDashboard from "./pages/PsychosocialDashboard";
 import COPSOQManagement from "./pages/COPSOQManagement";
 import COPSOQForm from "./pages/COPSOQForm";
 import COPSOQResults from "./pages/COPSOQResults";
+import CompanySelector from "./components/CompanySelector";
 
 const queryClient = new QueryClient();
 
