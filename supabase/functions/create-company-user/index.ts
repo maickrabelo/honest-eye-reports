@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify caller identity
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,8 +38,6 @@ Deno.serve(async (req) => {
     }
 
     const callerId = claimsData.claims.sub;
-
-    // Admin client for privileged operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify caller has role 'sst' or 'admin'
@@ -57,7 +54,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body
     const { company_id, email, cnpj, company_name } = await req.json();
 
     if (!company_id || !email || !cnpj) {
@@ -67,7 +63,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract digits only from CNPJ for password
     const cnpjDigits = cnpj.replace(/\D/g, "");
     if (cnpjDigits.length < 11) {
       return new Response(
@@ -76,9 +71,73 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create auth user with CNPJ as password
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check if email already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users.find(u => u.email === normalizedEmail);
+
+    if (existingUser) {
+      // User exists — check which companies they already have access to
+      const { data: existingCompanies } = await supabaseAdmin
+        .from("user_companies")
+        .select("company_id, companies:company_id(name)")
+        .eq("user_id", existingUser.id);
+
+      const alreadyHasThisCompany = existingCompanies?.some(
+        (uc: any) => uc.company_id === company_id
+      );
+
+      if (alreadyHasThisCompany) {
+        return new Response(
+          JSON.stringify({ error: "Este email já tem acesso a esta empresa." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get existing company names for the response
+      const existingCompanyNames = existingCompanies
+        ?.map((uc: any) => uc.companies?.name)
+        .filter(Boolean) || [];
+
+      // Add user_companies entry
+      const { error: ucError } = await supabaseAdmin
+        .from("user_companies")
+        .insert({
+          user_id: existingUser.id,
+          company_id: company_id,
+          is_default: false,
+        });
+
+      if (ucError) {
+        console.error("Error inserting user_companies:", ucError);
+        return new Response(
+          JSON.stringify({ error: "Erro ao vincular usuário à empresa." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update profiles.company_id to the new company (active company)
+      await supabaseAdmin
+        .from("profiles")
+        .update({ company_id: company_id })
+        .eq("id", existingUser.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          user_id: existingUser.id,
+          existing_user: true,
+          existing_companies: existingCompanyNames,
+          message: `Usuário já existente. Empresa adicionada ao acesso. Este email já tinha acesso a: ${existingCompanyNames.join(", ")}`,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // New user — create auth user
     const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password: cnpjDigits,
       email_confirm: true,
       user_metadata: {
@@ -88,14 +147,6 @@ Deno.serve(async (req) => {
 
     if (createUserError) {
       console.error("Error creating user:", createUserError);
-
-      if (createUserError.message?.includes("already been registered")) {
-        return new Response(
-          JSON.stringify({ error: "Este email já está cadastrado no sistema." }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
       return new Response(
         JSON.stringify({ error: `Erro ao criar usuário: ${createUserError.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -104,8 +155,8 @@ Deno.serve(async (req) => {
 
     const userId = newUser.user.id;
 
-    // Update profile with company_id and must_change_password flag
-    const { error: profileError } = await supabaseAdmin
+    // Update profile
+    await supabaseAdmin
       .from("profiles")
       .update({
         company_id: company_id,
@@ -114,29 +165,32 @@ Deno.serve(async (req) => {
       })
       .eq("id", userId);
 
-    if (profileError) {
-      console.error("Error updating profile:", profileError);
-      // Don't fail completely - user was created
-    }
-
-    // Update user role from 'pending' to 'company'
+    // Update role to 'company'
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .update({ role: "company" })
       .eq("user_id", userId);
 
     if (roleError) {
-      console.error("Error updating role:", roleError);
-      // Try inserting if update didn't match
       await supabaseAdmin
         .from("user_roles")
         .insert({ user_id: userId, role: "company" });
     }
 
+    // Add user_companies entry
+    await supabaseAdmin
+      .from("user_companies")
+      .insert({
+        user_id: userId,
+        company_id: company_id,
+        is_default: true,
+      });
+
     return new Response(
       JSON.stringify({
         success: true,
         user_id: userId,
+        existing_user: false,
         message: `Usuário criado com sucesso. Senha inicial: CNPJ (${cnpjDigits.substring(0, 4)}****)`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
