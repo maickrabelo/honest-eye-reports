@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 
 const CompanySelector: React.FC = () => {
-  const { companies, switchCompany, isLoading, user } = useRealAuth();
+  const { companies, switchCompany, isLoading, user, role } = useRealAuth();
   const navigate = useNavigate();
 
   if (isLoading) {
