@@ -163,9 +163,11 @@ const Navbar = () => {
                       </>
                     )}
                     {role === 'company' && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/dashboard">Dashboard</Link>
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/dashboard">Dashboard</Link>
+                        </DropdownMenuItem>
+                      </>
                     )}
                     {role === 'sst' && (
                       <DropdownMenuItem asChild>
