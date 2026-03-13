@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
+import CompanySwitcher from '@/components/CompanySwitcher';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import {
@@ -121,6 +122,7 @@ const Navbar = () => {
                   </Button>
                 </div>
               )}
+              {role === 'company' && <CompanySwitcher />}
               <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
@@ -162,9 +164,11 @@ const Navbar = () => {
                       </>
                     )}
                     {role === 'company' && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/dashboard">Dashboard</Link>
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/dashboard">Dashboard</Link>
+                        </DropdownMenuItem>
+                      </>
                     )}
                     {role === 'sst' && (
                       <DropdownMenuItem asChild>

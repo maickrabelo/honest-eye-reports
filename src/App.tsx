@@ -50,6 +50,7 @@ import PsychosocialDashboard from "./pages/PsychosocialDashboard";
 import COPSOQManagement from "./pages/COPSOQManagement";
 import COPSOQForm from "./pages/COPSOQForm";
 import COPSOQResults from "./pages/COPSOQResults";
+import CompanySelector from "./components/CompanySelector";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/pending-approval" element={<PendingApproval />} />
+              <Route path="/select-company" element={<CompanySelector />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/report" element={<ReportChat />} />
               <Route path="/report-form" element={<ReportForm />} />

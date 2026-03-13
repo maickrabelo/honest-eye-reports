@@ -168,7 +168,6 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
       // Create user account for the company
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
         const response = await supabase.functions.invoke('create-company-user', {
           body: {
             company_id: newCompany.id,
@@ -184,6 +183,12 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             title: "Empresa cadastrada, mas sem usuário",
             description: `A empresa foi criada, porém não foi possível criar o acesso automático: ${response.error.message}`,
             variant: "destructive",
+          });
+        } else if (response.data?.existing_user) {
+          const existingNames = response.data.existing_companies?.join(', ') || '';
+          toast({
+            title: "Empresa vinculada a usuário existente",
+            description: `Este email já tinha acesso a: ${existingNames}. A empresa "${trimmedName}" foi adicionada ao mesmo login.`,
           });
         } else {
           toast({
