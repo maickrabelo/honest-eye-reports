@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
+import CompanySwitcher from '@/components/CompanySwitcher';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import {
