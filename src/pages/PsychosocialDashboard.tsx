@@ -53,14 +53,14 @@ export default function PsychosocialDashboard() {
             <div className="animate-fade-in">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-4">
                 <Shield className="h-4 w-4" />
-                <span>Avaliação Psicossocial</span>
+                <span>Powered by SOnIA AI</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
                 <Brain className="h-8 w-8" />
                 Avaliação de Riscos Psicossociais
               </h1>
               <p className="text-white/70 mt-2 max-w-2xl">
-                Ferramentas validadas internacionalmente para gestão de riscos psicossociais no trabalho
+                Primeira IA de gestão de riscos psicossociais — ferramentas validadas internacionalmente
               </p>
             </div>
           </div>
