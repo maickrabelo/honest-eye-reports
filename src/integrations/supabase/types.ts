@@ -168,6 +168,7 @@ export type Database = {
       }
       burnout_assessments: {
         Row: {
+          collection_mode: string | null
           company_id: string
           created_at: string | null
           created_by: string | null
@@ -180,6 +181,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          collection_mode?: string | null
           company_id: string
           created_at?: string | null
           created_by?: string | null
@@ -192,6 +194,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          collection_mode?: string | null
           company_id?: string
           created_at?: string | null
           created_by?: string | null
@@ -532,6 +535,7 @@ export type Database = {
       }
       copsoq_assessments: {
         Row: {
+          collection_mode: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -544,6 +548,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          collection_mode?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -556,6 +561,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          collection_mode?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -691,6 +697,7 @@ export type Database = {
       }
       hseit_assessments: {
         Row: {
+          collection_mode: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -703,6 +710,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          collection_mode?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -715,6 +723,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          collection_mode?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
