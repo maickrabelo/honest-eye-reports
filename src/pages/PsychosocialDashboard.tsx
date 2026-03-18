@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Brain, FileText, Loader2, Shield } from 'lucide-react';
 import HSEITDashboardContent from '@/components/psychosocial/HSEITDashboardContent';
 import COPSOQDashboardContent from '@/components/psychosocial/COPSOQDashboardContent';
+import SoniaChat from '@/components/SoniaChat';
 
 export default function PsychosocialDashboard() {
   const navigate = useNavigate();
