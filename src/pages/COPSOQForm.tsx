@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, Building2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS, type COPSOQQuestion } from '@/data/copsoqQuestions';
+import SoniaFormChat from '@/components/sonia/SoniaFormChat';
 
 interface Assessment {
   id: string;
