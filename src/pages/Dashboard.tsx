@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AIAnalysisCard from '@/components/AIAnalysisCard';
 import HSEITParticipationCard from '@/components/HSEITParticipationCard';
 import SoniaChat from '@/components/SoniaChat';
+import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
 import TrackReportModal from '@/components/TrackReportModal';
 import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
