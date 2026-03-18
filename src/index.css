@@ -137,3 +137,63 @@
 .hover\:sst-bg-primary-dark:hover {
   background-color: hsl(var(--sst-primary-dark));
 }
+
+/* SOnIA AI Effects */
+.ai-glow {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.1);
+  animation: aiPulse 3s ease-in-out infinite;
+}
+
+@keyframes aiPulse {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.1); }
+  50% { box-shadow: 0 0 30px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.2); }
+}
+
+.glass-card {
+  background: hsl(var(--card) / 0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+.ai-badge {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ai-border {
+  border-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) 1;
+}
+
+.stat-card-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.03), transparent);
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.08), transparent);
+  animation: shimmer 3s infinite;
+}
