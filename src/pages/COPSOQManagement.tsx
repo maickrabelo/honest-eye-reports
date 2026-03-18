@@ -177,6 +177,13 @@ export default function COPSOQManagement() {
                   <div><Label>Avaliação Ativa</Label><p className="text-sm text-muted-foreground">Permite que funcionários respondam</p></div>
                   <Switch checked={isActive} onCheckedChange={setIsActive} />
                 </div>
+                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Modo de Coleta</Label>
+                    <p className="text-sm text-muted-foreground">{collectionMode === 'ai' ? 'SOnIA guia o respondente pergunta a pergunta' : 'Formulário tradicional'}</p>
+                  </div>
+                  <Switch checked={collectionMode === 'ai'} onCheckedChange={(c) => setCollectionMode(c ? 'ai' : 'form')} />
+                </div>
               </CardContent>
             </Card>
             <Card>
