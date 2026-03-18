@@ -279,6 +279,7 @@ export default function BurnoutDashboard() {
       </main>
       <Footer />
       {shouldShowTour && <OnboardingTour steps={burnoutSteps} onComplete={() => completeTour()} />}
+      <SoniaChat contextType="burnout" />
     </div>
   );
 }

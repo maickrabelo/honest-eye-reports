@@ -910,6 +910,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       </main>
       <Footer />
+      <SoniaChat companyId={companyId} contextType="dashboard" />
     </div>
   );
 };
