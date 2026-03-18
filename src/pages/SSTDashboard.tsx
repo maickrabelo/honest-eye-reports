@@ -19,6 +19,7 @@ import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import SoniaChat from '@/components/SoniaChat';
 
 const sstDashboardSteps: TourStep[] = [
   {
