@@ -435,8 +435,8 @@ export default function ClimateSurveyDashboard() {
   const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
 
   return (
-    <>
     <SoniaChatProvider>
+    <SoniaChatLayout>
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
