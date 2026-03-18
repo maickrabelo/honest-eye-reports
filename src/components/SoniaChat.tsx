@@ -130,6 +130,10 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
           title="Abrir SOnIA"
         >
           <Sparkles className="h-5 w-5 animate-pulse" />
+          <Avatar className="h-8 w-8 border-2 border-white/30">
+            <AvatarImage src={soniaAvatar} alt="SOnIA" />
+            <AvatarFallback>S</AvatarFallback>
+          </Avatar>
           <span className="text-xs font-bold tracking-widest [writing-mode:vertical-lr] rotate-180">SOnIA</span>
         </button>
       )}
