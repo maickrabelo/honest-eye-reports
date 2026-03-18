@@ -909,8 +909,8 @@ export default function ClimateSurveyDashboard() {
         />
       )}
     </div>
-    </SoniaChatProvider>
+    </SoniaChatLayout>
     <SoniaChat contextType="climate" />
-    </>
+    </SoniaChatProvider>
   );
 }

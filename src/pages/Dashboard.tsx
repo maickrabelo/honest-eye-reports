@@ -903,8 +903,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   }
 
   return (
-    <>
     <SoniaChatProvider>
+    <SoniaChatLayout>
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
@@ -914,9 +914,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       </main>
       <Footer />
     </div>
-    </SoniaChatProvider>
+    </SoniaChatLayout>
     <SoniaChat companyId={companyId} contextType="dashboard" />
-    </>
+    </SoniaChatProvider>
   );
 };
 
