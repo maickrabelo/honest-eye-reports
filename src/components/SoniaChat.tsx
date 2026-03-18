@@ -146,9 +146,10 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground shrink-0">
-          <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
-            <Bot className="h-5 w-5" />
-          </div>
+          <Avatar className="h-9 w-9 border-2 border-white/30">
+            <AvatarImage src={soniaAvatar} alt="SOnIA" />
+            <AvatarFallback>S</AvatarFallback>
+          </Avatar>
           <div className="flex-1">
             <p className="font-semibold text-base">SOnIA</p>
             <p className="text-[11px] opacity-80">IA de Riscos Psicossociais</p>
