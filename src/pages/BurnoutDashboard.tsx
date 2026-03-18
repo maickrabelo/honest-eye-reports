@@ -17,7 +17,7 @@ import { ptBR } from "date-fns/locale";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
-import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
+import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import { Loader2 } from "lucide-react";
 
 const burnoutSteps: TourStep[] = [
