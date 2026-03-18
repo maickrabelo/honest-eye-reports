@@ -22,6 +22,7 @@ import {
   getBurnoutRiskLevel 
 } from "@/data/burnoutQuestions";
 import { Flame, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import SoniaFormChat from "@/components/sonia/SoniaFormChat";
 
 interface Assessment {
   id: string;
@@ -249,6 +250,41 @@ export default function BurnoutForm() {
   }
 
   const company = assessment?.companies;
+  const isAiMode = (assessment as any)?.collection_mode === 'ai';
+
+  const handleAiComplete = async (aiAnswers: Record<number, number>) => {
+    try {
+      setSubmitting(true);
+      const respondentToken = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const answersList = Object.entries(aiAnswers).map(([qn, v]) => ({ questionNumber: parseInt(qn), value: v }));
+      const totalScore = calculateTotalScore(answersList);
+      const riskLevel = getBurnoutRiskLevel(totalScore);
+      const { data: response, error: re } = await supabase.from('burnout_responses').insert({ assessment_id: assessmentId, department: selectedDepartment || null, respondent_token: respondentToken, total_score: totalScore, risk_level: riskLevel, completed_at: new Date().toISOString() }).select().single();
+      if (re) throw re;
+      const data = Object.entries(aiAnswers).map(([qn, v]) => ({ response_id: response.id, question_number: parseInt(qn), answer_value: v }));
+      const { error: ae } = await supabase.from('burnout_answers').insert(data);
+      if (ae) throw ae;
+      setIsCompleted(true);
+    } catch (e) { console.error(e); toast({ title: 'Erro ao enviar', variant: 'destructive' }); }
+    finally { setSubmitting(false); }
+  };
+
+  if (isAiMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
+        <div className="container mx-auto px-4">
+          {departments.length > 0 && !selectedDepartment ? (
+            <div className="max-w-md mx-auto">
+              <Card><CardHeader><CardTitle>Selecione seu setor</CardTitle></CardHeader>
+              <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
+            </div>
+          ) : (
+            <SoniaFormChat questions={BURNOUT_QUESTIONS_SORTED} likertOptions={BURNOUT_LIKERT_OPTIONS} categoryLabels={BURNOUT_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'Burnout'} toolName="Burnout (MBI)" />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-8 px-4">

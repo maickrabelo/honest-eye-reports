@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check } from "lucide-react";
+import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
 import CompanySwitcher from '@/components/CompanySwitcher';
@@ -64,6 +64,12 @@ const Navbar = () => {
                 />
               )}
             </Link>
+            {isLoggedIn && (
+              <div className="hidden sm:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
+                <span className="text-xs font-semibold ai-badge">SOnIA AI</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-4">

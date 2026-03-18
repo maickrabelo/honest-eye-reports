@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, Building2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS, type COPSOQQuestion } from '@/data/copsoqQuestions';
+import SoniaFormChat from '@/components/sonia/SoniaFormChat';
 
 interface Assessment {
   id: string;
@@ -127,6 +128,40 @@ export default function COPSOQForm() {
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (error) return <div className="min-h-screen flex items-center justify-center bg-background p-4"><Card className="max-w-md w-full"><CardContent className="pt-6 text-center"><AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" /><h2 className="text-xl font-semibold mb-2">Avaliação Indisponível</h2><p className="text-muted-foreground">{error}</p></CardContent></Card></div>;
   if (isCompleted) return <div className="min-h-screen flex items-center justify-center bg-background p-4"><Card className="max-w-md w-full"><CardContent className="pt-6 text-center"><div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle2 className="h-8 w-8 text-green-600" /></div><h2 className="text-2xl font-bold text-foreground mb-2">Obrigado!</h2><p className="text-muted-foreground mb-4">Sua avaliação foi enviada com sucesso. Suas respostas são anônimas.</p><div className="p-4 bg-muted rounded-lg"><p className="text-sm text-muted-foreground">Você pode fechar esta página.</p></div></CardContent></Card></div>;
+
+  const isAiMode = (assessment as any)?.collection_mode === 'ai';
+  const defaultScale = COPSOQ_SCALES['frequency'];
+
+  const handleAiComplete = async (aiAnswers: Record<number, number>) => {
+    if (!assessment) return;
+    try {
+      setIsSubmitting(true);
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert({ assessment_id: assessment.id, department: selectedDepartment || null, respondent_token: crypto.randomUUID(), demographics: {}, completed_at: new Date().toISOString() }).select('id').single();
+      if (re) throw re;
+      const data = Object.entries(aiAnswers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
+      const { error: ae } = await supabase.from('copsoq_answers' as any).insert(data);
+      if (ae) throw ae;
+      setIsCompleted(true);
+    } catch (e) { console.error(e); toast({ title: 'Erro ao enviar', variant: 'destructive' }); }
+    finally { setIsSubmitting(false); }
+  };
+
+  if (isAiMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
+        <div className="container mx-auto px-4">
+          {departments.length > 0 && !selectedDepartment ? (
+            <div className="max-w-md mx-auto">
+              <Card><CardHeader><CardTitle>Selecione seu setor</CardTitle></CardHeader>
+              <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
+            </div>
+          ) : (
+            <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">

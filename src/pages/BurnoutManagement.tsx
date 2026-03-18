@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { DepartmentManager } from "@/components/climate-survey/DepartmentManager";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
-import { ArrowLeft, Save, Flame } from "lucide-react";
+import { ArrowLeft, Save, Flame, Sparkles } from "lucide-react";
 
 interface Company {
   id: string;
@@ -53,6 +53,7 @@ export default function BurnoutManagement() {
   const [endDate, setEndDate] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [collectionMode, setCollectionMode] = useState<string>('form');
 
   useEffect(() => {
     if (!authLoading) {
@@ -118,6 +119,7 @@ export default function BurnoutManagement() {
           setStartDate(assessment.start_date?.split('T')[0] || "");
           setEndDate(assessment.end_date?.split('T')[0] || "");
           setIsActive(assessment.is_active);
+          setCollectionMode((assessment as any).collection_mode || 'form');
           
           // Fetch departments
           const { data: depts } = await supabase
@@ -170,7 +172,8 @@ export default function BurnoutManagement() {
         start_date: startDate || null,
         end_date: endDate || null,
         is_active: isActive,
-        created_by: user?.id
+        created_by: user?.id,
+        collection_mode: collectionMode,
       };
       
       let assessmentId = id;
@@ -368,6 +371,14 @@ export default function BurnoutManagement() {
                     checked={isActive}
                     onCheckedChange={setIsActive}
                   />
+                </div>
+
+                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Modo de Coleta</Label>
+                    <p className="text-sm text-muted-foreground">{collectionMode === 'ai' ? 'SOnIA guia o respondente pergunta a pergunta' : 'Formulário tradicional'}</p>
+                  </div>
+                  <Switch checked={collectionMode === 'ai'} onCheckedChange={(c) => setCollectionMode(c ? 'ai' : 'form')} />
                 </div>
               </CardContent>
             </Card>

@@ -51,6 +51,7 @@ import { AIInsightsCard } from "@/components/climate-survey/AIInsightsCard";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import SoniaChat from "@/components/SoniaChat";
 
 const climateSteps: TourStep[] = [
   {
@@ -904,6 +905,7 @@ export default function ClimateSurveyDashboard() {
           onComplete={() => completeTour()}
         />
       )}
+      <SoniaChat contextType="climate" />
     </div>
   );
 }

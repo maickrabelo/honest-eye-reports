@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import SoniaChat from "@/components/SoniaChat";
 import { Loader2 } from "lucide-react";
 
 const burnoutSteps: TourStep[] = [
@@ -278,6 +279,7 @@ export default function BurnoutDashboard() {
       </main>
       <Footer />
       {shouldShowTour && <OnboardingTour steps={burnoutSteps} onComplete={() => completeTour()} />}
+      <SoniaChat contextType="burnout" />
     </div>
   );
 }

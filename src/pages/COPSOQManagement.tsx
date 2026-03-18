@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Save, ArrowLeft, FileText, Building2, Copy } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
@@ -32,6 +32,7 @@ export default function COPSOQManagement() {
   const [endDate, setEndDate] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
+  const [collectionMode, setCollectionMode] = useState<string>('form');
   const isEditing = !!id;
   const hasFetchedRef = useRef(false);
 
@@ -79,6 +80,7 @@ export default function COPSOQManagement() {
         setStartDate(a.start_date ? a.start_date.split('T')[0] : '');
         setEndDate(a.end_date ? a.end_date.split('T')[0] : '');
         setIsActive(a.is_active);
+        setCollectionMode(a.collection_mode || 'form');
         const { data: depts } = await supabase.from('copsoq_departments' as any).select('*').eq('assessment_id', id).order('order_index');
         setDepartments((depts as any[]) || []);
       } else if (companiesData.length === 1) {
@@ -99,7 +101,7 @@ export default function COPSOQManagement() {
     }
     try {
       setIsSaving(true);
-      const data = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id };
+      const data = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: collectionMode };
       let assessmentId = id;
 
       if (isEditing) {
@@ -174,6 +176,13 @@ export default function COPSOQManagement() {
                 <div className="flex items-center justify-between pt-4">
                   <div><Label>Avaliação Ativa</Label><p className="text-sm text-muted-foreground">Permite que funcionários respondam</p></div>
                   <Switch checked={isActive} onCheckedChange={setIsActive} />
+                </div>
+                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Modo de Coleta</Label>
+                    <p className="text-sm text-muted-foreground">{collectionMode === 'ai' ? 'SOnIA guia o respondente pergunta a pergunta' : 'Formulário tradicional'}</p>
+                  </div>
+                  <Switch checked={collectionMode === 'ai'} onCheckedChange={(c) => setCollectionMode(c ? 'ai' : 'form')} />
                 </div>
               </CardContent>
             </Card>

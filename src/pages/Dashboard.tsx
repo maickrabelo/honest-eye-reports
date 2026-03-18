@@ -34,6 +34,7 @@ import { useRealAuth } from "@/contexts/RealAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AIAnalysisCard from '@/components/AIAnalysisCard';
 import HSEITParticipationCard from '@/components/HSEITParticipationCard';
+import SoniaChat from '@/components/SoniaChat';
 import TrackReportModal from '@/components/TrackReportModal';
 import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
@@ -909,6 +910,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       </main>
       <Footer />
+      <SoniaChat companyId={companyId} contextType="dashboard" />
     </div>
   );
 };

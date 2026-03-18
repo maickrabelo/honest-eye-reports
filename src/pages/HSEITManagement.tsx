@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Save, ArrowLeft, ClipboardList, Building2, Copy } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
@@ -39,6 +40,7 @@ export default function HSEITManagement() {
   const [endDate, setEndDate] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
+  const [collectionMode, setCollectionMode] = useState<string>('form');
   
   const isEditing = !!id;
 
@@ -119,6 +121,7 @@ export default function HSEITManagement() {
         setStartDate(assessment.start_date ? assessment.start_date.split('T')[0] : '');
         setEndDate(assessment.end_date ? assessment.end_date.split('T')[0] : '');
         setIsActive(assessment.is_active);
+        setCollectionMode((assessment as any).collection_mode || 'form');
         
         // Fetch departments
         const { data: depts } = await supabase
@@ -163,7 +166,8 @@ export default function HSEITManagement() {
         start_date: startDate || null,
         end_date: endDate || null,
         is_active: isActive,
-        created_by: user?.id
+        created_by: user?.id,
+        collection_mode: collectionMode,
       };
 
       let assessmentId = id;
@@ -347,6 +351,23 @@ export default function HSEITManagement() {
                     id="isActive"
                     checked={isActive}
                     onCheckedChange={setIsActive}
+                  />
+                </div>
+
+                {/* Collection Mode */}
+                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Modo de Coleta
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {collectionMode === 'ai' ? 'SOnIA guia o respondente pergunta a pergunta' : 'Formulário tradicional com todas as perguntas'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={collectionMode === 'ai'}
+                    onCheckedChange={(checked) => setCollectionMode(checked ? 'ai' : 'form')}
                   />
                 </div>
               </CardContent>
