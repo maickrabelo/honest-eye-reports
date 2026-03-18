@@ -93,7 +93,9 @@ export default function PsychosocialDashboard() {
         </div>
       </main>
       <Footer />
-      <SoniaChat contextType="psychosocial" />
     </div>
+    </SoniaChatProvider>
+    <SoniaChat contextType="psychosocial" />
+    </>
   );
 }
