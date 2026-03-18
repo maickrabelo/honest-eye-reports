@@ -491,8 +491,10 @@ const SSTDashboard = () => {
       )}
       <EditCompanyDialog open={isEditCompanyOpen} onOpenChange={setIsEditCompanyOpen} company={editingCompany} onCompanyUpdated={fetchCompanies} />
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
-      <SoniaChat contextType="sst" />
     </div>
+    </SoniaChatProvider>
+    <SoniaChat contextType="sst" />
+    </>
   );
 };
 
