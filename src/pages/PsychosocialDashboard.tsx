@@ -35,8 +35,8 @@ export default function PsychosocialDashboard() {
   const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
 
   return (
-    <>
     <SoniaChatProvider>
+    <SoniaChatLayout>
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1">
