@@ -52,7 +52,7 @@ import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
-import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
+import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 
 const climateSteps: TourStep[] = [
   {
