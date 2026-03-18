@@ -905,6 +905,7 @@ export default function ClimateSurveyDashboard() {
           onComplete={() => completeTour()}
         />
       )}
+      <SoniaChat contextType="climate" />
     </div>
   );
 }
