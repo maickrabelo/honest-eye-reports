@@ -35,7 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AIAnalysisCard from '@/components/AIAnalysisCard';
 import HSEITParticipationCard from '@/components/HSEITParticipationCard';
 import SoniaChat from '@/components/SoniaChat';
-import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
+import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import TrackReportModal from '@/components/TrackReportModal';
 import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
@@ -903,8 +903,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   }
 
   return (
-    <>
     <SoniaChatProvider>
+    <SoniaChatLayout>
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
@@ -914,9 +914,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       </main>
       <Footer />
     </div>
-    </SoniaChatProvider>
+    </SoniaChatLayout>
     <SoniaChat companyId={companyId} contextType="dashboard" />
-    </>
+    </SoniaChatProvider>
   );
 };
 

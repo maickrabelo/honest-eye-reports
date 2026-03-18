@@ -17,7 +17,7 @@ import { ptBR } from "date-fns/locale";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
-import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
+import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import { Loader2 } from "lucide-react";
 
 const burnoutSteps: TourStep[] = [
@@ -129,8 +129,8 @@ export default function BurnoutDashboard() {
   }
 
   return (
-    <>
     <SoniaChatProvider>
+    <SoniaChatLayout>
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1">
@@ -283,8 +283,8 @@ export default function BurnoutDashboard() {
       <Footer />
       {shouldShowTour && <OnboardingTour steps={burnoutSteps} onComplete={() => completeTour()} />}
     </div>
-    </SoniaChatProvider>
+    </SoniaChatLayout>
     <SoniaChat contextType="burnout" />
-    </>
+    </SoniaChatProvider>
   );
 }
