@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, Sparkles, Loader2, PanelRightClose } from "lucide-react";
+import { Send, Sparkles, Loader2, PanelRightClose } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useSoniaChat } from "@/contexts/SoniaChatContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import soniaAvatar from "@/assets/sonia-avatar.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -128,6 +130,10 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
           title="Abrir SOnIA"
         >
           <Sparkles className="h-5 w-5 animate-pulse" />
+          <Avatar className="h-8 w-8 border-2 border-white/30">
+            <AvatarImage src={soniaAvatar} alt="SOnIA" />
+            <AvatarFallback>S</AvatarFallback>
+          </Avatar>
           <span className="text-xs font-bold tracking-widest [writing-mode:vertical-lr] rotate-180">SOnIA</span>
         </button>
       )}
@@ -140,9 +146,10 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground shrink-0">
-          <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
-            <Bot className="h-5 w-5" />
-          </div>
+          <Avatar className="h-9 w-9 border-2 border-white/30">
+            <AvatarImage src={soniaAvatar} alt="SOnIA" />
+            <AvatarFallback>S</AvatarFallback>
+          </Avatar>
           <div className="flex-1">
             <p className="font-semibold text-base">SOnIA</p>
             <p className="text-[11px] opacity-80">IA de Riscos Psicossociais</p>
@@ -162,7 +169,13 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
         <ScrollArea className="flex-1 p-5" ref={scrollRef as any}>
           <div className="space-y-4 max-w-2xl mx-auto">
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start gap-2"}`}>
+                {msg.role === "assistant" && (
+                  <Avatar className="h-7 w-7 shrink-0 mt-1 border border-primary/30">
+                    <AvatarImage src={soniaAvatar} alt="SOnIA" />
+                    <AvatarFallback>S</AvatarFallback>
+                  </Avatar>
+                )}
                 <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground rounded-br-md"
