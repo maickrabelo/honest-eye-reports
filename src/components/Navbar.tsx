@@ -70,6 +70,7 @@ const Navbar = () => {
                 <span className="text-xs font-semibold ai-badge">SOnIA AI</span>
               </div>
             )}
+          </div>
 
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
