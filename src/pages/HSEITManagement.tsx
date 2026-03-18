@@ -166,7 +166,8 @@ export default function HSEITManagement() {
         start_date: startDate || null,
         end_date: endDate || null,
         is_active: isActive,
-        created_by: user?.id
+        created_by: user?.id,
+        collection_mode: collectionMode,
       };
 
       let assessmentId = id;
