@@ -119,6 +119,7 @@ export default function BurnoutManagement() {
           setStartDate(assessment.start_date?.split('T')[0] || "");
           setEndDate(assessment.end_date?.split('T')[0] || "");
           setIsActive(assessment.is_active);
+          setCollectionMode((assessment as any).collection_mode || 'form');
           
           // Fetch departments
           const { data: depts } = await supabase
