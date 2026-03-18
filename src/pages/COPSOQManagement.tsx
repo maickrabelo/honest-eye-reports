@@ -32,6 +32,7 @@ export default function COPSOQManagement() {
   const [endDate, setEndDate] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
+  const [collectionMode, setCollectionMode] = useState<string>('form');
   const isEditing = !!id;
   const hasFetchedRef = useRef(false);
 
