@@ -9,6 +9,7 @@ import { ArrowLeft, Brain, FileText, Loader2, Shield } from 'lucide-react';
 import HSEITDashboardContent from '@/components/psychosocial/HSEITDashboardContent';
 import COPSOQDashboardContent from '@/components/psychosocial/COPSOQDashboardContent';
 import SoniaChat from '@/components/SoniaChat';
+import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
 
 export default function PsychosocialDashboard() {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ export default function PsychosocialDashboard() {
   const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
 
   return (
+    <>
+    <SoniaChatProvider>
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1">
@@ -90,7 +93,9 @@ export default function PsychosocialDashboard() {
         </div>
       </main>
       <Footer />
-      <SoniaChat contextType="psychosocial" />
     </div>
+    </SoniaChatProvider>
+    <SoniaChat contextType="psychosocial" />
+    </>
   );
 }

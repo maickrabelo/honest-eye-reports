@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send, Sparkles, Loader2, PanelRightClose } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useSoniaChat } from "@/contexts/SoniaChatContext";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -15,7 +16,7 @@ interface SoniaChatProps {
 }
 
 export default function SoniaChat({ companyId, contextType = "dashboard" }: SoniaChatProps) {
-  const [open, setOpen] = useState(false);
+  const { isOpen: open, setIsOpen: setOpen } = useSoniaChat();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -131,7 +132,7 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
         </button>
       )}
 
-      {/* Side panel - no overlay, page stays interactive */}
+      {/* Side panel - no overlay */}
       <div
         className={`fixed top-0 right-0 bottom-0 z-40 w-[50vw] bg-background border-l border-border/50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"

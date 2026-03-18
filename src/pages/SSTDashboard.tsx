@@ -20,6 +20,7 @@ import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import SoniaChat from '@/components/SoniaChat';
+import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -237,6 +238,8 @@ const SSTDashboard = () => {
   const pendingReports = companies.reduce((sum, c) => sum + c.newReports, 0);
 
   return (
+    <>
+    <SoniaChatProvider>
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow bg-background">
@@ -488,8 +491,10 @@ const SSTDashboard = () => {
       )}
       <EditCompanyDialog open={isEditCompanyOpen} onOpenChange={setIsEditCompanyOpen} company={editingCompany} onCompanyUpdated={fetchCompanies} />
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
-      <SoniaChat contextType="sst" />
     </div>
+    </SoniaChatProvider>
+    <SoniaChat contextType="sst" />
+    </>
   );
 };
 

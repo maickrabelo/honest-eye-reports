@@ -52,6 +52,7 @@ import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
+import { SoniaChatProvider } from '@/contexts/SoniaChatContext';
 
 const climateSteps: TourStep[] = [
   {
@@ -434,6 +435,8 @@ export default function ClimateSurveyDashboard() {
   const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
 
   return (
+    <>
+    <SoniaChatProvider>
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
@@ -905,7 +908,9 @@ export default function ClimateSurveyDashboard() {
           onComplete={() => completeTour()}
         />
       )}
-      <SoniaChat contextType="climate" />
     </div>
+    </SoniaChatProvider>
+    <SoniaChat contextType="climate" />
+    </>
   );
 }
