@@ -169,7 +169,13 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
         <ScrollArea className="flex-1 p-5" ref={scrollRef as any}>
           <div className="space-y-4 max-w-2xl mx-auto">
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start gap-2"}`}>
+                {msg.role === "assistant" && (
+                  <Avatar className="h-7 w-7 shrink-0 mt-1 border border-primary/30">
+                    <AvatarImage src={soniaAvatar} alt="SOnIA" />
+                    <AvatarFallback>S</AvatarFallback>
+                  </Avatar>
+                )}
                 <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground rounded-br-md"
