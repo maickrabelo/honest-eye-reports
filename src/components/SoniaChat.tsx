@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, Sparkles, Loader2, PanelRightClose } from "lucide-react";
+import { Send, Sparkles, Loader2, PanelRightClose } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useSoniaChat } from "@/contexts/SoniaChatContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import soniaAvatar from "@/assets/sonia-avatar.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
