@@ -321,6 +321,75 @@ export default function HSEITForm() {
     );
   }
 
+  const isAiMode = (assessment as any)?.collection_mode === 'ai';
+
+  const handleAiComplete = async (aiAnswers: Record<number, number>) => {
+    if (!assessment) return;
+    try {
+      setIsSubmitting(true);
+      const respondentToken = crypto.randomUUID();
+      const { data: response, error: responseError } = await supabase
+        .from('hseit_responses')
+        .insert({
+          assessment_id: assessment.id,
+          department: selectedDepartment || null,
+          respondent_token: respondentToken,
+          demographics: {},
+          completed_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+      if (responseError) throw responseError;
+      const answersData = Object.entries(aiAnswers).map(([qn, v]) => ({
+        response_id: response.id,
+        question_number: parseInt(qn),
+        answer_value: v
+      }));
+      const { error: answersError } = await supabase.from('hseit_answers').insert(answersData);
+      if (answersError) throw answersError;
+      setIsCompleted(true);
+    } catch (error) {
+      console.error('Error submitting:', error);
+      toast({ title: 'Erro ao enviar', description: 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isAiMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
+        <div className="container mx-auto px-4">
+          {departments.length > 0 && !selectedDepartment ? (
+            <div className="max-w-md mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Selecione seu setor</CardTitle>
+                  <CardDescription>Antes de começar, informe o setor em que você trabalha.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
+                    <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <SoniaFormChat
+              questions={HSEIT_QUESTIONS_SORTED}
+              likertOptions={HSEIT_LIKERT_OPTIONS}
+              categoryLabels={HSEIT_CATEGORY_LABELS}
+              onComplete={handleAiComplete}
+              assessmentTitle={assessment?.title || 'Avaliação HSE-IT'}
+              toolName="HSE-IT"
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Scroll anchor */}
