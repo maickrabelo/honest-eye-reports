@@ -238,6 +238,8 @@ const SSTDashboard = () => {
   const pendingReports = companies.reduce((sum, c) => sum + c.newReports, 0);
 
   return (
+    <>
+    <SoniaChatProvider>
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow bg-background">
