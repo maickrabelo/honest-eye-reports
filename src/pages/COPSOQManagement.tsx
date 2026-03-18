@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Save, ArrowLeft, FileText, Building2, Copy } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
