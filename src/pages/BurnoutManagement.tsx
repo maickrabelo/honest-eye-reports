@@ -53,6 +53,7 @@ export default function BurnoutManagement() {
   const [endDate, setEndDate] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [collectionMode, setCollectionMode] = useState<string>('form');
 
   useEffect(() => {
     if (!authLoading) {
