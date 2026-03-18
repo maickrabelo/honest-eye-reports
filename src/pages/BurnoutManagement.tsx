@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { DepartmentManager } from "@/components/climate-survey/DepartmentManager";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
-import { ArrowLeft, Save, Flame } from "lucide-react";
+import { ArrowLeft, Save, Flame, Sparkles } from "lucide-react";
 
 interface Company {
   id: string;
