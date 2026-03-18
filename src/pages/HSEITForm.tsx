@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, ClipboardList, Building2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, type HSEITQuestion } from '@/data/hseitQuestions';
+import SoniaFormChat from '@/components/sonia/SoniaFormChat';
 
 interface Assessment {
   id: string;
