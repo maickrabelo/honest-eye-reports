@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { Bot, Send, Sparkles, Loader2 } from "lucide-react";
+import { Bot, Send, Sparkles, Loader2, PanelRightClose } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -120,77 +119,90 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
 
   return (
     <>
-      {/* Sidebar tab trigger - fixed on right edge */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-2 bg-gradient-to-b from-primary to-accent text-primary-foreground px-2 py-4 rounded-l-xl shadow-lg hover:px-3 transition-all duration-300 ai-glow writing-vertical"
-        title="Abrir SOnIA"
+      {/* Vertical tab on right edge - full height */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed right-0 top-0 bottom-0 z-40 flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-primary to-accent text-primary-foreground w-10 hover:w-12 transition-all duration-300 ai-glow"
+          title="Abrir SOnIA"
+        >
+          <Sparkles className="h-5 w-5 animate-pulse" />
+          <span className="text-xs font-bold tracking-widest [writing-mode:vertical-lr] rotate-180">SOnIA</span>
+        </button>
+      )}
+
+      {/* Side panel - no overlay, page stays interactive */}
+      <div
+        className={`fixed top-0 right-0 bottom-0 z-40 w-[50vw] bg-background border-l border-border/50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        <Sparkles className="h-5 w-5 animate-pulse" />
-        <span className="text-xs font-bold tracking-widest [writing-mode:vertical-lr] rotate-180">SOnIA</span>
-      </button>
-
-      {/* Half-page sheet */}
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full sm:w-[50vw] sm:max-w-[50vw] p-0 flex flex-col gap-0 border-l border-border/50">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground shrink-0">
-            <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
-              <Bot className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <SheetTitle className="text-primary-foreground font-semibold text-base">SOnIA</SheetTitle>
-              <p className="text-[11px] opacity-80">IA de Riscos Psicossociais</p>
-            </div>
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground shrink-0">
+          <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
+            <Bot className="h-5 w-5" />
           </div>
-
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-5" ref={scrollRef as any}>
-            <div className="space-y-4 max-w-2xl mx-auto">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted text-foreground rounded-bl-md"
-                  }`}>
-                    {msg.role === "assistant" ? (
-                      <div className="prose prose-sm max-w-none dark:prose-invert [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      <p>{msg.content}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {isLoading && messages[messages.length - 1]?.role === "user" && (
-                <div className="flex justify-start">
-                  <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          {/* Input */}
-          <div className="p-4 border-t border-border/50 bg-background/80 shrink-0">
-            <form onSubmit={e => { e.preventDefault(); send(); }} className="flex gap-2 max-w-2xl mx-auto">
-              <Input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="Pergunte à SOnIA..."
-                className="flex-1 h-10 text-sm rounded-xl border-border/50 bg-muted/50"
-                disabled={isLoading}
-              />
-              <Button type="submit" size="icon" className="h-10 w-10 rounded-xl" disabled={isLoading || !input.trim()}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
+          <div className="flex-1">
+            <p className="font-semibold text-base">SOnIA</p>
+            <p className="text-[11px] opacity-80">IA de Riscos Psicossociais</p>
           </div>
-        </SheetContent>
-      </Sheet>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-primary-foreground hover:bg-white/20"
+            onClick={() => setOpen(false)}
+            title="Recolher"
+          >
+            <PanelRightClose className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Messages */}
+        <ScrollArea className="flex-1 p-5" ref={scrollRef as any}>
+          <div className="space-y-4 max-w-2xl mx-auto">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground rounded-br-md"
+                    : "bg-muted text-foreground rounded-bl-md"
+                }`}>
+                  {msg.role === "assistant" ? (
+                    <div className="prose prose-sm max-w-none dark:prose-invert [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p>{msg.content}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {isLoading && messages[messages.length - 1]?.role === "user" && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Input */}
+        <div className="p-4 border-t border-border/50 bg-background/80 shrink-0">
+          <form onSubmit={e => { e.preventDefault(); send(); }} className="flex gap-2 max-w-2xl mx-auto">
+            <Input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Pergunte à SOnIA..."
+              className="flex-1 h-10 text-sm rounded-xl border-border/50 bg-muted/50"
+              disabled={isLoading}
+            />
+            <Button type="submit" size="icon" className="h-10 w-10 rounded-xl" disabled={isLoading || !input.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </div>
+      </div>
     </>
   );
 }
