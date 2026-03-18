@@ -15,9 +15,16 @@ export function SoniaChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <SoniaChatContext.Provider value={{ isOpen, setIsOpen }}>
-      <div className={`transition-all duration-300 ease-in-out ${isOpen ? "mr-[50vw]" : "mr-10"}`}>
-        {children}
-      </div>
+      {children}
     </SoniaChatContext.Provider>
+  );
+}
+
+export function SoniaChatLayout({ children }: { children: ReactNode }) {
+  const { isOpen } = useSoniaChat();
+  return (
+    <div className={`transition-all duration-300 ease-in-out ${isOpen ? "mr-[50vw]" : "mr-10"}`}>
+      {children}
+    </div>
   );
 }
