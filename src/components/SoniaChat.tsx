@@ -62,6 +62,7 @@ export default function SoniaChat({ companyId, sstManagerId, contextType = "dash
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),
           company_id: companyId,
+          sst_manager_id: sstManagerId,
           context_type: contextType,
         }),
       });
