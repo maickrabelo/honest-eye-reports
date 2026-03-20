@@ -6,11 +6,111 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function fetchCompanyContext(supabase: any, companyId: string): Promise<string> {
+  let ctx = "";
+
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name, cnpj, max_employees")
+    .eq("id", companyId)
+    .single();
+
+  if (company) {
+    ctx += `\n### ${company.name}`;
+    if (company.cnpj) ctx += ` (CNPJ: ${company.cnpj})`;
+    if (company.max_employees) ctx += ` | Máx. funcionários: ${company.max_employees}`;
+  }
+
+  // Reports
+  const { count: totalReports } = await supabase
+    .from("reports")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", companyId);
+
+  const { count: pendingReports } = await supabase
+    .from("reports")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("status", "pending");
+
+  ctx += `\nDenúncias: ${totalReports || 0} total, ${pendingReports || 0} pendentes`;
+
+  // HSE-IT
+  const { data: hseitAssessments } = await supabase
+    .from("hseit_assessments")
+    .select("id, title, is_active")
+    .eq("company_id", companyId);
+
+  if (hseitAssessments?.length > 0) {
+    ctx += `\nAvaliações HSE-IT:`;
+    for (const a of hseitAssessments) {
+      const { count } = await supabase
+        .from("hseit_responses")
+        .select("*", { count: "exact", head: true })
+        .eq("assessment_id", a.id);
+      ctx += ` ${a.title} (${count || 0} respostas, ${a.is_active ? "ativa" : "inativa"});`;
+    }
+  }
+
+  // COPSOQ
+  const { data: copsoqAssessments } = await supabase
+    .from("copsoq_assessments")
+    .select("id, title, is_active")
+    .eq("company_id", companyId);
+
+  if (copsoqAssessments?.length > 0) {
+    ctx += `\nAvaliações COPSOQ II:`;
+    for (const a of copsoqAssessments) {
+      const { count } = await supabase
+        .from("copsoq_responses")
+        .select("*", { count: "exact", head: true })
+        .eq("assessment_id", a.id);
+      ctx += ` ${a.title} (${count || 0} respostas, ${a.is_active ? "ativa" : "inativa"});`;
+    }
+  }
+
+  // Burnout
+  const { data: burnoutAssessments } = await supabase
+    .from("burnout_assessments")
+    .select("id, title, is_active")
+    .eq("company_id", companyId);
+
+  if (burnoutAssessments?.length > 0) {
+    ctx += `\nAvaliações Burnout:`;
+    for (const a of burnoutAssessments) {
+      const { count } = await supabase
+        .from("burnout_responses")
+        .select("*", { count: "exact", head: true })
+        .eq("assessment_id", a.id);
+      ctx += ` ${a.title} (${count || 0} respostas, ${a.is_active ? "ativa" : "inativa"});`;
+    }
+  }
+
+  // Climate surveys
+  const { data: climateSurveys } = await supabase
+    .from("climate_surveys")
+    .select("id, title, is_active")
+    .eq("company_id", companyId);
+
+  if (climateSurveys?.length > 0) {
+    ctx += `\nPesquisas de Clima:`;
+    for (const s of climateSurveys) {
+      const { count } = await supabase
+        .from("survey_responses")
+        .select("*", { count: "exact", head: true })
+        .eq("survey_id", s.id);
+      ctx += ` ${s.title} (${count || 0} respostas, ${s.is_active ? "ativa" : "inativa"});`;
+    }
+  }
+
+  return ctx;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, company_id, context_type } = await req.json();
+    const { messages, company_id, sst_manager_id, context_type } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -18,86 +118,41 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch company context data
     let contextData = "";
 
-    if (company_id) {
-      const { data: company } = await supabase
-        .from("companies")
-        .select("name, cnpj, max_employees")
-        .eq("id", company_id)
+    if (sst_manager_id) {
+      // SST mode: fetch SST manager info and ALL assigned companies
+      const { data: sstManager } = await supabase
+        .from("sst_managers")
+        .select("name, max_companies, slug, trial_ends_at, subscription_status")
+        .eq("id", sst_manager_id)
         .single();
 
-      if (company) {
-        contextData += `\n## Empresa: ${company.name}`;
-        if (company.cnpj) contextData += ` (CNPJ: ${company.cnpj})`;
-        if (company.max_employees) contextData += `\nNúmero máximo de funcionários: ${company.max_employees}`;
+      if (sstManager) {
+        contextData += `\n## Gestora SST: ${sstManager.name}`;
+        contextData += `\nMáximo de empresas: ${sstManager.max_companies}`;
+        if (sstManager.subscription_status) contextData += ` | Status: ${sstManager.subscription_status}`;
+        if (sstManager.slug) contextData += ` | Slug: ${sstManager.slug}`;
       }
 
-      // Reports stats
-      const { count: totalReports } = await supabase
-        .from("reports")
-        .select("*", { count: "exact", head: true })
-        .eq("company_id", company_id);
+      // Get all assigned companies
+      const { data: assignments } = await supabase
+        .from("company_sst_assignments")
+        .select("company_id")
+        .eq("sst_manager_id", sst_manager_id);
 
-      const { count: pendingReports } = await supabase
-        .from("reports")
-        .select("*", { count: "exact", head: true })
-        .eq("company_id", company_id)
-        .eq("status", "pending");
-
-      contextData += `\n\n## Denúncias: ${totalReports || 0} total, ${pendingReports || 0} pendentes`;
-
-      // HSE-IT assessments
-      const { data: hseitAssessments } = await supabase
-        .from("hseit_assessments")
-        .select("id, title, is_active")
-        .eq("company_id", company_id);
-
-      if (hseitAssessments && hseitAssessments.length > 0) {
-        contextData += `\n\n## Avaliações HSE-IT: ${hseitAssessments.length}`;
-        for (const a of hseitAssessments) {
-          const { count } = await supabase
-            .from("hseit_responses")
-            .select("*", { count: "exact", head: true })
-            .eq("assessment_id", a.id);
-          contextData += `\n- ${a.title}: ${count || 0} respostas (${a.is_active ? "ativa" : "inativa"})`;
+      if (assignments && assignments.length > 0) {
+        contextData += `\n\n## Empresas cadastradas (${assignments.length}):`;
+        for (const assignment of assignments) {
+          contextData += await fetchCompanyContext(supabase, assignment.company_id);
         }
+      } else {
+        contextData += `\n\nNenhuma empresa cadastrada ainda.`;
       }
-
-      // COPSOQ assessments
-      const { data: copsoqAssessments } = await supabase
-        .from("copsoq_assessments")
-        .select("id, title, is_active")
-        .eq("company_id", company_id);
-
-      if (copsoqAssessments && copsoqAssessments.length > 0) {
-        contextData += `\n\n## Avaliações COPSOQ II: ${copsoqAssessments.length}`;
-        for (const a of copsoqAssessments) {
-          const { count } = await supabase
-            .from("copsoq_responses")
-            .select("*", { count: "exact", head: true })
-            .eq("assessment_id", a.id);
-          contextData += `\n- ${a.title}: ${count || 0} respostas (${a.is_active ? "ativa" : "inativa"})`;
-        }
-      }
-
-      // Burnout assessments
-      const { data: burnoutAssessments } = await supabase
-        .from("burnout_assessments")
-        .select("id, title, is_active")
-        .eq("company_id", company_id);
-
-      if (burnoutAssessments && burnoutAssessments.length > 0) {
-        contextData += `\n\n## Avaliações de Burnout: ${burnoutAssessments.length}`;
-        for (const a of burnoutAssessments) {
-          const { count } = await supabase
-            .from("burnout_responses")
-            .select("*", { count: "exact", head: true })
-            .eq("assessment_id", a.id);
-          contextData += `\n- ${a.title}: ${count || 0} respostas (${a.is_active ? "ativa" : "inativa"})`;
-        }
-      }
+    } else if (company_id) {
+      // Single company mode
+      contextData += `\n## Empresa selecionada:`;
+      contextData += await fetchCompanyContext(supabase, company_id);
     }
 
     const systemPrompt = `Você é a SOnIA (Sistema Online de Inteligência Artificial), a primeira IA especializada em gestão de riscos psicossociais no Brasil. Você foi desenvolvida para ajudar gestores de SST (Saúde e Segurança do Trabalho) e empresas a entender e gerenciar riscos psicossociais no ambiente de trabalho.
@@ -108,9 +163,10 @@ Suas capacidades incluem:
 - Interpretar resultados e sugerir ações preventivas
 - Orientar sobre a NR-01 e gestão de riscos psicossociais
 - Explicar como funcionam as ferramentas da plataforma
+- Comparar dados entre empresas diferentes (para gestores SST)
 
 Contexto atual: ${context_type || "dashboard"}
-${contextData ? `\nDados da empresa:\n${contextData}` : "\nNenhuma empresa selecionada no momento."}
+${contextData ? `\nDados disponíveis:\n${contextData}` : "\nNenhuma empresa selecionada no momento."}
 
 Diretrizes:
 - Responda sempre em português brasileiro
@@ -118,7 +174,8 @@ Diretrizes:
 - Use dados reais da empresa quando disponíveis
 - Formate respostas com markdown quando útil
 - Se não tiver dados suficientes, sugira ao usuário realizar avaliações
-- Nunca invente dados — use apenas o que está disponível no contexto`;
+- Nunca invente dados — use apenas o que está disponível no contexto
+- Quando o gestor SST perguntar sobre empresas, use os dados de TODAS as empresas cadastradas`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

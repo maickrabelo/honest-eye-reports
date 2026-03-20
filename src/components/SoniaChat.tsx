@@ -14,10 +14,11 @@ const SONIA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sonia-chat`
 
 interface SoniaChatProps {
   companyId?: string | null;
+  sstManagerId?: string | null;
   contextType?: string;
 }
 
-export default function SoniaChat({ companyId, contextType = "dashboard" }: SoniaChatProps) {
+export default function SoniaChat({ companyId, sstManagerId, contextType = "dashboard" }: SoniaChatProps) {
   const { isOpen: open, setIsOpen: setOpen } = useSoniaChat();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -61,6 +62,7 @@ export default function SoniaChat({ companyId, contextType = "dashboard" }: Soni
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),
           company_id: companyId,
+          sst_manager_id: sstManagerId,
           context_type: contextType,
         }),
       });
