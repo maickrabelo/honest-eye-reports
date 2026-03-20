@@ -18,7 +18,7 @@ interface SoniaChatProps {
   contextType?: string;
 }
 
-export default function SoniaChat({ companyId, contextType = "dashboard" }: SoniaChatProps) {
+export default function SoniaChat({ companyId, sstManagerId, contextType = "dashboard" }: SoniaChatProps) {
   const { isOpen: open, setIsOpen: setOpen } = useSoniaChat();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
