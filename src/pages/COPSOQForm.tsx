@@ -10,7 +10,7 @@ import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText
 import { toast } from '@/hooks/use-toast';
 import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS, type COPSOQQuestion } from '@/data/copsoqQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
-import VoiceIntroDialog from '@/components/sonia/VoiceIntroDialog';
+
 
 interface Assessment {
   id: string;
