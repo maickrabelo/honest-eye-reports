@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Sparkles } from "lucide-react";
@@ -54,28 +54,54 @@ export default function SoniaFormChat({
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showEncouragement, setShowEncouragement] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const femaleVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
-  const progress = (Object.keys(answers).length / questions.length) * 100;
-  const currentQuestion = questions[currentIndex];
-  const isComplete = currentIndex >= questions.length;
+  // Load and cache a female pt-BR voice
+  useEffect(() => {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
 
-  const speak = (text: string) => {
+    const pickFemaleVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      // Priority: explicit female Portuguese voices by common names
+      const femaleNames = ['luciana', 'francisca', 'fernanda', 'vitória', 'thalita', 'google português do brasil', 'microsoft francisca'];
+      const ptVoices = voices.filter(v => v.lang.startsWith('pt'));
+
+      // 1. Try known female voice names
+      for (const name of femaleNames) {
+        const match = ptVoices.find(v => v.name.toLowerCase().includes(name));
+        if (match) { femaleVoiceRef.current = match; return; }
+      }
+
+      // 2. Try any pt-BR voice with "female" in name
+      const female = ptVoices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('feminino'));
+      if (female) { femaleVoiceRef.current = female; return; }
+
+      // 3. Fallback: pick second pt-BR voice (often female) or first
+      const ptBR = ptVoices.filter(v => v.lang === 'pt-BR');
+      femaleVoiceRef.current = ptBR.length > 1 ? ptBR[1] : ptBR[0] || ptVoices[0] || null;
+    };
+
+    pickFemaleVoice();
+    // Voices may load async
+    window.speechSynthesis.onvoiceschanged = pickFemaleVoice;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, [voiceEnabled]);
+
+  const speak = useCallback((text: string) => {
     if (!voiceEnabled || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'pt-BR';
     utterance.rate = 0.95;
-    utterance.pitch = 1.1;
-    // Try to pick a female pt-BR voice
-    const voices = window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang.startsWith('pt') && v.name.toLowerCase().includes('female'))
-      || voices.find(v => v.lang.startsWith('pt-BR'))
-      || voices.find(v => v.lang.startsWith('pt'));
-    if (ptVoice) utterance.voice = ptVoice;
+    utterance.pitch = 1.15;
+    if (femaleVoiceRef.current) utterance.voice = femaleVoiceRef.current;
     window.speechSynthesis.speak(utterance);
-  };
+  }, [voiceEnabled]);
 
-  // Speak welcome message on mount
+  const progress = (Object.keys(answers).length / questions.length) * 100;
+  const currentQuestion = questions[currentIndex];
+  const isComplete = currentIndex >= questions.length;
+
   useEffect(() => {
     if (voiceEnabled) {
       // Wait for voices to load
