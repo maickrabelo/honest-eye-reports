@@ -277,15 +277,14 @@ export default function BurnoutForm() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
-          <VoiceIntroDialog open={showVoiceIntro} onStart={(voice) => { setVoiceEnabled(voice); setShowVoiceIntro(false); }} toolName="Burnout (MBI)" />
           {departments.length > 0 && !selectedDepartment ? (
             <div className="max-w-md mx-auto">
               <Card><CardHeader><CardTitle>Selecione seu setor</CardTitle></CardHeader>
               <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
             </div>
-          ) : !showVoiceIntro ? (
-            <SoniaFormChat questions={BURNOUT_QUESTIONS_SORTED} likertOptions={BURNOUT_LIKERT_OPTIONS} categoryLabels={BURNOUT_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'Burnout'} toolName="Burnout (MBI)" voiceEnabled={voiceEnabled} />
-          ) : null}
+          ) : (
+            <SoniaFormChat questions={BURNOUT_QUESTIONS_SORTED} likertOptions={BURNOUT_LIKERT_OPTIONS} categoryLabels={BURNOUT_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'Burnout'} toolName="Burnout (MBI)" />
+          )}
         </div>
       </div>
     );

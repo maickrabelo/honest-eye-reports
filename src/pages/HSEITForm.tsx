@@ -361,7 +361,6 @@ export default function HSEITForm() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
-          <VoiceIntroDialog open={showVoiceIntro} onStart={(voice) => { setVoiceEnabled(voice); setShowVoiceIntro(false); }} toolName="HSE-IT" />
           {departments.length > 0 && !selectedDepartment ? (
             <div className="max-w-md mx-auto">
               <Card>
@@ -377,7 +376,7 @@ export default function HSEITForm() {
                 </CardContent>
               </Card>
             </div>
-          ) : !showVoiceIntro ? (
+          ) : (
             <SoniaFormChat
               questions={HSEIT_QUESTIONS_SORTED}
               likertOptions={HSEIT_LIKERT_OPTIONS}
@@ -385,9 +384,8 @@ export default function HSEITForm() {
               onComplete={handleAiComplete}
               assessmentTitle={assessment?.title || 'Avaliação HSE-IT'}
               toolName="HSE-IT"
-              voiceEnabled={voiceEnabled}
             />
-          ) : null}
+          )}
         </div>
       </div>
     );
