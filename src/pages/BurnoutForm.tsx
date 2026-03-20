@@ -23,7 +23,7 @@ import {
 } from "@/data/burnoutQuestions";
 import { Flame, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import SoniaFormChat from "@/components/sonia/SoniaFormChat";
-import VoiceIntroDialog from "@/components/sonia/VoiceIntroDialog";
+
 
 interface Assessment {
   id: string;
