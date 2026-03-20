@@ -10,6 +10,7 @@ import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText
 import { toast } from '@/hooks/use-toast';
 import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS, type COPSOQQuestion } from '@/data/copsoqQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
+import VoiceIntroDialog from '@/components/sonia/VoiceIntroDialog';
 
 interface Assessment {
   id: string;
@@ -68,6 +69,8 @@ export default function COPSOQForm() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDepartmentError, setShowDepartmentError] = useState(false);
+  const [showVoiceIntro, setShowVoiceIntro] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const questionsPerPage = 7;
   const totalPages = Math.ceil(COPSOQ_QUESTIONS_SORTED.length / questionsPerPage);
@@ -146,18 +149,20 @@ export default function COPSOQForm() {
     finally { setIsSubmitting(false); }
   };
 
+
   if (isAiMode) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
+          <VoiceIntroDialog open={showVoiceIntro} onStart={(voice) => { setVoiceEnabled(voice); setShowVoiceIntro(false); }} toolName="COPSOQ II" />
           {departments.length > 0 && !selectedDepartment ? (
             <div className="max-w-md mx-auto">
               <Card><CardHeader><CardTitle>Selecione seu setor</CardTitle></CardHeader>
               <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
             </div>
-          ) : (
+          ) : !showVoiceIntro ? (
             <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" />
-          )}
+          ) : null}
         </div>
       </div>
     );

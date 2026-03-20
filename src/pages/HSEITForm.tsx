@@ -10,6 +10,7 @@ import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Clipboar
 import { toast } from '@/hooks/use-toast';
 import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, type HSEITQuestion } from '@/data/hseitQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
+import VoiceIntroDialog from '@/components/sonia/VoiceIntroDialog';
 
 interface Assessment {
   id: string;
@@ -91,6 +92,8 @@ export default function HSEITForm() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDepartmentError, setShowDepartmentError] = useState(false);
+  const [showVoiceIntro, setShowVoiceIntro] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const questionsPerPage = 7;
   const totalPages = Math.ceil(HSEIT_QUESTIONS_SORTED.length / questionsPerPage);
@@ -360,6 +363,7 @@ export default function HSEITForm() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
+          <VoiceIntroDialog open={showVoiceIntro} onStart={(voice) => { setVoiceEnabled(voice); setShowVoiceIntro(false); }} toolName="HSE-IT" />
           {departments.length > 0 && !selectedDepartment ? (
             <div className="max-w-md mx-auto">
               <Card>
@@ -375,7 +379,7 @@ export default function HSEITForm() {
                 </CardContent>
               </Card>
             </div>
-          ) : (
+          ) : !showVoiceIntro ? (
             <SoniaFormChat
               questions={HSEIT_QUESTIONS_SORTED}
               likertOptions={HSEIT_LIKERT_OPTIONS}
@@ -384,7 +388,7 @@ export default function HSEITForm() {
               assessmentTitle={assessment?.title || 'Avaliação HSE-IT'}
               toolName="HSE-IT"
             />
-          )}
+          ) : null}
         </div>
       </div>
     );
