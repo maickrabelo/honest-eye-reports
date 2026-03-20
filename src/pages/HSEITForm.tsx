@@ -92,8 +92,6 @@ export default function HSEITForm() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDepartmentError, setShowDepartmentError] = useState(false);
-  const [showVoiceIntro, setShowVoiceIntro] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const questionsPerPage = 7;
   const totalPages = Math.ceil(HSEIT_QUESTIONS_SORTED.length / questionsPerPage);
