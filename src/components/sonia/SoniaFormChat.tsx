@@ -23,6 +23,7 @@ interface SoniaFormChatProps {
   onComplete: (answers: Record<number, number>) => void;
   assessmentTitle: string;
   toolName: string;
+  voiceEnabled?: boolean;
 }
 
 const ENCOURAGEMENTS = [
@@ -47,6 +48,7 @@ export default function SoniaFormChat({
   onComplete,
   assessmentTitle,
   toolName,
+  voiceEnabled = false,
 }: SoniaFormChatProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -56,6 +58,54 @@ export default function SoniaFormChat({
   const progress = (Object.keys(answers).length / questions.length) * 100;
   const currentQuestion = questions[currentIndex];
   const isComplete = currentIndex >= questions.length;
+
+  const speak = (text: string) => {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 0.95;
+    utterance.pitch = 1.1;
+    // Try to pick a female pt-BR voice
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang.startsWith('pt') && v.name.toLowerCase().includes('female'))
+      || voices.find(v => v.lang.startsWith('pt-BR'))
+      || voices.find(v => v.lang.startsWith('pt'));
+    if (ptVoice) utterance.voice = ptVoice;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Speak welcome message on mount
+  useEffect(() => {
+    if (voiceEnabled) {
+      // Wait for voices to load
+      const timer = setTimeout(() => {
+        speak(`Olá! Eu sou a SOnIA e vou te guiar por esta avaliação. Vou fazer uma pergunta de cada vez.`);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [voiceEnabled]);
+
+  // Speak current question
+  useEffect(() => {
+    if (voiceEnabled && currentQuestion && !showEncouragement && !isComplete) {
+      const timer = setTimeout(() => {
+        speak(currentQuestion.text);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    if (voiceEnabled && isComplete) {
+      setTimeout(() => speak('Parabéns! Você completou todas as perguntas! Obrigada pela sua participação.'), 300);
+    }
+  }, [currentIndex, showEncouragement, isComplete]);
+
+  // Speak encouragement
+  useEffect(() => {
+    if (voiceEnabled && showEncouragement) {
+      const msg = ENCOURAGEMENTS[Math.floor(currentIndex / 7) % ENCOURAGEMENTS.length].replace(/[💪🌟]/g, '');
+      speak(msg);
+    }
+  }, [showEncouragement]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
