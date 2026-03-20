@@ -14,6 +14,7 @@ const SONIA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sonia-chat`
 
 interface SoniaChatProps {
   companyId?: string | null;
+  sstManagerId?: string | null;
   contextType?: string;
 }
 
