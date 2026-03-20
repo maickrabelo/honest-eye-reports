@@ -56,6 +56,8 @@ export default function BurnoutForm() {
   const [currentPage, setCurrentPage] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showVoiceIntro, setShowVoiceIntro] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const totalPages = Math.ceil(BURNOUT_QUESTIONS_SORTED.length / QUESTIONS_PER_PAGE);
   
