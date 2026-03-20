@@ -272,8 +272,8 @@ export default function BurnoutForm() {
     finally { setSubmitting(false); }
   };
 
-  const [showVoiceIntro, setShowVoiceIntro] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+
+
 
   if (isAiMode) {
     return (
