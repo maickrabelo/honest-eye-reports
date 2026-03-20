@@ -387,6 +387,7 @@ export default function HSEITForm() {
               onComplete={handleAiComplete}
               assessmentTitle={assessment?.title || 'Avaliação HSE-IT'}
               toolName="HSE-IT"
+              voiceEnabled={voiceEnabled}
             />
           ) : null}
         </div>

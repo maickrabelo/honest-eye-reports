@@ -286,7 +286,7 @@ export default function BurnoutForm() {
               <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
             </div>
           ) : !showVoiceIntro ? (
-            <SoniaFormChat questions={BURNOUT_QUESTIONS_SORTED} likertOptions={BURNOUT_LIKERT_OPTIONS} categoryLabels={BURNOUT_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'Burnout'} toolName="Burnout (MBI)" />
+            <SoniaFormChat questions={BURNOUT_QUESTIONS_SORTED} likertOptions={BURNOUT_LIKERT_OPTIONS} categoryLabels={BURNOUT_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'Burnout'} toolName="Burnout (MBI)" voiceEnabled={voiceEnabled} />
           ) : null}
         </div>
       </div>

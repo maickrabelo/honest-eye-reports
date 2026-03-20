@@ -161,7 +161,7 @@ export default function COPSOQForm() {
               <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
             </div>
           ) : !showVoiceIntro ? (
-            <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" />
+            <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" voiceEnabled={voiceEnabled} />
           ) : null}
         </div>
       </div>
