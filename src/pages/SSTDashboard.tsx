@@ -493,7 +493,7 @@ const SSTDashboard = () => {
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
     </div>
     </SoniaChatLayout>
-    <SoniaChat contextType="sst" />
+    <SoniaChat sstManagerId={sstManagerId} contextType="sst" />
     </SoniaChatProvider>
   );
 };
