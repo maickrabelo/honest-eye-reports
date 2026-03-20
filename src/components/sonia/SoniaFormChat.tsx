@@ -98,7 +98,10 @@ export default function SoniaFormChat({
     window.speechSynthesis.speak(utterance);
   }, [voiceEnabled]);
 
-  // Speak welcome message on mount
+  const progress = (Object.keys(answers).length / questions.length) * 100;
+  const currentQuestion = questions[currentIndex];
+  const isComplete = currentIndex >= questions.length;
+
   useEffect(() => {
     if (voiceEnabled) {
       // Wait for voices to load
