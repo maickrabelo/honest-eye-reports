@@ -149,8 +149,6 @@ export default function COPSOQForm() {
     finally { setIsSubmitting(false); }
   };
 
-  const [showVoiceIntro, setShowVoiceIntro] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   if (isAiMode) {
     return (
