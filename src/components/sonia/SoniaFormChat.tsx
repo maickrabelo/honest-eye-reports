@@ -23,6 +23,7 @@ interface SoniaFormChatProps {
   onComplete: (answers: Record<number, number>) => void;
   assessmentTitle: string;
   toolName: string;
+  voiceEnabled?: boolean;
 }
 
 const ENCOURAGEMENTS = [
