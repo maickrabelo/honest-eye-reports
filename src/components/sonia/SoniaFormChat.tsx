@@ -54,49 +54,102 @@ export default function SoniaFormChat({
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showEncouragement, setShowEncouragement] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const femaleVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speakQueueRef = useRef<string | null>(null);
+  const isSpeakingRef = useRef(false);
 
-  // Load and cache a female pt-BR voice
-  useEffect(() => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  const speak = useCallback(async (text: string) => {
+    if (!voiceEnabled) return;
 
-    const pickFemaleVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      // Priority: explicit female Portuguese voices by common names
-      const femaleNames = ['luciana', 'francisca', 'fernanda', 'vitória', 'thalita', 'google português do brasil', 'microsoft francisca'];
-      const ptVoices = voices.filter(v => v.lang.startsWith('pt'));
+    // Cancel any current audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
 
-      // 1. Try known female voice names
-      for (const name of femaleNames) {
-        const match = ptVoices.find(v => v.name.toLowerCase().includes(name));
-        if (match) { femaleVoiceRef.current = match; return; }
+    // Skip if already processing same text
+    if (isSpeakingRef.current) {
+      speakQueueRef.current = text;
+      return;
+    }
+
+    isSpeakingRef.current = true;
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/elevenlabs-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("TTS request failed:", response.status);
+        // Fallback to browser TTS
+        fallbackSpeak(text);
+        return;
       }
 
-      // 2. Try any pt-BR voice with "female" in name
-      const female = ptVoices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('feminino'));
-      if (female) { femaleVoiceRef.current = female; return; }
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
 
-      // 3. Fallback: pick second pt-BR voice (often female) or first
-      const ptBR = ptVoices.filter(v => v.lang === 'pt-BR');
-      femaleVoiceRef.current = ptBR.length > 1 ? ptBR[1] : ptBR[0] || ptVoices[0] || null;
-    };
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        isSpeakingRef.current = false;
+        audioRef.current = null;
+        // Process queued text
+        if (speakQueueRef.current) {
+          const next = speakQueueRef.current;
+          speakQueueRef.current = null;
+          speak(next);
+        }
+      };
 
-    pickFemaleVoice();
-    // Voices may load async
-    window.speechSynthesis.onvoiceschanged = pickFemaleVoice;
-    return () => { window.speechSynthesis.onvoiceschanged = null; };
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl);
+        isSpeakingRef.current = false;
+        audioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error("ElevenLabs TTS error:", error);
+      isSpeakingRef.current = false;
+      fallbackSpeak(text);
+    }
   }, [voiceEnabled]);
 
-  const speak = useCallback((text: string) => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  // Fallback to browser TTS if ElevenLabs fails
+  const fallbackSpeak = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'pt-BR';
     utterance.rate = 0.95;
     utterance.pitch = 1.15;
-    if (femaleVoiceRef.current) utterance.voice = femaleVoiceRef.current;
     window.speechSynthesis.speak(utterance);
-  }, [voiceEnabled]);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const progress = (Object.keys(answers).length / questions.length) * 100;
   const currentQuestion = questions[currentIndex];
@@ -104,7 +157,6 @@ export default function SoniaFormChat({
 
   useEffect(() => {
     if (voiceEnabled) {
-      // Wait for voices to load
       const timer = setTimeout(() => {
         speak(`Olá! Eu sou a SOnIA e vou te guiar por esta avaliação. Vou fazer uma pergunta de cada vez.`);
       }, 500);
@@ -181,7 +233,7 @@ export default function SoniaFormChat({
         <Progress value={progress} className="h-2" />
       </div>
 
-      {/* Chat area - content anchored to bottom, auto-scrolls */}
+      {/* Chat area */}
       <div className="flex-1 overflow-y-auto pr-2 min-h-0">
         <div className="flex flex-col justify-end min-h-full">
           <div className="space-y-4">
