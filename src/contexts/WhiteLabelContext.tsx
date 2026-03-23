@@ -127,6 +127,19 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     const detectBranding = async () => {
+      // Skip branding detection on auth/login pages for faster loading
+      const skipPaths = ['/auth', '/login', '/teste-gratis', '/teste-gratis-sst', '/parceiro/cadastro', '/afiliado/cadastro'];
+      if (skipPaths.some(p => location.pathname === p)) {
+        setBrandLogo(null);
+        setBrandName(null);
+        setSstSlug(null);
+        setBrandColor(null);
+        setSstManagerId(null);
+        applyColorTheme(null);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
 
       try {
