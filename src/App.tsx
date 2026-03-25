@@ -36,6 +36,7 @@ const PartnerRegistration = React.lazy(() => import("./pages/PartnerRegistration
 const AffiliateRegistration = React.lazy(() => import("./pages/AffiliateRegistration"));
 const PartnerDashboard = React.lazy(() => import("./pages/PartnerDashboard"));
 const AffiliateDashboard = React.lazy(() => import("./pages/AffiliateDashboard"));
+const AffiliateLanding = React.lazy(() => import("./pages/AffiliateLanding"));
 const HSEITDashboard = React.lazy(() => import("./pages/HSEITDashboard"));
 const HSEITManagement = React.lazy(() => import("./pages/HSEITManagement"));
 const HSEITForm = React.lazy(() => import("./pages/HSEITForm"));
