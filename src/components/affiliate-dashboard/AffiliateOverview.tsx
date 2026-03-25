@@ -14,6 +14,7 @@ interface Stats {
   totalCompanies: number;
   activeCompanies: number;
   totalCommissions: number;
+  totalLeads: number;
 }
 
 export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOverviewProps) => {
