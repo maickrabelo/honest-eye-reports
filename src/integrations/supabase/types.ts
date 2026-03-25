@@ -53,6 +53,44 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_leads: {
+        Row: {
+          affiliate_id: string
+          company_name: string
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          referral_code: string
+        }
+        Insert: {
+          affiliate_id: string
+          company_name: string
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          referral_code: string
+        }
+        Update: {
+          affiliate_id?: string
+          company_name?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          referral_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_leads_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates: {
         Row: {
           approved_at: string | null
@@ -71,6 +109,7 @@ export type Database = {
           nome_completo: string
           phone: string | null
           profissao: string
+          redirect_url: string | null
           referral_code: string
           rejection_reason: string | null
           rg: string
@@ -97,6 +136,7 @@ export type Database = {
           nome_completo: string
           phone?: string | null
           profissao: string
+          redirect_url?: string | null
           referral_code?: string
           rejection_reason?: string | null
           rg: string
@@ -123,6 +163,7 @@ export type Database = {
           nome_completo?: string
           phone?: string | null
           profissao?: string
+          redirect_url?: string | null
           referral_code?: string
           rejection_reason?: string | null
           rg?: string
