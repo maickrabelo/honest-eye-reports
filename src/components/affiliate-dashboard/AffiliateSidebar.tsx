@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, DollarSign, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, DollarSign, LogOut, Users, Settings } from 'lucide-react';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import {
   Sidebar,
