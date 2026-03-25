@@ -119,6 +119,7 @@ const App = () => (
                 <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
                 <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
                 <Route path="/afiliado/dashboard" element={<AffiliateDashboard />} />
+                <Route path="/i/:referralCode" element={<AffiliateLanding />} />
                 <Route path="/hseit-dashboard" element={<HSEITDashboard />} />
                 <Route path="/hseit/new" element={<HSEITManagement />} />
                 <Route path="/hseit/:id" element={<HSEITManagement />} />

@@ -79,8 +79,14 @@ const AffiliateDashboard = () => {
             {activeTab === 'companies' && (
               <AffiliateReferredCompanies affiliateId={affiliate.id} />
             )}
+            {activeTab === 'leads' && (
+              <AffiliateLeads affiliateId={affiliate.id} />
+            )}
             {activeTab === 'commissions' && (
               <AffiliateCommissions affiliateId={affiliate.id} />
+            )}
+            {activeTab === 'settings' && (
+              <AffiliateSettings affiliateId={affiliate.id} />
             )}
           </div>
         </main>
