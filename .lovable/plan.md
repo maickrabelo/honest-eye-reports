@@ -1,47 +1,49 @@
 
 
-## Plano: Unificar HSE-IT e COPSOQ em uma página "Avaliação de Riscos Psicossociais"
+## Tracked Affiliate Landing Pages with Lead Capture
 
-### Mudança principal
-Substituir o botão "Avaliação HSE-IT" na barra de ferramentas por um botão único **"Avaliação de Riscos Psicossociais"** que navega para uma nova página hub (`/psychosocial-dashboard`). Essa página terá duas abas (Tabs): **HSE-IT** e **COPSOQ**.
+### Overview
+Create a system where each affiliate gets a unique tracked URL. When someone visits that URL, they see a landing page (similar to the homepage) with a lead capture form right after the hero banner. On submission, the lead is saved linked to the affiliate, and a configurable redirect URL opens in a new tab.
 
-### Arquivos a criar
+### Database Changes
 
-1. **`src/pages/PsychosocialDashboard.tsx`** — Nova página hub com `Tabs` contendo:
-   - Aba **HSE-IT**: renderiza o conteúdo atual do `HSEITDashboard` (extraído como componente interno ou reutilizado)
-   - Aba **COPSOQ**: placeholder inicial com descrição da metodologia e botão para criar avaliações (será populado quando o módulo COPSOQ for implementado)
+**1. Add `redirect_url` column to `affiliates` table**
+- New nullable text column to store where leads should be redirected after form submission
+- Admins/affiliates can configure this URL
 
-### Arquivos a editar
+**2. Create `affiliate_leads` table**
+- `id` (uuid, PK)
+- `affiliate_id` (uuid, references affiliates)
+- `name` (text, required)
+- `phone` (text, required)
+- `company_name` (text, required)
+- `referral_code` (text) -- for tracking
+- `created_at` (timestamptz)
+- RLS: public INSERT (anon), SELECT for admin + owning affiliate
 
-1. **`src/pages/SSTDashboard.tsx`** — Trocar o botão `Avaliação HSE-IT` (id `tool-hseit`) por `Avaliação de Riscos Psicossociais` navegando para `/psychosocial-dashboard`. Atualizar o ícone e o texto do onboarding tour correspondente.
+### Frontend Changes
 
-2. **`src/pages/SalesDashboard.tsx`** — Mesma troca do botão HSE-IT para o novo botão unificado.
+**3. New page: `src/pages/AffiliateLanding.tsx`**
+- Route: `/i/:referralCode`
+- On mount, fetch affiliate info by `referral_code` to validate the link and get the `redirect_url`
+- Renders: HeroSection (reused) + Lead capture form (name, phone, company) + remaining landing sections (Features, Benefits, FAQ, etc.)
+- The lead form appears right below the hero banner in a highlighted card
+- On submit: inserts into `affiliate_leads`, then opens `redirect_url` in new tab via `window.open()`
 
-3. **`src/App.tsx`** — Adicionar rota `/psychosocial-dashboard` apontando para `PsychosocialDashboard`.
+**4. Update Affiliate Dashboard**
+- In `AffiliateOverview`, update the referral link to point to `/i/{referralCode}` instead of `/checkout?ref=`
+- Add a "Leads" count card to the overview stats
+- Add a new "Leads" tab in the sidebar to list captured leads
 
-### Estrutura da nova página
+**5. Add redirect URL config**
+- In the affiliate dashboard, add a settings section or inline edit for the `redirect_url`
 
-```text
-┌──────────────────────────────────────┐
-│  ← Voltar ao Dashboard              │
-│                                      │
-│  Avaliação de Riscos Psicossociais   │
-│                                      │
-│  ┌──────────┐ ┌──────────┐           │
-│  │  HSE-IT  │ │  COPSOQ  │  (Tabs)  │
-│  └──────────┘ └──────────┘           │
-│                                      │
-│  [Conteúdo da aba selecionada]       │
-│  - HSE-IT: redireciona/embute o      │
-│    dashboard existente               │
-│  - COPSOQ: placeholder "Em breve"   │
-│    ou conteúdo quando implementado   │
-└──────────────────────────────────────┘
-```
+### Route Registration
+- Add `/i/:referralCode` route in `App.tsx` with lazy-loaded `AffiliateLanding`
 
-### Detalhes técnicos
-- A aba HSE-IT renderizará o conteúdo do `HSEITDashboard` existente (importando e reutilizando sua lógica interna)
-- A aba COPSOQ será um placeholder preparado para receber o módulo completo quando for implementado
-- As rotas existentes do HSE-IT (`/hseit/new`, `/hseit/:id`, etc.) continuam funcionando normalmente
-- Não há alterações no banco de dados
+### Technical Details
+- The lead form uses no authentication (public/anon insert)
+- The `referral_code` lookup validates the affiliate exists and is approved
+- If no `redirect_url` is configured, fallback to the homepage or WhatsApp link
+- Form validation: name required, phone required (Brazilian format), company name required
 
