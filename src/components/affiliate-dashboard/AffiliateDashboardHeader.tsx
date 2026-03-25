@@ -1,4 +1,4 @@
-import { Copy, Check, User } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -28,10 +28,9 @@ export const AffiliateDashboardHeader = ({ affiliate }: AffiliateDashboardHeader
 
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <User className="h-6 w-6 text-primary" />
-        </div>
+      <div className="flex items-center gap-4">
+        <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA" className="h-10 w-auto" />
+        <div className="h-8 w-px bg-border" />
         <div>
           <h1 className="text-2xl font-bold text-foreground">{affiliate.nome_completo}</h1>
           <p className="text-sm text-muted-foreground">
