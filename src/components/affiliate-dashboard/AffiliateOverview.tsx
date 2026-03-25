@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, DollarSign, Link, Copy, Check } from 'lucide-react';
+import { Building2, DollarSign, Link, Copy, Check, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,13 +14,14 @@ interface Stats {
   totalCompanies: number;
   activeCompanies: number;
   totalCommissions: number;
+  totalLeads: number;
 }
 
 export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOverviewProps) => {
-  const [stats, setStats] = useState<Stats>({ totalCompanies: 0, activeCompanies: 0, totalCommissions: 0 });
+  const [stats, setStats] = useState<Stats>({ totalCompanies: 0, activeCompanies: 0, totalCommissions: 0, totalLeads: 0 });
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/checkout?ref=${referralCode}`;
+  const referralLink = `${window.location.origin}/i/${referralCode}`;
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -60,7 +61,13 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
           }
         }
 
-        setStats({ totalCompanies, activeCompanies, totalCommissions });
+        // Count leads
+        const { count: leadsCount } = await supabase
+          .from('affiliate_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('affiliate_id', affiliateId);
+
+        setStats({ totalCompanies, activeCompanies, totalCommissions, totalLeads: leadsCount || 0 });
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
@@ -109,18 +116,12 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Link de Indicação</CardTitle>
-            <Link className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Leads Capturados</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[150px]">
-                {referralCode}
-              </code>
-              <Button size="sm" variant="ghost" onClick={copyToClipboard}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
+            <div className="text-2xl font-bold">{stats.totalLeads}</div>
+            <p className="text-xs text-muted-foreground">via link de indicação</p>
           </CardContent>
         </Card>
       </div>

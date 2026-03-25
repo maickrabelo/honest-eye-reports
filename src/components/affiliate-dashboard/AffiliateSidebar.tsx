@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, DollarSign, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, DollarSign, LogOut, Users, Settings } from 'lucide-react';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import {
   Sidebar,
@@ -19,8 +19,10 @@ interface AffiliateSidebarProps {
 
 const menuItems = [
   { id: 'overview', title: 'Visão Geral', icon: LayoutDashboard },
+  { id: 'leads', title: 'Leads', icon: Users },
   { id: 'companies', title: 'Empresas Indicadas', icon: Building2 },
   { id: 'commissions', title: 'Comissões', icon: DollarSign },
+  { id: 'settings', title: 'Configurações', icon: Settings },
 ];
 
 export const AffiliateSidebar = ({ activeTab, onTabChange }: AffiliateSidebarProps) => {

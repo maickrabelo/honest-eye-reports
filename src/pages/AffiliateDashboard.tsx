@@ -7,6 +7,8 @@ import { AffiliateDashboardHeader } from '@/components/affiliate-dashboard/Affil
 import { AffiliateOverview } from '@/components/affiliate-dashboard/AffiliateOverview';
 import { AffiliateReferredCompanies } from '@/components/affiliate-dashboard/AffiliateReferredCompanies';
 import { AffiliateCommissions } from '@/components/affiliate-dashboard/AffiliateCommissions';
+import { AffiliateLeads } from '@/components/affiliate-dashboard/AffiliateLeads';
+import { AffiliateSettings } from '@/components/affiliate-dashboard/AffiliateSettings';
 import { Loader2 } from 'lucide-react';
 
 interface AffiliateInfo {
@@ -77,8 +79,14 @@ const AffiliateDashboard = () => {
             {activeTab === 'companies' && (
               <AffiliateReferredCompanies affiliateId={affiliate.id} />
             )}
+            {activeTab === 'leads' && (
+              <AffiliateLeads affiliateId={affiliate.id} />
+            )}
             {activeTab === 'commissions' && (
               <AffiliateCommissions affiliateId={affiliate.id} />
+            )}
+            {activeTab === 'settings' && (
+              <AffiliateSettings affiliateId={affiliate.id} />
             )}
           </div>
         </main>

@@ -36,6 +36,7 @@ const PartnerRegistration = React.lazy(() => import("./pages/PartnerRegistration
 const AffiliateRegistration = React.lazy(() => import("./pages/AffiliateRegistration"));
 const PartnerDashboard = React.lazy(() => import("./pages/PartnerDashboard"));
 const AffiliateDashboard = React.lazy(() => import("./pages/AffiliateDashboard"));
+const AffiliateLanding = React.lazy(() => import("./pages/AffiliateLanding"));
 const HSEITDashboard = React.lazy(() => import("./pages/HSEITDashboard"));
 const HSEITManagement = React.lazy(() => import("./pages/HSEITManagement"));
 const HSEITForm = React.lazy(() => import("./pages/HSEITForm"));
@@ -118,6 +119,7 @@ const App = () => (
                 <Route path="/parceiro/dashboard" element={<PartnerDashboard />} />
                 <Route path="/afiliado/cadastro" element={<AffiliateRegistration />} />
                 <Route path="/afiliado/dashboard" element={<AffiliateDashboard />} />
+                <Route path="/i/:referralCode" element={<AffiliateLanding />} />
                 <Route path="/hseit-dashboard" element={<HSEITDashboard />} />
                 <Route path="/hseit/new" element={<HSEITManagement />} />
                 <Route path="/hseit/:id" element={<HSEITManagement />} />
