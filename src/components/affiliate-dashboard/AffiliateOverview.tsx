@@ -61,7 +61,13 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
           }
         }
 
-        setStats({ totalCompanies, activeCompanies, totalCommissions });
+        // Count leads
+        const { count: leadsCount } = await supabase
+          .from('affiliate_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('affiliate_id', affiliateId);
+
+        setStats({ totalCompanies, activeCompanies, totalCommissions, totalLeads: leadsCount || 0 });
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
