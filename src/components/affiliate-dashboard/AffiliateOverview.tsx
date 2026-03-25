@@ -21,7 +21,7 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
   const [stats, setStats] = useState<Stats>({ totalCompanies: 0, activeCompanies: 0, totalCommissions: 0, totalLeads: 0 });
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/checkout?ref=${referralCode}`;
+  const referralLink = `${window.location.origin}/i/${referralCode}`;
 
   useEffect(() => {
     const fetchStats = async () => {
