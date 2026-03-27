@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Link2, ArrowRight, BarChart3, Shield } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -14,6 +14,7 @@ import { useRealAuth } from "@/contexts/RealAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import AddCompanyDialog from '@/components/sst/AddCompanyDialog';
 import EditCompanyDialog from '@/components/sst/EditCompanyDialog';
+import DeleteCompanyDialog from '@/components/sst/DeleteCompanyDialog';
 import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
@@ -115,6 +116,8 @@ const SSTDashboard = () => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
+  const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
+  const [isDeleteCompanyOpen, setIsDeleteCompanyOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
@@ -415,18 +418,32 @@ const SSTDashboard = () => {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">{company.name}</CardTitle>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingCompany(company);
-                            setIsEditCompanyOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCompany(company);
+                              setIsEditCompanyOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingCompany(company);
+                              setIsDeleteCompanyOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="pb-2 space-y-3">
@@ -490,6 +507,7 @@ const SSTDashboard = () => {
         <AddCompanyDialog open={isAddCompanyOpen} onOpenChange={setIsAddCompanyOpen} sstManagerId={sstManagerId} onCompanyAdded={fetchCompanies} />
       )}
       <EditCompanyDialog open={isEditCompanyOpen} onOpenChange={setIsEditCompanyOpen} company={editingCompany} onCompanyUpdated={fetchCompanies} />
+      <DeleteCompanyDialog open={isDeleteCompanyOpen} onOpenChange={setIsDeleteCompanyOpen} company={deletingCompany} onCompanyDeleted={fetchCompanies} />
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
     </div>
     </SoniaChatLayout>
