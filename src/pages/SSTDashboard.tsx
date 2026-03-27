@@ -507,6 +507,7 @@ const SSTDashboard = () => {
         <AddCompanyDialog open={isAddCompanyOpen} onOpenChange={setIsAddCompanyOpen} sstManagerId={sstManagerId} onCompanyAdded={fetchCompanies} />
       )}
       <EditCompanyDialog open={isEditCompanyOpen} onOpenChange={setIsEditCompanyOpen} company={editingCompany} onCompanyUpdated={fetchCompanies} />
+      <DeleteCompanyDialog open={isDeleteCompanyOpen} onOpenChange={setIsDeleteCompanyOpen} company={deletingCompany} onCompanyDeleted={fetchCompanies} />
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
     </div>
     </SoniaChatLayout>
