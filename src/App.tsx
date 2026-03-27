@@ -58,7 +58,14 @@ const COPSOQForm = React.lazy(() => import("./pages/COPSOQForm"));
 const COPSOQResults = React.lazy(() => import("./pages/COPSOQResults"));
 const CompanySelector = React.lazy(() => import("./components/CompanySelector"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  },
+});
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
