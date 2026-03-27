@@ -116,6 +116,8 @@ const SSTDashboard = () => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
+  const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
+  const [isDeleteCompanyOpen, setIsDeleteCompanyOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
