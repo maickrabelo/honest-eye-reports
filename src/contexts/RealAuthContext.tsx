@@ -54,6 +54,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const hasInitializedRef = useRef(false);
   const hasRedirectedRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
   const fetchUserRole = async (userId: string) => {
     try {
@@ -223,14 +224,26 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       (event, session) => {
         if (!isMounted) return;
 
+        const nextUserId = session?.user?.id ?? null;
+        const isSameUserSession = currentUserIdRef.current === nextUserId;
+
+        if (event === 'TOKEN_REFRESHED' && isSameUserSession) {
+          return;
+        }
+
+        if (event === 'SIGNED_IN' && hasInitializedRef.current && isSameUserSession) {
+          return;
+        }
+
         setSession(prev => {
-          if (prev?.access_token === session?.access_token) return prev;
+          if (prev?.user?.id === nextUserId) return prev;
           return session;
         });
         setUser(prev => {
-          if (prev?.id === session?.user?.id) return prev;
+          if (prev?.id === nextUserId) return prev;
           return session?.user ?? null;
         });
+        currentUserIdRef.current = nextUserId;
 
         if (event === 'SIGNED_OUT') {
           sendAccessLog({
@@ -245,6 +258,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setActiveCompanyId(null);
           setIsTrialExpired(false);
           setTrialEndsAt(null);
+          currentUserIdRef.current = null;
           hasRedirectedRef.current = false;
           return;
         }
@@ -275,19 +289,6 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }
           }, 0);
         }
-
-        if (event === 'TOKEN_REFRESHED' && session?.user) {
-          setTimeout(async () => {
-            if (!isMounted) return;
-            const { userRole, userProfile, userCompanies } = await loadFullUserData(session.user.id);
-            if (!isMounted) return;
-            setRole(userRole);
-            setProfile(userProfile);
-            setCompanies(userCompanies);
-            setActiveCompanyId(userProfile?.company_id ?? null);
-            await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
-          }, 0);
-        }
       }
     );
 
@@ -298,6 +299,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         setSession(session);
         setUser(session?.user ?? null);
+        currentUserIdRef.current = session?.user?.id ?? null;
 
         if (session?.user) {
           const { userRole, userProfile, userCompanies } = await loadFullUserData(session.user.id);
