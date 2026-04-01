@@ -189,29 +189,25 @@ export const PendingAffiliatesManager = () => {
                         <Button size="sm" variant="outline" onClick={() => handleView(affiliate)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {affiliate.contract_signed && affiliate.status === 'pending_approval' && (
-                          <>
-                            <Button 
-                              size="sm" 
-                              variant="default"
-                              onClick={() => handleApprove(affiliate)}
-                              disabled={processing}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => {
-                                setSelectedAffiliate(affiliate);
-                                setIsRejectOpen(true);
-                              }}
-                              disabled={processing}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => handleApprove(affiliate)}
+                          disabled={processing}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => {
+                            setSelectedAffiliate(affiliate);
+                            setIsRejectOpen(true);
+                          }}
+                          disabled={processing}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
