@@ -20,24 +20,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Mail, Phone, MapPin, Briefcase, ArrowRight, Loader2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Mail, Phone, MapPin, Briefcase, ArrowRight, Loader2, Building2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AffiliateFormData } from "@/pages/AffiliateRegistration";
 
-const formSchema = z.object({
+const pfSchema = z.object({
+  tipoPessoa: z.literal("pf"),
   nomeCompleto: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-  cpf: z
-    .string()
-    .min(11, "CPF inválido")
-    .max(14, "CPF inválido"),
+  cpf: z.string().min(11, "CPF inválido").max(14, "CPF inválido"),
   rg: z.string().min(5, "RG inválido"),
   estadoCivil: z.string().min(1, "Selecione o estado civil"),
   profissao: z.string().min(2, "Profissão obrigatória"),
   enderecoCompleto: z.string().min(10, "Endereço completo obrigatório"),
   email: z.string().email("Email inválido"),
   phone: z.string().min(10, "Telefone deve ter no mínimo 10 dígitos"),
+  cnpj: z.string().optional(),
+  razaoSocial: z.string().optional(),
+  nomeFantasia: z.string().optional(),
 });
+
+const pjSchema = z.object({
+  tipoPessoa: z.literal("pj"),
+  nomeCompleto: z.string().min(3, "Nome do responsável deve ter no mínimo 3 caracteres"),
+  cpf: z.string().min(11, "CPF do responsável inválido").max(14, "CPF inválido"),
+  rg: z.string().optional(),
+  estadoCivil: z.string().optional(),
+  profissao: z.string().optional(),
+  cnpj: z.string().min(14, "CNPJ inválido").max(18, "CNPJ inválido"),
+  razaoSocial: z.string().min(3, "Razão social deve ter no mínimo 3 caracteres"),
+  nomeFantasia: z.string().min(2, "Nome fantasia deve ter no mínimo 2 caracteres"),
+  enderecoCompleto: z.string().min(10, "Endereço completo obrigatório"),
+  email: z.string().email("Email inválido"),
+  phone: z.string().min(10, "Telefone deve ter no mínimo 10 dígitos"),
+});
+
+const formSchema = z.discriminatedUnion("tipoPessoa", [pfSchema, pjSchema]);
 
 interface PersonalDataStepProps {
   initialData: AffiliateFormData;
@@ -54,10 +73,11 @@ const estadosCivis = [
 
 const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [tipoPessoa, setTipoPessoa] = useState<"pf" | "pj">(initialData.tipoPessoa || "pf");
+
   const form = useForm<AffiliateFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: { ...initialData, tipoPessoa },
   });
 
   const formatCPF = (value: string) => {
@@ -67,6 +87,16 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d{1,2})/, "$1-$2")
       .substring(0, 14);
+  };
+
+  const formatCNPJ = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    return digits
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2")
+      .substring(0, 18);
   };
 
   const formatPhone = (value: string) => {
@@ -82,25 +112,45 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
       .substring(0, 15);
   };
 
+  const handleTipoPessoaChange = (value: string) => {
+    const tipo = value as "pf" | "pj";
+    setTipoPessoa(tipo);
+    form.setValue("tipoPessoa", tipo);
+    form.clearErrors();
+  };
+
   const handleSubmit = async (data: AffiliateFormData) => {
     setIsSubmitting(true);
     try {
       const affiliateId = crypto.randomUUID();
 
+      const insertData: any = {
+        id: affiliateId,
+        tipo_pessoa: data.tipoPessoa,
+        nome_completo: data.nomeCompleto,
+        cpf: data.cpf.replace(/\D/g, ""),
+        endereco_completo: data.enderecoCompleto,
+        email: data.email,
+        phone: data.phone.replace(/\D/g, ""),
+        status: "pending_contract",
+      };
+
+      if (data.tipoPessoa === "pf") {
+        insertData.rg = data.rg;
+        insertData.estado_civil = data.estadoCivil;
+        insertData.profissao = data.profissao;
+      } else {
+        insertData.cnpj = data.cnpj.replace(/\D/g, "");
+        insertData.razao_social = data.razaoSocial;
+        insertData.nome_fantasia = data.nomeFantasia;
+        insertData.rg = data.rg || "";
+        insertData.estado_civil = data.estadoCivil || "N/A";
+        insertData.profissao = data.profissao || "Empresário(a)";
+      }
+
       const { error } = await supabase
         .from("affiliates")
-        .insert({
-          id: affiliateId,
-          nome_completo: data.nomeCompleto,
-          cpf: data.cpf.replace(/\D/g, ""),
-          rg: data.rg,
-          estado_civil: data.estadoCivil,
-          profissao: data.profissao,
-          endereco_completo: data.enderecoCompleto,
-          email: data.email,
-          phone: data.phone.replace(/\D/g, ""),
-          status: "pending_contract",
-        });
+        .insert(insertData);
 
       if (error) throw error;
 
@@ -117,30 +167,107 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Tipo de Pessoa Toggle */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Tipo de cadastro</span>
+          <Tabs value={tipoPessoa} onValueChange={handleTipoPessoaChange} className="w-full max-w-sm">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="pf" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Pessoa Física
+              </TabsTrigger>
+              <TabsTrigger value="pj" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Pessoa Jurídica
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2">
+          {/* PJ-specific fields */}
+          {tipoPessoa === "pj" && (
+            <>
+              <FormField
+                control={form.control}
+                name="razaoSocial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Razão Social
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Empresa LTDA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="nomeFantasia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Nome Fantasia
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome Fantasia" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cnpj"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="00.000.000/0000-00"
+                        {...field}
+                        onChange={(e) => field.onChange(formatCNPJ(e.target.value))}
+                        maxLength={18}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
+
+          {/* Nome Completo (both) */}
           <FormField
             control={form.control}
             name="nomeCompleto"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem className={tipoPessoa === "pf" ? "md:col-span-2" : ""}>
                 <FormLabel className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Nome Completo
+                  {tipoPessoa === "pf" ? "Nome Completo" : "Nome do Responsável"}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Seu nome completo" {...field} />
+                  <Input placeholder={tipoPessoa === "pf" ? "Seu nome completo" : "Nome do responsável legal"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* CPF (both) */}
           <FormField
             control={form.control}
             name="cpf"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>CPF</FormLabel>
+                <FormLabel>{tipoPessoa === "pf" ? "CPF" : "CPF do Responsável"}</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="000.000.000-00"
@@ -154,62 +281,68 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="rg"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>RG</FormLabel>
-                <FormControl>
-                  <Input placeholder="Número do RG" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* PF-specific fields */}
+          {tipoPessoa === "pf" && (
+            <>
+              <FormField
+                control={form.control}
+                name="rg"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RG</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Número do RG" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="estadoCivil"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Estado Civil</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {estadosCivis.map((estado) => (
-                      <SelectItem key={estado} value={estado}>
-                        {estado}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="estadoCivil"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado Civil</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {estadosCivis.map((estado) => (
+                          <SelectItem key={estado} value={estado}>
+                            {estado}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="profissao"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  Profissão
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="Sua profissão" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="profissao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Profissão
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Sua profissão" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
 
+          {/* Email (both) */}
           <FormField
             control={form.control}
             name="email"
@@ -220,13 +353,14 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
                   Email
                 </FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="seu@email.com" {...field} />
+                  <Input type="email" placeholder={tipoPessoa === "pf" ? "seu@email.com" : "contato@empresa.com"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Phone (both) */}
           <FormField
             control={form.control}
             name="phone"
@@ -249,6 +383,7 @@ const PersonalDataStep = ({ initialData, onSubmit }: PersonalDataStepProps) => {
             )}
           />
 
+          {/* Endereço (both) */}
           <FormField
             control={form.control}
             name="enderecoCompleto"
