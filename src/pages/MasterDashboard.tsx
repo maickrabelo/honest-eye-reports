@@ -11,6 +11,7 @@ import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, U
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
+import { ActiveAffiliatesManager } from '@/components/admin/ActiveAffiliatesManager';
 import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
 import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
@@ -1156,6 +1157,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="sst">Gestoras SST</TabsTrigger>
                 <TabsTrigger value="portal">Portal</TabsTrigger>
                 <TabsTrigger value="active-partners">Parceiros Ativos</TabsTrigger>
+                <TabsTrigger value="active-affiliates">Afiliados Ativos</TabsTrigger>
                 <TabsTrigger value="partners">Aprovações Pendentes</TabsTrigger>
                 <TabsTrigger value="sales">Time de Vendas</TabsTrigger>
                 <TabsTrigger value="logs" className="flex items-center gap-1">
@@ -1817,6 +1819,11 @@ const MasterDashboard = () => {
             {/* Active Partners Tab */}
             <TabsContent value="active-partners" className="space-y-6">
               <ActivePartnersManager />
+            </TabsContent>
+
+            {/* Active Affiliates Tab */}
+            <TabsContent value="active-affiliates" className="space-y-6">
+              <ActiveAffiliatesManager />
             </TabsContent>
 
             {/* Pending Approvals Tab */}
