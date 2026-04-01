@@ -95,6 +95,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          cnpj: string | null
           contract_signed: boolean | null
           contract_signed_at: string | null
           contract_signed_ip: string | null
@@ -107,8 +108,10 @@ export type Database = {
           first_access_completed: boolean | null
           id: string
           nome_completo: string
+          nome_fantasia: string | null
           phone: string | null
           profissao: string
+          razao_social: string | null
           redirect_url: string | null
           referral_code: string
           rejection_reason: string | null
@@ -116,12 +119,14 @@ export type Database = {
           status: string
           terms_accepted: boolean | null
           terms_accepted_at: string | null
+          tipo_pessoa: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          cnpj?: string | null
           contract_signed?: boolean | null
           contract_signed_at?: string | null
           contract_signed_ip?: string | null
@@ -134,8 +139,10 @@ export type Database = {
           first_access_completed?: boolean | null
           id?: string
           nome_completo: string
+          nome_fantasia?: string | null
           phone?: string | null
           profissao: string
+          razao_social?: string | null
           redirect_url?: string | null
           referral_code?: string
           rejection_reason?: string | null
@@ -143,12 +150,14 @@ export type Database = {
           status?: string
           terms_accepted?: boolean | null
           terms_accepted_at?: string | null
+          tipo_pessoa?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          cnpj?: string | null
           contract_signed?: boolean | null
           contract_signed_at?: string | null
           contract_signed_ip?: string | null
@@ -161,8 +170,10 @@ export type Database = {
           first_access_completed?: boolean | null
           id?: string
           nome_completo?: string
+          nome_fantasia?: string | null
           phone?: string | null
           profissao?: string
+          razao_social?: string | null
           redirect_url?: string | null
           referral_code?: string
           rejection_reason?: string | null
@@ -170,6 +181,7 @@ export type Database = {
           status?: string
           terms_accepted?: boolean | null
           terms_accepted_at?: string | null
+          tipo_pessoa?: string
           updated_at?: string
           user_id?: string | null
         }
