@@ -265,24 +265,22 @@ export const PendingAffiliatesManager = () => {
                 </div>
               </div>
 
-              {selectedAffiliate.contract_signed && selectedAffiliate.status === 'pending_approval' && (
-                <DialogFooter>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => setIsRejectOpen(true)}
-                    disabled={processing}
-                  >
-                    Rejeitar
-                  </Button>
-                  <Button 
-                    onClick={() => handleApprove(selectedAffiliate)}
-                    disabled={processing}
-                  >
-                    {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Aprovar Afiliado
-                  </Button>
-                </DialogFooter>
-              )}
+              <DialogFooter>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setIsRejectOpen(true)}
+                  disabled={processing}
+                >
+                  Rejeitar
+                </Button>
+                <Button 
+                  onClick={() => handleApprove(selectedAffiliate)}
+                  disabled={processing}
+                >
+                  {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Aprovar Afiliado
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>
