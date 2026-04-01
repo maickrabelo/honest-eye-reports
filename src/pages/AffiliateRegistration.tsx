@@ -9,6 +9,7 @@ import AffiliateContractStep from "@/components/affiliate-registration/Affiliate
 import AffiliateSuccessStep from "@/components/affiliate-registration/AffiliateSuccessStep";
 
 export interface AffiliateFormData {
+  tipoPessoa: "pf" | "pj";
   nomeCompleto: string;
   cpf: string;
   rg: string;
@@ -17,6 +18,10 @@ export interface AffiliateFormData {
   enderecoCompleto: string;
   email: string;
   phone: string;
+  // PJ fields
+  cnpj: string;
+  razaoSocial: string;
+  nomeFantasia: string;
 }
 
 const AffiliateRegistration = () => {
