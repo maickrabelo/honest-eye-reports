@@ -1157,6 +1157,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="sst">Gestoras SST</TabsTrigger>
                 <TabsTrigger value="portal">Portal</TabsTrigger>
                 <TabsTrigger value="active-partners">Parceiros Ativos</TabsTrigger>
+                <TabsTrigger value="active-affiliates">Afiliados Ativos</TabsTrigger>
                 <TabsTrigger value="partners">Aprovações Pendentes</TabsTrigger>
                 <TabsTrigger value="sales">Time de Vendas</TabsTrigger>
                 <TabsTrigger value="logs" className="flex items-center gap-1">
