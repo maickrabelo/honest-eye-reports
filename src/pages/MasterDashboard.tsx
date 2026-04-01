@@ -1821,6 +1821,11 @@ const MasterDashboard = () => {
               <ActivePartnersManager />
             </TabsContent>
 
+            {/* Active Affiliates Tab */}
+            <TabsContent value="active-affiliates" className="space-y-6">
+              <ActiveAffiliatesManager />
+            </TabsContent>
+
             {/* Pending Approvals Tab */}
             <TabsContent value="partners" className="space-y-6">
               <PendingPartnersManager />
