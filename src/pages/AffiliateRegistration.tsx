@@ -27,6 +27,7 @@ export interface AffiliateFormData {
 const AffiliateRegistration = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [affiliateData, setAffiliateData] = useState<AffiliateFormData>({
+    tipoPessoa: "pf",
     nomeCompleto: "",
     cpf: "",
     rg: "",
@@ -35,6 +36,9 @@ const AffiliateRegistration = () => {
     enderecoCompleto: "",
     email: "",
     phone: "",
+    cnpj: "",
+    razaoSocial: "",
+    nomeFantasia: "",
   });
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
