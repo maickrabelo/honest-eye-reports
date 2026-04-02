@@ -286,7 +286,8 @@ export const ActiveAffiliatesManager: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setPasswordAffiliate(affiliate);
                             setGeneratedPassword('');
                             setIsPasswordOpen(true);
