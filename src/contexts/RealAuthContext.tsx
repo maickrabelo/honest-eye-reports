@@ -228,8 +228,15 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const isLoginPage = (path: string) => {
-    return path === '/auth' || path === '/';
+  const isPublicEntryPage = (path: string) => {
+    return (
+      path === '/auth' ||
+      path === '/' ||
+      path.startsWith('/sst/') ||
+      path.startsWith('/i/') ||
+      path === '/afiliado/cadastro' ||
+      path === '/parceiro/cadastro'
+    );
   };
 
   useEffect(() => {
@@ -249,7 +256,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (event === 'SIGNED_IN' && hasInitializedRef.current && isSameUserSession) {
           // Even if same user, still redirect if on login page (re-login scenario)
           const currentPath = window.location.pathname;
-          if (isLoginPage(currentPath) && !hasRedirectedRef.current && role) {
+          if (isPublicEntryPage(currentPath) && !hasRedirectedRef.current && role) {
             hasRedirectedRef.current = true;
             navigateByRole(role, profile, companies);
           }
@@ -304,7 +311,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
 
             const currentPath = window.location.pathname;
-            if (hasInitializedRef.current && !hasRedirectedRef.current && isLoginPage(currentPath)) {
+            if (hasInitializedRef.current && !hasRedirectedRef.current && isPublicEntryPage(currentPath)) {
               hasRedirectedRef.current = true;
               navigateByRole(userRole, userProfile, userCompanies);
             }
@@ -333,7 +340,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
           // Redirect if user is already logged in and on the login page
           const currentPath = window.location.pathname;
-          if (isLoginPage(currentPath)) {
+          if (isPublicEntryPage(currentPath)) {
             hasRedirectedRef.current = true;
             navigateByRole(userRole, userProfile, userCompanies);
           }
