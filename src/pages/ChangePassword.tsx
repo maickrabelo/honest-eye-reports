@@ -80,7 +80,12 @@ const ChangePassword: React.FC = () => {
       await refreshRole();
 
       setTimeout(() => {
-        navigate('/dashboard');
+        if (role === 'admin') navigate('/master-dashboard');
+        else if (role === 'sst') navigate('/sst-dashboard');
+        else if (role === 'partner') navigate('/parceiro/dashboard');
+        else if (role === 'affiliate') navigate('/afiliado/dashboard');
+        else if ((role as string) === 'sales') navigate('/sales-dashboard');
+        else navigate('/dashboard');
       }, 1500);
     } catch (error: any) {
       console.error('Error changing password:', error);
