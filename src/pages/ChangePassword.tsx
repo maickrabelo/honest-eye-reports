@@ -10,7 +10,7 @@ import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const ChangePassword: React.FC = () => {
-  const { user, profile, isLoading, refreshRole } = useRealAuth();
+  const { user, profile, role, isLoading, refreshRole } = useRealAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [newPassword, setNewPassword] = useState('');
