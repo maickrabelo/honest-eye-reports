@@ -247,6 +247,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         if (event === 'SIGNED_IN' && hasInitializedRef.current && isSameUserSession) {
+          // Even if same user, still redirect if on login page (re-login scenario)
+          const currentPath = window.location.pathname;
+          if (isLoginPage(currentPath) && !hasRedirectedRef.current && role) {
+            hasRedirectedRef.current = true;
+            navigateByRole(role, profile, companies);
+          }
           return;
         }
 
