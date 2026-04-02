@@ -10,7 +10,7 @@ import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const ChangePassword: React.FC = () => {
-  const { user, profile, isLoading, refreshRole } = useRealAuth();
+  const { user, profile, role, isLoading, refreshRole } = useRealAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [newPassword, setNewPassword] = useState('');
@@ -21,9 +21,14 @@ const ChangePassword: React.FC = () => {
     if (!isLoading && !user) {
       navigate('/auth');
     }
-    // If profile loaded and must_change_password is false, redirect to dashboard
+    // If profile loaded and must_change_password is false, redirect based on role
     if (!isLoading && profile && !(profile as any).must_change_password) {
-      navigate('/dashboard');
+      if (role === 'admin') navigate('/master-dashboard');
+      else if (role === 'sst') navigate('/sst-dashboard');
+      else if (role === 'partner') navigate('/parceiro/dashboard');
+      else if (role === 'affiliate') navigate('/afiliado/dashboard');
+      else if ((role as string) === 'sales') navigate('/sales-dashboard');
+      else navigate('/dashboard');
     }
   }, [isLoading, user, profile, navigate]);
 
@@ -75,7 +80,12 @@ const ChangePassword: React.FC = () => {
       await refreshRole();
 
       setTimeout(() => {
-        navigate('/dashboard');
+        if (role === 'admin') navigate('/master-dashboard');
+        else if (role === 'sst') navigate('/sst-dashboard');
+        else if (role === 'partner') navigate('/parceiro/dashboard');
+        else if (role === 'affiliate') navigate('/afiliado/dashboard');
+        else if ((role as string) === 'sales') navigate('/sales-dashboard');
+        else navigate('/dashboard');
       }, 1500);
     } catch (error: any) {
       console.error('Error changing password:', error);
