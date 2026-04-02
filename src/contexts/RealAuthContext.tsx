@@ -179,11 +179,15 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const loadFullUserData = async (userId: string) => {
-    const [userRole, userProfile, userCompanies] = await Promise.all([
+    const [userRole, userProfile] = await Promise.all([
       fetchUserRole(userId),
       fetchProfile(userId),
-      fetchUserCompanies(userId),
     ]);
+    
+    // Skip fetching companies for roles that don't need them
+    const skipCompanies = userRole === 'affiliate' || userRole === 'partner' || userRole === 'admin' || userRole === 'pending';
+    const userCompanies = skipCompanies ? [] : await fetchUserCompanies(userId);
+    
     return { userRole, userProfile, userCompanies };
   };
 
