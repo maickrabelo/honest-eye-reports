@@ -280,7 +280,7 @@ export const ActiveAffiliatesManager: React.FC = () => {
                     <TableCell className="text-center font-medium">{affiliate.companiesCount}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedAffiliate(affiliate)}>
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleSelectAffiliate(affiliate); }}>
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
