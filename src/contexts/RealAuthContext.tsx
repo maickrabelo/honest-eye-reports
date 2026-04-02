@@ -330,6 +330,13 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setCompanies(userCompanies);
           setActiveCompanyId(userProfile?.company_id ?? null);
           await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
+
+          // Redirect if user is already logged in and on the login page
+          const currentPath = window.location.pathname;
+          if (isLoginPage(currentPath)) {
+            hasRedirectedRef.current = true;
+            navigateByRole(userRole, userProfile, userCompanies);
+          }
         }
       } finally {
         if (isMounted) {
