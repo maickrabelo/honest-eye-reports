@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { toast } from 'sonner';
-import { Search, Users, Eye, RefreshCw, Key, Copy, User } from "lucide-react";
+import { Search, Users, Eye, RefreshCw, Key, Copy, User, Loader2 } from "lucide-react";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -35,11 +35,21 @@ interface ActiveAffiliate {
   companiesCount: number;
 }
 
+interface AffiliateLead {
+  id: string;
+  name: string;
+  phone: string;
+  company_name: string;
+  created_at: string;
+}
+
 export const ActiveAffiliatesManager: React.FC = () => {
   const [affiliates, setAffiliates] = useState<ActiveAffiliate[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAffiliate, setSelectedAffiliate] = useState<ActiveAffiliate | null>(null);
+  const [selectedLeads, setSelectedLeads] = useState<AffiliateLead[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [passwordAffiliate, setPasswordAffiliate] = useState<ActiveAffiliate | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState('');
@@ -137,6 +147,24 @@ export const ActiveAffiliatesManager: React.FC = () => {
     }
   };
 
+  const handleSelectAffiliate = async (affiliate: ActiveAffiliate) => {
+    setSelectedAffiliate(affiliate);
+    setLoadingLeads(true);
+    try {
+      const { data, error } = await supabase
+        .from('affiliate_leads')
+        .select('id, name, phone, company_name, created_at')
+        .eq('affiliate_id', affiliate.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setSelectedLeads(data || []);
+    } catch {
+      setSelectedLeads([]);
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
+
   const filteredAffiliates = affiliates.filter(a =>
     a.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -230,7 +258,7 @@ export const ActiveAffiliatesManager: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {filteredAffiliates.map((affiliate) => (
-                  <TableRow key={affiliate.id}>
+                  <TableRow key={affiliate.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleSelectAffiliate(affiliate)}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{affiliate.nome_completo}</p>
@@ -252,13 +280,14 @@ export const ActiveAffiliatesManager: React.FC = () => {
                     <TableCell className="text-center font-medium">{affiliate.companiesCount}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedAffiliate(affiliate)}>
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleSelectAffiliate(affiliate); }}>
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setPasswordAffiliate(affiliate);
                             setGeneratedPassword('');
                             setIsPasswordOpen(true);
@@ -278,7 +307,7 @@ export const ActiveAffiliatesManager: React.FC = () => {
 
       {/* Details Dialog */}
       <Dialog open={!!selectedAffiliate} onOpenChange={() => setSelectedAffiliate(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Afiliado</DialogTitle>
           </DialogHeader>
@@ -358,6 +387,43 @@ export const ActiveAffiliatesManager: React.FC = () => {
                     <p className="text-sm text-muted-foreground">Empresas Indicadas</p>
                   </CardContent>
                 </Card>
+              </div>
+
+              {/* Leads List */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Leads Capturados</h4>
+                {loadingLeads ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : selectedLeads.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">Nenhum lead cadastrado.</p>
+                ) : (
+                  <div className="border rounded-md max-h-48 overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Nome</TableHead>
+                          <TableHead className="text-xs">Telefone</TableHead>
+                          <TableHead className="text-xs">Empresa</TableHead>
+                          <TableHead className="text-xs">Data</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedLeads.map(lead => (
+                          <TableRow key={lead.id}>
+                            <TableCell className="text-sm py-2">{lead.name}</TableCell>
+                            <TableCell className="text-sm py-2">{lead.phone}</TableCell>
+                            <TableCell className="text-sm py-2">{lead.company_name}</TableCell>
+                            <TableCell className="text-sm py-2">
+                              {format(new Date(lead.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </div>
 
               <DialogFooter>
