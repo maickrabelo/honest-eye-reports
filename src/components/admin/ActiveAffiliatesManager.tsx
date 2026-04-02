@@ -258,7 +258,7 @@ export const ActiveAffiliatesManager: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {filteredAffiliates.map((affiliate) => (
-                  <TableRow key={affiliate.id}>
+                  <TableRow key={affiliate.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleSelectAffiliate(affiliate)}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{affiliate.nome_completo}</p>
