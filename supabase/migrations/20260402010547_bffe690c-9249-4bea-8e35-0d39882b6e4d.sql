@@ -1,0 +1,1 @@
+DELETE FROM public.user_roles WHERE user_id = 'fedd3078-0098-4b4d-adfc-04ca36d81a10' AND role = 'pending';

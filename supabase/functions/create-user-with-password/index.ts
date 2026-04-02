@@ -154,28 +154,17 @@ serve(async (req) => {
 
     if (profileError) throw profileError;
 
-    // Atualizar ou inserir role via upsert
-    const { error: upsertRoleError } = await supabaseAdmin
+    // Remove all existing roles and insert the correct one
+    await supabaseAdmin
       .from("user_roles")
-      .upsert(
-        { user_id: userId, role },
-        { onConflict: 'user_id,role' }
-      );
+      .delete()
+      .eq("user_id", userId);
 
-    // If upsert with same role succeeded but there's an old different role, update it
-    if (upsertRoleError) {
-      // Fallback: delete all existing roles and insert the new one
-      await supabaseAdmin
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId);
+    const { error: insertRoleError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: userId, role });
 
-      const { error: insertRoleError } = await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: userId, role });
-
-      if (insertRoleError) throw insertRoleError;
-    }
+    if (insertRoleError) throw insertRoleError;
 
     return new Response(
       JSON.stringify({
