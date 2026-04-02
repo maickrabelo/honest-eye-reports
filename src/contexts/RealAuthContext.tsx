@@ -144,6 +144,13 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const checkTrialStatus = async (companyId: string | null, sstManagerId: string | null) => {
+    // Skip trial check if no company or SST manager linked
+    if (!companyId && !sstManagerId) {
+      setIsTrialExpired(false);
+      setTrialEndsAt(null);
+      return;
+    }
+
     const [companyResult, sstResult] = await Promise.all([
       companyId
         ? supabase.from('companies').select('subscription_status, trial_ends_at').eq('id', companyId).single()
