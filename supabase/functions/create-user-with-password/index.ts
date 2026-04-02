@@ -148,6 +148,7 @@ serve(async (req) => {
         full_name,
         company_id: role === 'company' ? company_id : null,
         sst_manager_id: role === 'sst' ? sst_manager_id : null,
+        must_change_password: true,
       })
       .eq("id", userId);
 
