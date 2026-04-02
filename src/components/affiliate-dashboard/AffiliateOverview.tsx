@@ -26,48 +26,42 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data: companies } = await supabase
-          .from('companies')
-          .select('id, subscription_status')
-          .eq('referred_by_affiliate_id', affiliateId);
+        const [companiesResult, leadsResult] = await Promise.all([
+          supabase
+            .from('companies')
+            .select('id, subscription_status')
+            .eq('referred_by_affiliate_id', affiliateId),
+          supabase
+            .from('affiliate_leads')
+            .select('id', { count: 'exact', head: true })
+            .eq('affiliate_id', affiliateId),
+        ]);
 
-        const totalCompanies = companies?.length || 0;
-        const activeCompanies = companies?.filter(c => c.subscription_status === 'active').length || 0;
+        const companies = companiesResult.data || [];
+        const totalCompanies = companies.length;
+        const activeCompanies = companies.filter(c => c.subscription_status === 'active').length;
 
-        // Calculate commissions (5% for affiliates)
-        const activeCompanyIds = companies?.filter(c => c.subscription_status === 'active').map(c => c.id) || [];
         let totalCommissions = 0;
+        const activeCompanyIds = companies.filter(c => c.subscription_status === 'active').map(c => c.id);
 
         if (activeCompanyIds.length > 0) {
           const { data: subscriptions } = await supabase
             .from('subscriptions')
-            .select('plan_id')
+            .select('plan_id, subscription_plans!inner(base_price_cents)')
             .in('company_id', activeCompanyIds)
             .eq('status', 'active');
 
-          if (subscriptions) {
-            const planIds = [...new Set(subscriptions.map(s => s.plan_id))];
-            const { data: plans } = await supabase
-              .from('subscription_plans')
-              .select('id, base_price_cents')
-              .in('id', planIds);
-
-            subscriptions.forEach(sub => {
-              const plan = plans?.find(p => p.id === sub.plan_id);
-              if (plan) {
-                totalCommissions += (plan.base_price_cents * 0.05) / 100; // 5% commission
-              }
-            });
-          }
+          subscriptions?.forEach((sub: any) => {
+            totalCommissions += (sub.subscription_plans.base_price_cents * 0.05) / 100;
+          });
         }
 
-        // Count leads
-        const { count: leadsCount } = await supabase
-          .from('affiliate_leads')
-          .select('id', { count: 'exact', head: true })
-          .eq('affiliate_id', affiliateId);
-
-        setStats({ totalCompanies, activeCompanies, totalCommissions, totalLeads: leadsCount || 0 });
+        setStats({
+          totalCompanies,
+          activeCompanies,
+          totalCommissions,
+          totalLeads: leadsResult.count || 0,
+        });
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
