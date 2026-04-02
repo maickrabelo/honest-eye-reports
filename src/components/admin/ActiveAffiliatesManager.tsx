@@ -426,6 +426,7 @@ export const ActiveAffiliatesManager: React.FC = () => {
                 )}
               </div>
 
+              <DialogFooter>
                 <Button
                   variant="outline"
                   onClick={() => {
