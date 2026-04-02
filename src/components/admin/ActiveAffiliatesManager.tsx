@@ -35,11 +35,21 @@ interface ActiveAffiliate {
   companiesCount: number;
 }
 
+interface AffiliateLead {
+  id: string;
+  name: string;
+  phone: string;
+  company_name: string;
+  created_at: string;
+}
+
 export const ActiveAffiliatesManager: React.FC = () => {
   const [affiliates, setAffiliates] = useState<ActiveAffiliate[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAffiliate, setSelectedAffiliate] = useState<ActiveAffiliate | null>(null);
+  const [selectedLeads, setSelectedLeads] = useState<AffiliateLead[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [passwordAffiliate, setPasswordAffiliate] = useState<ActiveAffiliate | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState('');
