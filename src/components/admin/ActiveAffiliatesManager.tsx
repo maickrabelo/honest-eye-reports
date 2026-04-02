@@ -147,6 +147,24 @@ export const ActiveAffiliatesManager: React.FC = () => {
     }
   };
 
+  const handleSelectAffiliate = async (affiliate: ActiveAffiliate) => {
+    setSelectedAffiliate(affiliate);
+    setLoadingLeads(true);
+    try {
+      const { data, error } = await supabase
+        .from('affiliate_leads')
+        .select('id, name, phone, company_name, created_at')
+        .eq('affiliate_id', affiliate.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setSelectedLeads(data || []);
+    } catch {
+      setSelectedLeads([]);
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
+
   const filteredAffiliates = affiliates.filter(a =>
     a.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
