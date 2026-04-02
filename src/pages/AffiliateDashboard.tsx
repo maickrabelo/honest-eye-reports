@@ -80,7 +80,7 @@ const AffiliateDashboard = () => {
               <AffiliateReferredCompanies affiliateId={affiliate.id} />
             )}
             {activeTab === 'leads' && (
-              <AffiliateLeads affiliateId={affiliate.id} />
+              <AffiliateLeads affiliateId={affiliate.id} referralCode={affiliate.referral_code} />
             )}
             {activeTab === 'commissions' && (
               <AffiliateCommissions affiliateId={affiliate.id} />
