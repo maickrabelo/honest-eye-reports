@@ -307,7 +307,7 @@ export const ActiveAffiliatesManager: React.FC = () => {
 
       {/* Details Dialog */}
       <Dialog open={!!selectedAffiliate} onOpenChange={() => setSelectedAffiliate(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Afiliado</DialogTitle>
           </DialogHeader>
