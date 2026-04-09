@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import AddCompanyDialog from '@/components/sst/AddCompanyDialog';
 import EditCompanyDialog from '@/components/sst/EditCompanyDialog';
 import DeleteCompanyDialog from '@/components/sst/DeleteCompanyDialog';
+import ResetPasswordDialog from '@/components/sst/ResetPasswordDialog';
 import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
@@ -118,6 +119,8 @@ const SSTDashboard = () => {
   const [isEditCompanyOpen, setIsEditCompanyOpen] = useState(false);
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
   const [isDeleteCompanyOpen, setIsDeleteCompanyOpen] = useState(false);
+  const [resetPasswordCompany, setResetPasswordCompany] = useState<Company | null>(null);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
@@ -423,6 +426,20 @@ const SSTDashboard = () => {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
+                            title="Resetar senha"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setResetPasswordCompany(company);
+                              setIsResetPasswordOpen(true);
+                            }}
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            title="Editar empresa"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingCompany(company);
@@ -435,6 +452,7 @@ const SSTDashboard = () => {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Excluir empresa"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeletingCompany(company);
@@ -508,6 +526,7 @@ const SSTDashboard = () => {
       )}
       <EditCompanyDialog open={isEditCompanyOpen} onOpenChange={setIsEditCompanyOpen} company={editingCompany} onCompanyUpdated={fetchCompanies} />
       <DeleteCompanyDialog open={isDeleteCompanyOpen} onOpenChange={setIsDeleteCompanyOpen} company={deletingCompany} onCompanyDeleted={fetchCompanies} />
+      <ResetPasswordDialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen} company={resetPasswordCompany} />
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
     </div>
     </SoniaChatLayout>
