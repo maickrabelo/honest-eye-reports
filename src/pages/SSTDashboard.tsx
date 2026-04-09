@@ -426,6 +426,20 @@ const SSTDashboard = () => {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
+                            title="Resetar senha"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setResetPasswordCompany(company);
+                              setIsResetPasswordOpen(true);
+                            }}
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            title="Editar empresa"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingCompany(company);
@@ -438,6 +452,7 @@ const SSTDashboard = () => {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Excluir empresa"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeletingCompany(company);
