@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import AddCompanyDialog from '@/components/sst/AddCompanyDialog';
 import EditCompanyDialog from '@/components/sst/EditCompanyDialog';
 import DeleteCompanyDialog from '@/components/sst/DeleteCompanyDialog';
+import ResetPasswordDialog from '@/components/sst/ResetPasswordDialog';
 import SSTCompanyCounter from '@/components/sst/SSTCompanyCounter';
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
