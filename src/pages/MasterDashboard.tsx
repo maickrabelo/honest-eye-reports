@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
@@ -378,6 +379,49 @@ const MasterDashboard = () => {
       .filter(a => a.sst_manager_id === sstId)
       .map(a => a.company_id);
     return companies.filter(c => assignedCompanyIds.includes(c.id));
+  };
+
+  const exportCompaniesToExcel = () => {
+    const data = filteredCompanies.map(company => {
+      const assignedSST = getAssignedSST(company.id);
+      return {
+        'Empresa': company.name,
+        'Email': company.email || '-',
+        'CNPJ': company.cnpj || '-',
+        'Telefone': company.phone || '-',
+        'Endereço': company.address || '-',
+        'Slug (URL)': company.slug || '-',
+        'Gestora SST': assignedSST?.name || 'Não atribuída',
+        'Cadastrado em': new Date(company.created_at).toLocaleDateString('pt-BR'),
+      };
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Empresas');
+    XLSX.writeFile(wb, `empresas-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast({ title: 'Excel exportado', description: `${data.length} empresas exportadas com sucesso.` });
+  };
+
+  const exportSSTToExcel = () => {
+    const data = filteredSSTManagers.map(manager => {
+      const assignedCompanies = getAssignedCompanies(manager.id);
+      return {
+        'Gestora SST': manager.name,
+        'Email': manager.email || '-',
+        'CNPJ': manager.cnpj || '-',
+        'Telefone': manager.phone || '-',
+        'Endereço': manager.address || '-',
+        'Slug': manager.slug || '-',
+        'Empresas Geridas': assignedCompanies.length,
+        'Empresas': assignedCompanies.map(c => c.name).join(', ') || '-',
+        'Cadastrado em': new Date(manager.created_at).toLocaleDateString('pt-BR'),
+      };
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Gestoras SST');
+    XLSX.writeFile(wb, `gestoras-sst-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast({ title: 'Excel exportado', description: `${data.length} gestoras SST exportadas com sucesso.` });
   };
 
   const handleOpenGeneratePassword = (entity: Company | SSTManager, type: 'company' | 'sst') => {
@@ -1603,11 +1647,17 @@ const MasterDashboard = () => {
             
             <TabsContent value="companies">
               <Card>
-                <CardHeader>
-                  <CardTitle>Empresas Cadastradas</CardTitle>
-                  <CardDescription>
-                    Lista de todas as empresas no sistema
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Empresas Cadastradas</CardTitle>
+                    <CardDescription>
+                      Lista de todas as empresas no sistema
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => exportCompaniesToExcel()}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar Excel
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
@@ -1718,11 +1768,17 @@ const MasterDashboard = () => {
             
             <TabsContent value="sst">
               <Card>
-                <CardHeader>
-                  <CardTitle>Gestoras SST Cadastradas</CardTitle>
-                  <CardDescription>
-                    Lista de todas as empresas gestoras de SST no sistema
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Gestoras SST Cadastradas</CardTitle>
+                    <CardDescription>
+                      Lista de todas as empresas gestoras de SST no sistema
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => exportSSTToExcel()}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar Excel
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
