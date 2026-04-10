@@ -424,6 +424,7 @@ const MasterDashboard = () => {
     toast({ title: 'Excel exportado', description: `${data.length} gestoras SST exportadas com sucesso.` });
   };
 
+  const handleOpenGeneratePassword = (entity: Company | SSTManager, type: 'company' | 'sst') => {
     setPasswordData({
       entity: entity.name,
       type,
