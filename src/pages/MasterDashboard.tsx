@@ -381,7 +381,49 @@ const MasterDashboard = () => {
     return companies.filter(c => assignedCompanyIds.includes(c.id));
   };
 
-  const handleOpenGeneratePassword = (entity: Company | SSTManager, type: 'company' | 'sst') => {
+  const exportCompaniesToExcel = () => {
+    const data = filteredCompanies.map(company => {
+      const assignedSST = getAssignedSST(company.id);
+      return {
+        'Empresa': company.name,
+        'Email': company.email || '-',
+        'CNPJ': company.cnpj || '-',
+        'Telefone': company.phone || '-',
+        'Endereço': company.address || '-',
+        'Slug (URL)': company.slug || '-',
+        'Gestora SST': assignedSST?.name || 'Não atribuída',
+        'Cadastrado em': new Date(company.created_at).toLocaleDateString('pt-BR'),
+      };
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Empresas');
+    XLSX.writeFile(wb, `empresas-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast({ title: 'Excel exportado', description: `${data.length} empresas exportadas com sucesso.` });
+  };
+
+  const exportSSTToExcel = () => {
+    const data = filteredSSTManagers.map(manager => {
+      const assignedCompanies = getAssignedCompanies(manager.id);
+      return {
+        'Gestora SST': manager.name,
+        'Email': manager.email || '-',
+        'CNPJ': manager.cnpj || '-',
+        'Telefone': manager.phone || '-',
+        'Endereço': manager.address || '-',
+        'Slug': manager.slug || '-',
+        'Empresas Geridas': assignedCompanies.length,
+        'Empresas': assignedCompanies.map(c => c.name).join(', ') || '-',
+        'Cadastrado em': new Date(manager.created_at).toLocaleDateString('pt-BR'),
+      };
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Gestoras SST');
+    XLSX.writeFile(wb, `gestoras-sst-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast({ title: 'Excel exportado', description: `${data.length} gestoras SST exportadas com sucesso.` });
+  };
+
     setPasswordData({
       entity: entity.name,
       type,
