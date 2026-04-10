@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
@@ -1603,11 +1604,17 @@ const MasterDashboard = () => {
             
             <TabsContent value="companies">
               <Card>
-                <CardHeader>
-                  <CardTitle>Empresas Cadastradas</CardTitle>
-                  <CardDescription>
-                    Lista de todas as empresas no sistema
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Empresas Cadastradas</CardTitle>
+                    <CardDescription>
+                      Lista de todas as empresas no sistema
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => exportCompaniesToExcel()}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar Excel
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
@@ -1718,11 +1725,17 @@ const MasterDashboard = () => {
             
             <TabsContent value="sst">
               <Card>
-                <CardHeader>
-                  <CardTitle>Gestoras SST Cadastradas</CardTitle>
-                  <CardDescription>
-                    Lista de todas as empresas gestoras de SST no sistema
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Gestoras SST Cadastradas</CardTitle>
+                    <CardDescription>
+                      Lista de todas as empresas gestoras de SST no sistema
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => exportSSTToExcel()}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar Excel
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
