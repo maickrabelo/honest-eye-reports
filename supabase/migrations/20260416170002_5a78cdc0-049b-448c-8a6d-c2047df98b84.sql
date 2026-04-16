@@ -1,0 +1,1 @@
+DELETE FROM hseit_departments WHERE id IN ('8b205f68-20bb-4d45-8d6a-234ef7cb05c2','1ae51838-b200-4aa1-97a0-49915815f6d4','686d15f5-b9ca-42b2-880b-a71043a33aeb','2ee6e7e4-203b-4fe0-a39a-74f9a938e67e');
