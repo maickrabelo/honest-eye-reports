@@ -290,6 +290,12 @@ export default function COPSOQManagement() {
           </div>
         </div>
       </main>
+      <UnallocatedEmployeesDialog
+        open={showUnallocatedDialog}
+        onOpenChange={setShowUnallocatedDialog}
+        remaining={pendingRemaining}
+        onConfirm={() => { setShowUnallocatedDialog(false); persistAssessment(); }}
+      />
       <Footer />
     </div>
   );

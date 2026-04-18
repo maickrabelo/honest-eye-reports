@@ -414,8 +414,10 @@ export default function BurnoutManagement() {
               </CardHeader>
               <CardContent>
               <DepartmentManager
+                ref={deptManagerRef}
                 departments={departments}
                 onChange={setDepartments}
+                companyEmployeeCount={companyEmployeeCount}
               />
               </CardContent>
             </Card>
@@ -478,6 +480,12 @@ export default function BurnoutManagement() {
           </div>
         </div>
       </main>
+      <UnallocatedEmployeesDialog
+        open={showUnallocatedDialog}
+        onOpenChange={setShowUnallocatedDialog}
+        remaining={pendingRemaining}
+        onConfirm={() => { setShowUnallocatedDialog(false); persistAssessment(); }}
+      />
       <Footer />
     </div>
   );
