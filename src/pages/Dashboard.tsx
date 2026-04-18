@@ -537,31 +537,34 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </Card>
       )}
           
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          { title: "Total de Denúncias", value: stats.total.toString(), color: "bg-audit-primary" },
-          { title: "Denúncias Pendentes", value: stats.pending.toString(), color: "bg-audit-secondary" },
-          { title: "Em Análise", value: stats.inProgress.toString(), color: "bg-audit-accent" },
-          { title: "Resolvidas", value: stats.resolved.toString(), color: "bg-green-600" },
-        ].map((stat, idx) => (
-          <Card key={idx} className="card-hover">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-end">
-                <div className="text-3xl font-bold">{stat.value}</div>
-              </div>
-              <div className={`h-1 w-full mt-4 ${stat.color} rounded-full`}></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {features.ouvidoria && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[
+            { title: "Total de Denúncias", value: stats.total.toString(), color: "bg-audit-primary" },
+            { title: "Denúncias Pendentes", value: stats.pending.toString(), color: "bg-audit-secondary" },
+            { title: "Em Análise", value: stats.inProgress.toString(), color: "bg-audit-accent" },
+            { title: "Resolvidas", value: stats.resolved.toString(), color: "bg-green-600" },
+          ].map((stat, idx) => (
+            <Card key={idx} className="card-hover">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-end">
+                  <div className="text-3xl font-bold">{stat.value}</div>
+                </div>
+                <div className={`h-1 w-full mt-4 ${stat.color} rounded-full`}></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      <HSEITParticipationCard companyId={companyId} />
+      {features.psicossocial && <HSEITParticipationCard companyId={companyId} />}
       
+      {features.ouvidoria && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <Tabs defaultValue="overview" className="mb-8">
