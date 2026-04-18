@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -18,7 +18,8 @@ import { soiaQuestions, soiaOpenQuestions } from "@/data/soiaQuestions";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
 import { QuestionManager, SurveyQuestion } from "@/components/climate-survey/QuestionManager";
-import { DepartmentManager, SurveyDepartment } from "@/components/climate-survey/DepartmentManager";
+import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from "@/components/climate-survey/DepartmentManager";
+import { useCompanyEmployeeCount } from "@/hooks/useCompanyEmployeeCount";
 
 interface Company {
   id: string;
@@ -48,6 +49,10 @@ export default function ClimateSurveyManagement() {
     company_id: '',
     is_active: true
   });
+  const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
+  const [pendingRemaining, setPendingRemaining] = useState(0);
+  const deptManagerRef = useRef<DepartmentManagerHandle>(null);
+  const { employeeCount: companyEmployeeCount } = useCompanyEmployeeCount(formData.company_id || null);
 
   // Initialize questions from GPTW template
   const initializeGPTWQuestions = (): SurveyQuestion[] => {
@@ -264,7 +269,25 @@ export default function ClimateSurveyManagement() {
       return;
     }
 
-    setIsSaving(true);
+    const validation = deptManagerRef.current?.validateAllocation();
+    if (validation && validation.ok === false) {
+      if (validation.reason === 'overflow') {
+        toast({ title: 'Excesso de colaboradores', description: 'A soma dos setores excede o total da empresa.', variant: 'destructive' });
+        return;
+      }
+      if (validation.reason === 'unallocated') {
+        setPendingRemaining(validation.remaining);
+        setShowUnallocatedDialog(true);
+        return;
+      }
+    }
+
+    await persistSurvey();
+  };
+
+  const persistSurvey = async () => {
+    const activeQuestions = questions.filter(q => !q.isDeleted);
+    const activeDepartments = departments.filter(d => !d.isDeleted);
     try {
       if (isEditing) {
         // Update survey info
@@ -599,8 +622,10 @@ export default function ClimateSurveyManagement() {
         {/* Department Manager */}
         <div className="mb-6">
           <DepartmentManager
+            ref={deptManagerRef}
             departments={departments}
             onChange={setDepartments}
+            companyEmployeeCount={companyEmployeeCount}
           />
         </div>
 
@@ -639,7 +664,12 @@ export default function ClimateSurveyManagement() {
           </CardContent>
         </Card>
       </main>
-
+      <UnallocatedEmployeesDialog
+        open={showUnallocatedDialog}
+        onOpenChange={setShowUnallocatedDialog}
+        remaining={pendingRemaining}
+        onConfirm={() => { setShowUnallocatedDialog(false); persistSurvey(); }}
+      />
       <Footer />
     </div>
   );
