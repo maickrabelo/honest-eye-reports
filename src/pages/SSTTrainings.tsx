@@ -73,19 +73,19 @@ const SSTTrainings: React.FC = () => {
   };
 
   const loadModules = async (mgrId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('sst_training_modules')
-      .select('id, title, description, cover_image_url, sst_training_materials(count)')
+      .select('id, title, description, cover_image_url')
       .eq('sst_manager_id', mgrId)
       .order('created_at', { ascending: false });
-    const enriched: Module[] = (data || []).map((m: any) => ({
-      id: m.id,
-      title: m.title,
-      description: m.description,
-      cover_image_url: m.cover_image_url,
-      materialCount: m.sst_training_materials?.[0]?.count ?? 0,
-    }));
-    setModules(enriched);
+    if (error) { console.error('[SSTTrainings] loadModules error:', error); return; }
+    const base = (data || []) as Module[];
+    const counts = await Promise.all(
+      base.map((m) =>
+        supabase.rpc('count_training_materials', { _module_id: m.id }).then(r => r.data ?? 0)
+      )
+    );
+    setModules(base.map((m, i) => ({ ...m, materialCount: counts[i] as number })));
   };
 
   const loadMaterials = async (moduleId: string) => {
