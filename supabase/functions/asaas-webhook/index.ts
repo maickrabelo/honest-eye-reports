@@ -195,9 +195,11 @@ Deno.serve(async (req) => {
         })
         .eq('id', sub.id);
 
-      // Send credentials only for new users
-      if (!existing) {
+      // Send credentials only for newly created users
+      if (isNewUser) {
         await sendCredentialsEmail(email, password, plan.name);
+      } else {
+        console.log('Skipping credentials email — existing user');
       }
     } else if (eventType === 'PAYMENT_OVERDUE') {
       await supabase.from('subscriptions').update({ status: 'past_due' }).eq('id', sub.id);
