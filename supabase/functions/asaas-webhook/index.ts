@@ -103,12 +103,14 @@ Deno.serve(async (req) => {
       const cpfCnpj = (meta.customer?.cpfCnpj || '').replace(/\D/g, '');
       const password = cpfCnpj.length >= 8 ? cpfCnpj : crypto.randomUUID().slice(0, 12);
 
-      // Find or create user
+      // Find or create user (robust against email_exists race)
       let userId: string | null = null;
+      let isNewUser = false;
       const { data: existingUsers } = await supabase.auth.admin.listUsers();
       const existing = existingUsers?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
       if (existing) {
         userId = existing.id;
+        console.log('User already exists, reusing:', userId);
       } else {
         const { data: created, error: createErr } = await supabase.auth.admin.createUser({
           email,
@@ -116,14 +118,26 @@ Deno.serve(async (req) => {
           email_confirm: true,
           user_metadata: { full_name: customerName },
         });
-        if (createErr) throw createErr;
-        userId = created.user!.id;
-
-        await supabase.from('profiles').upsert({
-          id: userId,
-          full_name: customerName,
-          must_change_password: true,
-        });
+        if (createErr) {
+          // Race / duplicate — try to fetch again
+          if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
+            const { data: retry } = await supabase.auth.admin.listUsers();
+            const found = retry?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+            if (!found) throw createErr;
+            userId = found.id;
+            console.log('Recovered existing user after email_exists:', userId);
+          } else {
+            throw createErr;
+          }
+        } else {
+          userId = created.user!.id;
+          isNewUser = true;
+          await supabase.from('profiles').upsert({
+            id: userId,
+            full_name: customerName,
+            must_change_password: true,
+          });
+        }
       }
 
       // Assign role based on plan category
