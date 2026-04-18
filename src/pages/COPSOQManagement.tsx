@@ -120,6 +120,7 @@ export default function COPSOQManagement() {
   };
 
   const persistAssessment = async () => {
+    try {
       setIsSaving(true);
       const data = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: collectionMode };
       let assessmentId = id;

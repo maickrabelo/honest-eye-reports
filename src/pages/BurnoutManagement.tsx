@@ -184,6 +184,7 @@ export default function BurnoutManagement() {
   };
 
   const persistAssessment = async () => {
+    try {
       setSaving(true);
       
       const assessmentData = {
