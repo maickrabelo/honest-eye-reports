@@ -118,13 +118,18 @@ const SSTTrainings: React.FC = () => {
         const { data } = await supabase.storage.from('sst-trainings').createSignedUrl(path, 60 * 60 * 24 * 365);
         coverUrl = data?.signedUrl ?? null;
       }
-      const { error } = await supabase.from('sst_training_modules').insert({
-        sst_manager_id: sstManagerId,
-        title: newTitle.trim(),
-        description: newDescription.trim() || null,
-        cover_image_url: coverUrl,
-      });
+      const { data: inserted, error } = await supabase
+        .from('sst_training_modules')
+        .insert({
+          sst_manager_id: sstManagerId,
+          title: newTitle.trim(),
+          description: newDescription.trim() || null,
+          cover_image_url: coverUrl,
+        })
+        .select()
+        .single();
       if (error) throw error;
+      console.log('[SSTTrainings] Módulo criado:', inserted);
       toast({ title: 'Módulo criado!' });
       setModuleFormOpen(false);
       setNewTitle(''); setNewDescription(''); setCoverFile(null);
