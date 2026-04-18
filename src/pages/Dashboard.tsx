@@ -565,6 +565,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       {features.psicossocial && <HSEITParticipationCard companyId={companyId} />}
       
       {features.ouvidoria && (
+      <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <Tabs defaultValue="overview" className="mb-8">
@@ -728,6 +729,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           </div>
         </CardContent>
       </Card>
+      </>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
