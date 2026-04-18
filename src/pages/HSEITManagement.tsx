@@ -162,7 +162,7 @@ export default function HSEITManagement() {
     }
 
     const validation = deptManagerRef.current?.validateAllocation();
-    if (validation && !validation.ok) {
+    if (validation && validation.ok === false) {
       if (validation.reason === 'overflow') {
         toast({
           title: 'Excesso de colaboradores',
