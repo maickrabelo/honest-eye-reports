@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
+import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
+import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2, GraduationCap, Video, FileText, FileType } from 'lucide-react';
 import ModuleCard from '@/components/sst-trainings/ModuleCard';
 import MaterialViewer from '@/components/sst-trainings/MaterialViewer';
