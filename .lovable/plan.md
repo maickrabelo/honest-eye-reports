@@ -1,66 +1,41 @@
 
-The user wants a Trainings module where SST managers create educational content (videos, articles, PDFs), organize into modules, and assign visibility per managed company. Companies see a "Treinamentos" section in their dashboard.
+A gestora SST precisa poder resetar/criar senhas das empresas clientes. Já existe o componente `ResetPasswordDialog` (visto no contexto) que faz exatamente isso usando a edge function `create-user-with-password`. Preciso verificar se ele já está integrado no card das empresas no dashboard SST e se respeita o agrupamento por email (multi-company access).
 
-Existing context:
-- There's already `sst_portal_trainings` table for partner portal (admin → SST). I need a NEW system for SST → company.
-- Pattern reference: SST portal docs use `target_sst_manager_ids` checkbox selection.
-- Storage bucket `sst-portal-documents` exists (private). Will create new bucket for trainings.
+Olhando o código existente:
+- `ResetPasswordDialog.tsx` já existe e já implementa: busca o usuário pelo `company_id`, busca todas as empresas vinculadas via `user_companies`, gera senha temporária, reseta via edge function, mostra credenciais + lista de CNPJs vinculados ao email.
+- A memória `mem://features/sst-client-password-reset` confirma que esse fluxo já existe (ícone de chave 🔑 nos cards).
 
-Plan structure: simple, focused.
+Preciso checar se o dialog está sendo usado no `SSTDashboard.tsx` / nos cards de empresa. Se sim, talvez só precise validar/ajustar. Se não, integrar.
 
-## Plano: Módulo de Treinamentos (Gestora SST → Empresas)
+## Plano
 
-### Visão Geral
-Nova ferramenta no dashboard da Gestora SST para criar **Módulos Educativos** contendo materiais (vídeos do YouTube, PDFs, artigos). Cada material pode ser disponibilizado para empresas específicas via checkbox. Empresas atribuídas veem a página "Treinamentos" no dashboard (com botão desativado quando não houver conteúdo).
+### Objetivo
+Garantir que a gestora SST consiga resetar/criar senhas das empresas clientes diretamente do dashboard, com agrupamento correto por email (uma senha = todas as empresas vinculadas ao mesmo email).
 
-### Estrutura de Banco de Dados (3 tabelas novas)
+### Verificação
+1. Confirmar se o ícone "Resetar Senha" (🔑) já aparece nos cards de empresa no `SSTDashboard`.
+2. Confirmar que o `ResetPasswordDialog` está importado e funcionando.
 
-**1. `sst_training_modules`** — agrupa materiais por tema
-- `id`, `sst_manager_id`, `title`, `description`, `cover_image_url`, `order_index`, `created_at`
+### Implementação (caso necessário)
+1. **Integrar no dashboard SST** — adicionar botão de chave (🔑) em cada card de empresa que abre o `ResetPasswordDialog`.
+2. **Validar agrupamento por email** — o dialog atual já busca via `user_companies` e exibe todos os CNPJs vinculados; confirmar que o reset atualiza a senha do `auth.user` (única para todas as empresas).
+3. **Feedback visual** — após reset bem-sucedido, mostrar:
+   - Email de acesso
+   - Senha temporária gerada (formato: `NomeEmpresa2026!`)
+   - Lista de CNPJs/empresas vinculados ao mesmo email
+   - Botão "Copiar tudo" para compartilhar com o cliente
 
-**2. `sst_training_materials`** — vídeos / PDFs / artigos
-- `id`, `module_id`, `title`, `description`
-- `material_type`: 'video' | 'pdf' | 'article'
-- `content_url` (YouTube link ou arquivo PDF), `article_content` (texto), `duration_minutes`, `order_index`
+### Comportamento esperado
+- Email único → uma senha única → acesso a todas as empresas vinculadas via `CompanySwitcher`.
+- Empresa marca `must_change_password = true` para forçar troca no primeiro acesso.
+- Reset usa edge function existente `create-user-with-password` (já aceita atualização de usuário existente).
 
-**3. `sst_training_company_access`** — define quais empresas veem cada módulo
-- `module_id`, `company_id` (relação N:N)
-- Se um módulo não tiver registros aqui → invisível para todas
+### Arquivos envolvidos
+- `src/pages/SSTDashboard.tsx` — adicionar botão 🔑 no card (se ainda não existir)
+- `src/components/sst/ResetPasswordDialog.tsx` — componente já pronto, validar integração
+- Edge function `create-user-with-password` — já existente, sem alterações
 
-**Storage**: novo bucket privado `sst-trainings` para PDFs e capas.
-
-**RLS**:
-- Gestora SST: CRUD apenas em módulos onde `sst_manager_id` = seu próprio
-- Empresas: SELECT apenas em módulos liberados via `sst_training_company_access` para `company_id` do perfil
-- Materiais herdam permissão do módulo
-
-### Interface
-
-**Painel da Gestora SST** (novo card "Treinamentos" no dashboard):
-- Página `/sst/treinamentos` com lista de módulos (cards com capa)
-- Botão "Novo Módulo" → abre formulário (título, descrição, capa)
-- Ao abrir um módulo: lista de materiais + botão "Adicionar Material"
-- Modal de material: tipo (vídeo/PDF/artigo), título, descrição, URL ou upload
-- Botão "Gerenciar Acesso": modal com checkboxes de todas empresas atribuídas à gestora
-  - Opção "Todas empresas" / seleção individual
-
-**Dashboard da Empresa**:
-- Novo card "Treinamentos" no dashboard (visível somente se empresa tem ≥1 módulo liberado; caso contrário aparece desabilitado com tooltip "Aguardando conteúdo da sua gestora SST")
-- Página `/empresa/treinamentos`: grid de módulos liberados → ao clicar abre lista de materiais
-- Player embutido para YouTube, viewer para PDF, leitor para artigos
-
-### Arquivos a criar
-- Migration SQL: 3 tabelas + bucket + políticas RLS
-- `src/pages/SSTTrainings.tsx` (gestora)
-- `src/pages/CompanyTrainings.tsx` (empresa)
-- `src/components/sst-trainings/ModuleCard.tsx`
-- `src/components/sst-trainings/MaterialForm.tsx`
-- `src/components/sst-trainings/CompanyAccessDialog.tsx`
-- `src/components/sst-trainings/MaterialViewer.tsx` (player YouTube + PDF + artigo)
-- Rotas em `App.tsx` + cards/links nos dashboards SST e Empresa
-
-### Considerações Técnicas
-- YouTube: extrair ID do link e renderizar `<iframe>` embed
-- PDF: abrir em nova aba via signed URL (bucket privado)
-- Artigo: editor simples (textarea com markdown básico) para conteúdo inline
-- Verificação no dashboard da empresa via count rápido para habilitar/desabilitar o card
+### Considerações técnicas
+- Como o agrupamento é feito por `auth.users.email`, resetar a senha do usuário automaticamente afeta todas as empresas vinculadas — comportamento desejado.
+- Não criar novo usuário se já existir; apenas atualizar senha.
+- RLS já permite que SST visualize/resete empresas atribuídas via `company_sst_assignments`.
