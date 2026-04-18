@@ -474,7 +474,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
           
-          {companySlug && (
+          {features.ouvidoria && companySlug && (
             <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
               <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
               <div className="flex items-center gap-2">
@@ -504,34 +504,38 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
             </div>
           )}
         </div>
-        <div className="flex gap-4">
-          <DownloadReportButton />
-          <TrackReportModal />
-        </div>
+        {features.ouvidoria && (
+          <div className="flex gap-4">
+            <DownloadReportButton />
+            <TrackReportModal />
+          </div>
+        )}
       </div>
 
       {/* Treinamentos card */}
-      <Card
-        className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
-        onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
-      >
-        <CardContent className="p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <GraduationCap className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-foreground">Treinamentos</h3>
-            <p className="text-sm text-muted-foreground">
-              {trainingsCount > 0
-                ? `${trainingsCount} ${trainingsCount === 1 ? 'módulo disponível' : 'módulos disponíveis'} pela sua gestora SST`
-                : 'Aguardando conteúdo da sua gestora SST'}
-            </p>
-          </div>
-          {trainingsCount > 0 && (
-            <Button variant="outline" size="sm">Acessar</Button>
-          )}
-        </CardContent>
-      </Card>
+      {features.treinamentos && (
+        <Card
+          className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
+          onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
+        >
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground">Treinamentos</h3>
+              <p className="text-sm text-muted-foreground">
+                {trainingsCount > 0
+                  ? `${trainingsCount} ${trainingsCount === 1 ? 'módulo disponível' : 'módulos disponíveis'} pela sua gestora SST`
+                  : 'Aguardando conteúdo da sua gestora SST'}
+              </p>
+            </div>
+            {trainingsCount > 0 && (
+              <Button variant="outline" size="sm">Acessar</Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
           
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
