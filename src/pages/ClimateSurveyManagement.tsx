@@ -288,6 +288,7 @@ export default function ClimateSurveyManagement() {
   const persistSurvey = async () => {
     const activeQuestions = questions.filter(q => !q.isDeleted);
     const activeDepartments = departments.filter(d => !d.isDeleted);
+    setIsSaving(true);
     try {
       if (isEditing) {
         // Update survey info
