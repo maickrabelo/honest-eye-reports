@@ -42,6 +42,7 @@ import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
+import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -68,6 +69,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [trainingsCount, setTrainingsCount] = useState<number>(0);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { features } = useCompanyFeatures(companyId);
 
   useEffect(() => {
     const initCompanyId = async () => {
