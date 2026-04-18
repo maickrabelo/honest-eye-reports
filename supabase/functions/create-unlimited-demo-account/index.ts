@@ -625,11 +625,7 @@ Deno.serve(async (req) => {
 
     const finalSlug = existingSlug ? `${slug}-${Date.now().toString(36)}` : slug;
 
-    // Trial end date (7 days)
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-
-    // 1. Create SST manager (max_companies = 2: 1 demo + 1 user)
+    // 1. Create SST manager (UNLIMITED demo - no trial expiration)
     const { data: sstManager, error: sstError } = await supabaseAdmin
       .from("sst_managers")
       .insert({
@@ -638,9 +634,9 @@ Deno.serve(async (req) => {
         email: email.trim().toLowerCase(),
         phone: phone || null,
         slug: finalSlug,
-        max_companies: 2,
-        subscription_status: "trial",
-        trial_ends_at: trialEndsAt.toISOString(),
+        max_companies: 50,
+        subscription_status: "active",
+        trial_ends_at: null,
       })
       .select()
       .single();
