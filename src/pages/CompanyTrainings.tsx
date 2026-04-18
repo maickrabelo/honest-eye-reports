@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
+import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
+import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2, GraduationCap, Video, FileText, FileType } from 'lucide-react';
 import ModuleCard from '@/components/sst-trainings/ModuleCard';
 import MaterialViewer from '@/components/sst-trainings/MaterialViewer';
@@ -32,6 +34,8 @@ interface Material {
 const CompanyTrainings: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading: authLoading } = useRealAuth();
+  const { features, isLoading: featuresLoading } = useCompanyFeatures(profile?.company_id);
+  const { toast } = useToast();
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
@@ -41,8 +45,13 @@ const CompanyTrainings: React.FC = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate('/auth'); return; }
+    if (!featuresLoading && !features.treinamentos) {
+      toast({ title: 'Ferramenta indisponível', description: 'Treinamentos foi desabilitado pela sua gestora SST.', variant: 'destructive' });
+      navigate('/dashboard');
+      return;
+    }
     load();
-  }, [user, authLoading, profile?.company_id]);
+  }, [user, authLoading, profile?.company_id, featuresLoading, features.treinamentos]);
 
   const load = async () => {
     setLoading(true);

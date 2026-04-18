@@ -42,6 +42,7 @@ import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
+import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -68,6 +69,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [trainingsCount, setTrainingsCount] = useState<number>(0);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { features } = useCompanyFeatures(companyId);
 
   useEffect(() => {
     const initCompanyId = async () => {
@@ -472,7 +474,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
           
-          {companySlug && (
+          {features.ouvidoria && companySlug && (
             <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
               <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
               <div className="flex items-center gap-2">
@@ -502,60 +504,68 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
             </div>
           )}
         </div>
-        <div className="flex gap-4">
-          <DownloadReportButton />
-          <TrackReportModal />
-        </div>
+        {features.ouvidoria && (
+          <div className="flex gap-4">
+            <DownloadReportButton />
+            <TrackReportModal />
+          </div>
+        )}
       </div>
 
       {/* Treinamentos card */}
-      <Card
-        className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
-        onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
-      >
-        <CardContent className="p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <GraduationCap className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-foreground">Treinamentos</h3>
-            <p className="text-sm text-muted-foreground">
-              {trainingsCount > 0
-                ? `${trainingsCount} ${trainingsCount === 1 ? 'módulo disponível' : 'módulos disponíveis'} pela sua gestora SST`
-                : 'Aguardando conteúdo da sua gestora SST'}
-            </p>
-          </div>
-          {trainingsCount > 0 && (
-            <Button variant="outline" size="sm">Acessar</Button>
-          )}
-        </CardContent>
-      </Card>
+      {features.treinamentos && (
+        <Card
+          className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
+          onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
+        >
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground">Treinamentos</h3>
+              <p className="text-sm text-muted-foreground">
+                {trainingsCount > 0
+                  ? `${trainingsCount} ${trainingsCount === 1 ? 'módulo disponível' : 'módulos disponíveis'} pela sua gestora SST`
+                  : 'Aguardando conteúdo da sua gestora SST'}
+              </p>
+            </div>
+            {trainingsCount > 0 && (
+              <Button variant="outline" size="sm">Acessar</Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
           
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          { title: "Total de Denúncias", value: stats.total.toString(), color: "bg-audit-primary" },
-          { title: "Denúncias Pendentes", value: stats.pending.toString(), color: "bg-audit-secondary" },
-          { title: "Em Análise", value: stats.inProgress.toString(), color: "bg-audit-accent" },
-          { title: "Resolvidas", value: stats.resolved.toString(), color: "bg-green-600" },
-        ].map((stat, idx) => (
-          <Card key={idx} className="card-hover">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-end">
-                <div className="text-3xl font-bold">{stat.value}</div>
-              </div>
-              <div className={`h-1 w-full mt-4 ${stat.color} rounded-full`}></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {features.ouvidoria && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[
+            { title: "Total de Denúncias", value: stats.total.toString(), color: "bg-audit-primary" },
+            { title: "Denúncias Pendentes", value: stats.pending.toString(), color: "bg-audit-secondary" },
+            { title: "Em Análise", value: stats.inProgress.toString(), color: "bg-audit-accent" },
+            { title: "Resolvidas", value: stats.resolved.toString(), color: "bg-green-600" },
+          ].map((stat, idx) => (
+            <Card key={idx} className="card-hover">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-end">
+                  <div className="text-3xl font-bold">{stat.value}</div>
+                </div>
+                <div className={`h-1 w-full mt-4 ${stat.color} rounded-full`}></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      <HSEITParticipationCard companyId={companyId} />
+      {features.psicossocial && <HSEITParticipationCard companyId={companyId} />}
       
+      {features.ouvidoria && (
+      <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <Tabs defaultValue="overview" className="mb-8">
@@ -719,6 +729,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           </div>
         </CardContent>
       </Card>
+      </>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {selectedReport && (

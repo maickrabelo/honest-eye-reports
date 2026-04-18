@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal } from "lucide-react";
+import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -129,6 +130,8 @@ const SSTDashboard = () => {
   const [isDeleteCompanyOpen, setIsDeleteCompanyOpen] = useState(false);
   const [resetPasswordCompany, setResetPasswordCompany] = useState<Company | null>(null);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [featuresCompany, setFeaturesCompany] = useState<Company | null>(null);
+  const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
@@ -447,6 +450,19 @@ const SSTDashboard = () => {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
+                            title="Ferramentas disponíveis"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFeaturesCompany(company);
+                              setIsFeaturesOpen(true);
+                            }}
+                          >
+                            <SlidersHorizontal className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
                             title="Editar empresa"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -535,6 +551,7 @@ const SSTDashboard = () => {
       <EditCompanyDialog open={isEditCompanyOpen} onOpenChange={setIsEditCompanyOpen} company={editingCompany} onCompanyUpdated={fetchCompanies} />
       <DeleteCompanyDialog open={isDeleteCompanyOpen} onOpenChange={setIsDeleteCompanyOpen} company={deletingCompany} onCompanyDeleted={fetchCompanies} />
       <ResetPasswordDialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen} company={resetPasswordCompany} />
+      <ManageFeaturesDialog open={isFeaturesOpen} onOpenChange={setIsFeaturesOpen} company={featuresCompany} />
       {shouldShowTour && <OnboardingTour steps={sstDashboardSteps} onComplete={() => completeTour()} />}
     </div>
     </SoniaChatLayout>
