@@ -1,41 +1,61 @@
 
-A gestora SST precisa poder resetar/criar senhas das empresas clientes. Já existe o componente `ResetPasswordDialog` (visto no contexto) que faz exatamente isso usando a edge function `create-user-with-password`. Preciso verificar se ele já está integrado no card das empresas no dashboard SST e se respeita o agrupamento por email (multi-company access).
-
-Olhando o código existente:
-- `ResetPasswordDialog.tsx` já existe e já implementa: busca o usuário pelo `company_id`, busca todas as empresas vinculadas via `user_companies`, gera senha temporária, reseta via edge function, mostra credenciais + lista de CNPJs vinculados ao email.
-- A memória `mem://features/sst-client-password-reset` confirma que esse fluxo já existe (ícone de chave 🔑 nos cards).
-
-Preciso checar se o dialog está sendo usado no `SSTDashboard.tsx` / nos cards de empresa. Se sim, talvez só precise validar/ajustar. Se não, integrar.
+A gestora SST precisa controlar quais ferramentas cada empresa cliente tem acesso. Preciso ver o Dashboard da empresa para saber onde aplicar os gates.
 
 ## Plano
 
 ### Objetivo
-Garantir que a gestora SST consiga resetar/criar senhas das empresas clientes diretamente do dashboard, com agrupamento correto por email (uma senha = todas as empresas vinculadas ao mesmo email).
+Permitir que a gestora SST habilite/desabilite por empresa cinco ferramentas: **Ouvidoria, Riscos Psicossociais (HSE-IT/COPSOQ), Burnout, Pesquisa de Clima, Treinamentos**. Quando desabilitada, a ferramenta some/aparece bloqueada no dashboard da empresa cliente.
 
-### Verificação
-1. Confirmar se o ícone "Resetar Senha" (🔑) já aparece nos cards de empresa no `SSTDashboard`.
-2. Confirmar que o `ResetPasswordDialog` está importado e funcionando.
+### Backend
 
-### Implementação (caso necessário)
-1. **Integrar no dashboard SST** — adicionar botão de chave (🔑) em cada card de empresa que abre o `ResetPasswordDialog`.
-2. **Validar agrupamento por email** — o dialog atual já busca via `user_companies` e exibe todos os CNPJs vinculados; confirmar que o reset atualiza a senha do `auth.user` (única para todas as empresas).
-3. **Feedback visual** — após reset bem-sucedido, mostrar:
-   - Email de acesso
-   - Senha temporária gerada (formato: `NomeEmpresa2026!`)
-   - Lista de CNPJs/empresas vinculados ao mesmo email
-   - Botão "Copiar tudo" para compartilhar com o cliente
+**Nova tabela `company_feature_access`** (1 linha por empresa, booleans por ferramenta):
+```
+company_id (uuid, PK, FK companies)
+ouvidoria_enabled (bool, default true)
+psicossocial_enabled (bool, default true)
+burnout_enabled (bool, default true)
+clima_enabled (bool, default true)
+treinamentos_enabled (bool, default true)
+updated_at, updated_by
+```
+
+**RLS**:
+- SST gestora da empresa: SELECT/INSERT/UPDATE (via `company_sst_assignments`)
+- Empresa (role `company`): SELECT da própria linha
+- Admin: ALL
+
+**Função helper** `public.get_company_features(_company_id uuid)` SECURITY DEFINER retornando os flags (cria default `true` se não existir registro) — evita bloqueio por RLS no fetch da empresa.
+
+### Frontend
+
+**1. Painel SST — Card da empresa (`SSTDashboard.tsx`)**
+- Adicionar novo ícone (`Settings2` ou `ToggleRight`) ao lado do ícone de chave.
+- Abre `ManageFeaturesDialog` com 5 switches (uma para cada ferramenta) — usa o componente `Switch` já existente.
+- Salva via upsert em `company_feature_access`.
+- Toast de confirmação.
+
+**2. Hook `useCompanyFeatures(companyId)`**
+- Busca os flags da empresa ativa via RPC `get_company_features`.
+- Retorna `{ ouvidoria, psicossocial, burnout, clima, treinamentos, isLoading }`.
+- Usado no Dashboard da empresa.
+
+**3. Dashboard da empresa (`Dashboard.tsx`)**
+- Antes de renderizar cada card de ferramenta, checar o flag.
+- Se desabilitado: ocultar o card OU mostrar versão "bloqueada" com badge "Indisponível — Fale com seu gestor SST".
+- Padrão: **ocultar** (mais limpo). Se todos desabilitados exceto HSE-IT, só HSE-IT aparece, conforme exemplo do usuário.
+
+**4. Proteção de rotas (defesa em profundidade)**
+- Nas páginas das ferramentas (`Reports`, `BurnoutManagement`, `COPSOQManagement`, `HSEITManagement`, `ClimateSurveyManagement`, `CompanyTrainings`), checar o flag no mount; se desabilitado, redirecionar para `/dashboard` com toast "Ferramenta indisponível".
 
 ### Comportamento esperado
-- Email único → uma senha única → acesso a todas as empresas vinculadas via `CompanySwitcher`.
-- Empresa marca `must_change_password = true` para forçar troca no primeiro acesso.
-- Reset usa edge function existente `create-user-with-password` (já aceita atualização de usuário existente).
+- Default: todas ferramentas habilitadas (não quebra empresas existentes).
+- Mudança aplica imediato na próxima carga do dashboard da empresa.
+- Multi-empresa: cada empresa tem seus flags independentes (já que `activeCompanyId` define qual carregar).
 
-### Arquivos envolvidos
-- `src/pages/SSTDashboard.tsx` — adicionar botão 🔑 no card (se ainda não existir)
-- `src/components/sst/ResetPasswordDialog.tsx` — componente já pronto, validar integração
-- Edge function `create-user-with-password` — já existente, sem alterações
-
-### Considerações técnicas
-- Como o agrupamento é feito por `auth.users.email`, resetar a senha do usuário automaticamente afeta todas as empresas vinculadas — comportamento desejado.
-- Não criar novo usuário se já existir; apenas atualizar senha.
-- RLS já permite que SST visualize/resete empresas atribuídas via `company_sst_assignments`.
+### Arquivos a criar/editar
+- **Migração SQL**: tabela `company_feature_access` + RLS + função `get_company_features`
+- **Novo**: `src/components/sst/ManageFeaturesDialog.tsx`
+- **Novo**: `src/hooks/useCompanyFeatures.ts`
+- **Editar**: `src/pages/SSTDashboard.tsx` (botão de toggle no card)
+- **Editar**: `src/pages/Dashboard.tsx` (gating dos cards)
+- **Editar**: páginas das ferramentas (guard de rota)
