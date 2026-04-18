@@ -28,7 +28,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [departmentData, setDepartmentData] = useState<any[]>([]);
   const [statusData, setStatusData] = useState<any[]>([]);
+  const [trainingsCount, setTrainingsCount] = useState<number>(0);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
