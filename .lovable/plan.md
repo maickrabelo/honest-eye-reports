@@ -1,49 +1,66 @@
 
+The user wants a Trainings module where SST managers create educational content (videos, articles, PDFs), organize into modules, and assign visibility per managed company. Companies see a "Treinamentos" section in their dashboard.
 
-## Tracked Affiliate Landing Pages with Lead Capture
+Existing context:
+- There's already `sst_portal_trainings` table for partner portal (admin → SST). I need a NEW system for SST → company.
+- Pattern reference: SST portal docs use `target_sst_manager_ids` checkbox selection.
+- Storage bucket `sst-portal-documents` exists (private). Will create new bucket for trainings.
 
-### Overview
-Create a system where each affiliate gets a unique tracked URL. When someone visits that URL, they see a landing page (similar to the homepage) with a lead capture form right after the hero banner. On submission, the lead is saved linked to the affiliate, and a configurable redirect URL opens in a new tab.
+Plan structure: simple, focused.
 
-### Database Changes
+## Plano: Módulo de Treinamentos (Gestora SST → Empresas)
 
-**1. Add `redirect_url` column to `affiliates` table**
-- New nullable text column to store where leads should be redirected after form submission
-- Admins/affiliates can configure this URL
+### Visão Geral
+Nova ferramenta no dashboard da Gestora SST para criar **Módulos Educativos** contendo materiais (vídeos do YouTube, PDFs, artigos). Cada material pode ser disponibilizado para empresas específicas via checkbox. Empresas atribuídas veem a página "Treinamentos" no dashboard (com botão desativado quando não houver conteúdo).
 
-**2. Create `affiliate_leads` table**
-- `id` (uuid, PK)
-- `affiliate_id` (uuid, references affiliates)
-- `name` (text, required)
-- `phone` (text, required)
-- `company_name` (text, required)
-- `referral_code` (text) -- for tracking
-- `created_at` (timestamptz)
-- RLS: public INSERT (anon), SELECT for admin + owning affiliate
+### Estrutura de Banco de Dados (3 tabelas novas)
 
-### Frontend Changes
+**1. `sst_training_modules`** — agrupa materiais por tema
+- `id`, `sst_manager_id`, `title`, `description`, `cover_image_url`, `order_index`, `created_at`
 
-**3. New page: `src/pages/AffiliateLanding.tsx`**
-- Route: `/i/:referralCode`
-- On mount, fetch affiliate info by `referral_code` to validate the link and get the `redirect_url`
-- Renders: HeroSection (reused) + Lead capture form (name, phone, company) + remaining landing sections (Features, Benefits, FAQ, etc.)
-- The lead form appears right below the hero banner in a highlighted card
-- On submit: inserts into `affiliate_leads`, then opens `redirect_url` in new tab via `window.open()`
+**2. `sst_training_materials`** — vídeos / PDFs / artigos
+- `id`, `module_id`, `title`, `description`
+- `material_type`: 'video' | 'pdf' | 'article'
+- `content_url` (YouTube link ou arquivo PDF), `article_content` (texto), `duration_minutes`, `order_index`
 
-**4. Update Affiliate Dashboard**
-- In `AffiliateOverview`, update the referral link to point to `/i/{referralCode}` instead of `/checkout?ref=`
-- Add a "Leads" count card to the overview stats
-- Add a new "Leads" tab in the sidebar to list captured leads
+**3. `sst_training_company_access`** — define quais empresas veem cada módulo
+- `module_id`, `company_id` (relação N:N)
+- Se um módulo não tiver registros aqui → invisível para todas
 
-**5. Add redirect URL config**
-- In the affiliate dashboard, add a settings section or inline edit for the `redirect_url`
+**Storage**: novo bucket privado `sst-trainings` para PDFs e capas.
 
-### Route Registration
-- Add `/i/:referralCode` route in `App.tsx` with lazy-loaded `AffiliateLanding`
+**RLS**:
+- Gestora SST: CRUD apenas em módulos onde `sst_manager_id` = seu próprio
+- Empresas: SELECT apenas em módulos liberados via `sst_training_company_access` para `company_id` do perfil
+- Materiais herdam permissão do módulo
 
-### Technical Details
-- The lead form uses no authentication (public/anon insert)
-- The `referral_code` lookup validates the affiliate exists and is approved
-- If no `redirect_url` is configured, fallback to the homepage or WhatsApp link
-- Form validation: name required, phone required (Brazilian format), company name required
+### Interface
 
+**Painel da Gestora SST** (novo card "Treinamentos" no dashboard):
+- Página `/sst/treinamentos` com lista de módulos (cards com capa)
+- Botão "Novo Módulo" → abre formulário (título, descrição, capa)
+- Ao abrir um módulo: lista de materiais + botão "Adicionar Material"
+- Modal de material: tipo (vídeo/PDF/artigo), título, descrição, URL ou upload
+- Botão "Gerenciar Acesso": modal com checkboxes de todas empresas atribuídas à gestora
+  - Opção "Todas empresas" / seleção individual
+
+**Dashboard da Empresa**:
+- Novo card "Treinamentos" no dashboard (visível somente se empresa tem ≥1 módulo liberado; caso contrário aparece desabilitado com tooltip "Aguardando conteúdo da sua gestora SST")
+- Página `/empresa/treinamentos`: grid de módulos liberados → ao clicar abre lista de materiais
+- Player embutido para YouTube, viewer para PDF, leitor para artigos
+
+### Arquivos a criar
+- Migration SQL: 3 tabelas + bucket + políticas RLS
+- `src/pages/SSTTrainings.tsx` (gestora)
+- `src/pages/CompanyTrainings.tsx` (empresa)
+- `src/components/sst-trainings/ModuleCard.tsx`
+- `src/components/sst-trainings/MaterialForm.tsx`
+- `src/components/sst-trainings/CompanyAccessDialog.tsx`
+- `src/components/sst-trainings/MaterialViewer.tsx` (player YouTube + PDF + artigo)
+- Rotas em `App.tsx` + cards/links nos dashboards SST e Empresa
+
+### Considerações Técnicas
+- YouTube: extrair ID do link e renderizar `<iframe>` embed
+- PDF: abrir em nova aba via signed URL (bucket privado)
+- Artigo: editor simples (textarea com markdown básico) para conteúdo inline
+- Verificação no dashboard da empresa via count rápido para habilitar/desabilitar o card
