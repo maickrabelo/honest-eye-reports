@@ -14,8 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Save, ArrowLeft, ClipboardList, Building2, Copy } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { DepartmentManager, SurveyDepartment } from '@/components/climate-survey/DepartmentManager';
+import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
+import { useCompanyEmployeeCount } from '@/hooks/useCompanyEmployeeCount';
 
 interface Company {
   id: string;
@@ -41,7 +42,11 @@ export default function HSEITManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
-  
+  const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
+  const [pendingRemaining, setPendingRemaining] = useState(0);
+  const deptManagerRef = useRef<DepartmentManagerHandle>(null);
+  const { employeeCount: companyEmployeeCount } = useCompanyEmployeeCount(selectedCompany || null);
+
   const isEditing = !!id;
 
   // Auth guard - only for redirects
@@ -156,6 +161,27 @@ export default function HSEITManagement() {
       return;
     }
 
+    const validation = deptManagerRef.current?.validateAllocation();
+    if (validation && !validation.ok) {
+      if (validation.reason === 'overflow') {
+        toast({
+          title: 'Excesso de colaboradores',
+          description: 'A soma dos setores excede o total de colaboradores da empresa.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      if (validation.reason === 'unallocated') {
+        setPendingRemaining(validation.remaining);
+        setShowUnallocatedDialog(true);
+        return;
+      }
+    }
+
+    await persistAssessment();
+  };
+
+  const persistAssessment = async () => {
     try {
       setIsSaving(true);
       
@@ -383,8 +409,10 @@ export default function HSEITManagement() {
               </CardHeader>
               <CardContent>
                 <DepartmentManager
+                  ref={deptManagerRef}
                   departments={departments}
                   onChange={setDepartments}
+                  companyEmployeeCount={companyEmployeeCount}
                 />
               </CardContent>
             </Card>
