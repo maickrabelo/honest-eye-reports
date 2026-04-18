@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap } from "lucide-react";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -106,6 +106,14 @@ const tools = [
     description: 'Clima organizacional personalizado',
     highlights: ['NPS', 'Personalizável', 'Relatórios'],
     path: '/climate-dashboard',
+  },
+  {
+    id: 'tool-trainings',
+    icon: GraduationCap,
+    title: 'Treinamentos',
+    description: 'Crie módulos educativos para suas empresas',
+    highlights: ['Vídeos', 'PDFs', 'Artigos'],
+    path: '/sst/treinamentos',
   },
 ];
 

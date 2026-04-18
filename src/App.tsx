@@ -56,6 +56,8 @@ const PsychosocialDashboard = React.lazy(() => import("./pages/PsychosocialDashb
 const COPSOQManagement = React.lazy(() => import("./pages/COPSOQManagement"));
 const COPSOQForm = React.lazy(() => import("./pages/COPSOQForm"));
 const COPSOQResults = React.lazy(() => import("./pages/COPSOQResults"));
+const SSTTrainings = React.lazy(() => import("./pages/SSTTrainings"));
+const CompanyTrainings = React.lazy(() => import("./pages/CompanyTrainings"));
 const CompanySelector = React.lazy(() => import("./components/CompanySelector"));
 
 const queryClient = new QueryClient({
@@ -144,6 +146,8 @@ const App = () => (
                 <Route path="/copsoq/:id" element={<COPSOQManagement />} />
                 <Route path="/copsoq/:companySlug/:assessmentId" element={<COPSOQForm />} />
                 <Route path="/copsoq/results/:id" element={<COPSOQResults />} />
+                <Route path="/sst/treinamentos" element={<SSTTrainings />} />
+                <Route path="/empresa/treinamentos" element={<CompanyTrainings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
