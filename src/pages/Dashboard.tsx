@@ -28,7 +28,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [departmentData, setDepartmentData] = useState<any[]>([]);
   const [statusData, setStatusData] = useState<any[]>([]);
+  const [trainingsCount, setTrainingsCount] = useState<number>(0);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,6 +131,14 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   useEffect(() => {
     if (companyId) {
       loadDashboardData();
+      // count available trainings for this company
+      (async () => {
+        const { data: access } = await supabase
+          .from('sst_training_company_access')
+          .select('module_id')
+          .eq('company_id', companyId);
+        setTrainingsCount(access?.length ?? 0);
+      })();
     }
   }, [companyId]);
 
@@ -496,6 +507,29 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           <TrackReportModal />
         </div>
       </div>
+
+      {/* Treinamentos card */}
+      <Card
+        className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
+        onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
+      >
+        <CardContent className="p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <GraduationCap className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">Treinamentos</h3>
+            <p className="text-sm text-muted-foreground">
+              {trainingsCount > 0
+                ? `${trainingsCount} ${trainingsCount === 1 ? 'módulo disponível' : 'módulos disponíveis'} pela sua gestora SST`
+                : 'Aguardando conteúdo da sua gestora SST'}
+            </p>
+          </div>
+          {trainingsCount > 0 && (
+            <Button variant="outline" size="sm">Acessar</Button>
+          )}
+        </CardContent>
+      </Card>
           
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
