@@ -441,12 +441,14 @@ export type Database = {
           email: string | null
           employee_count: number
           id: string
+          legacy_plan: boolean
           logo_url: string | null
           max_employees: number | null
           name: string
           notification_email_1: string | null
           notification_email_2: string | null
           notification_email_3: string | null
+          parent_subscription_id: string | null
           phone: string | null
           referred_by_affiliate_id: string | null
           referred_by_partner_id: string | null
@@ -462,12 +464,14 @@ export type Database = {
           email?: string | null
           employee_count?: number
           id?: string
+          legacy_plan?: boolean
           logo_url?: string | null
           max_employees?: number | null
           name: string
           notification_email_1?: string | null
           notification_email_2?: string | null
           notification_email_3?: string | null
+          parent_subscription_id?: string | null
           phone?: string | null
           referred_by_affiliate_id?: string | null
           referred_by_partner_id?: string | null
@@ -483,12 +487,14 @@ export type Database = {
           email?: string | null
           employee_count?: number
           id?: string
+          legacy_plan?: boolean
           logo_url?: string | null
           max_employees?: number | null
           name?: string
           notification_email_1?: string | null
           notification_email_2?: string | null
           notification_email_3?: string | null
+          parent_subscription_id?: string | null
           phone?: string | null
           referred_by_affiliate_id?: string | null
           referred_by_partner_id?: string | null
@@ -498,6 +504,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "companies_parent_subscription_id_fkey"
+            columns: ["parent_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "companies_referred_by_affiliate_id_fkey"
             columns: ["referred_by_affiliate_id"]
@@ -1700,106 +1713,143 @@ export type Database = {
       subscription_plans: {
         Row: {
           base_price_cents: number
+          category: string
           created_at: string | null
+          display_order: number
           features: Json | null
           id: string
           is_active: boolean | null
+          is_custom_quote: boolean
+          max_cnpjs: number | null
+          max_companies: number | null
           max_employees: number | null
           min_employees: number
           name: string
+          price_annual_cents: number | null
+          price_monthly_cents: number | null
           price_per_employee_cents: number | null
+          price_quarterly_cents: number | null
+          roi_initial_cents: number | null
+          roi_monthly_cents: number | null
           slug: string
           stripe_price_id: string | null
           stripe_product_id: string | null
+          tier: string | null
           updated_at: string | null
         }
         Insert: {
           base_price_cents: number
+          category?: string
           created_at?: string | null
+          display_order?: number
           features?: Json | null
           id?: string
           is_active?: boolean | null
+          is_custom_quote?: boolean
+          max_cnpjs?: number | null
+          max_companies?: number | null
           max_employees?: number | null
           min_employees: number
           name: string
+          price_annual_cents?: number | null
+          price_monthly_cents?: number | null
           price_per_employee_cents?: number | null
+          price_quarterly_cents?: number | null
+          roi_initial_cents?: number | null
+          roi_monthly_cents?: number | null
           slug: string
           stripe_price_id?: string | null
           stripe_product_id?: string | null
+          tier?: string | null
           updated_at?: string | null
         }
         Update: {
           base_price_cents?: number
+          category?: string
           created_at?: string | null
+          display_order?: number
           features?: Json | null
           id?: string
           is_active?: boolean | null
+          is_custom_quote?: boolean
+          max_cnpjs?: number | null
+          max_companies?: number | null
           max_employees?: number | null
           min_employees?: number
           name?: string
+          price_annual_cents?: number | null
+          price_monthly_cents?: number | null
           price_per_employee_cents?: number | null
+          price_quarterly_cents?: number | null
+          roi_initial_cents?: number | null
+          roi_monthly_cents?: number | null
           slug?: string
           stripe_price_id?: string | null
           stripe_product_id?: string | null
+          tier?: string | null
           updated_at?: string | null
         }
         Relationships: []
       }
       subscriptions: {
         Row: {
-          company_id: string
-          created_at: string | null
+          amount_cents: number
+          asaas_customer_id: string | null
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          billing_cycle: Database["public"]["Enums"]["billing_cycle_enum"]
+          created_at: string
           current_period_end: string | null
           current_period_start: string | null
-          employee_count: number
           id: string
+          invoice_url: string | null
+          metadata: Json | null
+          next_charge_date: string | null
+          owner_email: string
+          owner_user_id: string | null
           plan_id: string
-          status: string
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          updated_at: string | null
+          status: Database["public"]["Enums"]["subscription_status_enum"]
+          updated_at: string
         }
         Insert: {
-          company_id: string
-          created_at?: string | null
+          amount_cents: number
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle_enum"]
+          created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
-          employee_count: number
           id?: string
+          invoice_url?: string | null
+          metadata?: Json | null
+          next_charge_date?: string | null
+          owner_email: string
+          owner_user_id?: string | null
           plan_id: string
-          status?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string | null
+          status?: Database["public"]["Enums"]["subscription_status_enum"]
+          updated_at?: string
         }
         Update: {
-          company_id?: string
-          created_at?: string | null
+          amount_cents?: number
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle_enum"]
+          created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
-          employee_count?: number
           id?: string
+          invoice_url?: string | null
+          metadata?: Json | null
+          next_charge_date?: string | null
+          owner_email?: string
+          owner_user_id?: string | null
           plan_id?: string
-          status?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string | null
+          status?: Database["public"]["Enums"]["subscription_status_enum"]
+          updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "subscriptions_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscriptions_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "subscriptions_plan_id_fkey"
             columns: ["plan_id"]
@@ -2156,6 +2206,13 @@ export type Database = {
         | "partner"
         | "affiliate"
         | "sales"
+      billing_cycle_enum: "monthly" | "quarterly" | "annual"
+      subscription_status_enum:
+        | "pending"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "expired"
       survey_question_type:
         | "likert"
         | "single_choice"
@@ -2297,6 +2354,14 @@ export const Constants = {
         "partner",
         "affiliate",
         "sales",
+      ],
+      billing_cycle_enum: ["monthly", "quarterly", "annual"],
+      subscription_status_enum: [
+        "pending",
+        "active",
+        "past_due",
+        "canceled",
+        "expired",
       ],
       survey_question_type: [
         "likert",
