@@ -42,6 +42,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     email: '',
     phone: '',
     address: '',
+    employee_count: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +62,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
   };
 
   const resetForm = () => {
-    setFormData({ name: '', cnpj: '', email: '', phone: '', address: '' });
+    setFormData({ name: '', cnpj: '', email: '', phone: '', address: '', employee_count: '' });
     setLogoFile(null);
     setLogoPreview(null);
   };
@@ -89,6 +90,12 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     const cnpjDigits = extractCnpjDigits(formData.cnpj);
     if (cnpjDigits.length < 11) {
       toast({ title: "CNPJ inválido", description: "Informe um CNPJ válido com pelo menos 11 dígitos.", variant: "destructive" });
+      return;
+    }
+
+    const employeeCountNum = parseInt(formData.employee_count, 10);
+    if (!Number.isFinite(employeeCountNum) || employeeCountNum < 1) {
+      toast({ title: "Quantidade de colaboradores obrigatória", description: "Informe quantos colaboradores ativos a empresa possui (mínimo 1).", variant: "destructive" });
       return;
     }
 
@@ -146,7 +153,8 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           logo_url: logoUrl,
           slug,
           subscription_status: 'active',
-        })
+          employee_count: employeeCountNum,
+        } as any)
         .select('id')
         .single();
 
@@ -260,6 +268,21 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
               required
             />
             <p className="text-xs text-muted-foreground">Será usado como senha do primeiro acesso.</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="employee_count">Quantidade de colaboradores ativos *</Label>
+            <Input
+              id="employee_count"
+              name="employee_count"
+              type="number"
+              min={1}
+              value={formData.employee_count}
+              onChange={handleInputChange}
+              placeholder="Ex: 50"
+              required
+            />
+            <p className="text-xs text-muted-foreground">Usado nas avaliações de risco para validar a alocação por setor.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
