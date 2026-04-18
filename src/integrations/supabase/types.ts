@@ -2064,6 +2064,10 @@ export type Database = {
         Args: { _sst_manager_id: string }
         Returns: number
       }
+      count_training_materials: {
+        Args: { _module_id: string }
+        Returns: number
+      }
       generate_tracking_code: { Args: never; Returns: string }
       get_sst_max_companies: {
         Args: { _sst_manager_id: string }
