@@ -13,8 +13,9 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { DepartmentManager, SurveyDepartment } from '@/components/climate-survey/DepartmentManager';
+import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
+import { useCompanyEmployeeCount } from '@/hooks/useCompanyEmployeeCount';
 
 interface Company { id: string; name: string; slug: string; }
 
@@ -33,6 +34,10 @@ export default function COPSOQManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
+  const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
+  const [pendingRemaining, setPendingRemaining] = useState(0);
+  const deptManagerRef = useRef<DepartmentManagerHandle>(null);
+  const { employeeCount: companyEmployeeCount } = useCompanyEmployeeCount(selectedCompany || null);
   const isEditing = !!id;
   const hasFetchedRef = useRef(false);
 
@@ -99,7 +104,22 @@ export default function COPSOQManagement() {
       toast({ title: 'Campos obrigatórios', description: 'Selecione uma empresa e informe o título.', variant: 'destructive' });
       return;
     }
-    try {
+    const validation = deptManagerRef.current?.validateAllocation();
+    if (validation && validation.ok === false) {
+      if (validation.reason === 'overflow') {
+        toast({ title: 'Excesso de colaboradores', description: 'A soma dos setores excede o total da empresa.', variant: 'destructive' });
+        return;
+      }
+      if (validation.reason === 'unallocated') {
+        setPendingRemaining(validation.remaining);
+        setShowUnallocatedDialog(true);
+        return;
+      }
+    }
+    await persistAssessment();
+  };
+
+  const persistAssessment = async () => {
       setIsSaving(true);
       const data = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: collectionMode };
       let assessmentId = id;
@@ -230,7 +250,7 @@ export default function COPSOQManagement() {
             </Card>
             <Card>
               <CardHeader><CardTitle>Setores / Departamentos</CardTitle><CardDescription>Configure os setores para segmentação</CardDescription></CardHeader>
-              <CardContent><DepartmentManager departments={departments} onChange={setDepartments} /></CardContent>
+              <CardContent><DepartmentManager ref={deptManagerRef} departments={departments} onChange={setDepartments} companyEmployeeCount={companyEmployeeCount} /></CardContent>
             </Card>
           </div>
 
