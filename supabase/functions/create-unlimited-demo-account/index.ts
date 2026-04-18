@@ -690,29 +690,25 @@ Deno.serve(async (req) => {
 
     logStep("Role updated to sst");
 
-    // 5. Seed demo company with assessments (fire-and-forget, don't block response)
+    // 5. Seed demo company with assessments
     const seedPromise = seedDemoData(supabaseAdmin, sstManager.id, sst_name, finalSlug, userId)
       .catch((seedError) => logStep("Error seeding demo data (non-fatal)", seedError));
 
-    // 6. Send welcome email (in parallel with seed)
+    // 6. Send welcome email
     let emailPromise = Promise.resolve();
     if (resendApiKey) {
       emailPromise = (async () => {
         try {
           const resend = new Resend(resendApiKey);
-          const trialEndFormatted = trialEndsAt.toLocaleDateString("pt-BR", {
-            day: "2-digit", month: "2-digit", year: "numeric",
-          });
-
           await resend.emails.send({
             from: "SOIA <noreply@sfrfranco.com.br>",
             to: [email.trim().toLowerCase()],
-            subject: "Bem-vindo ao SOIA - Teste Grátis para Gestoras SST",
+            subject: "Bem-vindo ao SOIA - Conta Demo Ilimitada",
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
                   <h1 style="color: #0F5132; margin: 0;">Bem-vindo ao SOIA!</h1>
-                  <p style="color: #666; font-size: 16px;">Seu período de teste gratuito para Gestoras SST começou</p>
+                  <p style="color: #666; font-size: 16px;">Sua conta demo ilimitada foi criada com sucesso</p>
                 </div>
                 <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
                   <h2 style="color: #333; margin-top: 0;">Seus dados de acesso:</h2>
@@ -721,17 +717,17 @@ Deno.serve(async (req) => {
                   <p style="color: #dc3545; font-size: 14px;">⚠️ No primeiro acesso, você será solicitado a criar uma nova senha.</p>
                 </div>
                 <div style="background: #e8f5e9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                  <h3 style="color: #2e7d32; margin-top: 0;">📅 Seu trial expira em: ${trialEndFormatted}</h3>
-                  <p style="color: #555;">Já criamos uma <strong>Empresa Demo</strong> com avaliações preenchidas para você explorar os dashboards. Você também pode cadastrar <strong>mais 1 empresa</strong> para testar.</p>
+                  <h3 style="color: #2e7d32; margin-top: 0;">✨ Acesso ilimitado</h3>
+                  <p style="color: #555;">Sua conta está com acesso permanente. Já criamos uma <strong>Empresa Demo</strong> com avaliações preenchidas para você explorar os dashboards.</p>
                 </div>
                 <div style="text-align: center; margin-top: 30px;">
-                  <a href="${req.headers.get("origin") || "https://honest-eye-reports.lovable.app"}/auth" 
+                  <a href="${req.headers.get("origin") || "https://honest-eye-reports.lovable.app"}/auth"
                      style="background: #0F5132; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                     Acessar a Plataforma
                   </a>
                 </div>
                 <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
-                  Gestora SST: ${sst_name} | Plano: Trial (7 dias) | Limite: 2 empresas (1 demo + 1 própria)
+                  Gestora SST: ${sst_name} | Plano: Demo Ilimitado | Limite: 50 empresas
                 </p>
               </div>
             `,
@@ -743,7 +739,6 @@ Deno.serve(async (req) => {
       })();
     }
 
-    // Wait for both seed and email in parallel
     await Promise.all([seedPromise, emailPromise]);
 
     return new Response(
@@ -751,8 +746,7 @@ Deno.serve(async (req) => {
         success: true,
         sst_manager_id: sstManager.id,
         user_id: userId,
-        trial_ends_at: trialEndsAt.toISOString(),
-        message: "Conta trial SST criada com sucesso! Verifique seu email para os dados de acesso.",
+        message: "Conta demo ilimitada criada com sucesso!",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
