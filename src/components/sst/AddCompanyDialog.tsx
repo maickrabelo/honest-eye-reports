@@ -101,6 +101,42 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
     setIsSubmitting(true);
 
+    // Validate subscription limits (companies + total employees)
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: sub } = await (supabase as any)
+          .from('subscriptions')
+          .select('id, subscription_plans(max_companies, max_employees, category)')
+          .eq('owner_user_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const plan: any = sub ? (sub as any).subscription_plans : null;
+        if (plan && plan.category === 'manager') {
+          const { data: assigned } = await supabase
+            .from('companies')
+            .select('id, employee_count, company_sst_assignments!inner(sst_manager_id)')
+            .eq('company_sst_assignments.sst_manager_id', sstManagerId);
+          const currCompanies = assigned?.length ?? 0;
+          const currEmployees = (assigned ?? []).reduce((s, c: any) => s + (c.employee_count ?? 0), 0);
+          if (plan.max_companies && currCompanies >= plan.max_companies) {
+            toast({ title: 'Limite atingido', description: `Seu plano permite até ${plan.max_companies} empresas. Faça upgrade para adicionar mais.`, variant: 'destructive' });
+            setIsSubmitting(false);
+            return;
+          }
+          if (plan.max_employees && currEmployees + employeeCountNum > plan.max_employees) {
+            toast({ title: 'Limite de colaboradores', description: `Seu plano permite até ${plan.max_employees} colaboradores no total. Atual: ${currEmployees}.`, variant: 'destructive' });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Subscription limit check skipped:', err);
+    }
+
     try {
       let logoUrl: string | null = null;
 

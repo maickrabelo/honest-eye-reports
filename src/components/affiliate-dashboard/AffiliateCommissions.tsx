@@ -38,28 +38,34 @@ export const AffiliateCommissions = ({ affiliateId }: AffiliateCommissionsProps)
           return;
         }
 
-        const companyIds = companies.map(c => c.id);
-        
-        const { data: subscriptions } = await supabase
+        const companiesWithSub = companies.filter((c: any) => c.parent_subscription_id);
+        const subIds = companiesWithSub.map((c: any) => c.parent_subscription_id);
+
+        if (subIds.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: subscriptions } = await (supabase as any)
           .from('subscriptions')
-          .select('company_id, plan_id, status, created_at')
-          .in('company_id', companyIds);
+          .select('id, plan_id, status, created_at, amount_cents')
+          .in('id', subIds);
 
         if (!subscriptions) {
           setLoading(false);
           return;
         }
 
-        const planIds = [...new Set(subscriptions.map(s => s.plan_id))];
+        const planIds = [...new Set(subscriptions.map((s: any) => s.plan_id))];
         const { data: plans } = await supabase
           .from('subscription_plans')
           .select('id, name, base_price_cents')
-          .in('id', planIds);
+          .in('id', planIds as string[]);
 
-        const commissionsList: Commission[] = subscriptions.map(sub => {
-          const company = companies.find(c => c.id === sub.company_id);
+        const commissionsList: Commission[] = subscriptions.map((sub: any) => {
+          const company: any = companiesWithSub.find((c: any) => c.parent_subscription_id === sub.id);
           const plan = plans?.find(p => p.id === sub.plan_id);
-          const basePrice = (plan?.base_price_cents || 0) / 100;
+          const basePrice = (sub.amount_cents ?? plan?.base_price_cents ?? 0) / 100;
           const commission = basePrice * 0.25; // 25% commission
 
           return {

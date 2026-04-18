@@ -44,15 +44,19 @@ export const AffiliateOverview = ({ affiliateId, referralCode }: AffiliateOvervi
         let totalCommissions = 0;
         const activeCompanyIds = companies.filter(c => c.subscription_status === 'active').map(c => c.id);
 
-        if (activeCompanyIds.length > 0) {
-          const { data: subscriptions } = await supabase
+        const activeSubIds = companies
+          .filter((c: any) => c.subscription_status === 'active' && c.parent_subscription_id)
+          .map((c: any) => c.parent_subscription_id);
+
+        if (activeSubIds.length > 0) {
+          const { data: subscriptions } = await (supabase as any)
             .from('subscriptions')
-            .select('plan_id, subscription_plans!inner(base_price_cents)')
-            .in('company_id', activeCompanyIds)
+            .select('amount_cents')
+            .in('id', activeSubIds)
             .eq('status', 'active');
 
           subscriptions?.forEach((sub: any) => {
-            totalCommissions += (sub.subscription_plans.base_price_cents * 0.05) / 100;
+            totalCommissions += (sub.amount_cents * 0.05) / 100;
           });
         }
 
