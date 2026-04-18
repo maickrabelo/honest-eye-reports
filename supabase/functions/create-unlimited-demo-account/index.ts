@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-SST-TRIAL] ${step}${detailsStr}`);
+  console.log(`[CREATE-UNLIMITED-DEMO] ${step}${detailsStr}`);
 };
 
 const DEPARTMENTS = ["Administrativo", "Operacional", "Comercial", "RH", "TI"];
