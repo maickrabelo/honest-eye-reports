@@ -511,6 +511,54 @@ export type Database = {
           },
         ]
       }
+      company_feature_access: {
+        Row: {
+          burnout_enabled: boolean
+          clima_enabled: boolean
+          company_id: string
+          ouvidoria_enabled: boolean
+          psicossocial_enabled: boolean
+          treinamentos_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          burnout_enabled?: boolean
+          clima_enabled?: boolean
+          company_id: string
+          ouvidoria_enabled?: boolean
+          psicossocial_enabled?: boolean
+          treinamentos_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          burnout_enabled?: boolean
+          clima_enabled?: boolean
+          company_id?: string
+          ouvidoria_enabled?: boolean
+          psicossocial_enabled?: boolean
+          treinamentos_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_feature_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_feature_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_sst_assignments: {
         Row: {
           assigned_at: string | null
@@ -2069,6 +2117,16 @@ export type Database = {
         Returns: number
       }
       generate_tracking_code: { Args: never; Returns: string }
+      get_company_features: {
+        Args: { _company_id: string }
+        Returns: {
+          burnout_enabled: boolean
+          clima_enabled: boolean
+          ouvidoria_enabled: boolean
+          psicossocial_enabled: boolean
+          treinamentos_enabled: boolean
+        }[]
+      }
       get_sst_max_companies: {
         Args: { _sst_manager_id: string }
         Returns: number
