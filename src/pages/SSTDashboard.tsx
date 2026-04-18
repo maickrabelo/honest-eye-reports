@@ -199,7 +199,7 @@ const SSTDashboard = () => {
       const companyIds = assignmentsData.map(a => a.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, logo_url, slug, cnpj, email, phone, address')
+        .select('id, name, logo_url, slug, cnpj, email, phone, address, employee_count')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;

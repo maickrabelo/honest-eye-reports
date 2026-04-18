@@ -439,6 +439,7 @@ export type Database = {
           cnpj: string | null
           created_at: string | null
           email: string | null
+          employee_count: number
           id: string
           logo_url: string | null
           max_employees: number | null
@@ -459,6 +460,7 @@ export type Database = {
           cnpj?: string | null
           created_at?: string | null
           email?: string | null
+          employee_count?: number
           id?: string
           logo_url?: string | null
           max_employees?: number | null
@@ -479,6 +481,7 @@ export type Database = {
           cnpj?: string | null
           created_at?: string | null
           email?: string | null
+          employee_count?: number
           id?: string
           logo_url?: string | null
           max_employees?: number | null

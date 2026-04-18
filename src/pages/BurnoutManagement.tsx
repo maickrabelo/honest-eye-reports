@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -18,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DepartmentManager } from "@/components/climate-survey/DepartmentManager";
+import { DepartmentManager, DepartmentManagerHandle, UnallocatedEmployeesDialog } from "@/components/climate-survey/DepartmentManager";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
+import { useCompanyEmployeeCount } from "@/hooks/useCompanyEmployeeCount";
 import { ArrowLeft, Save, Flame, Sparkles } from "lucide-react";
 
 interface Company {
@@ -54,6 +55,10 @@ export default function BurnoutManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
+  const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
+  const [pendingRemaining, setPendingRemaining] = useState(0);
+  const deptManagerRef = useRef<DepartmentManagerHandle>(null);
+  const { employeeCount: companyEmployeeCount } = useCompanyEmployeeCount(companyId || null);
 
   useEffect(() => {
     if (!authLoading) {
@@ -152,7 +157,7 @@ export default function BurnoutManagement() {
       });
       return;
     }
-    
+
     if (!title.trim()) {
       toast({
         title: "Título obrigatório",
@@ -161,7 +166,24 @@ export default function BurnoutManagement() {
       });
       return;
     }
-    
+
+    const validation = deptManagerRef.current?.validateAllocation();
+    if (validation && validation.ok === false) {
+      if (validation.reason === 'overflow') {
+        toast({ title: 'Excesso de colaboradores', description: 'A soma dos setores excede o total da empresa.', variant: 'destructive' });
+        return;
+      }
+      if (validation.reason === 'unallocated') {
+        setPendingRemaining(validation.remaining);
+        setShowUnallocatedDialog(true);
+        return;
+      }
+    }
+
+    await persistAssessment();
+  };
+
+  const persistAssessment = async () => {
     try {
       setSaving(true);
       
@@ -392,8 +414,10 @@ export default function BurnoutManagement() {
               </CardHeader>
               <CardContent>
               <DepartmentManager
+                ref={deptManagerRef}
                 departments={departments}
                 onChange={setDepartments}
+                companyEmployeeCount={companyEmployeeCount}
               />
               </CardContent>
             </Card>
@@ -456,6 +480,12 @@ export default function BurnoutManagement() {
           </div>
         </div>
       </main>
+      <UnallocatedEmployeesDialog
+        open={showUnallocatedDialog}
+        onOpenChange={setShowUnallocatedDialog}
+        remaining={pendingRemaining}
+        onConfirm={() => { setShowUnallocatedDialog(false); persistAssessment(); }}
+      />
       <Footer />
     </div>
   );

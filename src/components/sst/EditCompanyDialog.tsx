@@ -19,6 +19,7 @@ interface EditCompanyDialogProps {
     email?: string | null;
     phone?: string | null;
     address?: string | null;
+    employee_count?: number | null;
   } | null;
   onCompanyUpdated: () => void;
 }
@@ -39,6 +40,7 @@ const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
     email: '',
     phone: '',
     address: '',
+    employee_count: '',
   });
 
   useEffect(() => {
@@ -49,6 +51,7 @@ const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
         email: company.email || '',
         phone: company.phone || '',
         address: company.address || '',
+        employee_count: company.employee_count != null ? String(company.employee_count) : '',
       });
       setLogoPreview(company.logo_url || null);
       setLogoFile(null);
@@ -86,6 +89,16 @@ const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
       return;
     }
 
+    let employeeCountNum: number | null = null;
+    if (formData.employee_count.trim() !== '') {
+      const parsed = parseInt(formData.employee_count, 10);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        toast({ title: "Quantidade inválida", description: "Informe um número válido de colaboradores.", variant: "destructive" });
+        return;
+      }
+      employeeCountNum = parsed;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -108,16 +121,21 @@ const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
         logoUrl = publicUrl.publicUrl;
       }
 
+      const updatePayload: any = {
+        name: trimmedName,
+        cnpj: formData.cnpj.trim() || null,
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null,
+        address: formData.address.trim() || null,
+        logo_url: logoUrl,
+      };
+      if (employeeCountNum !== null) {
+        updatePayload.employee_count = employeeCountNum;
+      }
+
       const { error: updateError } = await supabase
         .from('companies')
-        .update({
-          name: trimmedName,
-          cnpj: formData.cnpj.trim() || null,
-          email: formData.email.trim() || null,
-          phone: formData.phone.trim() || null,
-          address: formData.address.trim() || null,
-          logo_url: logoUrl,
-        })
+        .update(updatePayload)
         .eq('id', company.id);
 
       if (updateError) throw updateError;
@@ -207,6 +225,20 @@ const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
               placeholder="Rua, número, cidade - UF"
               maxLength={500}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-employee_count">Quantidade de colaboradores ativos</Label>
+            <Input
+              id="edit-employee_count"
+              name="employee_count"
+              type="number"
+              min={0}
+              value={formData.employee_count}
+              onChange={handleInputChange}
+              placeholder="Ex: 50"
+            />
+            <p className="text-xs text-muted-foreground">Usado nas avaliações para validar a alocação de colaboradores por setor.</p>
           </div>
 
           <div className="space-y-2">
