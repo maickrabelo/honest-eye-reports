@@ -60,5 +60,8 @@ verify_jwt = false
 [functions.create-sst-trial-account]
 verify_jwt = false
 
+[functions.create-unlimited-demo-account]
+verify_jwt = false
+
 [functions.log-access]
 verify_jwt = false
