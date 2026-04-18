@@ -1,61 +1,38 @@
 
-A gestora SST precisa controlar quais ferramentas cada empresa cliente tem acesso. Preciso ver o Dashboard da empresa para saber onde aplicar os gates.
+User confirmou e ajustou apenas o texto do popup. Plano permanece igual ao anterior, com a mensagem do popup atualizada.
 
-## Plano
+## Objetivo
+Adicionar **quantidade de colaboradores ativos** como atributo da empresa (capturado na criação, editável depois) e usar esse total no `DepartmentManager` para validar a alocação por setor nas avaliações.
 
-### Objetivo
-Permitir que a gestora SST habilite/desabilite por empresa cinco ferramentas: **Ouvidoria, Riscos Psicossociais (HSE-IT/COPSOQ), Burnout, Pesquisa de Clima, Treinamentos**. Quando desabilitada, a ferramenta some/aparece bloqueada no dashboard da empresa cliente.
+## Backend
+- Migração: adicionar `companies.employee_count` (integer, NOT NULL, default 0).
 
-### Backend
+## Frontend
 
-**Nova tabela `company_feature_access`** (1 linha por empresa, booleans por ferramenta):
-```
-company_id (uuid, PK, FK companies)
-ouvidoria_enabled (bool, default true)
-psicossocial_enabled (bool, default true)
-burnout_enabled (bool, default true)
-clima_enabled (bool, default true)
-treinamentos_enabled (bool, default true)
-updated_at, updated_by
-```
+### 1. Captura/edição
+- **`AddCompanyDialog.tsx`** (SST): novo campo obrigatório "Quantidade de colaboradores ativos" (number, min 1).
+- **`EditCompanyDialog.tsx`** (SST) e **`CompanyProfile.tsx`** (empresa): campo editável.
+- **`SSTTrialSignup.tsx`, `TrialSignup.tsx`, `Checkout.tsx`**: mesmo campo no cadastro.
 
-**RLS**:
-- SST gestora da empresa: SELECT/INSERT/UPDATE (via `company_sst_assignments`)
-- Empresa (role `company`): SELECT da própria linha
-- Admin: ALL
+### 2. `DepartmentManager.tsx` — saldo + validação
+- Header: badge "Empresa: X colaboradores" + "Restantes: Y" (verde Y=0 / âmbar Y>0 / vermelho soma>X).
+- Bloqueio: se soma > total, erro inline e impede salvar.
+- Aviso ao salvar: se Y>0, abrir `AlertDialog` → **"Y colaboradores não estão sendo considerados na estrutura da empresa. Continuar?"** → Confirmar / Cancelar.
+- Recebe `companyEmployeeCount` via prop.
 
-**Função helper** `public.get_company_features(_company_id uuid)` SECURITY DEFINER retornando os flags (cria default `true` se não existir registro) — evita bloqueio por RLS no fetch da empresa.
+### 3. Integração nos formulários de avaliação
+Telas que usam `DepartmentManager` (HSE-IT, COPSOQ, Burnout, Clima): passar `companyEmployeeCount` da empresa ativa e interceptar submit para disparar o popup.
 
-### Frontend
+### 4. Migração de empresas existentes
+Default `0`. Banner não-bloqueante no Dashboard: "Configure a quantidade de colaboradores ativos" → link para edição.
 
-**1. Painel SST — Card da empresa (`SSTDashboard.tsx`)**
-- Adicionar novo ícone (`Settings2` ou `ToggleRight`) ao lado do ícone de chave.
-- Abre `ManageFeaturesDialog` com 5 switches (uma para cada ferramenta) — usa o componente `Switch` já existente.
-- Salva via upsert em `company_feature_access`.
-- Toast de confirmação.
+## Arquivos
+**Migração**: `companies.employee_count`.
 
-**2. Hook `useCompanyFeatures(companyId)`**
-- Busca os flags da empresa ativa via RPC `get_company_features`.
-- Retorna `{ ouvidoria, psicossocial, burnout, clima, treinamentos, isLoading }`.
-- Usado no Dashboard da empresa.
+**Novo**: `src/hooks/useCompanyEmployeeCount.ts`.
 
-**3. Dashboard da empresa (`Dashboard.tsx`)**
-- Antes de renderizar cada card de ferramenta, checar o flag.
-- Se desabilitado: ocultar o card OU mostrar versão "bloqueada" com badge "Indisponível — Fale com seu gestor SST".
-- Padrão: **ocultar** (mais limpo). Se todos desabilitados exceto HSE-IT, só HSE-IT aparece, conforme exemplo do usuário.
-
-**4. Proteção de rotas (defesa em profundidade)**
-- Nas páginas das ferramentas (`Reports`, `BurnoutManagement`, `COPSOQManagement`, `HSEITManagement`, `ClimateSurveyManagement`, `CompanyTrainings`), checar o flag no mount; se desabilitado, redirecionar para `/dashboard` com toast "Ferramenta indisponível".
-
-### Comportamento esperado
-- Default: todas ferramentas habilitadas (não quebra empresas existentes).
-- Mudança aplica imediato na próxima carga do dashboard da empresa.
-- Multi-empresa: cada empresa tem seus flags independentes (já que `activeCompanyId` define qual carregar).
-
-### Arquivos a criar/editar
-- **Migração SQL**: tabela `company_feature_access` + RLS + função `get_company_features`
-- **Novo**: `src/components/sst/ManageFeaturesDialog.tsx`
-- **Novo**: `src/hooks/useCompanyFeatures.ts`
-- **Editar**: `src/pages/SSTDashboard.tsx` (botão de toggle no card)
-- **Editar**: `src/pages/Dashboard.tsx` (gating dos cards)
-- **Editar**: páginas das ferramentas (guard de rota)
+**Editar**:
+- `src/components/sst/AddCompanyDialog.tsx`, `EditCompanyDialog.tsx`
+- `src/pages/SSTTrialSignup.tsx`, `TrialSignup.tsx`, `Checkout.tsx`, `CompanyProfile.tsx`, `Dashboard.tsx`
+- `src/components/climate-survey/DepartmentManager.tsx`
+- `HSEITManagement.tsx`, `COPSOQManagement.tsx`, `BurnoutManagement.tsx`, `ClimateSurveyManagement.tsx`
