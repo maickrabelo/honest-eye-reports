@@ -34,6 +34,8 @@ interface Material {
 const CompanyTrainings: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading: authLoading } = useRealAuth();
+  const { features, isLoading: featuresLoading } = useCompanyFeatures(profile?.company_id);
+  const { toast } = useToast();
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
@@ -43,8 +45,13 @@ const CompanyTrainings: React.FC = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate('/auth'); return; }
+    if (!featuresLoading && !features.treinamentos) {
+      toast({ title: 'Ferramenta indisponível', description: 'Treinamentos foi desabilitado pela sua gestora SST.', variant: 'destructive' });
+      navigate('/dashboard');
+      return;
+    }
     load();
-  }, [user, authLoading, profile?.company_id]);
+  }, [user, authLoading, profile?.company_id, featuresLoading, features.treinamentos]);
 
   const load = async () => {
     setLoading(true);
