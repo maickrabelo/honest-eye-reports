@@ -53,7 +53,7 @@ const Checkout = () => {
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [cycle, setCycle] = useState<Cycle>(initialCycle);
-  const [billingType, setBillingType] = useState<BillingType>('PIX');
+  const [billingType, setBillingType] = useState<BillingType>('CREDIT_CARD');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cnpjs, setCnpjs] = useState<string[]>(['']);
