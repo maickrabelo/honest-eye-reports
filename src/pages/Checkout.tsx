@@ -339,22 +339,27 @@ const Checkout = () => {
                 <Label>Forma de pagamento</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { v: 'PIX', label: 'PIX', icon: QrCode },
-                    { v: 'BOLETO', label: 'Boleto', icon: FileText },
-                    { v: 'CREDIT_CARD', label: 'Cartão', icon: CreditCard },
-                  ].map(({ v, label, icon: Icon }) => (
+                    { v: 'CREDIT_CARD', label: 'Cartão', icon: CreditCard, badge: monthsPerCycle > 1 ? `${monthsPerCycle}x sem juros` : null },
+                    { v: 'PIX', label: 'PIX', icon: QrCode, badge: null },
+                    { v: 'BOLETO', label: 'Boleto', icon: FileText, badge: null },
+                  ].map(({ v, label, icon: Icon, badge }) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => setBillingType(v as BillingType)}
-                      className={`flex flex-col items-center gap-1 p-3 border rounded-lg transition-colors ${
+                      className={`relative flex flex-col items-center gap-1 p-3 border-2 rounded-lg transition-all ${
                         billingType === v
-                          ? 'border-primary bg-primary/5 text-primary'
+                          ? 'border-primary bg-primary/10 text-primary shadow-md scale-[1.02]'
                           : 'border-border hover:border-primary/50'
                       }`}
                     >
+                      {badge && (
+                        <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] px-1.5 py-0 h-4 bg-primary text-primary-foreground whitespace-nowrap">
+                          {badge}
+                        </Badge>
+                      )}
                       <Icon className="w-5 h-5" />
-                      <span className="text-sm">{label}</span>
+                      <span className="text-sm font-medium">{label}</span>
                     </button>
                   ))}
                 </div>
@@ -366,6 +371,8 @@ const Checkout = () => {
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processando...
                   </>
+                ) : billingType === 'CREDIT_CARD' && monthsPerCycle > 1 ? (
+                  <>Pagar {monthsPerCycle}x de {formatBRL(getMonthlyPrice())}</>
                 ) : (
                   <>Pagar {formatBRL(getCycleTotal())}</>
                 )}
