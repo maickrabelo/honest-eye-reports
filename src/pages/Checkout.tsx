@@ -96,7 +96,7 @@ const Checkout = () => {
     })();
   }, [planSlug, navigate]);
 
-  const getPrice = () => {
+  const getMonthlyPrice = () => {
     if (!plan) return 0;
     return cycle === 'annual'
       ? plan.price_annual_cents ?? 0
@@ -104,6 +104,8 @@ const Checkout = () => {
         ? plan.price_quarterly_cents ?? 0
         : plan.price_monthly_cents ?? 0;
   };
+  const monthsPerCycle = cycle === 'annual' ? 12 : cycle === 'quarterly' ? 3 : 1;
+  const getCycleTotal = () => getMonthlyPrice() * monthsPerCycle;
 
   const isCorporate = plan?.slug === 'corporate';
   const maxCnpjs = plan?.max_cnpjs ?? 1;
@@ -222,11 +224,23 @@ const Checkout = () => {
                 </RadioGroup>
               </div>
 
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">Total mensal</span>
-                  <span className="text-2xl font-bold text-primary">{formatBRL(getPrice())}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {cycle === 'monthly' ? 'Mensalidade' : `Total a cobrar (${monthsPerCycle === 12 ? 'anual' : 'trimestral'})`}
+                  </span>
+                  <span className="text-2xl font-bold text-primary">{formatBRL(getCycleTotal())}</span>
                 </div>
+                {monthsPerCycle > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    {billingType === 'CREDIT_CARD'
+                      ? `Em até ${monthsPerCycle}x sem juros de ${formatBRL(getMonthlyPrice())} no cartão.`
+                      : `Equivale a ${formatBRL(getMonthlyPrice())}/mês.`}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Renovação automática a cada {monthsPerCycle === 1 ? 'mês' : monthsPerCycle === 3 ? '3 meses' : '12 meses'}. Cancele quando quiser.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -335,7 +349,7 @@ const Checkout = () => {
                     Processando...
                   </>
                 ) : (
-                  <>Pagar {formatBRL(getPrice())}</>
+                  <>Pagar {formatBRL(getCycleTotal())}</>
                 )}
               </Button>
 

@@ -60,9 +60,15 @@ Deno.serve(async (req) => {
       : body.billingCycle === 'quarterly'
         ? 'price_quarterly_cents'
         : 'price_monthly_cents';
-    const amountCents: number = (plan as any)[priceField];
-    if (!amountCents || amountCents <= 0) throw new Error('Preço inválido para o ciclo selecionado');
+    const monthlyEquivalentCents: number = (plan as any)[priceField];
+    if (!monthlyEquivalentCents || monthlyEquivalentCents <= 0) {
+      throw new Error('Preço inválido para o ciclo selecionado');
+    }
 
+    // Asaas cycles: MONTHLY=1mo, QUARTERLY=3mo, YEARLY=12mo
+    // Each charge in the cycle = monthly equivalent * months in cycle
+    const monthsPerCycle = body.billingCycle === 'annual' ? 12 : body.billingCycle === 'quarterly' ? 3 : 1;
+    const amountCents = monthlyEquivalentCents * monthsPerCycle;
     const cycleMap = { monthly: 'MONTHLY', quarterly: 'QUARTERLY', annual: 'YEARLY' };
     const asaasCycle = cycleMap[body.billingCycle];
 
@@ -97,18 +103,26 @@ Deno.serve(async (req) => {
     nextDueDate.setDate(nextDueDate.getDate() + 1);
     const dueDateStr = nextDueDate.toISOString().split('T')[0];
 
+    const subscriptionPayload: Record<string, unknown> = {
+      customer: customerId,
+      billingType: body.billingType,
+      value: amountCents / 100,
+      nextDueDate: dueDateStr,
+      cycle: asaasCycle,
+      description: `SOIA - ${plan.name} (${body.billingCycle})`,
+      externalReference: `soia-${body.planSlug}-${Date.now()}`,
+    };
+
+    // Split each cycle charge into N installments (no interest) when paying by credit card
+    // Annual = 12x, Quarterly = 3x, Monthly = no installments
+    if (body.billingType === 'CREDIT_CARD' && monthsPerCycle > 1) {
+      subscriptionPayload.maxInstallmentCount = monthsPerCycle;
+    }
+
     const subRes = await fetch(`${ASAAS_BASE}/subscriptions`, {
       method: 'POST',
       headers: { 'access_token': ASAAS_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer: customerId,
-        billingType: body.billingType,
-        value: amountCents / 100,
-        nextDueDate: dueDateStr,
-        cycle: asaasCycle,
-        description: `SOIA - ${plan.name} (${body.billingCycle})`,
-        externalReference: `soia-${body.planSlug}-${Date.now()}`,
-      }),
+      body: JSON.stringify(subscriptionPayload),
     });
     const subJson = await subRes.json();
     if (!subRes.ok) throw new Error(`Asaas subscription error: ${JSON.stringify(subJson)}`);
