@@ -96,7 +96,7 @@ const Checkout = () => {
     })();
   }, [planSlug, navigate]);
 
-  const getPrice = () => {
+  const getMonthlyPrice = () => {
     if (!plan) return 0;
     return cycle === 'annual'
       ? plan.price_annual_cents ?? 0
@@ -104,6 +104,8 @@ const Checkout = () => {
         ? plan.price_quarterly_cents ?? 0
         : plan.price_monthly_cents ?? 0;
   };
+  const monthsPerCycle = cycle === 'annual' ? 12 : cycle === 'quarterly' ? 3 : 1;
+  const getCycleTotal = () => getMonthlyPrice() * monthsPerCycle;
 
   const isCorporate = plan?.slug === 'corporate';
   const maxCnpjs = plan?.max_cnpjs ?? 1;
