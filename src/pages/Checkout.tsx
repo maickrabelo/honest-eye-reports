@@ -349,7 +349,7 @@ const Checkout = () => {
                     Processando...
                   </>
                 ) : (
-                  <>Pagar {formatBRL(getPrice())}</>
+                  <>Pagar {formatBRL(getCycleTotal())}</>
                 )}
               </Button>
 
