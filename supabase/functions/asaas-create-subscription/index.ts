@@ -60,9 +60,15 @@ Deno.serve(async (req) => {
       : body.billingCycle === 'quarterly'
         ? 'price_quarterly_cents'
         : 'price_monthly_cents';
-    const amountCents: number = (plan as any)[priceField];
-    if (!amountCents || amountCents <= 0) throw new Error('Preço inválido para o ciclo selecionado');
+    const monthlyEquivalentCents: number = (plan as any)[priceField];
+    if (!monthlyEquivalentCents || monthlyEquivalentCents <= 0) {
+      throw new Error('Preço inválido para o ciclo selecionado');
+    }
 
+    // Asaas cycles: MONTHLY=1mo, QUARTERLY=3mo, YEARLY=12mo
+    // Each charge in the cycle = monthly equivalent * months in cycle
+    const monthsPerCycle = body.billingCycle === 'annual' ? 12 : body.billingCycle === 'quarterly' ? 3 : 1;
+    const amountCents = monthlyEquivalentCents * monthsPerCycle;
     const cycleMap = { monthly: 'MONTHLY', quarterly: 'QUARTERLY', annual: 'YEARLY' };
     const asaasCycle = cycleMap[body.billingCycle];
 
