@@ -7,13 +7,21 @@ const corsHeaders = {
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend';
 
-async function sendCredentialsEmail(toEmail: string, password: string, planName: string) {
+async function sendCredentialsEmail(
+  toEmail: string,
+  password: string,
+  planName: string,
+  isExistingUser: boolean,
+) {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
     console.warn('Email keys missing - skipping credentials email');
     return;
   }
+  const passwordBlock = isExistingUser
+    ? `<p>Este e-mail já possui cadastro na SOIA. Use sua senha atual para acessar; se não lembrar, utilize a opção <strong>“Esqueci minha senha”</strong> na tela de login.</p>`
+    : `<p><strong>Senha provisória:</strong> ${password}</p><p>No primeiro acesso será solicitada a troca da senha.</p>`;
   await fetch(`${GATEWAY_URL}/emails`, {
     method: 'POST',
     headers: {
@@ -29,8 +37,7 @@ async function sendCredentialsEmail(toEmail: string, password: string, planName:
         <h2>Pagamento confirmado!</h2>
         <p>Seu plano <strong>${planName}</strong> está ativo.</p>
         <p><strong>Email:</strong> ${toEmail}</p>
-        <p><strong>Senha provisória:</strong> ${password}</p>
-        <p>No primeiro acesso será solicitada a troca da senha.</p>
+        ${passwordBlock}
         <p><a href="https://soia.app.br/auth">Acessar a plataforma</a></p>
       `,
     }),
@@ -214,12 +221,8 @@ Deno.serve(async (req) => {
         })
         .eq('id', sub.id);
 
-      // Send credentials only for newly created users
-      if (isNewUser) {
-        await sendCredentialsEmail(email, password, plan.name);
-      } else {
-        console.log('Skipping credentials email — existing user');
-      }
+      // Always send confirmation email; password block adapts to new vs existing user
+      await sendCredentialsEmail(email, password, plan.name, !isNewUser);
     } else if (eventType === 'PAYMENT_OVERDUE') {
       await supabase.from('subscriptions').update({ status: 'past_due' }).eq('id', sub.id);
     } else if (eventType === 'SUBSCRIPTION_DELETED' || eventType === 'PAYMENT_DELETED') {
