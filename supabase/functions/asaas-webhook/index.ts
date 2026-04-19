@@ -37,6 +37,26 @@ async function sendCredentialsEmail(toEmail: string, password: string, planName:
   });
 }
 
+async function findAuthUserByEmail(supabase: any, email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  let page = 1;
+  const perPage = 200;
+
+  while (page <= 10) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+
+    const users = data?.users ?? [];
+    const existingUser = users.find((user: any) => user.email?.toLowerCase() === normalizedEmail);
+    if (existingUser) return existingUser;
+    if (users.length < perPage) break;
+
+    page += 1;
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -106,8 +126,7 @@ Deno.serve(async (req) => {
       // Find or create user (robust against email_exists race)
       let userId: string | null = null;
       let isNewUser = false;
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existing = existingUsers?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+      const existing = await findAuthUserByEmail(supabase, email);
       if (existing) {
         userId = existing.id;
         console.log('User already exists, reusing:', userId);
@@ -121,8 +140,7 @@ Deno.serve(async (req) => {
         if (createErr) {
           // Race / duplicate — try to fetch again
           if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
-            const { data: retry } = await supabase.auth.admin.listUsers();
-            const found = retry?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+            const found = await findAuthUserByEmail(supabase, email);
             if (!found) throw createErr;
             userId = found.id;
             console.log('Recovered existing user after email_exists:', userId);
@@ -132,13 +150,14 @@ Deno.serve(async (req) => {
         } else {
           userId = created.user!.id;
           isNewUser = true;
-          await supabase.from('profiles').upsert({
-            id: userId,
-            full_name: customerName,
-            must_change_password: true,
-          });
         }
       }
+
+      await supabase.from('profiles').upsert({
+        id: userId!,
+        full_name: customerName,
+        ...(isNewUser ? { must_change_password: true } : {}),
+      });
 
       // Assign role based on plan category
       const role = plan.category === 'manager' ? 'sst' : 'company';
