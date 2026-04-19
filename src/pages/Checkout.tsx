@@ -53,7 +53,7 @@ const Checkout = () => {
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [cycle, setCycle] = useState<Cycle>(initialCycle);
-  const [billingType, setBillingType] = useState<BillingType>('PIX');
+  const [billingType, setBillingType] = useState<BillingType>('CREDIT_CARD');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cnpjs, setCnpjs] = useState<string[]>(['']);
@@ -224,21 +224,39 @@ const Checkout = () => {
                 </RadioGroup>
               </div>
 
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {cycle === 'monthly' ? 'Mensalidade' : `Total a cobrar (${monthsPerCycle === 12 ? 'anual' : 'trimestral'})`}
-                  </span>
-                  <span className="text-2xl font-bold text-primary">{formatBRL(getCycleTotal())}</span>
-                </div>
-                {monthsPerCycle > 1 && (
-                  <p className="text-xs text-muted-foreground">
-                    {billingType === 'CREDIT_CARD'
-                      ? `Em até ${monthsPerCycle}x sem juros de ${formatBRL(getMonthlyPrice())} no cartão.`
-                      : `Equivale a ${formatBRL(getMonthlyPrice())}/mês.`}
-                  </p>
+              <div className="border-t pt-4 space-y-3">
+                {monthsPerCycle > 1 && billingType === 'CREDIT_CARD' ? (
+                  <div className="rounded-lg bg-primary/10 border-2 border-primary/30 p-4 text-center">
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+                      No cartão de crédito
+                    </p>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-2xl font-bold text-primary">{monthsPerCycle}x</span>
+                      <span className="text-3xl font-extrabold text-primary">
+                        {formatBRL(getMonthlyPrice())}
+                      </span>
+                    </div>
+                    <p className="text-xs text-primary/80 mt-1">sem juros</p>
+                    <p className="text-[11px] text-muted-foreground mt-2">
+                      Total {monthsPerCycle === 12 ? 'anual' : 'trimestral'}: {formatBRL(getCycleTotal())}
+                    </p>
+                  </div>
+                ) : monthsPerCycle > 1 ? (
+                  <div className="text-center space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Pague no cartão em <strong className="text-primary">{monthsPerCycle}x de {formatBRL(getMonthlyPrice())}</strong> sem juros
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Total {monthsPerCycle === 12 ? 'anual' : 'trimestral'}: {formatBRL(getCycleTotal())}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-muted-foreground">Mensalidade</span>
+                    <span className="text-2xl font-bold text-primary">{formatBRL(getCycleTotal())}</span>
+                  </div>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] text-muted-foreground text-center">
                   Renovação automática a cada {monthsPerCycle === 1 ? 'mês' : monthsPerCycle === 3 ? '3 meses' : '12 meses'}. Cancele quando quiser.
                 </p>
               </div>
@@ -321,22 +339,27 @@ const Checkout = () => {
                 <Label>Forma de pagamento</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { v: 'PIX', label: 'PIX', icon: QrCode },
-                    { v: 'BOLETO', label: 'Boleto', icon: FileText },
-                    { v: 'CREDIT_CARD', label: 'Cartão', icon: CreditCard },
-                  ].map(({ v, label, icon: Icon }) => (
+                    { v: 'CREDIT_CARD', label: 'Cartão', icon: CreditCard, badge: monthsPerCycle > 1 ? `${monthsPerCycle}x sem juros` : null },
+                    { v: 'PIX', label: 'PIX', icon: QrCode, badge: null },
+                    { v: 'BOLETO', label: 'Boleto', icon: FileText, badge: null },
+                  ].map(({ v, label, icon: Icon, badge }) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => setBillingType(v as BillingType)}
-                      className={`flex flex-col items-center gap-1 p-3 border rounded-lg transition-colors ${
+                      className={`relative flex flex-col items-center gap-1 p-3 border-2 rounded-lg transition-all ${
                         billingType === v
-                          ? 'border-primary bg-primary/5 text-primary'
+                          ? 'border-primary bg-primary/10 text-primary shadow-md scale-[1.02]'
                           : 'border-border hover:border-primary/50'
                       }`}
                     >
+                      {badge && (
+                        <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] px-1.5 py-0 h-4 bg-primary text-primary-foreground whitespace-nowrap">
+                          {badge}
+                        </Badge>
+                      )}
                       <Icon className="w-5 h-5" />
-                      <span className="text-sm">{label}</span>
+                      <span className="text-sm font-medium">{label}</span>
                     </button>
                   ))}
                 </div>
@@ -348,6 +371,8 @@ const Checkout = () => {
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processando...
                   </>
+                ) : billingType === 'CREDIT_CARD' && monthsPerCycle > 1 ? (
+                  <>Pagar {monthsPerCycle}x de {formatBRL(getMonthlyPrice())}</>
                 ) : (
                   <>Pagar {formatBRL(getCycleTotal())}</>
                 )}
