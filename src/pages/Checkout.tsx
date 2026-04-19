@@ -224,11 +224,23 @@ const Checkout = () => {
                 </RadioGroup>
               </div>
 
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">Total mensal</span>
-                  <span className="text-2xl font-bold text-primary">{formatBRL(getPrice())}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {cycle === 'monthly' ? 'Mensalidade' : `Total a cobrar (${monthsPerCycle === 12 ? 'anual' : 'trimestral'})`}
+                  </span>
+                  <span className="text-2xl font-bold text-primary">{formatBRL(getCycleTotal())}</span>
                 </div>
+                {monthsPerCycle > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    {billingType === 'CREDIT_CARD'
+                      ? `Em até ${monthsPerCycle}x sem juros de ${formatBRL(getMonthlyPrice())} no cartão.`
+                      : `Equivale a ${formatBRL(getMonthlyPrice())}/mês.`}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Renovação automática a cada {monthsPerCycle === 1 ? 'mês' : monthsPerCycle === 3 ? '3 meses' : '12 meses'}. Cancele quando quiser.
+                </p>
               </div>
             </CardContent>
           </Card>
