@@ -1,0 +1,1 @@
+UPDATE public.profiles SET company_id='1ef8b5d2-2dc7-45ce-a034-89a199b4c332' WHERE id='3892f95c-8786-43dd-aec9-65ac093bccfc';
