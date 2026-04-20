@@ -2161,6 +2161,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      company_has_no_sst: { Args: { _company_id: string }; Returns: boolean }
       count_sst_companies: {
         Args: { _sst_manager_id: string }
         Returns: number
