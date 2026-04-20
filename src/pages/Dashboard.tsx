@@ -514,6 +514,63 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         )}
       </div>
 
+      {/* Suas Ferramentas — only when company has no SST manager assigned */}
+      {hasSST === false && (features.psicossocial || features.burnout || features.clima) && (
+        <div className="mb-6 animate-fade-in">
+          <h2 className="text-lg font-semibold text-foreground mb-3">Suas Ferramentas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {features.psicossocial && (
+              <Card
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => navigate('/psychosocial-dashboard')}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Brain className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Riscos Psicossociais</h3>
+                    <p className="text-sm text-muted-foreground">HSE-IT e COPSOQ II</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {features.burnout && (
+              <Card
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => navigate('/burnout-dashboard')}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Flame className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Avaliação de Burnout</h3>
+                    <p className="text-sm text-muted-foreground">Risco de esgotamento</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {features.clima && (
+              <Card
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => navigate('/climate-dashboard')}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <ClipboardList className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Pesquisa de Clima</h3>
+                    <p className="text-sm text-muted-foreground">Clima organizacional</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Treinamentos card */}
       {features.treinamentos && (
         <Card
