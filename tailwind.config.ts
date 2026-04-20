@@ -63,13 +63,14 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-        // Cores personalizadas para o app de auditoria
+        // Cores personalizadas para o app de auditoria — paleta SOIA (azul-marinho + verde)
         audit: {
-          primary: '#0F3460',
-          secondary: '#1A97B9',
-          accent: '#1E6F5C',
-          light: '#F5F9FC',
-          dark: '#0A1128',
+          primary: '#0A1F3D',       // azul-marinho profundo (headlines, navbar)
+          secondary: '#10C87A',     // verde vibrante (destaques, CTAs)
+          accent: '#1A4D7A',        // azul intermediário
+          light: '#F5F1E8',         // bege/off-white de fundo
+          dark: '#061229',          // azul quase preto
+          cream: '#F5F1E8',         // alias
         }
 			},
 			borderRadius: {
