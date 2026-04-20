@@ -221,9 +221,15 @@ const SSTDashboard = () => {
     }
   };
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = companies.filter(company => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    return (
+      company.name.toLowerCase().includes(term) ||
+      (company.cnpj || '').toLowerCase().includes(term) ||
+      (company.email || '').toLowerCase().includes(term)
+    );
+  });
 
   if (authLoading || isLoading) {
     return (
