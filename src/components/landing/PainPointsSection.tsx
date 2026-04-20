@@ -1,72 +1,77 @@
 import React from 'react';
-import { AlertTriangle, Scale, Users, TrendingDown } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { AlertTriangle } from 'lucide-react';
 
-const painPoints = [
-  {
-    icon: Scale,
-    title: 'Processos Trabalhistas',
-    description: 'Casos de assédio e riscos psicossociais não reportados podem resultar em processos milionários e danos irreparáveis à empresa.',
-    stat: 'R$ 50mi+',
-    statLabel: 'em indenizações/ano no Brasil'
-  },
-  {
-    icon: AlertTriangle,
-    title: 'Multas por NR-01',
-    description: 'A NR-01 exige o levantamento de riscos psicossociais. O não cumprimento gera multas pesadas e interdições.',
-    stat: 'R$ 6.708',
-    statLabel: 'a R$ 6,7 milhões por infração'
-  },
-  {
-    icon: Users,
-    title: 'Perda de Talentos',
-    description: 'Ambientes com riscos psicossociais não gerenciados causam alta rotatividade. Substituir um funcionário custa até 200% do salário.',
-    stat: '87%',
-    statLabel: 'deixam por cultura ruim'
-  },
-  {
-    icon: TrendingDown,
-    title: 'Danos Reputacionais',
-    description: 'Escândalos de assédio e falta de gestão de riscos psicossociais destroem a imagem da empresa em horas.',
-    stat: '66%',
-    statLabel: 'perdem valor de mercado'
-  },
+const stats = [
+  { value: '80%', label: 'Aumento de afastamentos', source: 'em 2 anos (Fonte: Veja)' },
+  { value: 'R$ 200B', label: 'Custo do presenteísmo', source: 'anuais no Brasil (IBEF-SP)' },
+  { value: 'R$ 50M+', label: 'Indenizações trabalhistas', source: 'por ano em assédio' },
+  { value: 'R$ 200k', label: 'Multas NR-01', source: 'limite por empresa' },
 ];
 
 const PainPointsSection = () => {
-  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="riscos-psicossociais" className="py-20 bg-muted/50" aria-label="Riscos psicossociais que a NR-01 exige gerenciar">
-      <div className="audit-container" ref={ref}>
-        <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="text-audit-secondary font-semibold text-sm uppercase tracking-wider">Riscos Psicossociais</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-3 mb-4">
-            Riscos psicossociais que sua empresa precisa gerenciar
+    <section
+      ref={ref}
+      id="oportunidade"
+      className="py-20 md:py-28 bg-audit-primary text-white relative overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--audit-secondary)/0.15),transparent_50%)] pointer-events-none" />
+
+      <div className="audit-container relative z-10">
+        <div className={`text-center max-w-3xl mx-auto mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+            O mercado de SST mudou.{' '}
+            <span className="text-audit-secondary">Sua empresa está em risco.</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Sem um sistema NR-01 eficiente para levantamento de riscos psicossociais, problemas graves passam despercebidos até se tornarem crises.
+          <p className="text-lg text-white/70">
+            A saúde mental não é mais "bem-estar" — é uma <strong className="text-white">exigência legal</strong> e um
+            <strong className="text-white"> ralo financeiro</strong> para empresas que ignoram.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {painPoints.map((point, idx) => (
-            <div 
-              key={idx} 
-              className={`bg-card rounded-xl p-6 border border-destructive/20 hover:border-destructive/40 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 group ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-              style={{ transitionDelay: isVisible ? `${idx * 100 + 200}ms` : '0ms' }}
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-16">
+          {stats.map((stat, idx) => (
+            <div
+              key={idx}
+              className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 hover:border-audit-secondary/50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+              style={{ transitionDelay: `${idx * 80}ms` }}
             >
-              <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center mb-4 group-hover:bg-destructive/20 transition-colors">
-                <point.icon className="h-6 w-6 text-destructive" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{point.title}</h3>
-              <p className="text-muted-foreground text-sm mb-4">{point.description}</p>
-              <div className="pt-4 border-t border-border">
-                <div className="text-2xl font-bold text-destructive">{point.stat}</div>
-                <div className="text-xs text-muted-foreground">{point.statLabel}</div>
-              </div>
+              <div className="text-3xl md:text-5xl font-bold text-audit-secondary mb-2">{stat.value}</div>
+              <div className="text-sm md:text-base font-semibold text-white mb-1">{stat.label}</div>
+              <div className="text-xs text-white/50">{stat.source}</div>
             </div>
           ))}
+        </div>
+
+        {/* "O Custo de Ignorar" highlight */}
+        <div className={`max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-audit-secondary/20 to-audit-secondary/5 border border-audit-secondary/40 p-8 md:p-12 transition-all duration-700 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ transitionDelay: '400ms' }}>
+          <div className="flex items-start gap-4 mb-6">
+            <AlertTriangle className="h-8 w-8 text-audit-secondary flex-shrink-0 mt-1" />
+            <div>
+              <p className="text-sm uppercase tracking-wider text-audit-secondary font-bold mb-2">O custo de ignorar</p>
+              <p className="text-4xl md:text-6xl font-bold text-white mb-2">R$ 6.084,16</p>
+              <p className="text-white/70">é quanto um único colaborador afastado custa para a empresa, diretamente.</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 pt-6 border-t border-white/10">
+            <div>
+              <p className="font-bold text-white mb-1">Multas NR-01</p>
+              <p className="text-sm text-white/60">Até R$ 200.000,00 por estabelecimento.</p>
+            </div>
+            <div>
+              <p className="font-bold text-white mb-1">Processos</p>
+              <p className="text-sm text-white/60">Indenizações por assédio superam R$ 50 milhões/ano.</p>
+            </div>
+            <div>
+              <p className="font-bold text-white mb-1">Reputação</p>
+              <p className="text-sm text-white/60">Escândalos destroem marcas em horas.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
