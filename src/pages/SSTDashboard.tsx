@@ -81,7 +81,11 @@ interface Company {
   address: string | null;
   reportCount: number;
   newReports: number;
+  createdAt: string | null;
+  lastActivityAt: string | null;
 }
+
+type SortOption = 'alphabetical' | 'newest' | 'last_activity';
 
 const tools = [
   {
