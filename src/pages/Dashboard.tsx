@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -43,6 +43,7 @@ import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
+import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -70,6 +71,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const navigate = useNavigate();
   const { toast } = useToast();
   const { features } = useCompanyFeatures(companyId);
+  const { hasSST } = useCompanyHasSST(companyId);
 
   useEffect(() => {
     const initCompanyId = async () => {
