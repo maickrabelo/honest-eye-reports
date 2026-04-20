@@ -50,6 +50,7 @@ const SSTLandingPage = React.lazy(() => import("./pages/SSTLandingPage"));
 const SSTPortal = React.lazy(() => import("./pages/SSTPortal"));
 const TrialSignup = React.lazy(() => import("./pages/TrialSignup"));
 const SSTTrialSignup = React.lazy(() => import("./pages/SSTTrialSignup"));
+const CompanyTrialSignup = React.lazy(() => import("./pages/CompanyTrialSignup"));
 const RelatorioDemo = React.lazy(() => import("./pages/RelatorioDemo"));
 const SalesDashboard = React.lazy(() => import("./pages/SalesDashboard"));
 const PsychosocialDashboard = React.lazy(() => import("./pages/PsychosocialDashboard"));
@@ -100,6 +101,7 @@ const App = () => (
                 <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
                 <Route path="/teste-gratis" element={<TrialSignup />} />
                 <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
+                <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
