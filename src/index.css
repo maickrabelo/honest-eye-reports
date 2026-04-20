@@ -32,6 +32,10 @@
     --input: 158 31.8% 91.4%;
     --ring: 158 75% 42%;
 
+    /* SOIA paleta — espelhada no tailwind config audit.* */
+    --audit-primary: 217 72% 14%;
+    --audit-secondary: 154 85% 43%;
+
     --radius: 0.5rem;
   }
 
