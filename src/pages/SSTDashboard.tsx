@@ -204,7 +204,7 @@ const SSTDashboard = () => {
       const companyIds = assignmentsData.map(a => a.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, logo_url, slug, cnpj, email, phone, address, employee_count')
+        .select('id, name, logo_url, slug, cnpj, email, phone, address, employee_count, created_at')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;
@@ -213,7 +213,20 @@ const SSTDashboard = () => {
         (companiesData || []).map(async (company) => {
           const { count: totalCount } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('company_id', company.id);
           const { count: newCount } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('status', 'pending');
-          return { ...company, reportCount: totalCount || 0, newReports: newCount || 0 };
+          const { data: latestReport } = await supabase
+            .from('reports')
+            .select('created_at')
+            .eq('company_id', company.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          return {
+            ...company,
+            reportCount: totalCount || 0,
+            newReports: newCount || 0,
+            createdAt: company.created_at ?? null,
+            lastActivityAt: latestReport?.created_at ?? null,
+          };
         })
       );
 
@@ -226,15 +239,30 @@ const SSTDashboard = () => {
     }
   };
 
-  const filteredCompanies = companies.filter(company => {
-    const term = searchTerm.toLowerCase().trim();
-    if (!term) return true;
-    return (
-      company.name.toLowerCase().includes(term) ||
-      (company.cnpj || '').toLowerCase().includes(term) ||
-      (company.email || '').toLowerCase().includes(term)
-    );
-  });
+  const filteredCompanies = companies
+    .filter(company => {
+      const term = searchTerm.toLowerCase().trim();
+      if (!term) return true;
+      return (
+        company.name.toLowerCase().includes(term) ||
+        (company.cnpj || '').toLowerCase().includes(term) ||
+        (company.email || '').toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'alphabetical') {
+        return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+      }
+      if (sortBy === 'newest') {
+        const aT = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bT = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bT - aT;
+      }
+      // last_activity
+      const aT = a.lastActivityAt ? new Date(a.lastActivityAt).getTime() : 0;
+      const bT = b.lastActivityAt ? new Date(b.lastActivityAt).getTime() : 0;
+      return bT - aT;
+    });
 
   if (authLoading || isLoading) {
     return (
