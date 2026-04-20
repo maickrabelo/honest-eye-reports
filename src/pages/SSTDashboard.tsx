@@ -434,9 +434,21 @@ const SSTDashboard = () => {
                     <h2 className="text-2xl font-bold text-foreground">Portal de Ouvidoria</h2>
                     <p className="text-muted-foreground text-sm">Clique para acessar o canal de ouvidoria de cada empresa</p>
                   </div>
-                  <div className="relative w-full md:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input placeholder="Buscar empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div className="relative w-full sm:w-72">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input placeholder="Buscar empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                    </div>
+                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                      <SelectTrigger className="w-full sm:w-56">
+                        <SelectValue placeholder="Ordenar por..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="alphabetical">Ordem alfabética</SelectItem>
+                        <SelectItem value="newest">Últimas cadastradas</SelectItem>
+                        <SelectItem value="last_activity">Últimas atividades</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
