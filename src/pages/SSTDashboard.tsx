@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal } from "lucide-react";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
@@ -81,7 +82,11 @@ interface Company {
   address: string | null;
   reportCount: number;
   newReports: number;
+  createdAt: string | null;
+  lastActivityAt: string | null;
 }
+
+type SortOption = 'alphabetical' | 'newest' | 'last_activity';
 
 const tools = [
   {
@@ -120,6 +125,7 @@ const tools = [
 
 const SSTDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -199,7 +205,7 @@ const SSTDashboard = () => {
       const companyIds = assignmentsData.map(a => a.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, logo_url, slug, cnpj, email, phone, address, employee_count')
+        .select('id, name, logo_url, slug, cnpj, email, phone, address, employee_count, created_at')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;
@@ -208,7 +214,20 @@ const SSTDashboard = () => {
         (companiesData || []).map(async (company) => {
           const { count: totalCount } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('company_id', company.id);
           const { count: newCount } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('status', 'pending');
-          return { ...company, reportCount: totalCount || 0, newReports: newCount || 0 };
+          const { data: latestReport } = await supabase
+            .from('reports')
+            .select('created_at')
+            .eq('company_id', company.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          return {
+            ...company,
+            reportCount: totalCount || 0,
+            newReports: newCount || 0,
+            createdAt: company.created_at ?? null,
+            lastActivityAt: latestReport?.created_at ?? null,
+          };
         })
       );
 
@@ -221,15 +240,30 @@ const SSTDashboard = () => {
     }
   };
 
-  const filteredCompanies = companies.filter(company => {
-    const term = searchTerm.toLowerCase().trim();
-    if (!term) return true;
-    return (
-      company.name.toLowerCase().includes(term) ||
-      (company.cnpj || '').toLowerCase().includes(term) ||
-      (company.email || '').toLowerCase().includes(term)
-    );
-  });
+  const filteredCompanies = companies
+    .filter(company => {
+      const term = searchTerm.toLowerCase().trim();
+      if (!term) return true;
+      return (
+        company.name.toLowerCase().includes(term) ||
+        (company.cnpj || '').toLowerCase().includes(term) ||
+        (company.email || '').toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'alphabetical') {
+        return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+      }
+      if (sortBy === 'newest') {
+        const aT = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bT = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bT - aT;
+      }
+      // last_activity
+      const aT = a.lastActivityAt ? new Date(a.lastActivityAt).getTime() : 0;
+      const bT = b.lastActivityAt ? new Date(b.lastActivityAt).getTime() : 0;
+      return bT - aT;
+    });
 
   if (authLoading || isLoading) {
     return (
@@ -401,9 +435,21 @@ const SSTDashboard = () => {
                     <h2 className="text-2xl font-bold text-foreground">Portal de Ouvidoria</h2>
                     <p className="text-muted-foreground text-sm">Clique para acessar o canal de ouvidoria de cada empresa</p>
                   </div>
-                  <div className="relative w-full md:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input placeholder="Buscar empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div className="relative w-full sm:w-72">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input placeholder="Buscar empresa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                    </div>
+                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                      <SelectTrigger className="w-full sm:w-56">
+                        <SelectValue placeholder="Ordenar por..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="alphabetical">Ordem alfabética</SelectItem>
+                        <SelectItem value="newest">Últimas cadastradas</SelectItem>
+                        <SelectItem value="last_activity">Últimas atividades</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
