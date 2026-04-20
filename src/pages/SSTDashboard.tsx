@@ -124,6 +124,7 @@ const tools = [
 
 const SSTDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
