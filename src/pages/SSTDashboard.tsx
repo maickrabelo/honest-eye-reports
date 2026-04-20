@@ -210,26 +210,38 @@ const SSTDashboard = () => {
 
       if (companiesError) throw companiesError;
 
-      const companiesWithCounts = await Promise.all(
-        (companiesData || []).map(async (company) => {
-          const { count: totalCount } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('company_id', company.id);
-          const { count: newCount } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('status', 'pending');
-          const { data: latestReport } = await supabase
+      const companiesList = companiesData || [];
+      const fetchedIds = companiesList.map(c => c.id);
+
+      // Única query agregada para TODOS os reports das empresas desse gestor
+      const { data: allReports } = fetchedIds.length > 0
+        ? await supabase
             .from('reports')
-            .select('created_at')
-            .eq('company_id', company.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          return {
-            ...company,
-            reportCount: totalCount || 0,
-            newReports: newCount || 0,
-            createdAt: company.created_at ?? null,
-            lastActivityAt: latestReport?.created_at ?? null,
-          };
-        })
-      );
+            .select('company_id, status, created_at')
+            .in('company_id', fetchedIds)
+        : { data: [] as any[] };
+
+      const reportsByCompany = new Map<string, { total: number; pending: number; lastAt: string | null }>();
+      (allReports || []).forEach((r: any) => {
+        const entry = reportsByCompany.get(r.company_id) || { total: 0, pending: 0, lastAt: null };
+        entry.total += 1;
+        if (r.status === 'pending') entry.pending += 1;
+        if (!entry.lastAt || new Date(r.created_at) > new Date(entry.lastAt)) {
+          entry.lastAt = r.created_at;
+        }
+        reportsByCompany.set(r.company_id, entry);
+      });
+
+      const companiesWithCounts = companiesList.map((company) => {
+        const agg = reportsByCompany.get(company.id) || { total: 0, pending: 0, lastAt: null };
+        return {
+          ...company,
+          reportCount: agg.total,
+          newReports: agg.pending,
+          createdAt: company.created_at ?? null,
+          lastActivityAt: agg.lastAt,
+        };
+      });
 
       setCompanies(companiesWithCounts);
     } catch (error: any) {
