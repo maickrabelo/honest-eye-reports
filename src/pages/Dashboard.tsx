@@ -1034,6 +1034,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       </main>
       <Footer />
+      {shouldShowTour && hasSST === false && (
+        <OnboardingTour steps={companyTourSteps} onComplete={() => completeTour()} />
+      )}
     </div>
     </SoniaChatLayout>
     <SoniaChat companyId={companyId} contextType="dashboard" />
