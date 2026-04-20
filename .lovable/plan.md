@@ -1,71 +1,99 @@
 
 
-## Liberar ferramentas (Psicossocial, Burnout, Clima) para empresas sem gestora SST
+## Refatoração da Landing Page + Separação de Planos + Trial Universal
 
-### Regra de negócio
-- Empresa **sem** gestora SST vinculada (sem registro em `company_sst_assignments`) → acesso total a Riscos Psicossociais (HSE-IT + COPSOQ), Burnout e Pesquisa de Clima.
-- Empresa **com** gestora SST vinculada → continua sem essas ferramentas (a gestora aplica). Mantém apenas Ouvidoria e Treinamentos.
+### 1. Landing page — novo layout inspirado na referência
 
-### 1. Banco de dados (migration)
+Refatorar a home (`src/pages/Index.tsx`) e seções para um visual mais editorial, com foco em conversão B2B. Inspiração: hero com proposta de valor direta sobre NR-01, blocos com prova social, ícones grandes e CTAs duplos (teste grátis + demo).
 
-Criar uma função e políticas RLS para que o role `company` possa criar/editar/excluir suas próprias avaliações **apenas quando não tiver SST atribuído**.
+**Seções na nova ordem:**
+1. **HeroSection** (reescrita) — Headline curta "Gestão de Riscos Psicossociais conforme a NR-01", subtítulo focado em conformidade, dois CTAs lado a lado: "Começar teste grátis" (primário) e "Falar com especialista" (WhatsApp). Remover ilustração lateral pesada; usar mockup do dashboard ou gradiente limpo. Stats abaixo do hero.
+2. **PainPointsSection** (mantida com ajustes de copy) — "Por que sua empresa precisa agir agora?" com 3 dores: multas NR-01, afastamentos por saúde mental, custo de turnover.
+3. **FeaturesSection** (mantida) — Grid de funcionalidades.
+4. **HowItWorksSection** (mantida) — 3-4 passos.
+5. **BenefitsSection** (mantida) — Benefícios para o negócio.
+6. **SSTHighlightSection** — **REMOVER** (bloco "Tem empresa de SST...").
+7. **PricingSection** (refatorada — ver item 2).
+8. **FAQSection** (mantida).
+9. **CTASection** (mantida).
 
-```sql
--- Helper: verifica se a empresa NÃO tem SST atribuído
-CREATE OR REPLACE FUNCTION public.company_has_no_sst(_company_id uuid)
-RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
-  SELECT NOT EXISTS (
-    SELECT 1 FROM public.company_sst_assignments WHERE company_id = _company_id
-  )
-$$;
+### 2. PricingSection — duas faixas separadas
+
+Substituir as `Tabs` (Empresa / Gestor) por **duas seções verticais empilhadas**, uma logo abaixo da outra:
+
+```
+┌─────────────────────────────────────────────┐
+│  FAIXA 1 — "Para sua empresa"               │
+│  Subtítulo: cuide da saúde mental do time   │
+│  [Toggle Mensal/Trimestral/Anual]           │
+│  [Card 1] [Card 2] [Card 3]                 │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│  FAIXA 2 — "Para gestores SST"              │
+│  Subtítulo: atenda múltiplas empresas       │
+│  [Toggle Mensal/Trimestral/Anual]           │
+│  [Card 1] [Card 2] [Card 3]                 │
+└─────────────────────────────────────────────┘
 ```
 
-Para cada uma das tabelas abaixo, adicionar policies INSERT / UPDATE / DELETE para `company` role gated por `company_has_no_sst(company_id)` + `profile.company_id = company_id`:
-- `hseit_assessments`, `hseit_departments`
-- `copsoq_assessments`, `copsoq_departments`
-- `burnout_assessments`, `burnout_departments`
-- `climate_surveys` (já tem policies de company — apenas validar gating)
+Cada faixa terá fundo levemente diferente (a primeira `bg-background`, a segunda `bg-muted/30`) para separação visual. Cada uma com seu próprio toggle de ciclo.
 
-### 2. Hook novo: `useCompanyHasSST`
+### 3. Botão "Teste grátis" em destaque em todos os planos
 
-`src/hooks/useCompanyHasSST.ts` — retorna `{ hasSST, isLoading }` consultando `company_sst_assignments` por `company_id`.
+Em **cada card de plano** (empresa e gestor), adicionar acima do botão "Contratar agora" um botão secundário em destaque:
 
-### 3. Dashboard da empresa (`src/pages/Dashboard.tsx`)
+```
+[ 🎁 Começar teste grátis de 7 dias ]   ← destaque (primário, full width)
+[ Contratar agora ]                      ← secundário
+```
 
-Adicionar uma seção **"Suas Ferramentas"** (cards estilo SSTDashboard), exibida **somente quando `!hasSST`** e respeitando `useCompanyFeatures`:
+- Plano de **gestor SST** → "Teste grátis" leva para `/teste-gratis-sst` (já existe).
+- Plano de **empresa** → "Teste grátis" leva para nova rota `/teste-gratis-empresa` (ver item 4).
 
-- Card **Riscos Psicossociais** → `/psychosocial-dashboard` (visível se `features.psicossocial`)
-- Card **Avaliação Burnout** → `/burnout-dashboard` (visível se `features.burnout`)
-- Card **Pesquisa de Clima** → `/climate-dashboard` (visível se `features.clima`)
+Para planos `is_custom_quote` (sob demanda), não exibir o botão de teste grátis.
 
-Layout: grid 3 colunas com ícones (`Brain`, `Flame`, `ClipboardList`) seguindo o mesmo padrão visual dos cards do SSTDashboard.
+### 4. Trial para empresa final (sem dados fictícios)
 
-### 4. Liberar acesso de rota para role `company`
+**Nova rota: `/teste-gratis-empresa`**
+- Página `src/pages/CompanyTrialSignup.tsx` espelhada na `SSTTrialSignup.tsx`, com formulário de cadastro (nome empresa, CNPJ, e-mail, senha, telefone, nº colaboradores).
+- Submit chama nova edge function `create-company-trial-account` que:
+  - Cria usuário Supabase com role `company`
+  - Cria registro em `companies` vinculado ao usuário
+  - **NÃO** cria SST manager nem assignment (empresa fica "solta" → ganha acesso direto às ferramentas via `useCompanyHasSST`)
+  - **NÃO** popula dados fictícios (relatórios, avaliações, etc.)
+  - Define `trial_expires_at` = +7 dias
+  - Habilita todos os módulos (`company_feature_access`: psicossocial, burnout, clima, ouvidoria, treinamentos)
 
-Atualizar os guards de role nos dashboards de ferramentas para aceitar `company` (somente quando a empresa não tem SST):
+**Onboarding tour** — A empresa ao entrar pela primeira vez vê o tour guiado (mesmo padrão de `useOnboarding` + `OnboardingTour`). Criar nova variante de tour focada nas ferramentas da empresa:
+- Passo 1: "Bem-vinda! Você tem 7 dias para testar"
+- Passo 2: Card "Ouvidoria" — receba denúncias anônimas
+- Passo 3: Card "Riscos Psicossociais" — aplique HSE-IT/COPSOQ
+- Passo 4: Card "Burnout" — avalie esgotamento
+- Passo 5: Card "Pesquisa de Clima"
+- Passo 6: Card "Treinamentos"
 
-- `src/pages/PsychosocialDashboard.tsx` — adicionar `'company'` ao array `['admin','sst','sales']`.
-- `src/pages/BurnoutDashboard.tsx` — adicionar `'company'` à checagem `role !== 'admin' && role !== 'sst'`.
-- `src/pages/HSEITDashboard.tsx` — adicionar `'company'` ao `includes`.
-- `src/pages/ClimateSurveyDashboard.tsx` — já tem branch `role === 'company'` para fetch; validar e ajustar `backPath` para `/dashboard`.
+A flag `tour_variant` no perfil distingue `sst` vs `company` para servir o tour correto.
 
-Em cada um desses dashboards, quando `role === 'company'`:
-- Fetch carrega dados apenas da empresa do `profile.company_id`.
-- Esconde o seletor "Empresas" do filtro (única empresa).
-- Botão "Voltar" aponta para `/dashboard`.
-- Se a empresa **tiver** SST atribuído (verificar via `useCompanyHasSST`), redirecionar de volta para `/dashboard` com toast informativo.
+**TrialBanner / TrialExpiredOverlay** — Já funcionam por `trial_expires_at`; revisar para garantir que aparecem no Dashboard de empresa também.
 
-### 5. Componentes de gestão (HSEITManagement, BurnoutManagement, COPSOQManagement, ClimateSurveyManagement)
+### 5. Registro da edge function
 
-Liberar role `company` nas guards e pré-selecionar `profile.company_id` automaticamente no campo "Empresa" (esconder o select de empresa para esse role).
+Adicionar bloco em `supabase/config.toml` para `create-company-trial-account` com `verify_jwt = false`.
 
-### 6. Ajustes visuais
+### 6. Atualização do Hero CTA
 
-Manter o design existente da Dashboard (header roxo gradient + cards). Os novos cards de ferramentas ficam logo abaixo do título "Dashboard" e antes do card de Treinamentos, com animação `animate-fade-in`.
+No `HeroSection`, o botão "Gestora SST? Teste grátis" vira **dois botões** lado a lado:
+- "Empresa? Teste grátis" → `/teste-gratis-empresa`
+- "Gestora SST? Teste grátis" → `/teste-gratis-sst`
+
+E um terceiro link discreto abaixo: "Ver demonstração" (WhatsApp).
 
 ### Resumo técnico
-- **1 migration SQL** (função helper + ~10 RLS policies novas para o role `company`).
-- **1 hook novo** (`useCompanyHasSST`).
-- **1 página alterada** (Dashboard — adiciona seção de ferramentas condicional).
-- **~8 páginas alteradas** (dashboards e management screens — relaxar role guards e adaptar UI para empresa única).
+- **Removido**: `SSTHighlightSection` da home.
+- **Refatorado**: `HeroSection.tsx` (copy + CTAs), `PricingSection.tsx` (duas faixas + botões trial), `Index.tsx` (ordem das seções).
+- **Criado**: `src/pages/CompanyTrialSignup.tsx`, edge function `supabase/functions/create-company-trial-account/index.ts`, variante de tour para empresa em `OnboardingTour.tsx` / `useOnboarding.ts`.
+- **Rota nova** em `App.tsx`: `/teste-gratis-empresa`.
+- **Migration**: adicionar coluna `tour_variant text default 'sst'` em `profiles` (ou reaproveitar lógica existente baseada em role).
+- **config.toml**: registrar nova edge function.
 
