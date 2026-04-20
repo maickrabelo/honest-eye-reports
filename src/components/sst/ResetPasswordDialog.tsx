@@ -39,86 +39,23 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     }
   }, [open]);
 
-  const generateTempPassword = (companyName: string) => {
-    const clean = companyName.replace(/[^a-zA-Z]/g, '').substring(0, 8);
-    const capitalized = clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
-    return `${capitalized}2026!`;
-  };
-
+  
   const handleReset = async () => {
     if (!company) return;
 
     setIsLoading(true);
     try {
-      // Find the user linked to this company
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name, company_id')
-        .eq('company_id', company.id);
-
-      if (profileError) throw profileError;
-
-      if (!profiles || profiles.length === 0) {
-        toast({ title: "Nenhum usuário encontrado", description: "Não há usuário vinculado a esta empresa.", variant: "destructive" });
-        setIsLoading(false);
-        return;
-      }
-
-      const userId = profiles[0].id;
-
-      // Get user email from user_companies or find via all companies linked
-      // First get all companies this user has access to
-      const { data: userCompanies } = await supabase
-        .from('user_companies')
-        .select('company_id')
-        .eq('user_id', userId);
-
-      const companyIds = userCompanies?.map(uc => uc.company_id) || [company.id];
-      if (!companyIds.includes(company.id)) {
-        companyIds.push(company.id);
-      }
-
-      // Get all related companies with CNPJs
-      const { data: relatedCompanies } = await supabase
-        .from('companies')
-        .select('name, cnpj')
-        .in('id', companyIds);
-
-      // We need the email - call list-users edge function
-      const { data: listData, error: listError } = await supabase.functions.invoke('list-users', {
-        body: {},
+      const { data, error } = await supabase.functions.invoke('sst-reset-company-password', {
+        body: { company_id: company.id },
       });
 
-      if (listError) throw listError;
-
-      const userInfo = listData?.users?.find((u: any) => u.id === userId);
-      if (!userInfo?.email) {
-        toast({ title: "Email não encontrado", description: "Não foi possível localizar o email deste usuário.", variant: "destructive" });
-        setIsLoading(false);
-        return;
-      }
-
-      const email = userInfo.email;
-      const tempPassword = generateTempPassword(company.name);
-
-      // Reset password via edge function
-      const { data: resetData, error: resetError } = await supabase.functions.invoke('create-user-with-password', {
-        body: {
-          email,
-          password: tempPassword,
-          full_name: userInfo.user_metadata?.full_name || profiles[0].full_name || company.name,
-          role: 'company',
-          company_id: company.id,
-        },
-      });
-
-      if (resetError) throw resetError;
-      if (!resetData?.success) throw new Error(resetData?.error || 'Erro ao resetar senha');
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro ao resetar senha');
 
       setResult({
-        email,
-        tempPassword,
-        relatedCompanies: relatedCompanies || [{ name: company.name, cnpj: company.cnpj || null }],
+        email: data.email,
+        tempPassword: data.tempPassword,
+        relatedCompanies: data.relatedCompanies || [{ name: company.name, cnpj: company.cnpj || null }],
       });
 
       toast({ title: "Senha resetada!", description: "A senha temporária foi gerada com sucesso." });

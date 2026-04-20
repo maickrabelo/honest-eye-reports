@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.asaas-check-payment]
 verify_jwt = false
+
+[functions.sst-reset-company-password]
+# Requires authentication (admin or assigned SST manager)
