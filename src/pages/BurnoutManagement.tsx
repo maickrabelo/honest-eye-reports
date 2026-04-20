@@ -66,7 +66,7 @@ export default function BurnoutManagement() {
         navigate('/auth');
         return;
       }
-      if (role !== 'admin' && role !== 'sst') {
+      if (role !== 'admin' && role !== 'sst' && role !== 'company') {
         navigate('/dashboard');
         return;
       }
@@ -96,6 +96,13 @@ export default function BurnoutManagement() {
             
           const companyIds = assignments?.map(a => a.company_id) || [];
           companiesQuery = companiesQuery.in('id', companyIds);
+        }
+      } else if (role === 'company') {
+        const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user?.id).single();
+        if (profile?.company_id) {
+          companiesQuery = companiesQuery.eq('id', profile.company_id);
+        } else {
+          companiesQuery = companiesQuery.eq('id', '00000000-0000-0000-0000-000000000000');
         }
       }
       

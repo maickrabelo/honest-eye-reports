@@ -132,7 +132,7 @@ export default function ClimateSurveyManagement() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (!['admin', 'sst'].includes(role || '')) {
+      if (!['admin', 'sst', 'company'].includes(role || '')) {
         toast({ title: "Acesso negado", variant: "destructive" });
         navigate('/climate-dashboard');
         return;
@@ -180,6 +180,13 @@ export default function ClimateSurveyManagement() {
             companiesData = data || [];
           }
         }
+      } else if (role === 'company' && profile?.company_id) {
+        const { data, error: companiesError } = await supabase
+          .from('companies')
+          .select('id, name, slug')
+          .eq('id', profile.company_id);
+        if (companiesError) throw companiesError;
+        companiesData = data || [];
       }
       
       setCompanies(companiesData);
