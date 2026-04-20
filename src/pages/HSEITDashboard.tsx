@@ -76,7 +76,7 @@ export default function HSEITDashboard() {
         navigate('/auth');
         return;
       }
-      if (!['admin', 'sst'].includes(role || '')) {
+      if (!['admin', 'sst', 'company'].includes(role || '')) {
         navigate('/dashboard');
         return;
       }
@@ -90,6 +90,7 @@ export default function HSEITDashboard() {
       
       // Get assigned company IDs for SST users
       let assignedCompanyIds: string[] = [];
+      let companyAccessIds: string[] = [];
       
       if (role === 'admin') {
         const { data: companiesData } = await supabase
@@ -121,6 +122,13 @@ export default function HSEITDashboard() {
             setCompanies(companiesData || []);
           }
         }
+      } else if (role === 'company' && profile?.company_id) {
+        companyAccessIds = [profile.company_id];
+        const { data: companiesData } = await supabase
+          .from('companies')
+          .select('id, name')
+          .eq('id', profile.company_id);
+        setCompanies(companiesData || []);
       }
 
       // Fetch assessments
@@ -138,6 +146,14 @@ export default function HSEITDashboard() {
           .from('hseit_assessments')
           .select('*, companies(name, slug)')
           .in('company_id', assignedCompanyIds)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        assessmentsData = (data || []) as unknown as HSEITAssessment[];
+      } else if (role === 'company' && companyAccessIds.length > 0) {
+        const { data, error } = await supabase
+          .from('hseit_assessments')
+          .select('*, companies(name, slug)')
+          .in('company_id', companyAccessIds)
           .order('created_at', { ascending: false });
         if (error) throw error;
         assessmentsData = (data || []) as unknown as HSEITAssessment[];
@@ -207,7 +223,7 @@ export default function HSEITDashboard() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <Button variant="outline" size="sm" onClick={() => navigate('/sst-dashboard')} className="mb-4 gap-2">
+        <Button variant="outline" size="sm" onClick={() => navigate(role === 'company' ? '/dashboard' : '/sst-dashboard')} className="mb-4 gap-2">
           <ArrowLeft className="h-4 w-4" />
           Voltar ao Dashboard
         </Button>
