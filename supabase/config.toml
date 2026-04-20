@@ -63,6 +63,9 @@ verify_jwt = false
 [functions.create-unlimited-demo-account]
 verify_jwt = false
 
+[functions.create-company-trial-account]
+verify_jwt = false
+
 [functions.log-access]
 verify_jwt = false
 

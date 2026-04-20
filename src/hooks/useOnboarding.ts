@@ -25,7 +25,22 @@ export function useOnboarding(pageId: string) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (authLoading || !profile?.sst_manager_id || role !== 'sst') {
+    if (authLoading) {
+      setIsReady(false);
+      return;
+    }
+
+    // Skip if no profile
+    if (!profile) {
+      setShouldShowTour(false);
+      setIsReady(true);
+      return;
+    }
+
+    const isSstOwner = role === 'sst' && !!profile.sst_manager_id;
+    const isCompanyOwner = role === 'company' && !!profile.company_id;
+
+    if (!isSstOwner && !isCompanyOwner) {
       setShouldShowTour(false);
       setIsReady(true);
       return;
@@ -41,31 +56,38 @@ export function useOnboarding(pageId: string) {
 
     const checkOnboarding = async () => {
       try {
-        const { data, error } = await supabase
-          .from('sst_managers')
-          .select('onboarding_completed_pages, subscription_status')
-          .eq('id', profile.sst_manager_id!)
-          .single();
-
-        if (error) throw error;
-
-        // Only show for trial accounts
-        if (data?.subscription_status !== 'trial') {
-          setShouldShowTour(false);
-          setIsReady(true);
-          return;
+        if (isSstOwner) {
+          const { data, error } = await supabase
+            .from('sst_managers')
+            .select('onboarding_completed_pages, subscription_status')
+            .eq('id', profile.sst_manager_id!)
+            .single();
+          if (error) throw error;
+          if (data?.subscription_status !== 'trial') {
+            setShouldShowTour(false);
+            setIsReady(true);
+            return;
+          }
+          const completedPages = (data?.onboarding_completed_pages as string[]) || [];
+          if (completedPages.length > 0) {
+            setLocalCompleted([...new Set([...localCompleted, ...completedPages])]);
+          }
+          setShouldShowTour(!completedPages.includes(pageId));
+        } else if (isCompanyOwner) {
+          const { data, error } = await supabase
+            .from('companies')
+            .select('subscription_status')
+            .eq('id', profile.company_id!)
+            .single();
+          if (error) throw error;
+          if (data?.subscription_status !== 'trial') {
+            setShouldShowTour(false);
+            setIsReady(true);
+            return;
+          }
+          // For company role we use localStorage only (no DB column for company onboarding state)
+          setShouldShowTour(true);
         }
-
-        const completedPages = (data?.onboarding_completed_pages as string[]) || [];
-        
-        // Sync DB state to localStorage
-        if (completedPages.length > 0) {
-          const merged = [...new Set([...localCompleted, ...completedPages])];
-          setLocalCompleted(merged);
-        }
-
-        const alreadyCompleted = completedPages.includes(pageId);
-        setShouldShowTour(!alreadyCompleted);
       } catch (err) {
         console.error('Error checking onboarding status:', err);
         setShouldShowTour(false);
@@ -75,57 +97,52 @@ export function useOnboarding(pageId: string) {
     };
 
     checkOnboarding();
-  }, [authLoading, profile?.sst_manager_id, role, pageId]);
+  }, [authLoading, profile?.sst_manager_id, profile?.company_id, role, pageId]);
 
   const completeTour = useCallback(async () => {
-    if (!profile?.sst_manager_id) return;
+    if (!profile) return;
 
-    // Immediately hide the tour and save to localStorage
     setShouldShowTour(false);
     const localCompleted = getLocalCompleted();
     if (!localCompleted.includes(pageId)) {
       setLocalCompleted([...localCompleted, pageId]);
     }
 
-    try {
-      // Persist to DB
-      const { data } = await supabase
-        .from('sst_managers')
-        .select('onboarding_completed_pages')
-        .eq('id', profile.sst_manager_id)
-        .single();
-
-      const completedPages = (data?.onboarding_completed_pages as string[]) || [];
-      
-      if (!completedPages.includes(pageId)) {
-        const updated = [...completedPages, pageId];
-        await supabase
+    if (role === 'sst' && profile.sst_manager_id) {
+      try {
+        const { data } = await supabase
           .from('sst_managers')
-          .update({ onboarding_completed_pages: updated })
-          .eq('id', profile.sst_manager_id);
+          .select('onboarding_completed_pages')
+          .eq('id', profile.sst_manager_id)
+          .single();
+        const completedPages = (data?.onboarding_completed_pages as string[]) || [];
+        if (!completedPages.includes(pageId)) {
+          await supabase
+            .from('sst_managers')
+            .update({ onboarding_completed_pages: [...completedPages, pageId] })
+            .eq('id', profile.sst_manager_id);
+        }
+      } catch (err) {
+        console.error('Error completing tour:', err);
       }
-    } catch (err) {
-      console.error('Error completing tour:', err);
     }
-  }, [profile?.sst_manager_id, pageId]);
+  }, [profile?.sst_manager_id, profile?.company_id, role, pageId]);
 
   const resetTour = useCallback(async () => {
-    if (!profile?.sst_manager_id) return;
-
-    // Clear localStorage
     setLocalCompleted([]);
     setShouldShowTour(true);
 
-    try {
-      // Clear DB
-      await supabase
-        .from('sst_managers')
-        .update({ onboarding_completed_pages: [] })
-        .eq('id', profile.sst_manager_id);
-    } catch (err) {
-      console.error('Error resetting tour:', err);
+    if (role === 'sst' && profile?.sst_manager_id) {
+      try {
+        await supabase
+          .from('sst_managers')
+          .update({ onboarding_completed_pages: [] })
+          .eq('id', profile.sst_manager_id);
+      } catch (err) {
+        console.error('Error resetting tour:', err);
+      }
     }
-  }, [profile?.sst_manager_id]);
+  }, [profile?.sst_manager_id, role]);
 
   return { shouldShowTour, completeTour, resetTour, isReady };
 }

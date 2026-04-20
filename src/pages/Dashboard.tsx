@@ -44,6 +44,8 @@ import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
+import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -72,6 +74,16 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { toast } = useToast();
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
+  const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
+
+  const companyTourSteps: TourStep[] = [
+    { targetId: 'company-tour-anchor', title: 'Bem-vinda à SOIA! 🎉', description: 'Você tem 7 dias para testar a plataforma. Vamos te mostrar as principais ferramentas.', position: 'bottom' },
+    { targetId: 'company-tool-ouvidoria', title: 'Canal de Ouvidoria', description: 'Receba denúncias anônimas dos seus colaboradores com total sigilo. Compartilhe o link ou QR code.', position: 'bottom' },
+    { targetId: 'company-tool-psicossocial', title: 'Riscos Psicossociais (NR-01)', description: 'Aplique avaliações HSE-IT e COPSOQ II para identificar e tratar riscos psicossociais conforme a NR-01.', position: 'bottom' },
+    { targetId: 'company-tool-burnout', title: 'Avaliação de Burnout', description: 'Mensure o nível de esgotamento da sua equipe com instrumentos científicos validados.', position: 'bottom' },
+    { targetId: 'company-tool-clima', title: 'Pesquisa de Clima', description: 'Avalie o clima organizacional e descubra oportunidades de melhoria.', position: 'top' },
+    { targetId: 'company-tool-treinamentos', title: 'Treinamentos', description: 'Acesse módulos educativos para capacitar sua equipe.', position: 'top' },
+  ];
 
   useEffect(() => {
     const initCompanyId = async () => {
@@ -474,10 +486,10 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       {!isTrialExpired && trialEndsAt && <TrialBanner trialEndsAt={trialEndsAt} />}
       <div className="flex justify-between items-start mb-8 gap-6">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
+          <h1 id="company-tour-anchor" className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
           
           {features.ouvidoria && companySlug && (
-            <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+            <div id="company-tool-ouvidoria" className="mt-4 p-4 bg-muted rounded-lg space-y-3">
               <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
               <div className="flex items-center gap-2">
                 <a 
@@ -521,6 +533,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.psicossocial && (
               <Card
+                id="company-tool-psicossocial"
                 className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
                 onClick={() => navigate('/psychosocial-dashboard')}
               >
@@ -537,6 +550,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
             )}
             {features.burnout && (
               <Card
+                id="company-tool-burnout"
                 className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
                 onClick={() => navigate('/burnout-dashboard')}
               >
@@ -553,6 +567,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
             )}
             {features.clima && (
               <Card
+                id="company-tool-clima"
                 className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
                 onClick={() => navigate('/climate-dashboard')}
               >
@@ -574,6 +589,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       {/* Treinamentos card */}
       {features.treinamentos && (
         <Card
+          id="company-tool-treinamentos"
           className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
           onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
         >
@@ -1018,6 +1034,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       </main>
       <Footer />
+      {shouldShowTour && hasSST === false && (
+        <OnboardingTour steps={companyTourSteps} onComplete={() => completeTour()} />
+      )}
     </div>
     </SoniaChatLayout>
     <SoniaChat companyId={companyId} contextType="dashboard" />

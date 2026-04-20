@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Loader2, MessageCircle } from 'lucide-react';
+import { Check, Loader2, MessageCircle, Gift } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,7 +41,8 @@ const PricingSection = () => {
   const { ref, isVisible } = useScrollAnimation();
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [cycle, setCycle] = useState<Cycle>('annual');
+  const [companyCycle, setCompanyCycle] = useState<Cycle>('annual');
+  const [managerCycle, setManagerCycle] = useState<Cycle>('annual');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const PricingSection = () => {
     })();
   }, []);
 
-  const getPrice = (plan: Plan): number | null => {
+  const getPrice = (plan: Plan, cycle: Cycle): number | null => {
     if (plan.is_custom_quote) return null;
     return cycle === 'annual'
       ? plan.price_annual_cents
@@ -70,15 +70,14 @@ const PricingSection = () => {
         : plan.price_monthly_cents;
   };
 
-  const getSavings = (plan: Plan): number | null => {
-    if (plan.is_custom_quote || !plan.price_monthly_cents) return null;
-    if (cycle === 'monthly') return null;
+  const getSavings = (plan: Plan, cycle: Cycle): number | null => {
+    if (plan.is_custom_quote || !plan.price_monthly_cents || cycle === 'monthly') return null;
     const target = cycle === 'annual' ? plan.price_annual_cents : plan.price_quarterly_cents;
     if (!target) return null;
     return Math.round(((plan.price_monthly_cents - target) / plan.price_monthly_cents) * 100);
   };
 
-  const handleSelect = (plan: Plan) => {
+  const handleContract = (plan: Plan, cycle: Cycle) => {
     if (plan.is_custom_quote) {
       const msg = `Olá! Tenho interesse no plano ${plan.name} da SOIA.`;
       window.open(`https://wa.me/5511996029222?text=${encodeURIComponent(msg)}`, '_blank');
@@ -87,12 +86,34 @@ const PricingSection = () => {
     navigate(`/contratar?plano=${plan.slug}&ciclo=${cycle}`);
   };
 
+  const handleTrial = (category: 'company' | 'manager') => {
+    navigate(category === 'manager' ? '/teste-gratis-sst' : '/teste-gratis-empresa');
+  };
+
   const companyPlans = plans.filter((p) => p.category === 'company');
   const managerPlans = plans.filter((p) => p.category === 'manager');
 
-  const renderCard = (plan: Plan, idx: number, showROI = false) => {
-    const price = getPrice(plan);
-    const savings = getSavings(plan);
+  const renderCycleToggle = (cycle: Cycle, setCycle: (c: Cycle) => void) => (
+    <div className="inline-flex rounded-lg border border-border p-1 bg-card mx-auto">
+      {(['monthly', 'quarterly', 'annual'] as Cycle[]).map((c) => (
+        <button
+          key={c}
+          onClick={() => setCycle(c)}
+          className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+            cycle === c
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {cycleLabels[c]}
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderCard = (plan: Plan, cycle: Cycle, idx: number, showROI: boolean, category: 'company' | 'manager') => {
+    const price = getPrice(plan, cycle);
+    const savings = getSavings(plan, cycle);
     return (
       <Card
         key={plan.id}
@@ -153,23 +174,33 @@ const PricingSection = () => {
             ))}
           </ul>
 
-          <Button className="w-full" onClick={() => handleSelect(plan)}>
-            {plan.is_custom_quote ? (
-              <>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Falar com consultor
-              </>
-            ) : (
-              'Contratar agora'
+          <div className="space-y-2">
+            {!plan.is_custom_quote && (
+              <Button
+                className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold"
+                onClick={() => handleTrial(category)}
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Começar teste grátis de 7 dias
+              </Button>
             )}
-          </Button>
+            <Button
+              variant={plan.is_custom_quote ? 'default' : 'outline'}
+              className="w-full"
+              onClick={() => handleContract(plan, cycle)}
+            >
+              {plan.is_custom_quote ? (
+                <><MessageCircle className="w-4 h-4 mr-2" /> Falar com consultor</>
+              ) : 'Contratar agora'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
   };
 
   return (
-    <section ref={ref} className="py-20 px-4 bg-gradient-to-b from-background to-muted/30">
+    <section ref={ref} id="planos" className="py-20 px-4">
       <div className="container mx-auto max-w-7xl">
         <div className={`text-center mb-12 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Planos & Investimento</Badge>
@@ -177,7 +208,7 @@ const PricingSection = () => {
             Escolha o plano ideal para você
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Para empresas que querem cuidar do seu time ou para gestores que atendem múltiplas empresas.
+            Para empresas que querem cuidar do seu time ou para gestores SST que atendem múltiplas empresas.
           </p>
         </div>
 
@@ -186,45 +217,45 @@ const PricingSection = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <Tabs defaultValue="company" className="w-full">
-            <div className="flex flex-col items-center gap-4 mb-8">
-              <TabsList className="grid grid-cols-2 w-full max-w-md">
-                <TabsTrigger value="company">Para sua empresa</TabsTrigger>
-                <TabsTrigger value="manager">Para gestores</TabsTrigger>
-              </TabsList>
-
-              <div className="inline-flex rounded-lg border border-border p-1 bg-card">
-                {(['monthly', 'quarterly', 'annual'] as Cycle[]).map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCycle(c)}
-                    className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
-                      cycle === c
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {cycleLabels[c]}
-                  </button>
-                ))}
+          <div className="space-y-16">
+            {/* FAIXA 1 — Empresas */}
+            <div className="rounded-2xl bg-background border border-border p-6 md:p-10">
+              <div className="text-center mb-8">
+                <Badge className="mb-3 bg-audit-secondary/10 text-audit-secondary border-audit-secondary/20">
+                  Para sua empresa
+                </Badge>
+                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  Cuide da saúde mental do seu time
+                </h3>
+                <p className="text-muted-foreground max-w-xl mx-auto mb-6">
+                  Plataforma completa para sua empresa cumprir a NR-01 e gerir riscos psicossociais.
+                </p>
+                {renderCycleToggle(companyCycle, setCompanyCycle)}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {companyPlans.map((plan, idx) => renderCard(plan, companyCycle, idx, false, 'company'))}
               </div>
             </div>
 
-            <TabsContent value="company">
+            {/* FAIXA 2 — Gestores */}
+            <div className="rounded-2xl bg-muted/30 border border-border p-6 md:p-10">
+              <div className="text-center mb-8">
+                <Badge className="mb-3 bg-primary/10 text-primary border-primary/20">
+                  Para gestores SST
+                </Badge>
+                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  Atenda múltiplas empresas com escala
+                </h3>
+                <p className="text-muted-foreground max-w-xl mx-auto mb-6">
+                  Ideal para gestoras de SST, escritórios de advocacia, psicólogos e contabilidades.
+                </p>
+                {renderCycleToggle(managerCycle, setManagerCycle)}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {companyPlans.map((plan, idx) => renderCard(plan, idx, false))}
+                {managerPlans.map((plan, idx) => renderCard(plan, managerCycle, idx, true, 'manager'))}
               </div>
-            </TabsContent>
-
-            <TabsContent value="manager">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {managerPlans.map((plan, idx) => renderCard(plan, idx, true))}
-              </div>
-              <p className="text-center text-xs text-muted-foreground mt-6">
-                Ideal para gestoras de SST, escritórios de advocacia, psicólogos e contabilidades.
-              </p>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         )}
 
         <div className={`text-center mt-12 space-y-3 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
