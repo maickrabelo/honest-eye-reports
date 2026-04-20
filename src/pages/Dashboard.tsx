@@ -74,6 +74,16 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { toast } = useToast();
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
+  const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
+
+  const companyTourSteps: TourStep[] = [
+    { targetId: 'company-tour-anchor', title: 'Bem-vinda à SOIA! 🎉', description: 'Você tem 7 dias para testar a plataforma. Vamos te mostrar as principais ferramentas.', position: 'bottom' },
+    { targetId: 'company-tool-ouvidoria', title: 'Canal de Ouvidoria', description: 'Receba denúncias anônimas dos seus colaboradores com total sigilo. Compartilhe o link ou QR code.', position: 'bottom' },
+    { targetId: 'company-tool-psicossocial', title: 'Riscos Psicossociais (NR-01)', description: 'Aplique avaliações HSE-IT e COPSOQ II para identificar e tratar riscos psicossociais conforme a NR-01.', position: 'bottom' },
+    { targetId: 'company-tool-burnout', title: 'Avaliação de Burnout', description: 'Mensure o nível de esgotamento da sua equipe com instrumentos científicos validados.', position: 'bottom' },
+    { targetId: 'company-tool-clima', title: 'Pesquisa de Clima', description: 'Avalie o clima organizacional e descubra oportunidades de melhoria.', position: 'top' },
+    { targetId: 'company-tool-treinamentos', title: 'Treinamentos', description: 'Acesse módulos educativos para capacitar sua equipe.', position: 'top' },
+  ];
 
   useEffect(() => {
     const initCompanyId = async () => {
