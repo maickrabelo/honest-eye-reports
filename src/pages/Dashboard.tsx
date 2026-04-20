@@ -486,10 +486,10 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       {!isTrialExpired && trialEndsAt && <TrialBanner trialEndsAt={trialEndsAt} />}
       <div className="flex justify-between items-start mb-8 gap-6">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
+          <h1 id="company-tour-anchor" className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
           
           {features.ouvidoria && companySlug && (
-            <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+            <div id="company-tool-ouvidoria" className="mt-4 p-4 bg-muted rounded-lg space-y-3">
               <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
               <div className="flex items-center gap-2">
                 <a 
@@ -533,6 +533,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.psicossocial && (
               <Card
+                id="company-tool-psicossocial"
                 className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
                 onClick={() => navigate('/psychosocial-dashboard')}
               >
@@ -549,6 +550,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
             )}
             {features.burnout && (
               <Card
+                id="company-tool-burnout"
                 className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
                 onClick={() => navigate('/burnout-dashboard')}
               >
@@ -565,6 +567,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
             )}
             {features.clima && (
               <Card
+                id="company-tool-clima"
                 className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
                 onClick={() => navigate('/climate-dashboard')}
               >
@@ -586,6 +589,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       {/* Treinamentos card */}
       {features.treinamentos && (
         <Card
+          id="company-tool-treinamentos"
           className={`mb-6 transition-all ${trainingsCount > 0 ? 'cursor-pointer hover:shadow-lg hover:border-primary/40' : 'opacity-60'}`}
           onClick={() => trainingsCount > 0 && navigate('/empresa/treinamentos')}
         >
