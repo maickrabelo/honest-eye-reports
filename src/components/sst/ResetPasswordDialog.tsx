@@ -39,12 +39,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     }
   }, [open]);
 
-  const generateTempPassword = (companyName: string) => {
-    const clean = companyName.replace(/[^a-zA-Z]/g, '').substring(0, 8);
-    const capitalized = clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
-    return `${capitalized}2026!`;
-  };
-
+  
   const handleReset = async () => {
     if (!company) return;
 
