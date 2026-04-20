@@ -57,7 +57,7 @@ export default function BurnoutDashboard() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) { navigate('/auth'); return; }
-      if (role !== 'admin' && role !== 'sst') { navigate('/dashboard'); return; }
+      if (role !== 'admin' && role !== 'sst' && role !== 'company') { navigate('/dashboard'); return; }
       fetchData();
     }
   }, [user, role, authLoading, navigate]);
@@ -73,12 +73,19 @@ export default function BurnoutDashboard() {
           const companyIds = assignments?.map(a => a.company_id) || [];
           companiesQuery = companiesQuery.in('id', companyIds);
         }
+      } else if (role === 'company') {
+        const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user?.id).single();
+        if (profile?.company_id) {
+          companiesQuery = companiesQuery.eq('id', profile.company_id);
+        } else {
+          companiesQuery = companiesQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
       }
       const { data: companiesData } = await companiesQuery;
       setCompanies(companiesData || []);
 
       let assessmentsQuery = supabase.from('burnout_assessments').select(`id, title, description, company_id, start_date, end_date, is_active, created_at, companies (name, slug)`).order('created_at', { ascending: false });
-      if (role === 'sst' && companiesData) {
+      if ((role === 'sst' || role === 'company') && companiesData) {
         assessmentsQuery = assessmentsQuery.in('company_id', companiesData.map(c => c.id));
       }
       const { data: assessmentsData, error } = await assessmentsQuery;
@@ -114,7 +121,8 @@ export default function BurnoutDashboard() {
   const activeCount = assessments.filter(a => a.is_active).length;
   const totalResponses = assessments.reduce((sum, a) => sum + a.response_count, 0);
 
-  const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
+  const r = role as string;
+  const backPath = r === 'sales' ? '/sales-dashboard' : r === 'company' ? '/dashboard' : '/sst-dashboard';
 
   if (authLoading || loading) {
     return (

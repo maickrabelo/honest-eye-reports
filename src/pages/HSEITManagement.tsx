@@ -54,7 +54,7 @@ export default function HSEITManagement() {
     if (!authLoading) {
       if (!user) {
         navigate('/auth');
-      } else if (!['admin', 'sst'].includes(role || '')) {
+      } else if (!['admin', 'sst', 'company'].includes(role || '')) {
         navigate('/dashboard');
       }
     }
@@ -63,7 +63,7 @@ export default function HSEITManagement() {
   // Data fetching - only on mount and when assessment id changes
   const hasFetchedRef = useRef(false);
   useEffect(() => {
-    if (!authLoading && user && ['admin', 'sst'].includes(role || '') && !hasFetchedRef.current) {
+    if (!authLoading && user && ['admin', 'sst', 'company'].includes(role || '') && !hasFetchedRef.current) {
       hasFetchedRef.current = true;
       fetchData();
     }
@@ -106,6 +106,12 @@ export default function HSEITManagement() {
             companiesData = data || [];
           }
         }
+      } else if (role === 'company' && profile?.company_id) {
+        const { data } = await supabase
+          .from('companies')
+          .select('id, name, slug')
+          .eq('id', profile.company_id);
+        companiesData = data || [];
       }
       
       setCompanies(companiesData);

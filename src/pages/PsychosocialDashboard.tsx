@@ -13,14 +13,14 @@ import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext'
 
 export default function PsychosocialDashboard() {
   const navigate = useNavigate();
-  const { user, role, isLoading: authLoading } = useRealAuth();
+  const { user, role, profile, isLoading: authLoading } = useRealAuth();
   const [activeTab, setActiveTab] = useState('hseit');
 
   useEffect(() => {
     if (!authLoading) {
       if (!user) { navigate('/auth'); return; }
       const r = role as string | null;
-      if (!r || !['admin', 'sst', 'sales'].includes(r)) { navigate('/'); return; }
+      if (!r || !['admin', 'sst', 'sales', 'company'].includes(r)) { navigate('/'); return; }
     }
   }, [user, role, authLoading, navigate]);
 
@@ -32,7 +32,8 @@ export default function PsychosocialDashboard() {
     );
   }
 
-  const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
+  const r = role as string;
+  const backPath = r === 'sales' ? '/sales-dashboard' : r === 'company' ? '/dashboard' : '/sst-dashboard';
 
   return (
     <SoniaChatProvider>

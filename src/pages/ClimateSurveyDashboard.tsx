@@ -432,7 +432,8 @@ export default function ClimateSurveyDashboard() {
     );
   }
 
-  const backPath = (role as string) === 'sales' ? '/sales-dashboard' : '/sst-dashboard';
+  const r = role as string;
+  const backPath = r === 'sales' ? '/sales-dashboard' : r === 'company' ? '/dashboard' : '/sst-dashboard';
 
   return (
     <SoniaChatProvider>
@@ -473,7 +474,7 @@ export default function ClimateSurveyDashboard() {
                     size="default"
                   />
                 )}
-                {['admin', 'sst'].includes(role || '') && (
+                {['admin', 'sst', 'company'].includes(role || '') && (
                   <Button id="climate-new-btn" onClick={handleCreateSurvey} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
                     <Plus className="h-4 w-4" /> Nova Pesquisa
                   </Button>
@@ -528,7 +529,7 @@ export default function ClimateSurveyDashboard() {
               <p className="text-muted-foreground mb-4">
                 Crie sua primeira pesquisa de clima organizacional
               </p>
-              {['admin', 'sst'].includes(role || '') && (
+              {['admin', 'sst', 'company'].includes(role || '') && (
                 <Button onClick={handleCreateSurvey}>
                   <Plus className="mr-2 h-4 w-4" />
                   Criar Pesquisa

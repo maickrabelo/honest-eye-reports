@@ -44,12 +44,12 @@ export default function COPSOQManagement() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) navigate('/auth');
-      else if (!['admin', 'sst'].includes(role || '')) navigate('/dashboard');
+      else if (!['admin', 'sst', 'company'].includes(role || '')) navigate('/dashboard');
     }
   }, [user, role, authLoading]);
 
   useEffect(() => {
-    if (!authLoading && user && ['admin', 'sst'].includes(role || '') && !hasFetchedRef.current) {
+    if (!authLoading && user && ['admin', 'sst', 'company'].includes(role || '') && !hasFetchedRef.current) {
       hasFetchedRef.current = true;
       fetchData();
     }
@@ -72,6 +72,9 @@ export default function COPSOQManagement() {
             companiesData = data || [];
           }
         }
+      } else if (role === 'company' && profile?.company_id) {
+        const { data } = await supabase.from('companies').select('id, name, slug').eq('id', profile.company_id);
+        companiesData = data || [];
       }
       setCompanies(companiesData);
 
