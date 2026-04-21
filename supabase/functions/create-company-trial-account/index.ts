@@ -97,6 +97,14 @@ Deno.serve(async (req) => {
       full_name: responsible_name,
     }).eq("id", userId);
 
+    // 3b. Link user to company (multi-company access table)
+    const { error: linkErr } = await supabase.from("user_companies").insert({
+      user_id: userId,
+      company_id: company.id,
+      is_default: true,
+    });
+    if (linkErr) log("user_companies link warning", linkErr.message);
+
     // 4. Role: company
     const { error: roleErr } = await supabase.from("user_roles")
       .update({ role: "company" }).eq("user_id", userId);
