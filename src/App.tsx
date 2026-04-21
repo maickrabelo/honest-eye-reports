@@ -46,6 +46,7 @@ const BurnoutManagement = React.lazy(() => import("./pages/BurnoutManagement"));
 const BurnoutForm = React.lazy(() => import("./pages/BurnoutForm"));
 const BurnoutResults = React.lazy(() => import("./pages/BurnoutResults"));
 const ChangePassword = React.lazy(() => import("./pages/ChangePassword"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const SSTLandingPage = React.lazy(() => import("./pages/SSTLandingPage"));
 const SSTPortal = React.lazy(() => import("./pages/SSTPortal"));
 const TrialSignup = React.lazy(() => import("./pages/TrialSignup"));
@@ -104,6 +105,7 @@ const App = () => (
                 <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
                 <Route path="/select-company" element={<CompanySelector />} />
                 <Route path="/dashboard" element={<Dashboard />} />

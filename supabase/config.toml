@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.send-test-welcome]
 verify_jwt = false
+
+[functions.request-password-reset]
+verify_jwt = false
