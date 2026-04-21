@@ -42,6 +42,7 @@ import DownloadReportButton from '@/components/DownloadReportButton';
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
+import ProfileCompletionBanner from '@/components/ProfileCompletionBanner';
 import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
@@ -484,6 +485,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
     <>
       {isTrialExpired && <TrialExpiredOverlay category="company" />}
       {!isTrialExpired && trialEndsAt && <TrialBanner trialEndsAt={trialEndsAt} />}
+      {!isTrialExpired && <ProfileCompletionBanner companyId={companyId} />}
       <div className="flex justify-between items-start mb-8 gap-6">
         <div className="flex-1">
           <h1 id="company-tour-anchor" className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
