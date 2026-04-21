@@ -482,7 +482,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
   const dashboardContent = (
     <>
-      {isTrialExpired && <TrialExpiredOverlay />}
+      {isTrialExpired && <TrialExpiredOverlay category="company" />}
       {!isTrialExpired && trialEndsAt && <TrialBanner trialEndsAt={trialEndsAt} />}
       <div className="flex justify-between items-start mb-8 gap-6">
         <div className="flex-1">
