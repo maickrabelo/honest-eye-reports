@@ -154,14 +154,25 @@ const PricingSection = () => {
             )}
           </div>
 
-          {showROI && plan.roi_initial_cents && plan.roi_monthly_cents && (
-            <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 text-left">
-              <p className="text-xs font-semibold text-primary mb-1">Receita potencial</p>
-              <p className="text-sm text-foreground">
-                <strong>{formatBRL(plan.roi_initial_cents)}</strong> inicial<br />
-                + <strong>{formatBRL(plan.roi_monthly_cents)}</strong>/mês recorrente
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-1">Estimativa atendendo carteira completa.</p>
+          {showROI && plan.max_companies && (
+            <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 text-left space-y-2">
+              <p className="text-xs font-semibold text-primary">Receita potencial da sua carteira</p>
+              <div className="text-sm text-foreground space-y-1">
+                <p>
+                  <strong>{formatBRL(450000 * plan.max_companies)}</strong> inicial
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Levantamento de riscos + emissão do PGR Psicossocial · ~R$ 4.500/empresa × {plan.max_companies}
+                </p>
+              </div>
+              <div className="text-sm text-foreground space-y-1 pt-1 border-t border-primary/10">
+                <p>
+                  + <strong>{formatBRL(35000 * plan.max_companies)}</strong>/mês recorrente
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Mensalidade sugerida de R$ 350/empresa: canal de ouvidoria ativo, monitoramento de denúncias e acompanhamento dos dados das avaliações
+                </p>
+              </div>
             </div>
           )}
 
