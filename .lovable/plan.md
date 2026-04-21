@@ -1,72 +1,45 @@
 
 
-## Bloqueio pós-trial com exibição contextual de planos
+## Diagnóstico: Email de credenciais não enviado após pagamento
 
-### Comportamento
+### O que aconteceu
 
-Quando o trial de 7 dias expirar (`trial_expires_at < now()` e ainda sem assinatura ativa), o sistema bloqueia o acesso ao app e exibe um overlay full-screen com os planos disponíveis:
+O webhook do Asaas foi recebido e processado com sucesso (a assinatura `buzzmktsocial@gmail.com` está `active`), mas o email com as credenciais **não saiu**. Identifiquei 3 problemas no código atual de `asaas-webhook/index.ts`:
 
-- **Empresa final** (role `company`, sem `sst_manager_id` no perfil) → mostra apenas os 3 planos da categoria `company`.
-- **Gestora SST** (role `sst`) → mostra apenas os planos da categoria `manager`.
+### Problema 1 — Remetente inválido (causa raiz mais provável)
+O email usa `from: 'SOIA <onboarding@resend.dev>'`. Esse remetente só funciona quando enviado **para o próprio dono da conta Resend**. Para qualquer outro destinatário (como `buzzmktsocial@gmail.com`), o gateway Resend **rejeita o envio** com erro 403. É por isso que o webhook completa sem erros, mas o email nunca chega.
 
-O overlay é não-dispensável (sem botão fechar). Único caminho: contratar um plano ou sair (logout).
+### Problema 2 — Falha silenciosa
+O `await fetch(...)` em `sendCredentialsEmail` não verifica `response.ok` nem captura o corpo do erro. Quando o Resend recusa o envio, o webhook ignora a falha e responde 200 OK, escondendo o problema.
 
-### 1. Refatoração do `TrialExpiredOverlay`
+### Problema 3 — Sem infraestrutura de email branded da Lovable
+O projeto ainda não usa o sistema de **App Emails** da Lovable (fila durável, retry automático, domínio verificado, supressão de bounces). Hoje todo email passa por um `fetch` direto ao Resend sem rastreabilidade.
 
-`src/components/TrialExpiredOverlay.tsx` — atualmente bloqueia genericamente. Será reescrito para:
+---
 
-- Detectar a categoria do usuário (`company` vs `manager`) via `useAuth()` + perfil.
-- Buscar `subscription_plans` ativos da categoria correspondente (mesma query do `PricingSection`).
-- Renderizar em modal full-screen:
-  - Header: "Seu período de teste de 7 dias terminou"
-  - Subheader contextual ("Escolha um plano para continuar usando a SOIA" / "Escolha um plano de gestor para continuar atendendo seus clientes")
-  - Toggle Mensal/Trimestral/Anual
-  - Grid com 3 cards de plano (reusando a mesma estrutura visual do `PricingSection`)
-  - Cada card com botão "Contratar agora" → `/contratar?plano={slug}&ciclo={cycle}`
-  - Rodapé com link discreto "Sair" (logout) e "Falar com consultor" (WhatsApp)
+### Solução proposta (em 2 fases)
 
-### 2. Hook unificado `useTrialStatus`
+**Fase 1 — Correção imediata (sem depender de DNS)**
+1. Editar `supabase/functions/asaas-webhook/index.ts`:
+   - Tornar `sendCredentialsEmail` à prova de falhas: checar `response.ok`, ler `await response.text()` em caso de erro e logar com `console.error`.
+   - Persistir uma linha em uma tabela `email_send_attempts` (criada via migration) com `email`, `status`, `error_message`, `subscription_id` e `created_at` para auditoria futura.
+   - Como medida temporária, manter `from: 'SOIA <onboarding@resend.dev>'` mas adicionar fallback: se o envio falhar, gravar a senha provisória em `subscriptions.metadata.provisional_password` para que você possa recuperá-la manualmente do banco.
+2. Reenviar manualmente o email da última compra (`buzzmktsocial@gmail.com`) executando o webhook novamente para aquela `subscription_id` ou via uma chamada SQL+função admin que dispare o email com a senha gerada (CNPJ do cliente, conforme a regra atual).
 
-Novo hook `src/hooks/useTrialStatus.ts` que centraliza a lógica de verificação:
+**Fase 2 — Migração para App Emails da Lovable (recomendado)**
+1. Configurar o domínio de envio `notify.soia.app.br` (delegação de NS para a Lovable).
+2. Provisionar a infraestrutura de email (fila pgmq, cron, supressão).
+3. Criar um template React Email `subscription-credentials` em `_shared/transactional-email-templates/` com a identidade visual SOIA (cores `audit-primary`/`audit-secondary`, logo).
+4. Substituir a chamada direta ao Resend dentro do `asaas-webhook` por uma invocação a `send-transactional-email` com `templateName: 'subscription-credentials'` e `idempotencyKey` baseado em `subscription.id`.
+5. Benefícios: retry automático em caso de rate-limit, log durável em `email_send_log`, supressão de bounces, e remetente `noreply@soia.app.br` (entrega muito superior).
 
-```ts
-// Retorna: { isTrialExpired, daysLeft, category, isLoading, hasActiveSubscription }
-```
+---
 
-- Lê `companies.trial_expires_at` (para empresas) ou `sst_managers.trial_expires_at` (para gestoras).
-- Verifica se há assinatura ativa em `subscriptions` (via `owner_user_id`).
-- Determina `category` pelo role + perfil.
-- Se assinatura ativa existir, **nunca** bloqueia (mesmo após `trial_expires_at`).
+### Detalhes técnicos
+- **Editado**: `supabase/functions/asaas-webhook/index.ts` (logging + fallback).
+- **Criada**: migration para tabela `email_send_attempts` (auditoria).
+- **Fase 2**: configuração de domínio de email + scaffold de app emails + template `subscription-credentials.tsx` + atualização do webhook.
 
-### 3. Integração nos dashboards
-
-Aplicar o overlay em:
-- `src/pages/Dashboard.tsx` (empresa)
-- `src/pages/SSTDashboard.tsx` (gestora SST)
-
-Padrão:
-```tsx
-const { isTrialExpired, category, isLoading } = useTrialStatus();
-// ...
-{isTrialExpired && <TrialExpiredOverlay category={category} />}
-```
-
-O overlay cobre toda a tela (z-index alto), impedindo interação com o resto da UI. O `TrialBanner` continua aparecendo nos últimos 3 dias antes da expiração.
-
-### 4. Bloqueio nas rotas internas
-
-Para evitar que o usuário acesse rotas profundas digitando URL diretamente, adicionar verificação no `App.tsx` (ou em wrapper de rota privada): se `isTrialExpired && !hasActiveSubscription`, redirecionar todas as rotas autenticadas para `/dashboard` ou `/sst-dashboard`, onde o overlay irá bloquear.
-
-Alternativa mais leve: incluir o overlay no layout raiz das rotas autenticadas via componente `<TrialGuard>` que envolve `<Outlet />`.
-
-### 5. Pós-pagamento
-
-Após contratar (fluxo `/contratar` → checkout → webhook Asaas/Stripe cria registro em `subscriptions` com `status='active'`), o `useTrialStatus` deixa de retornar `isTrialExpired=true` no próximo refetch e o overlay some automaticamente.
-
-### Resumo técnico
-- **Criado**: `src/hooks/useTrialStatus.ts`.
-- **Refatorado**: `src/components/TrialExpiredOverlay.tsx` (recebe `category`, busca planos, renderiza grid).
-- **Editado**: `src/pages/Dashboard.tsx` e `src/pages/SSTDashboard.tsx` (integração do hook + overlay).
-- **Editado**: `src/App.tsx` (guard global opcional para redirecionar rotas profundas).
-- Nenhuma migration necessária — toda a lógica usa tabelas e campos já existentes (`trial_expires_at`, `subscriptions`, `subscription_plans`).
+### Pergunta antes de começar
+A Fase 1 corrige o sintoma imediato e dá visibilidade. A Fase 2 resolve definitivamente, mas exige você adicionar 2 registros NS no provedor do domínio `soia.app.br` (propagação até 72h). Quer que eu execute as duas fases agora, ou só a Fase 1 por enquanto?
 
