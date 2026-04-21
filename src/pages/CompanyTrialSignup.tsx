@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Loader2, ArrowLeft, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ const CompanyTrialSignup = () => {
     description: 'Teste grátis 7 dias. Plataforma completa para gestão de riscos psicossociais (NR-01), burnout, clima e ouvidoria na sua empresa.',
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planSlug = searchParams.get('plano') || searchParams.get('plan') || null;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -49,7 +51,7 @@ const CompanyTrialSignup = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-company-trial-account', {
-        body: { ...formData, employee_count: Number(formData.employee_count) || 0 },
+        body: { ...formData, employee_count: Number(formData.employee_count) || 0, plan_slug: planSlug },
       });
       if (error) {
         let msg = 'Tente novamente mais tarde.';
