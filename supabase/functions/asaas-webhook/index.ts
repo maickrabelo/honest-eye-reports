@@ -7,41 +7,92 @@ const corsHeaders = {
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend';
 
+async function logEmailAttempt(
+  supabase: any,
+  recipientEmail: string,
+  status: 'sent' | 'failed' | 'skipped',
+  subscriptionId: string | null,
+  errorMessage: string | null,
+  metadata: Record<string, unknown> = {},
+) {
+  try {
+    await supabase.from('email_send_attempts').insert({
+      recipient_email: recipientEmail,
+      status,
+      error_message: errorMessage,
+      subscription_id: subscriptionId,
+      context: 'asaas-webhook:credentials',
+      metadata,
+    });
+  } catch (e) {
+    console.error('Failed to log email attempt:', e);
+  }
+}
+
 async function sendCredentialsEmail(
+  supabase: any,
   toEmail: string,
   password: string,
   planName: string,
   isExistingUser: boolean,
-) {
+  subscriptionId: string | null,
+): Promise<{ ok: boolean; error?: string }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
-    console.warn('Email keys missing - skipping credentials email');
-    return;
+    const msg = 'Email keys missing (LOVABLE_API_KEY or RESEND_API_KEY)';
+    console.warn(msg);
+    await logEmailAttempt(supabase, toEmail, 'skipped', subscriptionId, msg);
+    return { ok: false, error: msg };
   }
   const passwordBlock = isExistingUser
     ? `<p>Este e-mail já possui cadastro na SOIA. Use sua senha atual para acessar; se não lembrar, utilize a opção <strong>“Esqueci minha senha”</strong> na tela de login.</p>`
     : `<p><strong>Senha provisória:</strong> ${password}</p><p>No primeiro acesso será solicitada a troca da senha.</p>`;
-  await fetch(`${GATEWAY_URL}/emails`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'X-Connection-Api-Key': RESEND_API_KEY,
-    },
-    body: JSON.stringify({
-      from: 'SOIA <onboarding@resend.dev>',
-      to: [toEmail],
-      subject: `Bem-vindo à SOIA — Plano ${planName} ativado`,
-      html: `
-        <h2>Pagamento confirmado!</h2>
-        <p>Seu plano <strong>${planName}</strong> está ativo.</p>
-        <p><strong>Email:</strong> ${toEmail}</p>
-        ${passwordBlock}
-        <p><a href="https://soia.app.br/auth">Acessar a plataforma</a></p>
-      `,
-    }),
-  });
+
+  try {
+    const response = await fetch(`${GATEWAY_URL}/emails`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'X-Connection-Api-Key': RESEND_API_KEY,
+      },
+      body: JSON.stringify({
+        from: 'SOIA <onboarding@resend.dev>',
+        to: [toEmail],
+        subject: `Bem-vindo à SOIA — Plano ${planName} ativado`,
+        html: `
+          <h2>Pagamento confirmado!</h2>
+          <p>Seu plano <strong>${planName}</strong> está ativo.</p>
+          <p><strong>Email:</strong> ${toEmail}</p>
+          ${passwordBlock}
+          <p><a href="https://soia.app.br/auth">Acessar a plataforma</a></p>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '<no body>');
+      const msg = `Resend gateway returned ${response.status}: ${body}`;
+      console.error('sendCredentialsEmail failed:', msg);
+      await logEmailAttempt(supabase, toEmail, 'failed', subscriptionId, msg, {
+        http_status: response.status,
+      });
+      return { ok: false, error: msg };
+    }
+
+    const result = await response.json().catch(() => ({}));
+    console.log('sendCredentialsEmail success:', result);
+    await logEmailAttempt(supabase, toEmail, 'sent', subscriptionId, null, {
+      provider_id: (result as any)?.id ?? null,
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('sendCredentialsEmail threw:', msg);
+    await logEmailAttempt(supabase, toEmail, 'failed', subscriptionId, msg);
+    return { ok: false, error: msg };
+  }
 }
 
 async function findAuthUserByEmail(supabase: any, email: string) {
