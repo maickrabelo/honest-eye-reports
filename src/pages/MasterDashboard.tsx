@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download } from "lucide-react";
-import * as XLSX from 'xlsx';
+import { downloadJsonAsExcel } from '@/lib/excelExport';
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
@@ -381,7 +381,7 @@ const MasterDashboard = () => {
     return companies.filter(c => assignedCompanyIds.includes(c.id));
   };
 
-  const exportCompaniesToExcel = () => {
+  const exportCompaniesToExcel = async () => {
     const data = filteredCompanies.map(company => {
       const assignedSST = getAssignedSST(company.id);
       return {
@@ -395,14 +395,11 @@ const MasterDashboard = () => {
         'Cadastrado em': new Date(company.created_at).toLocaleDateString('pt-BR'),
       };
     });
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Empresas');
-    XLSX.writeFile(wb, `empresas-${new Date().toISOString().split('T')[0]}.xlsx`);
+    await downloadJsonAsExcel(data, 'Empresas', `empresas-${new Date().toISOString().split('T')[0]}.xlsx`);
     toast({ title: 'Excel exportado', description: `${data.length} empresas exportadas com sucesso.` });
   };
 
-  const exportSSTToExcel = () => {
+  const exportSSTToExcel = async () => {
     const data = filteredSSTManagers.map(manager => {
       const assignedCompanies = getAssignedCompanies(manager.id);
       return {
@@ -417,10 +414,7 @@ const MasterDashboard = () => {
         'Cadastrado em': new Date(manager.created_at).toLocaleDateString('pt-BR'),
       };
     });
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Gestoras SST');
-    XLSX.writeFile(wb, `gestoras-sst-${new Date().toISOString().split('T')[0]}.xlsx`);
+    await downloadJsonAsExcel(data, 'Gestoras SST', `gestoras-sst-${new Date().toISOString().split('T')[0]}.xlsx`);
     toast({ title: 'Excel exportado', description: `${data.length} gestoras SST exportadas com sucesso.` });
   };
 
