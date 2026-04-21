@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { company_name, cnpj, email, responsible_name, phone, employee_count } = await req.json();
+    const { company_name, cnpj, email, responsible_name, phone, employee_count, plan_slug } = await req.json();
 
     if (!company_name || !cnpj || !email || !responsible_name || !phone) {
       return new Response(JSON.stringify({ error: "Preencha todos os campos obrigatórios." }), {
@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
         employee_count: Number(employee_count) || 0,
         subscription_status: "trial",
         trial_ends_at: trialEndsAt.toISOString(),
+        trial_plan_slug: plan_slug || null,
       })
       .select()
       .single();
