@@ -1,0 +1,1 @@
+ALTER VIEW public.sst_managers_public SET (security_invoker = true);

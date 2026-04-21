@@ -616,6 +616,13 @@ export type Database = {
             referencedRelation: "sst_managers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "company_sst_assignments_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       copsoq_answers: {
@@ -1169,6 +1176,13 @@ export type Database = {
             referencedRelation: "sst_managers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       report_attachments: {
@@ -1708,6 +1722,13 @@ export type Database = {
             referencedRelation: "sst_managers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sst_training_modules_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       subscription_plans: {
@@ -2157,6 +2178,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sst_managers_public: {
+        Row: {
+          brand_color: string | null
+          id: string | null
+          logo_url: string | null
+          name: string | null
+          slug: string | null
+        }
+        Insert: {
+          brand_color?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          slug?: string | null
+        }
+        Update: {
+          brand_color?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          slug?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
