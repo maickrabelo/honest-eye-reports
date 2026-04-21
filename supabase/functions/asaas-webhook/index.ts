@@ -68,11 +68,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    // Validate Asaas access token
+    // Validate Asaas access token (REQUIRED — fail closed)
     const expectedToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN');
+    if (!expectedToken) {
+      console.error('ASAAS_WEBHOOK_TOKEN is not configured — rejecting webhook');
+      return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const receivedToken = req.headers.get('asaas-access-token');
-    if (expectedToken && receivedToken && receivedToken !== expectedToken) {
-      console.warn('Invalid asaas-access-token received');
+    if (!receivedToken || receivedToken !== expectedToken) {
+      console.warn('Invalid or missing asaas-access-token');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
