@@ -118,9 +118,37 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // ---- AuthN: require a valid JWT ----
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Sessão inválida" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = userData.user.id;
+
+    // ---- AuthZ: verify ownership of requested scope ----
+    const { data: profile } = await supabase
+      .from("profiles").select("company_id, sst_manager_id").eq("id", userId).maybeSingle();
+    const { data: adminCheck } = await supabase
+      .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+    const isAdmin = !!adminCheck;
+
     let contextData = "";
 
     if (sst_manager_id) {
+      if (!isAdmin && profile?.sst_manager_id !== sst_manager_id) {
+        return new Response(JSON.stringify({ error: "Acesso negado a esta gestora" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       // SST mode: fetch SST manager info and ALL assigned companies
       const { data: sstManager } = await supabase
         .from("sst_managers")
@@ -150,6 +178,19 @@ serve(async (req) => {
         contextData += `\n\nNenhuma empresa cadastrada ainda.`;
       }
     } else if (company_id) {
+      let allowed = isAdmin || profile?.company_id === company_id;
+      if (!allowed && profile?.sst_manager_id) {
+        const { data: assignment } = await supabase
+          .from("company_sst_assignments").select("id")
+          .eq("sst_manager_id", profile.sst_manager_id)
+          .eq("company_id", company_id).maybeSingle();
+        allowed = !!assignment;
+      }
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "Acesso negado a esta empresa" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       // Single company mode
       contextData += `\n## Empresa selecionada:`;
       contextData += await fetchCompanyContext(supabase, company_id);
