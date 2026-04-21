@@ -220,7 +220,7 @@ const handler = async (req: Request): Promise<Response> => {
     const html = getEmailHTML(request);
 
     const emailOptions: any = {
-      from: "SOIA <onboarding@resend.dev>",
+      from: "SOIA <noreply@soia.app.br>",
       to: [email],
       subject: subject,
       html: html,

@@ -701,7 +701,7 @@ Deno.serve(async (req) => {
         try {
           const resend = new Resend(resendApiKey);
           await resend.emails.send({
-            from: "SOIA <noreply@sfrfranco.com.br>",
+            from: "SOIA <noreply@soia.app.br>",
             to: [email.trim().toLowerCase()],
             subject: "Bem-vindo ao SOIA - Conta Demo Ilimitada",
             html: `
