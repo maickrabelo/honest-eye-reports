@@ -126,6 +126,11 @@ const CompanyProfile = () => {
       <Navbar />
       <main className="flex-grow bg-muted/30 py-8">
         <div className="container mx-auto max-w-5xl px-4">
+          <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
+            <Link to="/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Voltar ao dashboard
+            </Link>
+          </Button>
           <h1 className="text-3xl font-bold text-primary mb-2">Perfil da Empresa</h1>
           <p className="text-muted-foreground mb-8">
             Complete o cadastro para personalizar a página pública do canal de denúncias.
