@@ -455,6 +455,7 @@ export type Database = {
           slug: string | null
           subscription_status: string | null
           trial_ends_at: string | null
+          trial_plan_slug: string | null
           updated_at: string | null
         }
         Insert: {
@@ -478,6 +479,7 @@ export type Database = {
           slug?: string | null
           subscription_status?: string | null
           trial_ends_at?: string | null
+          trial_plan_slug?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -501,6 +503,7 @@ export type Database = {
           slug?: string | null
           subscription_status?: string | null
           trial_ends_at?: string | null
+          trial_plan_slug?: string | null
           updated_at?: string | null
         }
         Relationships: [
