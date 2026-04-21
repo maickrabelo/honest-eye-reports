@@ -41,8 +41,8 @@ const ProfileCompletionBanner: React.FC<Props> = ({ companyId }) => {
   if (dismissed || missing.length === 0) return null;
 
   return (
-    <Alert className="mb-6 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-      <AlertCircle className="h-4 w-4 !text-amber-600" />
+    <Alert className="mb-6 border-warning/40 bg-warning/10">
+      <AlertCircle className="h-4 w-4" />
       <AlertTitle>Complete o cadastro da sua empresa</AlertTitle>
       <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span>
