@@ -279,8 +279,30 @@ Deno.serve(async (req) => {
         })
         .eq('id', sub.id);
 
-      // Always send confirmation email; password block adapts to new vs existing user
-      await sendCredentialsEmail(email, password, plan.name, !isNewUser);
+      // Send confirmation email; on failure, persist provisional password as fallback
+      const emailResult = await sendCredentialsEmail(
+        supabase,
+        email,
+        password,
+        plan.name,
+        !isNewUser,
+        sub.id,
+      );
+
+      if (!emailResult.ok && isNewUser) {
+        console.warn('Email failed — storing provisional password fallback in subscription metadata');
+        await supabase
+          .from('subscriptions')
+          .update({
+            metadata: {
+              ...meta,
+              provisional_password: password,
+              provisional_password_set_at: new Date().toISOString(),
+              email_send_error: emailResult.error ?? 'unknown',
+            },
+          })
+          .eq('id', sub.id);
+      }
     } else if (eventType === 'PAYMENT_OVERDUE') {
       await supabase.from('subscriptions').update({ status: 'past_due' }).eq('id', sub.id);
     } else if (eventType === 'SUBSCRIPTION_DELETED' || eventType === 'PAYMENT_DELETED') {
