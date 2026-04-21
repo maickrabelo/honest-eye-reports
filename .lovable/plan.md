@@ -1,99 +1,72 @@
 
 
-## Refatoração da Landing Page + Separação de Planos + Trial Universal
+## Bloqueio pós-trial com exibição contextual de planos
 
-### 1. Landing page — novo layout inspirado na referência
+### Comportamento
 
-Refatorar a home (`src/pages/Index.tsx`) e seções para um visual mais editorial, com foco em conversão B2B. Inspiração: hero com proposta de valor direta sobre NR-01, blocos com prova social, ícones grandes e CTAs duplos (teste grátis + demo).
+Quando o trial de 7 dias expirar (`trial_expires_at < now()` e ainda sem assinatura ativa), o sistema bloqueia o acesso ao app e exibe um overlay full-screen com os planos disponíveis:
 
-**Seções na nova ordem:**
-1. **HeroSection** (reescrita) — Headline curta "Gestão de Riscos Psicossociais conforme a NR-01", subtítulo focado em conformidade, dois CTAs lado a lado: "Começar teste grátis" (primário) e "Falar com especialista" (WhatsApp). Remover ilustração lateral pesada; usar mockup do dashboard ou gradiente limpo. Stats abaixo do hero.
-2. **PainPointsSection** (mantida com ajustes de copy) — "Por que sua empresa precisa agir agora?" com 3 dores: multas NR-01, afastamentos por saúde mental, custo de turnover.
-3. **FeaturesSection** (mantida) — Grid de funcionalidades.
-4. **HowItWorksSection** (mantida) — 3-4 passos.
-5. **BenefitsSection** (mantida) — Benefícios para o negócio.
-6. **SSTHighlightSection** — **REMOVER** (bloco "Tem empresa de SST...").
-7. **PricingSection** (refatorada — ver item 2).
-8. **FAQSection** (mantida).
-9. **CTASection** (mantida).
+- **Empresa final** (role `company`, sem `sst_manager_id` no perfil) → mostra apenas os 3 planos da categoria `company`.
+- **Gestora SST** (role `sst`) → mostra apenas os planos da categoria `manager`.
 
-### 2. PricingSection — duas faixas separadas
+O overlay é não-dispensável (sem botão fechar). Único caminho: contratar um plano ou sair (logout).
 
-Substituir as `Tabs` (Empresa / Gestor) por **duas seções verticais empilhadas**, uma logo abaixo da outra:
+### 1. Refatoração do `TrialExpiredOverlay`
 
-```
-┌─────────────────────────────────────────────┐
-│  FAIXA 1 — "Para sua empresa"               │
-│  Subtítulo: cuide da saúde mental do time   │
-│  [Toggle Mensal/Trimestral/Anual]           │
-│  [Card 1] [Card 2] [Card 3]                 │
-└─────────────────────────────────────────────┘
+`src/components/TrialExpiredOverlay.tsx` — atualmente bloqueia genericamente. Será reescrito para:
 
-┌─────────────────────────────────────────────┐
-│  FAIXA 2 — "Para gestores SST"              │
-│  Subtítulo: atenda múltiplas empresas       │
-│  [Toggle Mensal/Trimestral/Anual]           │
-│  [Card 1] [Card 2] [Card 3]                 │
-└─────────────────────────────────────────────┘
+- Detectar a categoria do usuário (`company` vs `manager`) via `useAuth()` + perfil.
+- Buscar `subscription_plans` ativos da categoria correspondente (mesma query do `PricingSection`).
+- Renderizar em modal full-screen:
+  - Header: "Seu período de teste de 7 dias terminou"
+  - Subheader contextual ("Escolha um plano para continuar usando a SOIA" / "Escolha um plano de gestor para continuar atendendo seus clientes")
+  - Toggle Mensal/Trimestral/Anual
+  - Grid com 3 cards de plano (reusando a mesma estrutura visual do `PricingSection`)
+  - Cada card com botão "Contratar agora" → `/contratar?plano={slug}&ciclo={cycle}`
+  - Rodapé com link discreto "Sair" (logout) e "Falar com consultor" (WhatsApp)
+
+### 2. Hook unificado `useTrialStatus`
+
+Novo hook `src/hooks/useTrialStatus.ts` que centraliza a lógica de verificação:
+
+```ts
+// Retorna: { isTrialExpired, daysLeft, category, isLoading, hasActiveSubscription }
 ```
 
-Cada faixa terá fundo levemente diferente (a primeira `bg-background`, a segunda `bg-muted/30`) para separação visual. Cada uma com seu próprio toggle de ciclo.
+- Lê `companies.trial_expires_at` (para empresas) ou `sst_managers.trial_expires_at` (para gestoras).
+- Verifica se há assinatura ativa em `subscriptions` (via `owner_user_id`).
+- Determina `category` pelo role + perfil.
+- Se assinatura ativa existir, **nunca** bloqueia (mesmo após `trial_expires_at`).
 
-### 3. Botão "Teste grátis" em destaque em todos os planos
+### 3. Integração nos dashboards
 
-Em **cada card de plano** (empresa e gestor), adicionar acima do botão "Contratar agora" um botão secundário em destaque:
+Aplicar o overlay em:
+- `src/pages/Dashboard.tsx` (empresa)
+- `src/pages/SSTDashboard.tsx` (gestora SST)
 
+Padrão:
+```tsx
+const { isTrialExpired, category, isLoading } = useTrialStatus();
+// ...
+{isTrialExpired && <TrialExpiredOverlay category={category} />}
 ```
-[ 🎁 Começar teste grátis de 7 dias ]   ← destaque (primário, full width)
-[ Contratar agora ]                      ← secundário
-```
 
-- Plano de **gestor SST** → "Teste grátis" leva para `/teste-gratis-sst` (já existe).
-- Plano de **empresa** → "Teste grátis" leva para nova rota `/teste-gratis-empresa` (ver item 4).
+O overlay cobre toda a tela (z-index alto), impedindo interação com o resto da UI. O `TrialBanner` continua aparecendo nos últimos 3 dias antes da expiração.
 
-Para planos `is_custom_quote` (sob demanda), não exibir o botão de teste grátis.
+### 4. Bloqueio nas rotas internas
 
-### 4. Trial para empresa final (sem dados fictícios)
+Para evitar que o usuário acesse rotas profundas digitando URL diretamente, adicionar verificação no `App.tsx` (ou em wrapper de rota privada): se `isTrialExpired && !hasActiveSubscription`, redirecionar todas as rotas autenticadas para `/dashboard` ou `/sst-dashboard`, onde o overlay irá bloquear.
 
-**Nova rota: `/teste-gratis-empresa`**
-- Página `src/pages/CompanyTrialSignup.tsx` espelhada na `SSTTrialSignup.tsx`, com formulário de cadastro (nome empresa, CNPJ, e-mail, senha, telefone, nº colaboradores).
-- Submit chama nova edge function `create-company-trial-account` que:
-  - Cria usuário Supabase com role `company`
-  - Cria registro em `companies` vinculado ao usuário
-  - **NÃO** cria SST manager nem assignment (empresa fica "solta" → ganha acesso direto às ferramentas via `useCompanyHasSST`)
-  - **NÃO** popula dados fictícios (relatórios, avaliações, etc.)
-  - Define `trial_expires_at` = +7 dias
-  - Habilita todos os módulos (`company_feature_access`: psicossocial, burnout, clima, ouvidoria, treinamentos)
+Alternativa mais leve: incluir o overlay no layout raiz das rotas autenticadas via componente `<TrialGuard>` que envolve `<Outlet />`.
 
-**Onboarding tour** — A empresa ao entrar pela primeira vez vê o tour guiado (mesmo padrão de `useOnboarding` + `OnboardingTour`). Criar nova variante de tour focada nas ferramentas da empresa:
-- Passo 1: "Bem-vinda! Você tem 7 dias para testar"
-- Passo 2: Card "Ouvidoria" — receba denúncias anônimas
-- Passo 3: Card "Riscos Psicossociais" — aplique HSE-IT/COPSOQ
-- Passo 4: Card "Burnout" — avalie esgotamento
-- Passo 5: Card "Pesquisa de Clima"
-- Passo 6: Card "Treinamentos"
+### 5. Pós-pagamento
 
-A flag `tour_variant` no perfil distingue `sst` vs `company` para servir o tour correto.
-
-**TrialBanner / TrialExpiredOverlay** — Já funcionam por `trial_expires_at`; revisar para garantir que aparecem no Dashboard de empresa também.
-
-### 5. Registro da edge function
-
-Adicionar bloco em `supabase/config.toml` para `create-company-trial-account` com `verify_jwt = false`.
-
-### 6. Atualização do Hero CTA
-
-No `HeroSection`, o botão "Gestora SST? Teste grátis" vira **dois botões** lado a lado:
-- "Empresa? Teste grátis" → `/teste-gratis-empresa`
-- "Gestora SST? Teste grátis" → `/teste-gratis-sst`
-
-E um terceiro link discreto abaixo: "Ver demonstração" (WhatsApp).
+Após contratar (fluxo `/contratar` → checkout → webhook Asaas/Stripe cria registro em `subscriptions` com `status='active'`), o `useTrialStatus` deixa de retornar `isTrialExpired=true` no próximo refetch e o overlay some automaticamente.
 
 ### Resumo técnico
-- **Removido**: `SSTHighlightSection` da home.
-- **Refatorado**: `HeroSection.tsx` (copy + CTAs), `PricingSection.tsx` (duas faixas + botões trial), `Index.tsx` (ordem das seções).
-- **Criado**: `src/pages/CompanyTrialSignup.tsx`, edge function `supabase/functions/create-company-trial-account/index.ts`, variante de tour para empresa em `OnboardingTour.tsx` / `useOnboarding.ts`.
-- **Rota nova** em `App.tsx`: `/teste-gratis-empresa`.
-- **Migration**: adicionar coluna `tour_variant text default 'sst'` em `profiles` (ou reaproveitar lógica existente baseada em role).
-- **config.toml**: registrar nova edge function.
+- **Criado**: `src/hooks/useTrialStatus.ts`.
+- **Refatorado**: `src/components/TrialExpiredOverlay.tsx` (recebe `category`, busca planos, renderiza grid).
+- **Editado**: `src/pages/Dashboard.tsx` e `src/pages/SSTDashboard.tsx` (integração do hook + overlay).
+- **Editado**: `src/App.tsx` (guard global opcional para redirecionar rotas profundas).
+- Nenhuma migration necessária — toda a lógica usa tabelas e campos já existentes (`trial_expires_at`, `subscriptions`, `subscription_plans`).
 
