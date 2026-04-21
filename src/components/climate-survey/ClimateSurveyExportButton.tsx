@@ -9,7 +9,7 @@ import {
 import { Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 interface SurveyStats {
   totalResponses: number;
@@ -191,10 +191,11 @@ export const ClimateSurveyExportButton: React.FC<ClimateSurveyExportButtonProps>
   const exportToExcel = async () => {
     setIsExporting(true);
     try {
-      const workbook = XLSX.utils.book_new();
+      const workbook = new ExcelJS.Workbook();
 
       // Sheet 1: Resumo
-      const resumoData = [
+      const resumoSheet = workbook.addWorksheet('Resumo');
+      resumoSheet.addRows([
         ['Relatório de Pesquisa de Clima'],
         [''],
         ['Pesquisa', surveyTitle],
@@ -206,37 +207,33 @@ export const ClimateSurveyExportButton: React.FC<ClimateSurveyExportButtonProps>
         ['NPS Score', stats.npsScore],
         ['Média Geral', stats.avgScore],
         ['Taxa de Participação (%)', Math.min(100, Math.round(stats.totalResponses / 2))]
-      ];
-      const resumoSheet = XLSX.utils.aoa_to_sheet(resumoData);
-      XLSX.utils.book_append_sheet(workbook, resumoSheet, 'Resumo');
+      ]);
 
       // Sheet 2: Por Categoria
-      const categoryData = [
-        ['Categoria', 'Score', 'Máximo'],
-        ...stats.categoryScores.map(cat => [cat.category, cat.score.toFixed(2), cat.fullMark])
-      ];
-      const categorySheet = XLSX.utils.aoa_to_sheet(categoryData);
-      XLSX.utils.book_append_sheet(workbook, categorySheet, 'Por Categoria');
+      const categorySheet = workbook.addWorksheet('Por Categoria');
+      categorySheet.addRow(['Categoria', 'Score', 'Máximo']);
+      stats.categoryScores.forEach(cat => categorySheet.addRow([cat.category, Number(cat.score.toFixed(2)), cat.fullMark]));
 
       // Sheet 3: Distribuição NPS
-      const npsData = [
-        ['Grupo', 'Percentual (%)'],
-        ...stats.npsDistribution.map(item => [item.name, item.value])
-      ];
-      const npsSheet = XLSX.utils.aoa_to_sheet(npsData);
-      XLSX.utils.book_append_sheet(workbook, npsSheet, 'Distribuição NPS');
+      const npsSheet = workbook.addWorksheet('Distribuição NPS');
+      npsSheet.addRow(['Grupo', 'Percentual (%)']);
+      stats.npsDistribution.forEach(item => npsSheet.addRow([item.name, item.value]));
 
       // Sheet 4: Por Departamento
-      const deptData = [
-        ['Departamento', 'Respostas'],
-        ...stats.departmentDistribution.map(dept => [dept.name, dept.value])
-      ];
-      const deptSheet = XLSX.utils.aoa_to_sheet(deptData);
-      XLSX.utils.book_append_sheet(workbook, deptSheet, 'Por Departamento');
+      const deptSheet = workbook.addWorksheet('Por Departamento');
+      deptSheet.addRow(['Departamento', 'Respostas']);
+      stats.departmentDistribution.forEach(dept => deptSheet.addRow([dept.name, dept.value]));
 
       // Save Excel
       const filename = `pesquisa-clima-${surveyTitle.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`;
-      XLSX.writeFile(workbook, filename);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Excel exportado",
