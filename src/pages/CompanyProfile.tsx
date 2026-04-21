@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useRealAuth } from '@/contexts/RealAuthContext';
-import { Upload, Loader2, Building2, Plus, Check } from 'lucide-react';
+import { Upload, Loader2, Building2, Plus, Check, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AddCompanyDialog from '@/components/AddCompanyDialog';
+import { Link } from 'react-router-dom';
 
 interface CompanyData {
   id: string;
