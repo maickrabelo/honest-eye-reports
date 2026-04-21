@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download } from "lucide-react";
-import ExcelJS from 'exceljs';
+import { downloadJsonAsExcel } from '@/lib/excelExport';
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
 import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager';
@@ -381,7 +381,7 @@ const MasterDashboard = () => {
     return companies.filter(c => assignedCompanyIds.includes(c.id));
   };
 
-  const exportCompaniesToExcel = () => {
+  const exportCompaniesToExcel = async () => {
     const data = filteredCompanies.map(company => {
       const assignedSST = getAssignedSST(company.id);
       return {
@@ -399,7 +399,7 @@ const MasterDashboard = () => {
     toast({ title: 'Excel exportado', description: `${data.length} empresas exportadas com sucesso.` });
   };
 
-  const exportSSTToExcel = () => {
+  const exportSSTToExcel = async () => {
     const data = filteredSSTManagers.map(manager => {
       const assignedCompanies = getAssignedCompanies(manager.id);
       return {
