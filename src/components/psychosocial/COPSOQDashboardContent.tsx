@@ -52,6 +52,17 @@ export default function COPSOQDashboardContent() {
       if (currentRole === 'admin') {
         const { data } = await supabase.from('companies').select('id, name').order('name');
         setCompanies(data || []);
+      } else if (currentRole === 'company' && profile?.id) {
+        const { data: userCompanies } = await supabase
+          .from('user_companies').select('company_id').eq('user_id', profile.id);
+        assignedCompanyIds = userCompanies?.map(uc => uc.company_id) || [];
+        if (assignedCompanyIds.length === 0 && profile.company_id) {
+          assignedCompanyIds = [profile.company_id];
+        }
+        if (assignedCompanyIds.length > 0) {
+          const { data } = await supabase.from('companies').select('id, name').in('id', assignedCompanyIds).order('name');
+          setCompanies(data || []);
+        }
       } else if ((currentRole === 'sst' || currentRole === 'sales') && profile?.id) {
         if (currentRole === 'sales' && profile?.company_id) {
           assignedCompanyIds = [profile.company_id];
