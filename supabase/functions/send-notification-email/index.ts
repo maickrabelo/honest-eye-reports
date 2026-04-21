@@ -65,7 +65,7 @@ serve(async (req) => {
 
     // Enviar email para todos os endereços configurados
     const emailResponse = await resend.emails.send({
-      from: "Canal de Denúncias <onboarding@resend.dev>",
+      from: "SOIA <noreply@soia.app.br>",
       to: emailAddresses,
       subject: `Nova Denúncia Recebida - ${tracking_code}`,
       html: `

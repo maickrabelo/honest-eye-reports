@@ -184,7 +184,7 @@ serve(async (req) => {
         const resend = new Resend(resendKey);
         
         const { error: emailError } = await resend.emails.send({
-          from: "SOIA <onboarding@resend.dev>",
+          from: "SOIA <noreply@soia.app.br>",
           to: [company_email],
           subject: "Bem-vindo ao SOIA - Suas credenciais de acesso",
           html: `

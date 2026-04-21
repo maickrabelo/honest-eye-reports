@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         const trialFmt = trialEndsAt.toLocaleDateString("pt-BR");
         const origin = req.headers.get("origin") || "https://soia.app.br";
         await resend.emails.send({
-          from: "SOIA <noreply@sfrfranco.com.br>",
+          from: "SOIA <noreply@soia.app.br>",
           to: [normalizedEmail],
           subject: "Bem-vindo ao SOIA — seu teste grátis começou!",
           html: `

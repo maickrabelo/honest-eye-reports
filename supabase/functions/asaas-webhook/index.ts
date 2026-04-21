@@ -58,7 +58,7 @@ async function sendCredentialsEmail(
         'X-Connection-Api-Key': RESEND_API_KEY,
       },
       body: JSON.stringify({
-        from: 'SOIA <onboarding@resend.dev>',
+        from: 'SOIA <noreply@soia.app.br>',
         to: [toEmail],
         subject: `Bem-vindo à SOIA — Plano ${planName} ativado`,
         html: `
