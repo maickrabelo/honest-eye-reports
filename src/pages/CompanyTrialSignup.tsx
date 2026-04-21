@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Loader2, ArrowLeft, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ const CompanyTrialSignup = () => {
     description: 'Teste grátis 7 dias. Plataforma completa para gestão de riscos psicossociais (NR-01), burnout, clima e ouvidoria na sua empresa.',
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planSlug = searchParams.get('plano') || searchParams.get('plan') || null;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -49,7 +51,7 @@ const CompanyTrialSignup = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-company-trial-account', {
-        body: { ...formData, employee_count: Number(formData.employee_count) || 0 },
+        body: { ...formData, employee_count: Number(formData.employee_count) || 0, plan_slug: planSlug },
       });
       if (error) {
         let msg = 'Tente novamente mais tarde.';
@@ -116,10 +118,13 @@ const CompanyTrialSignup = () => {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                 <Building2 className="h-7 w-7 text-primary" />
               </div>
-              <CardTitle className="text-2xl text-primary">Teste grátis para sua empresa</CardTitle>
+              <CardTitle className="text-2xl text-primary">
+                {planSlug === 'corporate' ? 'Teste grátis — Plano Corporate' : 'Teste grátis para sua empresa'}
+              </CardTitle>
               <CardDescription className="text-base">
-                Experimente a plataforma SOIA por 7 dias. Acesso completo a Ouvidoria, NR-01,
-                Burnout, Clima e Treinamentos. Sem cartão de crédito.
+                {planSlug === 'corporate'
+                  ? 'Experimente o plano Corporate por 7 dias. Múltiplos CNPJs, todos os módulos. Sem cartão de crédito.'
+                  : 'Experimente a plataforma SOIA por 7 dias. Acesso completo a Ouvidoria, NR-01, Burnout, Clima e Treinamentos. Sem cartão de crédito.'}
               </CardDescription>
             </CardHeader>
             <CardContent>

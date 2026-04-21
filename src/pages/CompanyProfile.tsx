@@ -1,227 +1,279 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
-import { useRealAuth } from "@/contexts/RealAuthContext";
-import { Upload } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { useRealAuth } from '@/contexts/RealAuthContext';
+import { Upload, Loader2, Building2, Plus, Check } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import AddCompanyDialog from '@/components/AddCompanyDialog';
+
+interface CompanyData {
+  id: string;
+  name: string;
+  cnpj: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  logo_url: string | null;
+  slug: string | null;
+  trial_plan_slug: string | null;
+}
 
 const CompanyProfile = () => {
-  const { user, profile } = useRealAuth();
+  const { profile, companies, activeCompanyId, switchCompany, refreshRole } = useRealAuth();
   const { toast } = useToast();
-  const [companyName, setCompanyName] = useState('');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [companyLogo, setCompanyLogo] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [company, setCompany] = useState<CompanyData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const result = evt.target?.result as string;
-        setCompanyLogo(result);
-      };
-      reader.readAsDataURL(file);
+  const [form, setForm] = useState({ name: '', phone: '', address: '' });
+
+  const companyId = activeCompanyId || profile?.company_id || null;
+
+  const loadCompany = async () => {
+    if (!companyId) { setLoading(false); return; }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id, name, cnpj, email, phone, address, logo_url, slug, trial_plan_slug')
+      .eq('id', companyId)
+      .maybeSingle();
+    if (!error && data) {
+      setCompany(data as CompanyData);
+      setForm({ name: data.name || '', phone: data.phone || '', address: data.address || '' });
     }
+    setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  useEffect(() => { loadCompany(); }, [companyId]);
 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!company) return;
+    setSaving(true);
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: companyName,
-        })
-        .eq('id', user?.id);
-
+        .from('companies')
+        .update({ name: form.name, phone: form.phone, address: form.address })
+        .eq('id', company.id);
       if (error) throw error;
-
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso."
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar perfil",
-        description: error.message
-      });
+      toast({ title: 'Cadastro atualizado', description: 'Os dados foram salvos.' });
+      await loadCompany();
+    } catch (err: any) {
+      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleGenerateReportUrl = () => {
-    // Generate a clean URL slug for this company's report page
-    const companySlug = companyName
-      .toLowerCase()
-      .normalize('NFD') // Decompose accented characters
-      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Remove duplicate hyphens
-      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-    return `${window.location.origin}/report/${companySlug}`;
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !company) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'Arquivo grande', description: 'Logo deve ter até 2MB.', variant: 'destructive' });
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `${company.id}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('company-logos').upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('company-logos').getPublicUrl(path);
+      const { error: updErr } = await supabase
+        .from('companies').update({ logo_url: pub.publicUrl }).eq('id', company.id);
+      if (updErr) throw updErr;
+      toast({ title: 'Logo atualizada' });
+      await loadCompany();
+      await refreshRole();
+    } catch (err: any) {
+      toast({ title: 'Erro no upload', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
-  const reportUrl = handleGenerateReportUrl();
+  const reportUrl = company?.slug
+    ? `${window.location.origin}/report/${company.slug}`
+    : '';
+
+  const isCorporate = company?.trial_plan_slug === 'corporate';
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
-        <div className="audit-container max-w-4xl">
-          <h1 className="text-3xl font-bold text-audit-primary mb-8">Perfil da Empresa</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Company Logo */}
-            <div className="md:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Logo da Empresa</CardTitle>
-                  <CardDescription>Adicione ou atualize o logo da sua empresa</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center space-y-4">
-                  <div className="bg-gray-100 w-full aspect-square rounded-md flex items-center justify-center overflow-hidden">
-                    {companyLogo ? (
-                      <img 
-                        src={companyLogo} 
-                        alt="Logo da empresa" 
-                        className="max-w-full max-h-full object-contain" 
-                      />
+      <main className="flex-grow bg-muted/30 py-8">
+        <div className="container mx-auto max-w-5xl px-4">
+          <h1 className="text-3xl font-bold text-primary mb-2">Perfil da Empresa</h1>
+          <p className="text-muted-foreground mb-8">
+            Complete o cadastro para personalizar a página pública do canal de denúncias.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Logo */}
+            <Card className="md:col-span-1">
+              <CardHeader>
+                <CardTitle className="text-lg">Logo da empresa</CardTitle>
+                <CardDescription>Aparece no canal de denúncias</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-4">
+                <div className="bg-muted w-full aspect-square rounded-md flex items-center justify-center overflow-hidden border">
+                  {company?.logo_url ? (
+                    <img src={company.logo_url} alt="Logo" className="max-w-full max-h-full object-contain p-3" />
+                  ) : (
+                    <div className="text-muted-foreground flex flex-col items-center">
+                      <Upload size={48} />
+                      <span className="mt-2 text-sm">Sem logo</span>
+                    </div>
+                  )}
+                </div>
+                <Label htmlFor="logo" className="w-full cursor-pointer">
+                  <div className="flex items-center justify-center py-2 px-4 border-2 border-dashed border-border rounded-md hover:border-primary transition-colors">
+                    {uploadingLogo ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
                     ) : (
-                      <div className="text-gray-400 flex flex-col items-center">
-                        <Upload size={48} />
-                        <span className="mt-2 text-sm">Sem logo</span>
-                      </div>
+                      <><Upload className="mr-2 h-4 w-4" /> {company?.logo_url ? 'Alterar logo' : 'Adicionar logo'}</>
                     )}
                   </div>
-                  <div className="w-full">
-                    <Label htmlFor="logo" className="cursor-pointer">
-                      <div className="flex items-center justify-center py-2 px-4 border-2 border-dashed border-gray-300 rounded-md hover:border-audit-primary transition-colors">
-                        <Upload className="mr-2 h-4 w-4" />
-                        <span>{companyLogo ? 'Alterar logo' : 'Adicionar logo'}</span>
-                      </div>
-                      <input 
-                        id="logo" 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={handleLogoUpload} 
-                      />
-                    </Label>
-                  </div>
-                </CardContent>
-              </Card>
+                  <input id="logo" type="file" accept="image/*" className="hidden"
+                    onChange={handleLogoUpload} disabled={uploadingLogo} />
+                </Label>
+                <p className="text-xs text-muted-foreground text-center">
+                  PNG/JPG até 2MB. Recomendado fundo transparente.
+                </p>
+              </CardContent>
+            </Card>
 
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Página de Denúncias</CardTitle>
-                  <CardDescription>Link e QR Code personalizados</CardDescription>
-                </CardHeader>
+            {/* Form */}
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Informações da empresa</CardTitle>
+                <CardDescription>Dados que aparecem na página pública de denúncias</CardDescription>
+              </CardHeader>
+              <form onSubmit={handleSave}>
                 <CardContent className="space-y-4">
-                  <div className="bg-white p-4 rounded-md border">
-                    <div className="flex justify-center mb-4">
-                      <div className="bg-gray-100 p-3 rounded-md">
-                        {/* QR Code placeholder - in a real app you would generate this */}
-                        <div className="w-32 h-32 bg-gray-800 rounded-md flex items-center justify-center text-white text-xs text-center">
-                          QR Code para<br/>página de denúncias
-                        </div>
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome da empresa *</Label>
+                    <Input id="name" value={form.name}
+                      onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} required />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>CNPJ</Label>
+                      <Input value={company?.cnpj || ''} disabled />
                     </div>
-                    <div className="text-sm">
-                      <p className="font-medium mb-1">Link para denúncias:</p>
-                      <p className="text-blue-600 break-all">{reportUrl}</p>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input value={company?.email || ''} disabled />
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full" onClick={() => {
-                    navigator.clipboard.writeText(reportUrl);
-                    toast({
-                      title: "Link copiado",
-                      description: "Link para denúncias copiado para área de transferência."
-                    });
-                  }}>
-                    Copiar link
-                  </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone *</Label>
+                    <Input id="phone" value={form.phone}
+                      onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))}
+                      placeholder="(11) 99999-9999" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Endereço completo *</Label>
+                    <Textarea id="address" value={form.address}
+                      onChange={(e) => setForm(p => ({ ...p, address: e.target.value }))}
+                      placeholder="Rua, número, bairro, cidade/UF, CEP" rows={3} />
+                  </div>
+                  {reportUrl && (
+                    <div className="rounded-md border bg-muted/50 p-3 text-sm">
+                      <p className="font-medium mb-1">Link público do canal de denúncias:</p>
+                      <p className="text-primary break-all">{reportUrl}</p>
+                    </div>
+                  )}
                 </CardContent>
-              </Card>
-            </div>
-            
-            {/* Company Information */}
-            <div className="md:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informações da Empresa</CardTitle>
-                  <CardDescription>Atualize os dados da sua empresa</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Nome da Empresa</Label>
-                      <Input 
-                        id="companyName" 
-                        value={companyName} 
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Nome da empresa"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="contato@empresa.com"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input 
-                        id="phone" 
-                        value={phone} 
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="(00) 0000-0000"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Endereço</Label>
-                      <Input 
-                        id="address" 
-                        value={address} 
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="Endereço completo"
-                      />
-                    </div>
-                  </CardContent>
-                  
-                  <CardFooter className="flex justify-end">
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Salvando...' : 'Salvar alterações'}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </div>
+                <CardFooter className="flex justify-end">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : 'Salvar alterações'}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
           </div>
+
+          {/* Minhas empresas (Corporate) */}
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  Minhas empresas
+                  {isCorporate && <Badge variant="secondary">Corporate</Badge>}
+                </CardTitle>
+                <CardDescription>
+                  {isCorporate
+                    ? 'Você pode cadastrar múltiplos CNPJs no plano Corporate.'
+                    : 'Para gerenciar múltiplos CNPJs, faça upgrade para o plano Corporate.'}
+                </CardDescription>
+              </div>
+              {isCorporate && (
+                <Button onClick={() => setAddOpen(true)} size="sm">
+                  <Plus className="mr-2 h-4 w-4" /> Adicionar CNPJ
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {companies.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhuma empresa vinculada.</p>
+                )}
+                {companies.map((c) => (
+                  <div key={c.id}
+                    className="flex items-center gap-3 p-3 rounded-md border hover:bg-muted/40 transition-colors">
+                    {c.logo_url ? (
+                      <img src={c.logo_url} alt={c.name}
+                        className="h-10 w-10 rounded object-contain border bg-background p-1 flex-shrink-0" />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{c.name}</p>
+                      {c.cnpj && <p className="text-xs text-muted-foreground">CNPJ: {c.cnpj}</p>}
+                    </div>
+                    {c.id === activeCompanyId ? (
+                      <Badge variant="default" className="gap-1">
+                        <Check className="h-3 w-3" /> Ativa
+                      </Badge>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={() => switchCompany(c.id)}>
+                        Acessar
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
       <Footer />
+      <AddCompanyDialog open={addOpen} onOpenChange={setAddOpen} onCreated={loadCompany} />
     </div>
   );
 };
