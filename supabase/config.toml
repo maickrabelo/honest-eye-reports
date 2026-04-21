@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.sst-reset-company-password]
 # Requires authentication (admin or assigned SST manager)
+
+[functions.send-test-welcome]
+verify_jwt = false
