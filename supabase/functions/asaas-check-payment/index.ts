@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -16,8 +18,8 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const subId = url.searchParams.get('subscriptionId');
-    if (!subId) {
-      return new Response(JSON.stringify({ error: 'subscriptionId required' }), {
+    if (!subId || !UUID_RE.test(subId)) {
+      return new Response(JSON.stringify({ error: 'Valid subscriptionId required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -25,7 +27,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('id, status, owner_email, invoice_url, plan_id, subscription_plans(name)')
+      .select('id, status, plan_id, subscription_plans(name)')
       .eq('id', subId)
       .maybeSingle();
 
@@ -37,10 +39,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Only return non-sensitive status info. Email and invoice URL removed
+    // to prevent enumeration / phishing exposure on this unauthenticated endpoint.
     return new Response(JSON.stringify({
       status: data.status,
-      email: data.owner_email,
-      invoiceUrl: data.invoice_url,
       planName: (data as any).subscription_plans?.name,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
