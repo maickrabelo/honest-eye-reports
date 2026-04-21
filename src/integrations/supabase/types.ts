@@ -787,6 +787,47 @@ export type Database = {
           },
         ]
       }
+      email_send_attempts: {
+        Row: {
+          context: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          status: string
+          subscription_id?: string | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_send_attempts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hseit_answers: {
         Row: {
           answer_value: number
