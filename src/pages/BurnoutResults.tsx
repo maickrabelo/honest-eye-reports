@@ -126,7 +126,7 @@ export default function BurnoutResults() {
         navigate('/auth');
         return;
       }
-      if (role !== 'admin' && role !== 'sst') {
+      if (!['admin', 'sst', 'company', 'sales'].includes(role || '')) {
         navigate('/dashboard');
         return;
       }
