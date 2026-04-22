@@ -177,10 +177,16 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
         if (suffix > 100) throw new Error('Não foi possível gerar um slug único.');
       }
 
-      // Insert company
-      const { data: newCompany, error: companyError } = await supabase
+      // Generate company id client-side so we can create the SST assignment
+      // without depending on .select() returning the row (RLS for SELECT
+      // requires the assignment to already exist, which causes a chicken-and-egg
+      // failure on first insert).
+      const newCompanyId = crypto.randomUUID();
+
+      const { error: companyError } = await supabase
         .from('companies')
         .insert({
+          id: newCompanyId,
           name: trimmedName,
           cnpj: formData.cnpj.trim() || null,
           email: formData.email.trim() || null,
@@ -190,9 +196,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           slug,
           subscription_status: 'active',
           employee_count: employeeCountNum,
-        } as any)
-        .select('id')
-        .single();
+        } as any);
 
       if (companyError) throw companyError;
 
@@ -200,15 +204,17 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
       const { error: assignmentError } = await supabase
         .from('company_sst_assignments')
         .insert({
-          company_id: newCompany.id,
+          company_id: newCompanyId,
           sst_manager_id: sstManagerId,
         });
 
       if (assignmentError) {
         // Rollback: delete the company if assignment fails
-        await supabase.from('companies').delete().eq('id', newCompany.id);
+        await supabase.from('companies').delete().eq('id', newCompanyId);
         throw assignmentError;
       }
+
+      const newCompany = { id: newCompanyId };
 
       // Create user account for the company
       try {
