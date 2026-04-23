@@ -95,3 +95,6 @@ verify_jwt = false
 
 [functions.list-account-collaborators]
 verify_jwt = false
+
+[functions.seed-ellen-collaborator]
+verify_jwt = false
