@@ -53,6 +53,80 @@ export type Database = {
         }
         Relationships: []
       }
+      account_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          account_type: string
+          company_id: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          sst_manager_id: string | null
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          account_type: string
+          company_id?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          sst_manager_id?: string | null
+          status?: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          account_type?: string
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          sst_manager_id?: string | null
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_invitations_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_invitations_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_leads: {
         Row: {
           affiliate_id: string
@@ -2143,6 +2217,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sst_managers: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          sst_manager_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          sst_manager_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          sst_manager_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sst_managers_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_sst_managers_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       companies_public: {
@@ -2284,6 +2397,14 @@ export type Database = {
       }
       is_sst_module_owner: {
         Args: { _module_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_in_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_in_sst_manager: {
+        Args: { _sst_manager_id: string; _user_id: string }
         Returns: boolean
       }
     }
