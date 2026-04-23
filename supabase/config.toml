@@ -95,3 +95,4 @@ verify_jwt = false
 
 [functions.list-account-collaborators]
 verify_jwt = false
+
