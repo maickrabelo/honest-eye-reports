@@ -25,6 +25,7 @@ import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import SoniaChat from '@/components/SoniaChat';
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
+import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -604,6 +605,12 @@ const SSTDashboard = () => {
                 )}
               </div>
             </>
+          )}
+
+          {sstManagerId && (
+            <div className="mt-8">
+              <TeamManagementCard accountType="sst" accountId={sstManagerId} />
+            </div>
           )}
         </div>
       </main>
