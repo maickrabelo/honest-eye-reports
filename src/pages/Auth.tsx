@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
 
 const Auth = () => {
@@ -18,6 +18,31 @@ const Auth = () => {
   const [forgotOpen, setForgotOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get('invitation');
+
+  // Após login/signup com convite, aceita automaticamente
+  useEffect(() => {
+    if (!invitationToken) return;
+    const sub = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session && invitationToken) {
+        try {
+          const { data, error } = await supabase.functions.invoke('accept-invitation', {
+            body: { invitation_token: invitationToken },
+          });
+          if (error) throw error;
+          if ((data as any)?.error) throw new Error((data as any).error);
+          toast({ title: 'Convite aceito!', description: 'Redirecionando...' });
+          setTimeout(() => {
+            window.location.href = data.account_type === 'sst' ? '/sst-dashboard' : '/dashboard';
+          }, 1200);
+        } catch (e: any) {
+          toast({ title: 'Erro ao aceitar convite', description: e.message, variant: 'destructive' });
+        }
+      }
+    });
+    return () => { sub.data.subscription.unsubscribe(); };
+  }, [invitationToken, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +132,12 @@ const Auth = () => {
           <CardDescription className="text-center">
             Entre ou crie sua conta para acessar o sistema
           </CardDescription>
+          {invitationToken && (
+            <div className="mt-3 p-3 rounded-md bg-primary/10 border border-primary/20 flex items-start gap-2 text-sm">
+              <Mail className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <span>Você foi convidado para uma conta. Faça login ou cadastre-se com o e-mail que recebeu o convite para aceitar automaticamente.</span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
