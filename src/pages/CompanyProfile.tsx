@@ -12,6 +12,7 @@ import { useRealAuth } from '@/contexts/RealAuthContext';
 import { Upload, Loader2, Building2, Plus, Check, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AddCompanyDialog from '@/components/AddCompanyDialog';
+import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { Link } from 'react-router-dom';
 
 interface CompanyData {
@@ -276,6 +277,16 @@ const CompanyProfile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {company && (
+            <div className="mt-6">
+              <TeamManagementCard
+                accountType="company"
+                accountId={company.id}
+                accountName={company.name}
+              />
+            </div>
+          )}
         </div>
       </main>
       <Footer />
