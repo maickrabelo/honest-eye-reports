@@ -61,6 +61,7 @@ const COPSOQResults = React.lazy(() => import("./pages/COPSOQResults"));
 const SSTTrainings = React.lazy(() => import("./pages/SSTTrainings"));
 const CompanyTrainings = React.lazy(() => import("./pages/CompanyTrainings"));
 const CompanySelector = React.lazy(() => import("./components/CompanySelector"));
+const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,6 +105,7 @@ const App = () => (
                 <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
                 <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/convite/:token" element={<AcceptInvitation />} />
                 <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />

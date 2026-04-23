@@ -234,6 +234,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       path === '/' ||
       path.startsWith('/sst/') ||
       path.startsWith('/i/') ||
+      path.startsWith('/convite/') ||
       path === '/afiliado/cadastro' ||
       path === '/parceiro/cadastro'
     );

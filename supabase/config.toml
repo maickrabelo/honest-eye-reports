@@ -86,3 +86,12 @@ verify_jwt = false
 
 [functions.request-password-reset]
 verify_jwt = false
+
+[functions.invite-collaborator]
+verify_jwt = false
+
+[functions.accept-invitation]
+verify_jwt = false
+
+[functions.list-account-collaborators]
+verify_jwt = false
