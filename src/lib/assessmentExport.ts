@@ -86,22 +86,43 @@ async function fetchAssessmentData(config: ExportConfig): Promise<FetchedData> {
   const { assessmentType, assessmentId } = config;
 
   if (assessmentType === 'climate') {
-    const [{ data: assessment }, { data: responses }, { data: answers }, { data: questions }] = await Promise.all([
+    const [a1, a2, a3] = await Promise.all([
       supabase.from('climate_surveys').select('*').eq('id', assessmentId).maybeSingle(),
       supabase.from('survey_responses').select('*').eq('survey_id', assessmentId),
-      supabase.from('survey_answers').select('*, survey_questions(question_text, question_type, category)').eq('survey_id' as any, assessmentId).limit(50000) as any,
       supabase.from('survey_questions').select('*').eq('survey_id', assessmentId).order('order_index'),
     ]);
-    const qList: QuestionMeta[] = (questions || []).map((q: any, i: number) => ({
+    const responses = (a2.data as any[]) || [];
+    const responseIds = responses.map((r: any) => r.id);
+    let answers: any[] = [];
+    if (responseIds.length > 0) {
+      const { data: ansData } = await supabase
+        .from('survey_answers')
+        .select('*')
+        .in('response_id', responseIds);
+      answers = ansData || [];
+    }
+    const rawQuestions = (a3.data as any[]) || [];
+    // Mapeia question_id -> number sequencial
+    const idToNumber = new Map<string, number>();
+    rawQuestions.forEach((q: any, i: number) => {
+      idToNumber.set(q.id, q.order_index ?? i + 1);
+    });
+    // Reescreve answers com question_number derivado
+    const normalizedAnswers = answers.map((a: any) => ({
+      ...a,
+      question_number: idToNumber.get(a.question_id) ?? 0,
+      answer_value: Number(a.answer_value) || 0,
+    }));
+    const qList: QuestionMeta[] = rawQuestions.map((q: any, i: number) => ({
       number: q.order_index ?? i + 1,
       text: q.question_text,
       category: q.category || 'geral',
       categoryLabel: q.category || 'Geral',
     }));
     return {
-      assessment,
-      responses: responses || [],
-      answers: (answers as any[]) || [],
+      assessment: a1.data,
+      responses,
+      answers: normalizedAnswers,
       questions: qList,
       scaleLabels: {},
     };
