@@ -340,18 +340,26 @@ export default function BurnoutResults() {
               {assessment?.companies?.name} • {responses.length} respostas
             </p>
           </div>
-          <div id="burnout-report-btn">
-            <BurnoutReportPDF
-              assessment={assessment}
-              responses={responses}
-              categoryData={categoryData}
-              departmentData={departmentData}
-              avgScore={avgScore}
-              overallRiskLevel={overallRiskLevel}
-              riskDistribution={riskDistribution}
-              questionAverages={questionAverages}
-              hasDetailedAnswers={hasDetailedAnswers}
+          <div className="flex items-center gap-3">
+            <AssessmentExportButton
+              assessmentType="burnout"
+              assessmentId={assessment?.id || ''}
+              assessmentTitle={assessment?.title || 'Burnout'}
+              companyName={assessment?.companies?.name}
             />
+            <div id="burnout-report-btn">
+              <BurnoutReportPDF
+                assessment={assessment}
+                responses={responses}
+                categoryData={categoryData}
+                departmentData={departmentData}
+                avgScore={avgScore}
+                overallRiskLevel={overallRiskLevel}
+                riskDistribution={riskDistribution}
+                questionAverages={questionAverages}
+                hasDetailedAnswers={hasDetailedAnswers}
+              />
+            </div>
           </div>
         </div>
 

@@ -888,8 +888,14 @@ export default function ClimateSurveyDashboard() {
               openResponses={getMockOpenResponses()}
             />
 
-            {/* Export Button */}
-            <div className="flex justify-end mt-6">
+            {/* Export Buttons */}
+            <div className="flex justify-end mt-6 gap-3 flex-wrap">
+              <AssessmentExportButton
+                assessmentType="climate"
+                assessmentId={selectedSurvey}
+                assessmentTitle={getSelectedSurvey()?.title || 'Pesquisa de Clima'}
+                companyName={getSelectedSurvey()?.companies?.name}
+              />
               <ClimateSurveyExportButton
                 surveyTitle={getSelectedSurvey()?.title || 'Pesquisa de Clima'}
                 companyName={getSelectedSurvey()?.companies?.name}

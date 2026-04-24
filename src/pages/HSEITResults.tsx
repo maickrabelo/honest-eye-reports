@@ -412,6 +412,13 @@ export default function HSEITResults() {
               </Select>
             )}
             
+            <AssessmentExportButton
+              assessmentType="hseit"
+              assessmentId={assessment.id}
+              assessmentTitle={assessment.title}
+              companyName={assessment.companies?.name}
+            />
+
             <Button id="hseit-report-btn" onClick={() => setIsReportEditorOpen(true)}>
               <ClipboardList className="h-4 w-4 mr-2" />
               Preparar Relatório PDF
