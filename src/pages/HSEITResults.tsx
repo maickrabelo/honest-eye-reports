@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { AssessmentExportButton } from '@/components/assessments/AssessmentExportButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import Navbar from '@/components/Navbar';
@@ -412,6 +413,13 @@ export default function HSEITResults() {
               </Select>
             )}
             
+            <AssessmentExportButton
+              assessmentType="hseit"
+              assessmentId={assessment.id}
+              assessmentTitle={assessment.title}
+              companyName={assessment.companies?.name}
+            />
+
             <Button id="hseit-report-btn" onClick={() => setIsReportEditorOpen(true)}>
               <ClipboardList className="h-4 w-4 mr-2" />
               Preparar Relatório PDF

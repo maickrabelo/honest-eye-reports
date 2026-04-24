@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { AssessmentExportButton } from '@/components/assessments/AssessmentExportButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import Navbar from '@/components/Navbar';
@@ -142,15 +143,23 @@ export default function COPSOQResults() {
               <p className="text-muted-foreground mt-1">{assessment.title} - {assessment.companies?.name}</p>
             </div>
           </div>
-          {departments.length > 0 && (
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar por setor" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os setores</SelectItem>
-                {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {departments.length > 0 && (
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar por setor" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os setores</SelectItem>
+                  {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+            <AssessmentExportButton
+              assessmentType="copsoq"
+              assessmentId={assessment.id}
+              assessmentTitle={assessment.title}
+              companyName={assessment.companies?.name}
+            />
+          </div>
         </div>
 
         {/* Summary Cards */}

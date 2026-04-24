@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AssessmentExportButton } from '@/components/assessments/AssessmentExportButton';
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -888,8 +889,14 @@ export default function ClimateSurveyDashboard() {
               openResponses={getMockOpenResponses()}
             />
 
-            {/* Export Button */}
-            <div className="flex justify-end mt-6">
+            {/* Export Buttons */}
+            <div className="flex justify-end mt-6 gap-3 flex-wrap">
+              <AssessmentExportButton
+                assessmentType="climate"
+                assessmentId={selectedSurvey}
+                assessmentTitle={getSelectedSurvey()?.title || 'Pesquisa de Clima'}
+                companyName={getSelectedSurvey()?.companies?.name}
+              />
               <ClimateSurveyExportButton
                 surveyTitle={getSelectedSurvey()?.title || 'Pesquisa de Clima'}
                 companyName={getSelectedSurvey()?.companies?.name}
