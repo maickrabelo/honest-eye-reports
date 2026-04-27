@@ -163,63 +163,29 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
         logoUrl = publicUrl.publicUrl;
       }
 
-      // Generate unique slug
-      let baseSlug = generateSlug(trimmedName);
-      let slug = baseSlug;
-      let suffix = 1;
-
-      // Check slug uniqueness
-      while (true) {
-        const { data: existing } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('slug', slug)
-          .maybeSingle();
-
-        if (!existing) break;
-        slug = `${baseSlug}-${suffix}`;
-        suffix++;
-        if (suffix > 100) throw new Error('Não foi possível gerar um slug único.');
-      }
-
-      // Generate company id client-side so we can create the SST assignment
-      // without depending on .select() returning the row (RLS for SELECT
-      // requires the assignment to already exist, which causes a chicken-and-egg
-      // failure on first insert).
-      const newCompanyId = crypto.randomUUID();
-
-      const { error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          id: newCompanyId,
+      const { data: companyResult, error: companyError } = await supabase.functions.invoke('create-sst-company', {
+        body: {
+          sst_manager_id: sstManagerId,
           name: trimmedName,
-          cnpj: formData.cnpj.trim() || null,
-          email: formData.email.trim() || null,
+          cnpj: formData.cnpj.trim(),
+          email: trimmedEmail,
           phone: formData.phone.trim() || null,
           address: formData.address.trim() || null,
           logo_url: logoUrl,
-          slug,
-          subscription_status: 'active',
           employee_count: employeeCountNum,
-        } as any);
+        },
+      });
 
       if (companyError) throw companyError;
-
-      // Create SST assignment
-      const { error: assignmentError } = await supabase
-        .from('company_sst_assignments')
-        .insert({
-          company_id: newCompanyId,
-          sst_manager_id: sstManagerId,
-        });
-
-      if (assignmentError) {
-        // Rollback: delete the company if assignment fails
-        await supabase.from('companies').delete().eq('id', newCompanyId);
-        throw assignmentError;
+      if (companyResult?.code === 'limit_reached') {
+        setLimitInfo({ current: companyResult.current_count ?? 0, limit: companyResult.effective_limit ?? 0 });
+        setUpgradeOpen(true);
+        setIsSubmitting(false);
+        return;
       }
+      if (companyResult?.error) throw new Error(companyResult.error);
 
-      const newCompany = { id: newCompanyId };
+      const newCompany = { id: companyResult.company_id };
 
       // Create user account for the company
       try {
