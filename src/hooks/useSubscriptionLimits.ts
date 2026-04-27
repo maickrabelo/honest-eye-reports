@@ -100,7 +100,8 @@ export function useSubscriptionLimits(userId: string | null | undefined): Subscr
         );
       }
 
-      const maxCompanies = plan.category === "manager" ? plan.max_companies : plan.max_cnpjs;
+      const baseMax = plan.category === "manager" ? plan.max_companies : plan.max_cnpjs;
+      const maxCompanies = baseMax != null ? baseMax + extraSlots : null;
 
       setState({
         planName: plan.name,
