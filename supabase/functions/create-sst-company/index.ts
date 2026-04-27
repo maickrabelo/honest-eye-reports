@@ -23,6 +23,9 @@ const json = (body: Record<string, unknown>, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+const businessError = (body: Record<string, unknown>) =>
+  json({ success: false, ...body });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -117,25 +120,25 @@ Deno.serve(async (req) => {
       if (assignmentsErr) throw assignmentsErr;
 
       if ((assignments ?? []).some((a: any) => a.sst_manager_id === sstManagerId)) {
-        return json({
+        return businessError({
           error: "Este CNPJ já está vinculado à sua gestora.",
           code: "already_linked",
           company_id: existingCompany.id,
-        }, 409);
+        });
       }
 
       if ((assignments ?? []).length > 0) {
-        return json({ error: "Este CNPJ já está cadastrado e vinculado a outra gestora.", code: "linked_elsewhere" }, 409);
+        return businessError({ error: "Este CNPJ já está cadastrado e vinculado a outra gestora.", code: "linked_elsewhere" });
       }
 
       if (!hasAvailableSlot) {
-        return json({
+        return businessError({
           error: `Limite de ${effectiveLimit} empresas atingido para este gestor SST`,
           code: "limit_reached",
           current_count: currentCount ?? 0,
           effective_limit: effectiveLimit,
           orphan_company_id: existingCompany.id,
-        }, 409);
+        });
       }
 
       const { error: updateErr } = await supabase
@@ -170,12 +173,12 @@ Deno.serve(async (req) => {
     }
 
     if (!hasAvailableSlot) {
-      return json({
+      return businessError({
         error: `Limite de ${effectiveLimit} empresas atingido para este gestor SST`,
         code: "limit_reached",
         current_count: currentCount ?? 0,
         effective_limit: effectiveLimit,
-      }, 409);
+      });
     }
 
     const baseSlug = generateSlug(name);
