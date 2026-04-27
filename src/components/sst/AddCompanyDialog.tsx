@@ -94,7 +94,8 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
     setIsSubmitting(true);
 
-    // Validate subscription limits (companies + total employees)
+    // Validate employee limit locally. Company slot limits are enforced by the backend
+    // to avoid stale client-side reads after a slot is purchased.
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -114,23 +115,6 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             .eq('company_sst_assignments.sst_manager_id', sstManagerId);
           const currCompanies = assigned?.length ?? 0;
           const currEmployees = (assigned ?? []).reduce((s, c: any) => s + (c.employee_count ?? 0), 0);
-
-          // Buscar slots extras já contratados pela gestora
-          const { data: managerRow } = await (supabase as any)
-            .from('sst_managers')
-            .select('extra_company_slots')
-            .eq('id', sstManagerId)
-            .maybeSingle();
-          const extraSlots = managerRow?.extra_company_slots ?? 0;
-          const effectiveLimit = (plan.max_companies ?? 0) + extraSlots;
-
-          if (plan.max_companies && currCompanies >= effectiveLimit) {
-            // Em vez de bloquear, oferecer compra de slot extra
-            setLimitInfo({ current: currCompanies, limit: effectiveLimit });
-            setUpgradeOpen(true);
-            setIsSubmitting(false);
-            return;
-          }
           if (plan.max_employees && currEmployees + employeeCountNum > plan.max_employees) {
             toast({ title: 'Limite de colaboradores', description: `Seu plano permite até ${plan.max_employees} colaboradores no total. Atual: ${currEmployees}.`, variant: 'destructive' });
             setIsSubmitting(false);
