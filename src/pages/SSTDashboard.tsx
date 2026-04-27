@@ -466,7 +466,7 @@ const SSTDashboard = () => {
                     </Select>
                   </div>
                 </div>
-                <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
+                <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} extraSlots={extraSlots} />
               </div>
 
               <div id="company-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
