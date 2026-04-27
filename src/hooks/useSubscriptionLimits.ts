@@ -69,8 +69,16 @@ export function useSubscriptionLimits(userId: string | null | undefined): Subscr
 
       let currentCompanies = 0;
       let currentEmployees = 0;
+      let extraSlots = 0;
 
       if (plan.category === "manager" && profile?.sst_manager_id) {
+        const { data: managerRow } = await (supabase as any)
+          .from("sst_managers")
+          .select("extra_company_slots")
+          .eq("id", profile.sst_manager_id)
+          .maybeSingle();
+        extraSlots = managerRow?.extra_company_slots ?? 0;
+
         const { data: companies } = await supabase
           .from("companies")
           .select("id, employee_count, company_sst_assignments!inner(sst_manager_id)")
