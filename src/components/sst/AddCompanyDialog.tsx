@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import UpgradeSlotDialog from "./UpgradeSlotDialog";
 
 interface AddCompanyDialogProps {
   open: boolean;
