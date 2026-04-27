@@ -1,16 +1,18 @@
 import React from 'react';
 import { Progress } from "@/components/ui/progress";
-import { Building2 } from "lucide-react";
+import { Building2, Sparkles } from "lucide-react";
 
 interface SSTCompanyCounterProps {
   currentCount: number;
   maxCompanies: number;
+  extraSlots?: number;
 }
 
-const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, maxCompanies }) => {
-  const percentage = maxCompanies > 0 ? (currentCount / maxCompanies) * 100 : 0;
+const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, maxCompanies, extraSlots = 0 }) => {
+  const effectiveMax = maxCompanies + extraSlots;
+  const percentage = effectiveMax > 0 ? (currentCount / effectiveMax) * 100 : 0;
   const isNearLimit = percentage >= 80;
-  const isAtLimit = currentCount >= maxCompanies;
+  const isAtLimit = currentCount >= effectiveMax;
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 mb-6 animate-fade-in">
@@ -21,9 +23,17 @@ const SSTCompanyCounter: React.FC<SSTCompanyCounterProps> = ({ currentCount, max
           </div>
           <div>
             <p className="font-semibold text-foreground">
-              {currentCount} / {maxCompanies} empresas
+              {currentCount} / {effectiveMax} empresas
             </p>
-            <p className="text-xs text-muted-foreground">Empresas cadastradas no seu plano</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
+              Empresas cadastradas no seu plano
+              {extraSlots > 0 && (
+                <span className="inline-flex items-center gap-1 text-primary font-medium">
+                  <Sparkles className="h-3 w-3" />
+                  +{extraSlots} slot{extraSlots > 1 ? 's' : ''} extra{extraSlots > 1 ? 's' : ''}
+                </span>
+              )}
+            </p>
           </div>
         </div>
         {isAtLimit && (

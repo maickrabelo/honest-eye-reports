@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import UpgradeSlotDialog from "./UpgradeSlotDialog";
 
 interface AddCompanyDialogProps {
   open: boolean;
@@ -36,6 +37,8 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<{ current: number; limit: number }>({ current: 0, limit: 0 });
   const [formData, setFormData] = useState({
     name: '',
     cnpj: '',
@@ -121,8 +124,20 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             .eq('company_sst_assignments.sst_manager_id', sstManagerId);
           const currCompanies = assigned?.length ?? 0;
           const currEmployees = (assigned ?? []).reduce((s, c: any) => s + (c.employee_count ?? 0), 0);
-          if (plan.max_companies && currCompanies >= plan.max_companies) {
-            toast({ title: 'Limite atingido', description: `Seu plano permite até ${plan.max_companies} empresas. Faça upgrade para adicionar mais.`, variant: 'destructive' });
+
+          // Buscar slots extras já contratados pela gestora
+          const { data: managerRow } = await (supabase as any)
+            .from('sst_managers')
+            .select('extra_company_slots')
+            .eq('id', sstManagerId)
+            .maybeSingle();
+          const extraSlots = managerRow?.extra_company_slots ?? 0;
+          const effectiveLimit = (plan.max_companies ?? 0) + extraSlots;
+
+          if (plan.max_companies && currCompanies >= effectiveLimit) {
+            // Em vez de bloquear, oferecer compra de slot extra
+            setLimitInfo({ current: currCompanies, limit: effectiveLimit });
+            setUpgradeOpen(true);
             setIsSubmitting(false);
             return;
           }
@@ -402,6 +417,18 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <UpgradeSlotDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        currentCount={limitInfo.current}
+        currentLimit={limitInfo.limit}
+        onPurchased={() => {
+          // Slot liberado: notifica o pai para refetch e mantém o formulário aberto
+          // para o usuário reenviar e cadastrar a empresa.
+          onCompanyAdded();
+        }}
+      />
     </Dialog>
   );
 };

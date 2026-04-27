@@ -141,6 +141,7 @@ const SSTDashboard = () => {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
+  const [extraSlots, setExtraSlots] = useState(0);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading, isTrialExpired, trialEndsAt } = useRealAuth();
@@ -186,7 +187,7 @@ const SSTDashboard = () => {
       setSstManagerId(currentSstManagerId);
 
       const [sstResult, assignmentsResult] = await Promise.all([
-        supabase.from('sst_managers').select('max_companies, slug').eq('id', currentSstManagerId).single(),
+        supabase.from('sst_managers').select('max_companies, slug, extra_company_slots').eq('id', currentSstManagerId).single(),
         supabase.from('company_sst_assignments').select('company_id').eq('sst_manager_id', currentSstManagerId),
       ]);
 
@@ -194,6 +195,7 @@ const SSTDashboard = () => {
       const { data: assignmentsData, error: assignmentsError } = assignmentsResult;
 
       if (sstData?.max_companies) setMaxCompanies(sstData.max_companies);
+      if (typeof (sstData as any)?.extra_company_slots === 'number') setExtraSlots((sstData as any).extra_company_slots);
       if (sstData?.slug) setSstSlug(sstData.slug);
       if (assignmentsError) throw assignmentsError;
 
@@ -375,7 +377,6 @@ const SSTDashboard = () => {
               <Button
                 id="tool-new-company"
                 onClick={() => setIsAddCompanyOpen(true)}
-                disabled={companies.length >= maxCompanies}
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
@@ -465,7 +466,7 @@ const SSTDashboard = () => {
                     </Select>
                   </div>
                 </div>
-                <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} />
+                <SSTCompanyCounter currentCount={companies.length} maxCompanies={maxCompanies} extraSlots={extraSlots} />
               </div>
 
               <div id="company-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
