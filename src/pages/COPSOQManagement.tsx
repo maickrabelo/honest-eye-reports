@@ -139,8 +139,9 @@ export default function COPSOQManagement() {
 
       if (assessmentId) {
         await supabase.from('copsoq_departments' as any).delete().eq('assessment_id', assessmentId);
-        if (departments.length > 0) {
-          const deptData = departments.map((d, i) => ({ assessment_id: assessmentId, name: d.name, employee_count: d.employee_count, order_index: i }));
+        const activeDepts = departments.filter((d: any) => !d.isDeleted);
+        if (activeDepts.length > 0) {
+          const deptData = activeDepts.map((d, i) => ({ assessment_id: assessmentId, name: d.name, employee_count: d.employee_count, order_index: i }));
           const { error } = await supabase.from('copsoq_departments' as any).insert(deptData);
           if (error) throw error;
         }
