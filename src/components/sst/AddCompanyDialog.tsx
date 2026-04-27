@@ -278,10 +278,52 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
       let message = 'Não foi possível cadastrar a empresa. Tente novamente.';
       const errMsg = error.message || '';
       const errCode = error.code || '';
+      const isCnpjDuplicate =
+        errMsg.includes('companies_cnpj_key') ||
+        (errMsg.includes('duplicate key') && errMsg.includes('cnpj')) ||
+        (errCode === '23505' && errMsg.includes('cnpj'));
+
       if (errMsg.includes('Limite de')) {
         message = errMsg;
-      } else if (errMsg.includes('companies_cnpj_key') || errMsg.includes('duplicate key') && errMsg.includes('cnpj') || errCode === '23505' && errMsg.includes('cnpj')) {
-        message = 'Este CNPJ já está cadastrado no sistema. Verifique o número informado.';
+      } else if (isCnpjDuplicate) {
+        // Tentar recuperar empresa órfã (criada em tentativa anterior e não vinculada)
+        try {
+          const cnpjFormatted = formData.cnpj.trim();
+          const { data: existing } = await supabase
+            .from('companies')
+            .select('id, name, company_sst_assignments(sst_manager_id)')
+            .eq('cnpj', cnpjFormatted)
+            .maybeSingle();
+          const assignments: any[] = (existing as any)?.company_sst_assignments ?? [];
+          if (existing && assignments.length === 0) {
+            // Empresa órfã encontrada → tentar vincular
+            const { error: linkErr } = await supabase
+              .from('company_sst_assignments')
+              .insert({ company_id: (existing as any).id, sst_manager_id: sstManagerId });
+            if (linkErr) {
+              if ((linkErr.message || '').includes('Limite de')) {
+                // Oferecer upgrade de slot
+                setLimitInfo({ current: limitInfo.current, limit: limitInfo.limit });
+                setUpgradeOpen(true);
+                setIsSubmitting(false);
+                return;
+              }
+              throw linkErr;
+            }
+            toast({
+              title: 'Empresa recuperada e vinculada!',
+              description: `${(existing as any).name} já existia no sistema sem vínculo. Agora foi atribuída à sua gestora.`,
+            });
+            resetForm();
+            onOpenChange(false);
+            onCompanyAdded();
+            return;
+          }
+          message = 'Este CNPJ já está cadastrado no sistema e vinculado a outra gestora. Verifique o número informado.';
+        } catch (recoveryErr: any) {
+          console.warn('Auto-recovery failed:', recoveryErr);
+          message = 'Este CNPJ já está cadastrado no sistema. Verifique o número informado.';
+        }
       } else if (errCode === '23505' || errMsg.includes('duplicate key') || errMsg.includes('unique constraint')) {
         message = 'Este registro já existe no sistema. Verifique os dados informados.';
       }
