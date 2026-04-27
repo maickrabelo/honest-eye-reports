@@ -60,14 +60,18 @@ export default function HSEITManagement() {
     }
   }, [user, role, authLoading]);
 
-  // Data fetching - only on mount and when assessment id changes
+  // Data fetching - wait until profile is available (needed for sst/company branches)
   const hasFetchedRef = useRef(false);
   useEffect(() => {
-    if (!authLoading && user && ['admin', 'sst', 'company'].includes(role || '') && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchData();
-    }
-  }, [authLoading, user, role, id]);
+    if (hasFetchedRef.current) return;
+    if (authLoading) return;
+    if (!user) return;
+    if (!['admin', 'sst', 'company'].includes(role || '')) return;
+    // Need profile for sst/company branches
+    if ((role === 'sst' || role === 'company') && !profile?.id) return;
+    hasFetchedRef.current = true;
+    fetchData();
+  }, [authLoading, user, role, id, profile?.id]);
 
   const fetchData = async () => {
     try {
