@@ -49,11 +49,14 @@ export default function COPSOQManagement() {
   }, [user, role, authLoading]);
 
   useEffect(() => {
-    if (!authLoading && user && ['admin', 'sst', 'company'].includes(role || '') && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchData();
-    }
-  }, [authLoading, user, role, id]);
+    if (hasFetchedRef.current) return;
+    if (authLoading) return;
+    if (!user) return;
+    if (!['admin', 'sst', 'company'].includes(role || '')) return;
+    if ((role === 'sst' || role === 'company') && !profile?.id) return;
+    hasFetchedRef.current = true;
+    fetchData();
+  }, [authLoading, user, role, id, profile?.id]);
 
   const fetchData = async () => {
     try {
