@@ -230,9 +230,10 @@ export default function HSEITManagement() {
           .delete()
           .eq('assessment_id', assessmentId);
         
-        // Insert new departments
-        if (departments.length > 0) {
-          const deptData = departments.map((d, index) => ({
+        // Insert new departments (skip ones marked as deleted in the UI)
+        const activeDepts = departments.filter((d) => !d.isDeleted);
+        if (activeDepts.length > 0) {
+          const deptData = activeDepts.map((d, index) => ({
             assessment_id: assessmentId,
             name: d.name,
             employee_count: d.employee_count,
