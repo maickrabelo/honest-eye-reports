@@ -124,8 +124,20 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             .eq('company_sst_assignments.sst_manager_id', sstManagerId);
           const currCompanies = assigned?.length ?? 0;
           const currEmployees = (assigned ?? []).reduce((s, c: any) => s + (c.employee_count ?? 0), 0);
-          if (plan.max_companies && currCompanies >= plan.max_companies) {
-            toast({ title: 'Limite atingido', description: `Seu plano permite até ${plan.max_companies} empresas. Faça upgrade para adicionar mais.`, variant: 'destructive' });
+
+          // Buscar slots extras já contratados pela gestora
+          const { data: managerRow } = await (supabase as any)
+            .from('sst_managers')
+            .select('extra_company_slots')
+            .eq('id', sstManagerId)
+            .maybeSingle();
+          const extraSlots = managerRow?.extra_company_slots ?? 0;
+          const effectiveLimit = (plan.max_companies ?? 0) + extraSlots;
+
+          if (plan.max_companies && currCompanies >= effectiveLimit) {
+            // Em vez de bloquear, oferecer compra de slot extra
+            setLimitInfo({ current: currCompanies, limit: effectiveLimit });
+            setUpgradeOpen(true);
             setIsSubmitting(false);
             return;
           }
