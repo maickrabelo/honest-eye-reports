@@ -187,7 +187,7 @@ const SSTDashboard = () => {
       setSstManagerId(currentSstManagerId);
 
       const [sstResult, assignmentsResult] = await Promise.all([
-        supabase.from('sst_managers').select('max_companies, slug').eq('id', currentSstManagerId).single(),
+        supabase.from('sst_managers').select('max_companies, slug, extra_company_slots').eq('id', currentSstManagerId).single(),
         supabase.from('company_sst_assignments').select('company_id').eq('sst_manager_id', currentSstManagerId),
       ]);
 
@@ -195,6 +195,7 @@ const SSTDashboard = () => {
       const { data: assignmentsData, error: assignmentsError } = assignmentsResult;
 
       if (sstData?.max_companies) setMaxCompanies(sstData.max_companies);
+      if (typeof (sstData as any)?.extra_company_slots === 'number') setExtraSlots((sstData as any).extra_company_slots);
       if (sstData?.slug) setSstSlug(sstData.slug);
       if (assignmentsError) throw assignmentsError;
 
