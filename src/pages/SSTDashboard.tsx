@@ -141,6 +141,7 @@ const SSTDashboard = () => {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
   const [maxCompanies, setMaxCompanies] = useState(50);
+  const [extraSlots, setExtraSlots] = useState(0);
   const [sstSlug, setSstSlug] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading, isTrialExpired, trialEndsAt } = useRealAuth();
