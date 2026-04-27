@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.purchase-extra-company-slot]
 verify_jwt = false
+
+[functions.create-sst-company]
+verify_jwt = false
