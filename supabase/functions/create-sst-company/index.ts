@@ -120,11 +120,30 @@ Deno.serve(async (req) => {
       if (assignmentsErr) throw assignmentsErr;
 
       if ((assignments ?? []).some((a: any) => a.sst_manager_id === sstManagerId)) {
-        return businessError({
-          error: "Este CNPJ já está vinculado à sua gestora.",
-          code: "already_linked",
+        const { error: updateErr } = await supabase
+          .from("companies")
+          .update({
+            name,
+            email,
+            phone,
+            address,
+            logo_url: logoUrl,
+            subscription_status: "active",
+            employee_count: employeeCount,
+          })
+          .eq("id", existingCompany.id);
+        if (updateErr) throw updateErr;
+
+        await supabase.from("company_feature_access").upsert({
           company_id: existingCompany.id,
+          ouvidoria_enabled: true,
+          psicossocial_enabled: true,
+          burnout_enabled: true,
+          clima_enabled: true,
+          treinamentos_enabled: true,
         });
+
+        return json({ success: true, company_id: existingCompany.id, already_linked: true });
       }
 
       if ((assignments ?? []).length > 0) {
