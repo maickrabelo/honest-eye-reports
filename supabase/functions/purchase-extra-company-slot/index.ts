@@ -79,9 +79,10 @@ Deno.serve(async (req) => {
     let nextChargeDate: string | null = subscription?.next_charge_date ?? null;
     let pendingBilling = false;
 
+    // IMPORTANTE: a falha no Asaas NUNCA bloqueia a liberação do slot.
+    // Se algo der errado na cobrança, marcamos como pending_billing e seguimos.
     if (asaasKey && subscription?.asaas_customer_id) {
       try {
-        // Próxima data de cobrança = mesma da assinatura principal, ou +30 dias
         const nextDueDate = subscription.next_charge_date
           ? new Date(subscription.next_charge_date).toISOString().slice(0, 10)
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -103,21 +104,26 @@ Deno.serve(async (req) => {
           }),
         });
 
-        const asaasJson = await asaasRes.json();
+        let asaasJson: any = null;
+        try { asaasJson = await asaasRes.json(); } catch (_) { /* resposta vazia */ }
+
         if (asaasRes.ok && asaasJson?.id) {
           asaasSubscriptionId = asaasJson.id;
           nextChargeDate = nextDueDate;
           log("asaas sub created", { id: asaasSubscriptionId, nextDueDate });
         } else {
-          log("asaas sub failed, marking as pending", asaasJson);
+          log("asaas sub failed, releasing slot anyway", { status: asaasRes.status, body: asaasJson });
           pendingBilling = true;
         }
       } catch (e: any) {
-        log("asaas error, marking as pending", e?.message);
+        log("asaas exception, releasing slot anyway", e?.message);
         pendingBilling = true;
       }
     } else {
-      log("no asaas customer; recording slot as pending billing");
+      log("no asaas key/customer; releasing slot as pending billing", {
+        hasKey: !!asaasKey,
+        hasCustomer: !!subscription?.asaas_customer_id,
+      });
       pendingBilling = true;
     }
 
