@@ -37,6 +37,8 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<{ current: number; limit: number }>({ current: 0, limit: 0 });
   const [formData, setFormData] = useState({
     name: '',
     cnpj: '',
