@@ -1,71 +1,88 @@
-## Exportação de Dados das Avaliações (Excel + Power BI)
+## Slots extras de empresa para Gestoras SST
 
-Adicionar capacidade de exportar **dados brutos e agregados** de todas as avaliações da plataforma em formatos compatíveis com Excel e Power BI.
+Hoje, quando uma gestora SST atinge o limite de empresas do plano (`subscription_plans.max_companies` ou `sst_managers.max_companies`), o cadastro é bloqueado com um toast de erro. Vamos transformar esse bloqueio em uma oferta: comprar 1 slot extra por **R$ 19,90/mês**, cobrado junto à próxima fatura no Asaas, e liberar o cadastro imediatamente após confirmação.
 
-### Módulos contemplados
+### 1. Banco de dados (migration)
 
-1. **HSE-IT** (`hseit_assessments`, `hseit_responses`, `hseit_answers`)
-2. **COPSOQ II** (`copsoq_assessments`, `copsoq_responses`, `copsoq_answers`)
-3. **Burnout / LBQ** (`burnout_assessments`, `burnout_responses`, `burnout_answers`)
-4. **Pesquisa de Clima** (`climate_surveys`, `survey_responses`, `survey_answers`) — hoje exporta só agregados; será expandido com dados brutos.
+**Nova coluna em `sst_managers`:**
+- `extra_company_slots integer NOT NULL DEFAULT 0` — quantos slots adicionais a gestora já contratou.
 
-### Formatos de exportação
+**Nova tabela `sst_extra_slot_purchases`** (histórico/auditoria + base para faturamento):
+- `id uuid PK`
+- `sst_manager_id uuid → sst_managers(id) ON DELETE CASCADE`
+- `subscription_id uuid → subscriptions(id)` (assinatura na qual o slot foi anexado)
+- `slots_added integer NOT NULL DEFAULT 1`
+- `unit_price_cents integer NOT NULL DEFAULT 1990` (R$ 19,90)
+- `status text NOT NULL DEFAULT 'active'` (`active` | `canceled`)
+- `purchased_by uuid` (user_id de quem comprou)
+- `billing_started_at timestamptz` (próxima fatura)
+- `created_at timestamptz default now()`
+- RLS: gestora vê/insere apenas seus próprios registros; admin vê todos.
 
-Botão único "Exportar" com dropdown:
-- **Excel (.xlsx)** — múltiplas abas (Resumo, Respostas, Respostas por Questão, Por Departamento, Score por Categoria/Dimensão).
-- **CSV para Power BI (.csv)** — formato "long/tidy" (uma linha por resposta-questão), UTF-8 com BOM, separador `;` (padrão BR/PowerBI), datas ISO. Ideal para importar direto em Power BI / Power Query.
+**Atualizar `validate_sst_company_limit()`**: somar `extra_company_slots` ao `max_companies` antes de comparar.
 
-### Arquitetura
+```sql
+SELECT COALESCE(max_companies, 50) + COALESCE(extra_company_slots, 0)
+INTO max_allowed FROM sst_managers WHERE id = NEW.sst_manager_id;
+```
 
-**1. Util compartilhado** `src/lib/assessmentExport.ts`
-- `exportAssessmentToExcel(config)` — gera .xlsx multi-aba com ExcelJS (já instalado).
-- `exportAssessmentToPowerBICSV(config)` — gera .csv long-format.
-- Recebe: título, empresa, lista de respostas (com demographics), lista de answers (com question text/code/category), metadata da avaliação.
+### 2. Edge function `purchase-extra-company-slot`
 
-**2. Componente reutilizável** `src/components/assessments/AssessmentExportButton.tsx`
-- Dropdown com Excel / CSV Power BI.
-- Loader e toast de feedback (mesmo padrão de `ClimateSurveyExportButton`).
-- Aceita `assessmentType: 'hseit' | 'copsoq' | 'burnout' | 'climate'` + `assessmentId`.
-- Faz fetch das respostas + answers ao clicar (lazy).
+Responsável por:
+1. Validar JWT e que o usuário é admin da gestora.
+2. Buscar a `subscription` ativa do dono da gestora.
+3. Criar uma assinatura adicional recorrente no Asaas (R$ 19,90/mês) com `nextDueDate` = data da próxima fatura da assinatura principal, descrição "Slot extra de empresa - SOIA".
+   - Reaproveita `ASAAS_API_KEY` e o `asaas_customer_id` já existente.
+   - Em caso de assinatura sem Asaas (trial/legacy), apenas registra o slot e marca `metadata.pending_billing = true` para cobrança manual posterior.
+4. Incrementar `sst_managers.extra_company_slots += 1`.
+5. Inserir registro em `sst_extra_slot_purchases`.
+6. Retornar `{ success: true, new_limit, next_charge_date }`.
 
-**3. Estrutura das abas Excel**
+### 3. Frontend
 
-| Aba | Conteúdo |
-|---|---|
-| Resumo | Empresa, período, total respostas, taxa participação, scores principais |
-| Respostas (anonimizadas) | 1 linha por respondente: ID anônimo, departamento, cargo, gênero, faixa etária, tempo empresa, data |
-| Respostas por Questão | 1 linha × N colunas (uma coluna por questão) — ideal para análise em Excel |
-| Por Questão (long) | ID resposta, código questão, texto, categoria, valor — formato analítico |
-| Por Departamento | Médias por departamento × categoria |
-| Por Categoria | Score médio por categoria/dimensão |
+**`AddCompanyDialog.tsx` (SST)** — substituir o toast destrutivo do bloco `if (plan.max_companies && currCompanies >= plan.max_companies)` por:
+- Fechar o formulário e abrir um novo `<UpgradeSlotDialog />` (AlertDialog).
 
-**4. CSV Power BI (formato long)**
-Colunas: `assessment_id; assessment_type; company; department; gender; age_range; tenure; response_id; response_date; question_code; question_text; category; answer_value; answer_label`
+**Novo `src/components/sst/UpgradeSlotDialog.tsx`:**
+- Título: "Limite de empresas atingido"
+- Mensagem:
+  > Você já cadastrou {currCompanies} de {limit} empresas do seu plano.  
+  > Deseja contratar **mais 1 slot de empresa**?  
+  > Será cobrado o valor de **R$ 19,90/mês** na sua próxima fatura.
+- Botões: "Cancelar" / "Contratar slot adicional"
+- Ao confirmar: invoca `purchase-extra-company-slot`, mostra toast de sucesso ("Slot liberado! Continue o cadastro da empresa."), atualiza limites locais (refetch do hook `useSubscriptionLimits`/contador) e reabre o `AddCompanyDialog` com os campos preenchidos preservados.
 
-### Pontos de integração na UI
+**`SSTCompanyCounter.tsx`** — mostrar `currentCount / (max + extras)` e um pequeno badge "+N slots extras" quando `extra_company_slots > 0`.
 
-Adicionar `<AssessmentExportButton />` em:
-- `src/pages/HSEITResults.tsx` — header, ao lado dos botões existentes
-- `src/pages/COPSOQResults.tsx` — idem
-- `src/pages/BurnoutResults.tsx` — idem
-- `src/pages/HSEITDashboard.tsx`, `src/pages/PsychosocialDashboard.tsx`, `src/pages/BurnoutDashboard.tsx` — header
-- `src/pages/ClimateSurveyDashboard.tsx` — substituir/complementar `ClimateSurveyExportButton` atual com o novo (mantendo backward-compat)
+**`useSubscriptionLimits.ts`** — somar `sst_managers.extra_company_slots` em `maxCompanies` para a categoria `manager`.
 
-### Segurança
+### 4. Painel Master (opcional rápido)
 
-- Queries respeitam RLS atual (usuário só exporta dados das empresas/gestoras às quais pertence).
-- Dados sempre **anonimizados** (sem nome/email do respondente — usar `respondent_id` UUID curto).
-- Toast claro: "Dados exportados de forma anonimizada conforme LGPD."
+Listar `sst_extra_slot_purchases` em uma aba dentro de `MasterDashboard` (apenas leitura) para acompanhamento de receita extra.
 
-### Documentação Power BI
+### Fluxo do usuário
 
-Criar `mem://features/data-export-powerbi` registrando:
-- Layout do CSV (separador, encoding, formato data)
-- Como importar no Power BI Desktop (Get Data → Text/CSV)
-- Estrutura "long" facilita criação de medidas DAX e visualizações.
+```
+Gestora clica "Adicionar Empresa"
+        ↓
+Preenche formulário → submit
+        ↓
+Limite atingido?
+   ├─ Não → cadastro normal
+   └─ Sim → Dialog "Contratar slot extra (R$19,90/mês)"
+              ├─ Cancelar → fecha
+              └─ Confirmar → edge function
+                                 ↓
+                         Asaas cria sub recorrente
+                         + extra_company_slots++
+                                 ↓
+                         Reabre AddCompanyDialog
+                                 ↓
+                         Usuário clica "Cadastrar" → sucesso
+```
 
-### Fora de escopo (futuro)
+### Fora de escopo
 
-- Endpoint REST/API direto para Power BI Service refresh agendado.
-- Conector Power BI customizado (.mez).
-- Export agendado por e-mail.
+- Cancelamento self-service de slots (futuramente botão "Reduzir slots" listando os ativos).
+- Descontos por compra de múltiplos slots de uma vez (mantemos 1 por clique).
+- Cobrança proporcional (pro-rata) — usaremos sempre a próxima fatura cheia.

@@ -1534,6 +1534,67 @@ export type Database = {
         }
         Relationships: []
       }
+      sst_extra_slot_purchases: {
+        Row: {
+          asaas_subscription_id: string | null
+          billing_started_at: string | null
+          created_at: string
+          id: string
+          purchased_by: string | null
+          slots_added: number
+          sst_manager_id: string
+          status: string
+          subscription_id: string | null
+          unit_price_cents: number
+        }
+        Insert: {
+          asaas_subscription_id?: string | null
+          billing_started_at?: string | null
+          created_at?: string
+          id?: string
+          purchased_by?: string | null
+          slots_added?: number
+          sst_manager_id: string
+          status?: string
+          subscription_id?: string | null
+          unit_price_cents?: number
+        }
+        Update: {
+          asaas_subscription_id?: string | null
+          billing_started_at?: string | null
+          created_at?: string
+          id?: string
+          purchased_by?: string | null
+          slots_added?: number
+          sst_manager_id?: string
+          status?: string
+          subscription_id?: string | null
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sst_extra_slot_purchases_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sst_extra_slot_purchases_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sst_extra_slot_purchases_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sst_managers: {
         Row: {
           address: string | null
@@ -1543,6 +1604,7 @@ export type Database = {
           contract_signed_at: string | null
           created_at: string | null
           email: string | null
+          extra_company_slots: number
           id: string
           logo_url: string | null
           max_companies: number
@@ -1562,6 +1624,7 @@ export type Database = {
           contract_signed_at?: string | null
           created_at?: string | null
           email?: string | null
+          extra_company_slots?: number
           id?: string
           logo_url?: string | null
           max_companies?: number
@@ -1581,6 +1644,7 @@ export type Database = {
           contract_signed_at?: string | null
           created_at?: string | null
           email?: string | null
+          extra_company_slots?: number
           id?: string
           logo_url?: string | null
           max_companies?: number
