@@ -225,10 +225,12 @@ export default function HSEITManagement() {
       // Update departments
       if (assessmentId) {
         // Delete existing departments
-        await supabase
+        const { error: deleteDepartmentsError } = await supabase
           .from('hseit_departments')
           .delete()
           .eq('assessment_id', assessmentId);
+
+        if (deleteDepartmentsError) throw deleteDepartmentsError;
         
         // Insert new departments (skip ones marked as deleted in the UI)
         const activeDepts = departments.filter((d) => !d.isDeleted);
