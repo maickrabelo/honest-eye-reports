@@ -417,6 +417,18 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <UpgradeSlotDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        currentCount={limitInfo.current}
+        currentLimit={limitInfo.limit}
+        onPurchased={() => {
+          // Slot liberado: notifica o pai para refetch e mantém o formulário aberto
+          // para o usuário reenviar e cadastrar a empresa.
+          onCompanyAdded();
+        }}
+      />
     </Dialog>
   );
 };
