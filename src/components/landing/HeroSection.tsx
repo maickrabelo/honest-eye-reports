@@ -91,7 +91,7 @@ const HeroSection = () => {
               <div className="space-y-2 mb-6">
                 <Button
                   size="lg"
-                  onClick={() => navigate('/teste-gratis-empresa')}
+                  onClick={() => navigate('/teste-gratis')}
                   className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold group"
                 >
                   Sou empresa — quero testar grátis
@@ -100,7 +100,7 @@ const HeroSection = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => navigate('/teste-gratis-sst')}
+                  onClick={() => navigate('/teste-gratis')}
                   className="w-full border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-semibold group"
                 >
                   Sou gestora SST — quero testar grátis
