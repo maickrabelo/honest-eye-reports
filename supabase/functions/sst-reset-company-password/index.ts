@@ -107,6 +107,7 @@ serve(async (req) => {
 
     // Find user linked: first via profiles.company_id, then via user_companies
     let userId: string | null = null;
+    let email: string | null = null;
 
     const { data: profileMatch } = await supabaseAdmin
       .from('profiles')
@@ -115,7 +116,6 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    let fullName: string | null = profileMatch?.full_name ?? null;
     if (profileMatch?.id) {
       userId = profileMatch.id;
     } else {
@@ -125,39 +125,71 @@ serve(async (req) => {
         .eq('company_id', company_id)
         .limit(1)
         .maybeSingle();
-      if (ucMatch?.user_id) {
-        userId = ucMatch.user_id;
-        const { data: p } = await supabaseAdmin
-          .from('profiles').select('full_name').eq('id', userId).maybeSingle();
-        fullName = p?.full_name ?? null;
-      }
+      if (ucMatch?.user_id) userId = ucMatch.user_id;
     }
 
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Nenhum usuário vinculado a esta empresa.' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
-      );
-    }
-
-    // Get auth user (email)
-    const { data: authUserData, error: getUserErr } = await supabaseAdmin.auth.admin.getUserById(userId);
-    if (getUserErr || !authUserData?.user?.email) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Email do usuário não encontrado.' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
-      );
-    }
-
-    const email = authUserData.user.email;
     const tempPassword = generateTempPassword(company.name);
 
-    // Reset password + force change on next login
-    const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      password: tempPassword,
-      email_confirm: true,
-    });
-    if (updateErr) throw updateErr;
+    if (!userId) {
+      // No user linked yet (orphan company): create one on the fly using the company email.
+      const companyEmail = (company as any).email?.toString().trim().toLowerCase();
+      if (!companyEmail) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Empresa sem email cadastrado. Edite a empresa e adicione um email antes de resetar a senha.' }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+
+      // Check if an auth user with this email already exists
+      const { data: existingList } = await supabaseAdmin.auth.admin.listUsers();
+      const existing = existingList?.users?.find((u: any) => u.email?.toLowerCase() === companyEmail);
+
+      if (existing) {
+        userId = existing.id;
+        email = existing.email!;
+        const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+          password: tempPassword,
+          email_confirm: true,
+        });
+        if (updErr) throw updErr;
+      } else {
+        const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email: companyEmail,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { full_name: company.name },
+        });
+        if (createErr) throw createErr;
+        userId = created.user!.id;
+        email = created.user!.email!;
+      }
+
+      // Ensure profile points to this company
+      await supabaseAdmin
+        .from('profiles')
+        .upsert({ id: userId, full_name: company.name, company_id: company_id, must_change_password: true }, { onConflict: 'id' });
+
+      // Ensure 'company' role
+      await supabaseAdmin.from('user_roles').delete().eq('user_id', userId);
+      await supabaseAdmin.from('user_roles').insert({ user_id: userId, role: 'company' });
+    } else {
+      // Get auth user (email)
+      const { data: authUserData, error: getUserErr } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (getUserErr || !authUserData?.user?.email) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Email do usuário não encontrado.' }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+        );
+      }
+      email = authUserData.user.email;
+
+      // Reset password + force change on next login
+      const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password: tempPassword,
+        email_confirm: true,
+      });
+      if (updateErr) throw updateErr;
+    }
 
     await supabaseAdmin
       .from('profiles')
