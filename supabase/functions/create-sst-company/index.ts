@@ -246,6 +246,47 @@ Deno.serve(async (req) => {
       treinamentos_enabled: true,
     });
 
+    // Create company access user (or link existing) using CNPJ-derived password
+    try {
+      const initialPassword = `${cnpjDigits.substring(0, 8)}@Soia2026`;
+      const { data: existingList } = await supabase.auth.admin.listUsers();
+      const existingAuth = existingList?.users?.find(
+        (u: any) => u.email?.toLowerCase() === email,
+      );
+
+      let companyUserId: string;
+      if (existingAuth) {
+        companyUserId = existingAuth.id;
+      } else {
+        const { data: createdUser, error: createUserErr } = await supabase.auth.admin.createUser({
+          email,
+          password: initialPassword,
+          email_confirm: true,
+          user_metadata: { full_name: name },
+        });
+        if (createUserErr) throw createUserErr;
+        companyUserId = createdUser.user!.id;
+      }
+
+      await supabase
+        .from("profiles")
+        .upsert(
+          { id: companyUserId, full_name: name, company_id: newCompanyId, must_change_password: true },
+          { onConflict: "id" },
+        );
+
+      const { data: existingRoles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", companyUserId);
+      if (!(existingRoles ?? []).some((r: any) => r.role === "company")) {
+        await supabase.from("user_roles").delete().eq("user_id", companyUserId);
+        await supabase.from("user_roles").insert({ user_id: companyUserId, role: "company" });
+      }
+    } catch (userCreationErr: any) {
+      console.error("[CREATE-SST-COMPANY] User creation failed (company still created)", userCreationErr);
+    }
+
     return json({ success: true, company_id: newCompanyId, recovered_orphan: false });
   } catch (error: any) {
     console.error("[CREATE-SST-COMPANY] ERROR", error);
