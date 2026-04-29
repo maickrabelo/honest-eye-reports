@@ -33,19 +33,13 @@ const HeroSection = () => {
               <span>PIONEIRISMO ABSOLUTO NO MUNDO</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-audit-primary leading-[1.05] mb-6 tracking-tight">
-              A primeira <span className="text-audit-secondary">I.A.</span>
-              <br />
-              de Gestão de
-              <br />
-              Riscos
-              <br />
-              Psicossociais
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-audit-primary leading-[1.1] mb-6 tracking-tight break-words">
+              A primeira <span className="text-audit-secondary">I.A.</span> de Gestão de Riscos Psicossociais
             </h1>
 
             {/* Highlight box */}
-            <div className="rounded-xl bg-audit-secondary/10 border border-audit-secondary/30 px-5 py-4 mb-6 max-w-lg">
-              <p className="text-xl md:text-2xl font-bold text-audit-primary">
+            <div className="rounded-xl bg-audit-secondary/10 border border-audit-secondary/30 px-4 sm:px-5 py-4 mb-6 max-w-lg">
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-audit-primary break-words">
                 <span className="text-audit-secondary">Conformidade total</span> com a NR-01
               </p>
               <p className="text-xs uppercase tracking-wider text-audit-primary/70 font-semibold mt-1">
@@ -92,19 +86,19 @@ const HeroSection = () => {
                 <Button
                   size="lg"
                   onClick={() => navigate('/teste-gratis')}
-                  className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold group"
+                  className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold group whitespace-normal text-sm sm:text-base h-auto py-3"
                 >
-                  Sou empresa — quero testar grátis
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <span className="text-center">Sou empresa — quero testar grátis</span>
+                  <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   onClick={() => navigate('/teste-gratis')}
-                  className="w-full border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-semibold group"
+                  className="w-full border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-semibold group whitespace-normal text-sm sm:text-base h-auto py-3"
                 >
-                  Sou gestora SST — quero testar grátis
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <span className="text-center">Sou gestora SST — quero testar grátis</span>
+                  <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
 

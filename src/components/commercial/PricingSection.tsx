@@ -94,12 +94,12 @@ const PricingSection = () => {
   const managerPlans = plans.filter((p) => p.category === 'manager');
 
   const renderCycleToggle = (cycle: Cycle, setCycle: (c: Cycle) => void) => (
-    <div className="inline-flex rounded-lg border border-border p-1 bg-card mx-auto">
+    <div className="inline-flex flex-wrap justify-center rounded-lg border border-border p-1 bg-card mx-auto max-w-full gap-1">
       {(['monthly', 'quarterly', 'annual'] as Cycle[]).map((c) => (
         <button
           key={c}
           onClick={() => setCycle(c)}
-          className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+          className={`px-2 sm:px-4 py-1.5 text-xs sm:text-sm rounded-md transition-colors whitespace-nowrap ${
             cycle === c
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:text-foreground'
@@ -211,7 +211,7 @@ const PricingSection = () => {
   };
 
   return (
-    <section ref={ref} id="planos" className="py-20 px-4">
+    <section ref={ref} id="planos" className="py-20 px-4 overflow-hidden">
       <div className="container mx-auto max-w-7xl">
         <div className={`text-center mb-12 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Planos & Investimento</Badge>
@@ -230,7 +230,7 @@ const PricingSection = () => {
         ) : (
           <div className="space-y-16">
             {/* FAIXA 1 — Empresas */}
-            <div className="rounded-2xl bg-background border border-border p-6 md:p-10">
+            <div className="rounded-2xl bg-background border border-border p-4 sm:p-6 md:p-10">
               <div className="text-center mb-8">
                 <Badge className="mb-3 bg-audit-secondary/10 text-audit-secondary border-audit-secondary/20">
                   Para sua empresa
@@ -249,7 +249,7 @@ const PricingSection = () => {
             </div>
 
             {/* FAIXA 2 — Gestores */}
-            <div className="rounded-2xl bg-muted/30 border border-border p-6 md:p-10">
+            <div className="rounded-2xl bg-muted/30 border border-border p-4 sm:p-6 md:p-10">
               <div className="text-center mb-8">
                 <Badge className="mb-3 bg-primary/10 text-primary border-primary/20">
                   Para gestores SST
