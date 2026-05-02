@@ -85,7 +85,7 @@ const HeroSection = () => {
               <div className="space-y-2 mb-6">
                 <Button
                   size="lg"
-                  onClick={() => navigate('/teste-gratis')}
+                  onClick={() => navigate('/teste-gratis-empresa')}
                   className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-semibold group whitespace-normal text-sm sm:text-base h-auto py-3"
                 >
                   <span className="text-center">Sou empresa — quero testar grátis</span>
@@ -94,7 +94,7 @@ const HeroSection = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => navigate('/teste-gratis')}
+                  onClick={() => navigate('/teste-gratis-sst')}
                   className="w-full border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-semibold group whitespace-normal text-sm sm:text-base h-auto py-3"
                 >
                   <span className="text-center">Sou gestora SST — quero testar grátis</span>
