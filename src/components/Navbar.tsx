@@ -31,11 +31,16 @@ const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] 
 const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
   const { brandLogo, isWhiteLabel, brandColor, setBrandColorDB } = useWhiteLabel();
-  const { resetTour } = useOnboarding('sst-dashboard');
+  const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
+  const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
   const isLoggedIn = !!user;
 
   const handleResetTour = () => {
-    resetTour();
+    if (role === 'sst') {
+      resetSstTour();
+    } else {
+      resetCompanyTour();
+    }
     toast.success('Tutorial reiniciado! Navegue pelas páginas para revê-lo.');
   };
 
@@ -128,7 +133,20 @@ const Navbar = () => {
                   </Button>
                 </div>
               )}
-              {role === 'company' && <CompanySwitcher />}
+              {role === 'company' && (
+                <>
+                  <CompanySwitcher />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={handleResetTour}
+                    title="Rever tutorial"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
               <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
