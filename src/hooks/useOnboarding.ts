@@ -74,18 +74,7 @@ export function useOnboarding(pageId: string) {
           }
           setShouldShowTour(!completedPages.includes(pageId));
         } else if (isCompanyOwner) {
-          const { data, error } = await supabase
-            .from('companies')
-            .select('subscription_status')
-            .eq('id', profile.company_id!)
-            .single();
-          if (error) throw error;
-          if (data?.subscription_status !== 'trial') {
-            setShouldShowTour(false);
-            setIsReady(true);
-            return;
-          }
-          // For company role we use localStorage only (no DB column for company onboarding state)
+          // Para empresa: controle apenas via localStorage (independente de status de assinatura)
           setShouldShowTour(true);
         }
       } catch (err) {
