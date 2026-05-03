@@ -7,7 +7,9 @@ const corsHeaders = {
 };
 
 const SLOT_PRICE_CENTS = 1990; // R$ 19,90
-const ASAAS_API_URL = "https://api.asaas.com/v3";
+const ASAAS_API_URL = Deno.env.get("ASAAS_ENV") === "production"
+  ? "https://api.asaas.com/v3"
+  : "https://sandbox.asaas.com/api/v3";
 
 const log = (step: string, details?: any) =>
   console.log(`[PURCHASE-SLOT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
