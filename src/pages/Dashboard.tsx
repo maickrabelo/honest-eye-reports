@@ -492,6 +492,15 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           
           {features.ouvidoria && companySlug && (
             <div id="company-tool-ouvidoria" className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+              <div className="border-l-4 border-primary bg-primary/5 p-3 rounded-r-md">
+                <p className="text-sm font-semibold text-primary mb-1">📢 Compartilhe com seus colaboradores</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">
+                  Divulgue o <strong>link</strong> e o <strong>QR Code</strong> abaixo para todos os colaboradores da sua empresa.
+                  Por meio deles, qualquer colaborador poderá acessar o <strong>canal de ouvidoria anônimo</strong> e registrar
+                  reclamações, denúncias ou sugestões com total sigilo. Todas as manifestações recebidas aparecerão
+                  automaticamente no <strong>dashboard abaixo</strong> para sua análise e tratamento.
+                </p>
+              </div>
               <p className="text-sm font-medium text-muted-foreground">Canal de Denúncias:</p>
               <div className="flex items-center gap-2">
                 <a 
