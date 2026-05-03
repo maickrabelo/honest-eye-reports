@@ -118,20 +118,27 @@ export function useOnboarding(pageId: string) {
   }, [profile?.sst_manager_id, profile?.company_id, role, pageId]);
 
   const resetTour = useCallback(async () => {
-    setLocalCompleted([]);
+    const localCompleted = getLocalCompleted();
+    setLocalCompleted(localCompleted.filter((p) => p !== pageId));
     setShouldShowTour(true);
 
     if (role === 'sst' && profile?.sst_manager_id) {
       try {
+        const { data } = await supabase
+          .from('sst_managers')
+          .select('onboarding_completed_pages')
+          .eq('id', profile.sst_manager_id)
+          .single();
+        const completedPages = (data?.onboarding_completed_pages as string[]) || [];
         await supabase
           .from('sst_managers')
-          .update({ onboarding_completed_pages: [] })
+          .update({ onboarding_completed_pages: completedPages.filter((p) => p !== pageId) })
           .eq('id', profile.sst_manager_id);
       } catch (err) {
         console.error('Error resetting tour:', err);
       }
     }
-  }, [profile?.sst_manager_id, role]);
+  }, [profile?.sst_manager_id, role, pageId]);
 
   return { shouldShowTour, completeTour, resetTour, isReady };
 }
