@@ -202,6 +202,11 @@ const Navbar = () => {
                     <DropdownMenuItem asChild>
                       <Link to="/profile">Perfil</Link>
                     </DropdownMenuItem>
+                    {(role === 'company' || role === 'sst') && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/financeiro">Financeiro</Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut}>
                       Sair

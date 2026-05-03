@@ -20,6 +20,7 @@ const ReportForm = React.lazy(() => import("./pages/ReportForm"));
 const ReportChat = React.lazy(() => import("./pages/ReportChat"));
 const Reports = React.lazy(() => import("./pages/Reports"));
 const CompanyProfile = React.lazy(() => import("./pages/CompanyProfile"));
+const Financeiro = React.lazy(() => import("./pages/Financeiro"));
 const SSTDashboard = React.lazy(() => import("./pages/SSTDashboard"));
 const MasterDashboard = React.lazy(() => import("./pages/MasterDashboard"));
 const CompanyReport = React.lazy(() => import("./pages/CompanyReport"));
@@ -115,6 +116,7 @@ const App = () => (
                 <Route path="/report-form" element={<ReportForm />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/profile" element={<CompanyProfile />} />
+                <Route path="/financeiro" element={<Financeiro />} />
                 <Route path="/sst-dashboard" element={<SSTDashboard />} />
                 <Route path="/sst-portal" element={<SSTPortal />} />
                 <Route path="/master-dashboard" element={<MasterDashboard />} />
