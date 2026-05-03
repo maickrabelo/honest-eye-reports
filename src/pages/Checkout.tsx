@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { fbqTrack } from '@/lib/metaPixel';
 
 type Cycle = 'monthly' | 'quarterly' | 'annual';
 type BillingType = 'PIX' | 'BOLETO' | 'CREDIT_CARD';
@@ -134,6 +135,14 @@ const Checkout = () => {
   const handleSubmit = async () => {
     if (!plan || !validate()) return;
     setSubmitting(true);
+    const monthsPerCycle = cycle === 'annual' ? 12 : cycle === 'quarterly' ? 3 : 1;
+    const totalCents = (getMonthlyPrice() || 0) * monthsPerCycle;
+    fbqTrack('InitiateCheckout', {
+      content_name: plan.name,
+      content_category: plan.category,
+      currency: 'BRL',
+      value: totalCents / 100,
+    });
     try {
       const { data, error } = await supabase.functions.invoke('asaas-create-subscription', {
         body: {
