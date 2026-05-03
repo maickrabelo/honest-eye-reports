@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Mail, ArrowRight, Loader2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { fbqTrack } from '@/lib/metaPixel';
 
 const POLL_INTERVAL_MS = 5000;
 const POLL_MAX_MS = 5 * 60 * 1000;
@@ -42,7 +43,18 @@ const CheckoutSuccess = () => {
           setInfo({ email: json.email, planName: json.planName, invoiceUrl: json.invoiceUrl });
         }
         if (json.status === 'active') {
-          setStatus('active');
+          setStatus((prev) => {
+            if (prev !== 'active') {
+              // Fire Meta Pixel Purchase only once
+              fbqTrack('Purchase', {
+                currency: 'BRL',
+                value: typeof json.value === 'number' ? json.value : 0,
+                content_name: json.planName,
+                content_type: 'subscription',
+              });
+            }
+            return 'active';
+          });
           return;
         }
         if (Date.now() - start > POLL_MAX_MS) {

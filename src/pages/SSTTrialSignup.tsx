@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { fbqTrack } from '@/lib/metaPixel';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import usePageSEO from '@/hooks/usePageSEO';
@@ -75,6 +76,8 @@ const SSTTrialSignup = () => {
       }
       if (data?.error) throw new Error(data.error);
 
+      fbqTrack('Lead', { content_name: 'Trial Gestora SST' });
+      fbqTrack('CompleteRegistration', { content_name: 'Trial Gestora SST', status: true });
       setIsSuccess(true);
     } catch (error: any) {
       toast({
