@@ -38,7 +38,7 @@ async function sendCredentialsEmail(
   subscriptionId: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY_1') ?? Deno.env.get('RESEND_API_KEY');
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
     const msg = 'Email keys missing (LOVABLE_API_KEY or RESEND_API_KEY)';
     console.warn(msg);
