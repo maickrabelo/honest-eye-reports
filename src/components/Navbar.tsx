@@ -31,11 +31,16 @@ const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] 
 const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
   const { brandLogo, isWhiteLabel, brandColor, setBrandColorDB } = useWhiteLabel();
-  const { resetTour } = useOnboarding('sst-dashboard');
+  const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
+  const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
   const isLoggedIn = !!user;
 
   const handleResetTour = () => {
-    resetTour();
+    if (role === 'sst') {
+      resetSstTour();
+    } else {
+      resetCompanyTour();
+    }
     toast.success('Tutorial reiniciado! Navegue pelas páginas para revê-lo.');
   };
 
