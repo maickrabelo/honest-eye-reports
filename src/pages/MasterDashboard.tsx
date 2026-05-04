@@ -1202,6 +1202,7 @@ const MasterDashboard = () => {
                   <Activity className="h-3.5 w-3.5" />
                   Logs
                 </TabsTrigger>
+                <TabsTrigger value="stats">Estatísticas</TabsTrigger>
               </TabsList>
               
               <div className="flex gap-4">
