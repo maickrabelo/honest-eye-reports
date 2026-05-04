@@ -1892,6 +1892,10 @@ const MasterDashboard = () => {
             <TabsContent value="logs" className="space-y-6">
               <AccessLogsTab />
             </TabsContent>
+
+            <TabsContent value="stats" className="space-y-6">
+              <StatisticsTab />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
