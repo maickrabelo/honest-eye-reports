@@ -15,6 +15,7 @@ import { ActivePartnersManager } from '@/components/admin/ActivePartnersManager'
 import { ActiveAffiliatesManager } from '@/components/admin/ActiveAffiliatesManager';
 import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
 import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
+import StatisticsTab from '@/components/admin/StatisticsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
