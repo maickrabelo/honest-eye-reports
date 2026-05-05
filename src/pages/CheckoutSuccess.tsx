@@ -45,12 +45,14 @@ const CheckoutSuccess = () => {
         if (json.status === 'active') {
           setStatus((prev) => {
             if (prev !== 'active') {
-              // Fire Meta Pixel Purchase only once
               fbqTrack('Purchase', {
                 currency: 'BRL',
                 value: typeof json.value === 'number' ? json.value : 0,
                 content_name: json.planName,
                 content_type: 'subscription',
+              }, {
+                email: json.email,
+                country: 'br',
               });
             }
             return 'active';
