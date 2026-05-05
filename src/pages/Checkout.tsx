@@ -142,6 +142,13 @@ const Checkout = () => {
       content_category: plan.category,
       currency: 'BRL',
       value: totalCents / 100,
+    }, {
+      email: form.email,
+      phone: form.phone,
+      first_name: form.name.split(' ')[0],
+      last_name: form.name.split(' ').slice(1).join(' '),
+      external_id: form.cpfCnpj,
+      country: 'br',
     });
     try {
       const { data, error } = await supabase.functions.invoke('asaas-create-subscription', {
