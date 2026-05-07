@@ -39,7 +39,7 @@ const SSTLandingPage = () => {
         if (!data) {
           setNotFound(true);
         } else {
-          setSstManager(data);
+          setSstManager(data as unknown as SSTManagerInfo);
         }
       } catch (error) {
         console.error('Error fetching SST manager:', error);
