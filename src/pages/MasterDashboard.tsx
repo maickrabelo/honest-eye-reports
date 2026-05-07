@@ -17,6 +17,7 @@ import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
 import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
 import StatisticsTab from '@/components/admin/StatisticsTab';
 import FormLeadsTab from '@/components/admin/FormLeadsTab';
+import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
