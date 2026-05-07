@@ -30,7 +30,7 @@ const SSTLandingPage = () => {
 
       try {
         const { data, error } = await supabase
-          .from('sst_managers')
+          .from('sst_managers_public' as any)
           .select('name, logo_url, slug')
           .eq('slug', sstSlug)
           .maybeSingle();
@@ -39,7 +39,7 @@ const SSTLandingPage = () => {
         if (!data) {
           setNotFound(true);
         } else {
-          setSstManager(data);
+          setSstManager(data as unknown as SSTManagerInfo);
         }
       } catch (error) {
         console.error('Error fetching SST manager:', error);
