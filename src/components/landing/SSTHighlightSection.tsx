@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Shield } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import DemoRequestDialog from '@/components/DemoRequestDialog';
 
 const SSTHighlightSection = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const [demoOpen, setDemoOpen] = useState(false);
 
   const scrollToContact = () => {
     document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
@@ -48,7 +50,7 @@ const SSTHighlightSection = () => {
             </Button>
             <Button
               size="lg"
-              onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de agendar uma demonstração do SOIA para minha empresa de SST.', '_blank')}
+              onClick={() => setDemoOpen(true)}
               className="bg-emerald-500/30 hover:bg-emerald-500/40 text-white border border-white/30 font-semibold px-8 py-6 text-lg group"
             >
               Solicitar Demonstração
