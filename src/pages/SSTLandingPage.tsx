@@ -30,7 +30,7 @@ const SSTLandingPage = () => {
 
       try {
         const { data, error } = await supabase
-          .from('sst_managers')
+          .from('sst_managers_public' as any)
           .select('name, logo_url, slug')
           .eq('slug', sstSlug)
           .maybeSingle();
