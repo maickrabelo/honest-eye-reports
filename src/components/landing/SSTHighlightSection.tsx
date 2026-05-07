@@ -13,6 +13,7 @@ const SSTHighlightSection = () => {
   };
 
   return (
+    <>
     <section
       ref={ref}
       className="py-16 px-4 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 relative overflow-hidden"
