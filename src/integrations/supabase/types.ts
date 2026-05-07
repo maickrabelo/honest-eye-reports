@@ -864,6 +864,42 @@ export type Database = {
           },
         ]
       }
+      demo_leads: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string
+          employee_count: string | null
+          id: string
+          message: string | null
+          name: string
+          phone: string
+          source: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email: string
+          employee_count?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          phone: string
+          source?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          employee_count?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string
+          source?: string
+        }
+        Relationships: []
+      }
       email_send_attempts: {
         Row: {
           context: string | null

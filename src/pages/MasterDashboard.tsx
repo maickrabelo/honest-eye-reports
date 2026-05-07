@@ -16,6 +16,7 @@ import { ActiveAffiliatesManager } from '@/components/admin/ActiveAffiliatesMana
 import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
 import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
 import StatisticsTab from '@/components/admin/StatisticsTab';
+import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -1203,6 +1204,7 @@ const MasterDashboard = () => {
                   <Activity className="h-3.5 w-3.5" />
                   Logs
                 </TabsTrigger>
+                <TabsTrigger value="form-leads">Leads Formulários</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
               </TabsList>
               
@@ -1892,6 +1894,10 @@ const MasterDashboard = () => {
             {/* Logs Tab */}
             <TabsContent value="logs" className="space-y-6">
               <AccessLogsTab />
+            </TabsContent>
+
+            <TabsContent value="form-leads" className="space-y-6">
+              <FormLeadsTab />
             </TabsContent>
 
             <TabsContent value="stats" className="space-y-6">
