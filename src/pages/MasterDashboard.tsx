@@ -17,6 +17,7 @@ import { AdminPortalManager } from '@/components/admin/AdminPortalManager';
 import { AccessLogsTab } from '@/components/admin/AccessLogsTab';
 import StatisticsTab from '@/components/admin/StatisticsTab';
 import FormLeadsTab from '@/components/admin/FormLeadsTab';
+import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -1205,6 +1206,7 @@ const MasterDashboard = () => {
                   Logs
                 </TabsTrigger>
                 <TabsTrigger value="form-leads">Leads Formulários</TabsTrigger>
+                <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
               </TabsList>
               
@@ -1898,6 +1900,10 @@ const MasterDashboard = () => {
 
             <TabsContent value="form-leads" className="space-y-6">
               <FormLeadsTab />
+            </TabsContent>
+
+            <TabsContent value="trials" className="space-y-6">
+              <TrialAccountsTab />
             </TabsContent>
 
             <TabsContent value="stats" className="space-y-6">
