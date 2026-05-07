@@ -60,6 +60,13 @@ const SSTHighlightSection = () => {
         </div>
       </div>
     </section>
+    <DemoRequestDialog
+      open={demoOpen}
+      onOpenChange={setDemoOpen}
+      source="demo_form_sst_highlight"
+      whatsappMessage="Olá! Gostaria de agendar uma demonstração do SOIA para minha empresa de SST."
+    />
+    </>
   );
 };
 
