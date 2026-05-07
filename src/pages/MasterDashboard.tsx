@@ -1902,6 +1902,10 @@ const MasterDashboard = () => {
               <FormLeadsTab />
             </TabsContent>
 
+            <TabsContent value="trials" className="space-y-6">
+              <TrialAccountsTab />
+            </TabsContent>
+
             <TabsContent value="stats" className="space-y-6">
               <StatisticsTab />
             </TabsContent>
