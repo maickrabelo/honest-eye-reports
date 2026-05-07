@@ -1206,6 +1206,7 @@ const MasterDashboard = () => {
                   Logs
                 </TabsTrigger>
                 <TabsTrigger value="form-leads">Leads Formulários</TabsTrigger>
+                <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
               </TabsList>
               
