@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.meta-capi]
 verify_jwt = false
+
+[functions.fix-company-passwords]
+# Requires admin authentication
