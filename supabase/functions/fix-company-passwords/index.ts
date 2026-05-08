@@ -28,21 +28,21 @@ const ensureCompanyAccess = async (admin: any, userId: string, company: any) => 
   );
 
   await admin.from("user_roles").delete().eq("user_id", userId).neq("role", "company");
-  const { data: existingRole } = await admin
+  const { data: existingRoles } = await admin
     .from("user_roles")
     .select("id")
     .eq("user_id", userId)
     .eq("role", "company")
-    .maybeSingle();
-  if (!existingRole) await admin.from("user_roles").insert({ user_id: userId, role: "company" });
+    .limit(1);
+  if (!existingRoles?.length) await admin.from("user_roles").insert({ user_id: userId, role: "company" });
 
-  const { data: existingLink } = await admin
+  const { data: existingLinks } = await admin
     .from("user_companies")
     .select("id")
     .eq("user_id", userId)
     .eq("company_id", company.id)
-    .maybeSingle();
-  if (!existingLink) await admin.from("user_companies").insert({ user_id: userId, company_id: company.id });
+    .limit(1);
+  if (!existingLinks?.length) await admin.from("user_companies").insert({ user_id: userId, company_id: company.id });
 };
 
 Deno.serve(async (req) => {
