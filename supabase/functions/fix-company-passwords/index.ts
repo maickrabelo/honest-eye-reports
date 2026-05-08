@@ -43,6 +43,27 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const onlyNeverSignedIn: boolean = body.only_never_signed_in !== false;
 
+    // Override mode: reset a specific email to a specific password
+    if (body.override_email && body.override_password) {
+      const admin = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const u = users.find((x: any) => x.email?.toLowerCase() === String(body.override_email).toLowerCase());
+      if (!u) {
+        return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error: updErr } = await admin.auth.admin.updateUserById(u.id, {
+        password: String(body.override_password),
+        email_confirm: true,
+      });
+      if (updErr) throw updErr;
+      await admin.from("profiles").update({ must_change_password: false }).eq("id", u.id);
+      return new Response(JSON.stringify({ success: true, user_id: u.id, email: u.email }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Get all companies + linked users
     const { data: companies } = await admin
       .from("companies")
