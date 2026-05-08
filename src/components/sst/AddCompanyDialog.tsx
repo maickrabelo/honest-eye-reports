@@ -169,46 +169,10 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
       }
       if (companyResult?.error) throw new Error(companyResult.error);
 
-      const newCompany = { id: companyResult.company_id };
-
-      // Create user account for the company
-      try {
-        const response = await supabase.functions.invoke('create-company-user', {
-          body: {
-            company_id: newCompany.id,
-            email: trimmedEmail,
-            cnpj: formData.cnpj.trim(),
-            company_name: trimmedName,
-          },
-        });
-
-        if (response.error) {
-          console.error('Error creating company user:', response.error);
-          toast({
-            title: "Empresa cadastrada, mas sem usuário",
-            description: `A empresa foi criada, porém não foi possível criar o acesso automático: ${response.error.message}`,
-            variant: "destructive",
-          });
-        } else if (response.data?.existing_user) {
-          const existingNames = response.data.existing_companies?.join(', ') || '';
-          toast({
-            title: "Empresa vinculada a usuário existente",
-            description: `Este email já tinha acesso a: ${existingNames}. A empresa "${trimmedName}" foi adicionada ao mesmo login.`,
-          });
-        } else {
-          toast({
-            title: "Empresa cadastrada com sucesso!",
-            description: `${trimmedName} foi adicionada. O acesso foi criado com email: ${trimmedEmail} e senha: CNPJ (${cnpjDigits.substring(0, 4)}****). No primeiro login será solicitada a troca de senha.`,
-          });
-        }
-      } catch (userError: any) {
-        console.error('Error creating company user:', userError);
-        toast({
-          title: "Empresa cadastrada, mas sem usuário",
-          description: "A empresa foi criada, porém houve um erro ao criar o acesso automático.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Empresa cadastrada com sucesso!",
+        description: `${trimmedName} foi adicionada. Acesso: ${trimmedEmail} / senha inicial: CNPJ (${cnpjDigits.substring(0, 4)}****). No primeiro login será solicitada a troca de senha.`,
+      });
 
       resetForm();
       onOpenChange(false);
