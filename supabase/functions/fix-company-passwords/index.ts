@@ -5,6 +5,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const cnpjDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
+
+const findUserByEmail = (users: any[], email: string) =>
+  users.find((x: any) => x.email?.toLowerCase() === email.toLowerCase());
+
+const ensureCompanyAccess = async (admin: any, userId: string, company: any) => {
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("company_id, full_name, must_change_password")
+    .eq("id", userId)
+    .maybeSingle();
+
+  await admin.from("profiles").upsert(
+    {
+      id: userId,
+      full_name: profile?.full_name || company.name,
+      company_id: profile?.company_id || company.id,
+      must_change_password: profile?.must_change_password ?? true,
+    },
+    { onConflict: "id" },
+  );
+
+  await admin.from("user_roles").delete().eq("user_id", userId).neq("role", "company");
+  const { data: existingRoles } = await admin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "company")
+    .limit(1);
+  if (!existingRoles?.length) await admin.from("user_roles").insert({ user_id: userId, role: "company" });
+
+  const { data: existingLinks } = await admin
+    .from("user_companies")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("company_id", company.id)
+    .limit(1);
+  if (!existingLinks?.length) await admin.from("user_companies").insert({ user_id: userId, company_id: company.id });
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -23,8 +63,8 @@ Deno.serve(async (req) => {
       const caller = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: `Bearer ${token}` } },
       });
-      const { data: claims } = await caller.auth.getClaims(token);
-      const callerId = claims?.claims?.sub;
+      const { data: callerData } = await caller.auth.getUser(token);
+      const callerId = callerData?.user?.id;
       if (callerId) {
         const adminTmp = createClient(supabaseUrl, supabaseServiceKey);
         const { data: roles } = await adminTmp.from("user_roles").select("role").eq("user_id", callerId);
@@ -41,13 +81,14 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const onlyNeverSignedIn: boolean = body.only_never_signed_in !== false;
+    const onlyNeverSignedIn: boolean = body.only_never_signed_in === true;
+    const onlyMustChangePassword: boolean = body.only_must_change_password !== false;
 
     // Override mode: reset a specific email to a specific password
     if (body.override_email && body.override_password) {
       const admin = createClient(supabaseUrl, supabaseServiceKey);
       const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
-      const u = users.find((x: any) => x.email?.toLowerCase() === String(body.override_email).toLowerCase());
+      const u = findUserByEmail(users, String(body.override_email));
       if (!u) {
         return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -71,29 +112,64 @@ Deno.serve(async (req) => {
 
     const results: any[] = [];
     const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const resetHandledUserIds = new Set<string>();
 
     for (const c of companies ?? []) {
-      const cnpjDigits = String(c.cnpj ?? "").replace(/\D/g, "");
-      if (cnpjDigits.length < 8) {
+      const initialPassword = cnpjDigits(c.cnpj);
+      if (initialPassword.length < 8) {
         results.push({ company: c.name, status: "skipped_invalid_cnpj" });
         continue;
       }
       const email = String(c.email ?? "").trim().toLowerCase();
-      const u = users.find((x: any) => x.email?.toLowerCase() === email);
+      let u = findUserByEmail(users, email);
       if (!u) {
-        results.push({ company: c.name, email, status: "no_auth_user" });
-        continue;
+        const { data: createdUser, error: createUserErr } = await admin.auth.admin.createUser({
+          email,
+          password: initialPassword,
+          email_confirm: true,
+          user_metadata: { full_name: c.name },
+        });
+        if (createUserErr || !createdUser.user) {
+          results.push({ company: c.name, email, status: "create_user_error", error: createUserErr?.message });
+          continue;
+        }
+        u = createdUser.user;
+        users.push(u);
       }
+      await ensureCompanyAccess(admin, u.id, c);
       if (onlyNeverSignedIn && u.last_sign_in_at) {
-        results.push({ company: c.name, email, status: "skipped_already_signed_in" });
+        results.push({ company: c.name, email, status: "linked_skipped_already_signed_in" });
         continue;
       }
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("must_change_password")
+        .eq("id", u.id)
+        .maybeSingle();
+      if (onlyMustChangePassword && profile?.must_change_password === false) {
+        results.push({ company: c.name, email, status: "linked_skipped_password_changed" });
+        continue;
+      }
+
+      if (resetHandledUserIds.has(u.id)) {
+        results.push({ company: c.name, email, status: "linked_skipped_duplicate_email" });
+        continue;
+      }
+
+      const profileCompany = (companies ?? []).find((company: any) => company.id === profile?.company_id);
+      const passwordForUser = cnpjDigits(profileCompany?.cnpj).length >= 8
+        ? cnpjDigits(profileCompany?.cnpj)
+        : initialPassword;
+
       const { error: updErr } = await admin.auth.admin.updateUserById(u.id, {
-        password: cnpjDigits,
+        password: passwordForUser,
+        email_confirm: true,
       });
       if (updErr) {
         results.push({ company: c.name, email, status: "error", error: updErr.message });
       } else {
+        resetHandledUserIds.add(u.id);
         await admin.from("profiles").update({ must_change_password: true }).eq("id", u.id);
         results.push({ company: c.name, email, status: "reset_ok" });
       }
