@@ -26,6 +26,58 @@ const json = (body: Record<string, unknown>, status = 200) =>
 const businessError = (body: Record<string, unknown>) =>
   json({ success: false, ...body });
 
+const ensureCompanyAccess = async (
+  supabase: any,
+  company: { id: string; name: string; email: string; cnpj: string },
+  initialPassword: string,
+) => {
+  const normalizedEmail = String(company.email ?? "").trim().toLowerCase();
+  if (!normalizedEmail) return null;
+
+  const { data: existingList } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const existingAuth = existingList?.users?.find(
+    (u: any) => u.email?.toLowerCase() === normalizedEmail,
+  );
+
+  let companyUserId: string;
+  if (existingAuth) {
+    companyUserId = existingAuth.id;
+  } else {
+    const { data: createdUser, error: createUserErr } = await supabase.auth.admin.createUser({
+      email: normalizedEmail,
+      password: initialPassword,
+      email_confirm: true,
+      user_metadata: { full_name: company.name },
+    });
+    if (createUserErr) throw createUserErr;
+    companyUserId = createdUser.user!.id;
+  }
+
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("company_id, full_name, must_change_password")
+    .eq("id", companyUserId)
+    .maybeSingle();
+
+  await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: companyUserId,
+        full_name: currentProfile?.full_name || company.name,
+        company_id: currentProfile?.company_id || company.id,
+        must_change_password: currentProfile?.must_change_password ?? true,
+      },
+      { onConflict: "id" },
+    );
+
+  await supabase.from("user_roles").delete().eq("user_id", companyUserId).neq("role", "company");
+  await supabase.from("user_roles").upsert({ user_id: companyUserId, role: "company" });
+  await supabase.from("user_companies").upsert({ user_id: companyUserId, company_id: company.id });
+
+  return companyUserId;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -143,6 +195,12 @@ Deno.serve(async (req) => {
           treinamentos_enabled: true,
         });
 
+        await ensureCompanyAccess(
+          supabase,
+          { id: existingCompany.id, name, email, cnpj },
+          cnpjDigits,
+        );
+
         return json({ success: true, company_id: existingCompany.id, already_linked: true });
       }
 
@@ -187,6 +245,12 @@ Deno.serve(async (req) => {
         clima_enabled: true,
         treinamentos_enabled: true,
       });
+
+      await ensureCompanyAccess(
+        supabase,
+        { id: existingCompany.id, name, email, cnpj },
+        cnpjDigits,
+      );
 
       return json({ success: true, company_id: existingCompany.id, recovered_orphan: true });
     }
