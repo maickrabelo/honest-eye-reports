@@ -9,38 +9,36 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "");
+
+    let authorized = false;
+    if (token && token === supabaseServiceKey) {
+      authorized = true;
+    } else if (token) {
+      const caller = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+      const { data: claims } = await caller.auth.getClaims(token);
+      const callerId = claims?.claims?.sub;
+      if (callerId) {
+        const adminTmp = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: roles } = await adminTmp.from("user_roles").select("role").eq("user_id", callerId);
+        if (roles?.some((r: any) => r.role === "admin")) authorized = true;
+      }
+    }
+
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    const caller = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims } = await caller.auth.getClaims(token);
-    const callerId = claims?.claims?.sub;
-    if (!callerId) {
-      return new Response(JSON.stringify({ error: "Token inválido" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const admin = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Only admins can run this
-    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", callerId);
-    if (!roles?.some((r: any) => r.role === "admin")) {
-      return new Response(JSON.stringify({ error: "Apenas admin." }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const body = await req.json().catch(() => ({}));
     const onlyNeverSignedIn: boolean = body.only_never_signed_in !== false;
