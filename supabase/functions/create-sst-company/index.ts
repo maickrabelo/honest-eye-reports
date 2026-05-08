@@ -72,12 +72,25 @@ const ensureCompanyAccess = async (
     );
 
   await supabase.from("user_roles").delete().eq("user_id", companyUserId).neq("role", "company");
-  await supabase
+  const { data: existingCompanyRole } = await supabase
     .from("user_roles")
-    .upsert({ user_id: companyUserId, role: "company" }, { onConflict: "user_id,role" });
-  await supabase
+    .select("id")
+    .eq("user_id", companyUserId)
+    .eq("role", "company")
+    .maybeSingle();
+  if (!existingCompanyRole) {
+    await supabase.from("user_roles").insert({ user_id: companyUserId, role: "company" });
+  }
+
+  const { data: existingCompanyLink } = await supabase
     .from("user_companies")
-    .upsert({ user_id: companyUserId, company_id: company.id }, { onConflict: "user_id,company_id" });
+    .select("id")
+    .eq("user_id", companyUserId)
+    .eq("company_id", company.id)
+    .maybeSingle();
+  if (!existingCompanyLink) {
+    await supabase.from("user_companies").insert({ user_id: companyUserId, company_id: company.id });
+  }
 
   return companyUserId;
 };
