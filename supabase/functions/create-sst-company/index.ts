@@ -248,7 +248,8 @@ Deno.serve(async (req) => {
 
     // Create company access user (or link existing) using CNPJ-derived password
     try {
-      const initialPassword = `${cnpjDigits.substring(0, 8)}@Soia2026`;
+      // Initial password = full CNPJ digits (consistent with what is shown to user)
+      const initialPassword = cnpjDigits;
       const { data: existingList } = await supabase.auth.admin.listUsers();
       const existingAuth = existingList?.users?.find(
         (u: any) => u.email?.toLowerCase() === email,
