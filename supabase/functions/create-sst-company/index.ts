@@ -72,8 +72,12 @@ const ensureCompanyAccess = async (
     );
 
   await supabase.from("user_roles").delete().eq("user_id", companyUserId).neq("role", "company");
-  await supabase.from("user_roles").upsert({ user_id: companyUserId, role: "company" });
-  await supabase.from("user_companies").upsert({ user_id: companyUserId, company_id: company.id });
+  await supabase
+    .from("user_roles")
+    .upsert({ user_id: companyUserId, role: "company" }, { onConflict: "user_id,role" });
+  await supabase
+    .from("user_companies")
+    .upsert({ user_id: companyUserId, company_id: company.id }, { onConflict: "user_id,company_id" });
 
   return companyUserId;
 };
