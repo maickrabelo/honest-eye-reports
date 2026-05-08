@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     if (body.override_email && body.override_password) {
       const admin = createClient(supabaseUrl, supabaseServiceKey);
       const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
-      const u = users.find((x: any) => x.email?.toLowerCase() === String(body.override_email).toLowerCase());
+      const u = findUserByEmail(users, String(body.override_email));
       if (!u) {
         return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -114,23 +114,46 @@ Deno.serve(async (req) => {
     const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
 
     for (const c of companies ?? []) {
-      const cnpjDigits = String(c.cnpj ?? "").replace(/\D/g, "");
-      if (cnpjDigits.length < 8) {
+      const initialPassword = cnpjDigits(c.cnpj);
+      if (initialPassword.length < 8) {
         results.push({ company: c.name, status: "skipped_invalid_cnpj" });
         continue;
       }
       const email = String(c.email ?? "").trim().toLowerCase();
-      const u = users.find((x: any) => x.email?.toLowerCase() === email);
+      let u = findUserByEmail(users, email);
       if (!u) {
-        results.push({ company: c.name, email, status: "no_auth_user" });
-        continue;
+        const { data: createdUser, error: createUserErr } = await admin.auth.admin.createUser({
+          email,
+          password: initialPassword,
+          email_confirm: true,
+          user_metadata: { full_name: c.name },
+        });
+        if (createUserErr || !createdUser.user) {
+          results.push({ company: c.name, email, status: "create_user_error", error: createUserErr?.message });
+          continue;
+        }
+        u = createdUser.user;
+        users.push(u);
       }
+      await ensureCompanyAccess(admin, u.id, c);
       if (onlyNeverSignedIn && u.last_sign_in_at) {
-        results.push({ company: c.name, email, status: "skipped_already_signed_in" });
+        results.push({ company: c.name, email, status: "linked_skipped_already_signed_in" });
         continue;
       }
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("must_change_password")
+        .eq("id", u.id)
+        .maybeSingle();
+      if (onlyMustChangePassword && profile?.must_change_password === false) {
+        results.push({ company: c.name, email, status: "linked_skipped_password_changed" });
+        continue;
+      }
+
       const { error: updErr } = await admin.auth.admin.updateUserById(u.id, {
-        password: cnpjDigits,
+        password: initialPassword,
+        email_confirm: true,
       });
       if (updErr) {
         results.push({ company: c.name, email, status: "error", error: updErr.message });
