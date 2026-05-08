@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
       const caller = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: `Bearer ${token}` } },
       });
-      const { data: claims } = await caller.auth.getClaims(token);
-      const callerId = claims?.claims?.sub;
+      const { data: callerData } = await caller.auth.getUser(token);
+      const callerId = callerData?.user?.id;
       if (callerId) {
         const adminTmp = createClient(supabaseUrl, supabaseServiceKey);
         const { data: roles } = await adminTmp.from("user_roles").select("role").eq("user_id", callerId);
