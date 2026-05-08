@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
 
     const results: any[] = [];
     const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const resetHandledUserIds = new Set<string>();
 
     for (const c of companies ?? []) {
       const initialPassword = cnpjDigits(c.cnpj);
@@ -151,13 +152,24 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      if (resetHandledUserIds.has(u.id)) {
+        results.push({ company: c.name, email, status: "linked_skipped_duplicate_email" });
+        continue;
+      }
+
+      const profileCompany = (companies ?? []).find((company: any) => company.id === profile?.company_id);
+      const passwordForUser = cnpjDigits(profileCompany?.cnpj).length >= 8
+        ? cnpjDigits(profileCompany?.cnpj)
+        : initialPassword;
+
       const { error: updErr } = await admin.auth.admin.updateUserById(u.id, {
-        password: initialPassword,
+        password: passwordForUser,
         email_confirm: true,
       });
       if (updErr) {
         results.push({ company: c.name, email, status: "error", error: updErr.message });
       } else {
+        resetHandledUserIds.add(u.id);
         await admin.from("profiles").update({ must_change_password: true }).eq("id", u.id);
         results.push({ company: c.name, email, status: "reset_ok" });
       }
