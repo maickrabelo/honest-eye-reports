@@ -5,6 +5,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const cnpjDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
+
+const findUserByEmail = (users: any[], email: string) =>
+  users.find((x: any) => x.email?.toLowerCase() === email.toLowerCase());
+
+const ensureCompanyAccess = async (admin: any, userId: string, company: any) => {
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("company_id, full_name, must_change_password")
+    .eq("id", userId)
+    .maybeSingle();
+
+  await admin.from("profiles").upsert(
+    {
+      id: userId,
+      full_name: profile?.full_name || company.name,
+      company_id: profile?.company_id || company.id,
+      must_change_password: profile?.must_change_password ?? true,
+    },
+    { onConflict: "id" },
+  );
+
+  await admin.from("user_roles").delete().eq("user_id", userId).neq("role", "company");
+  const { data: existingRole } = await admin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "company")
+    .maybeSingle();
+  if (!existingRole) await admin.from("user_roles").insert({ user_id: userId, role: "company" });
+
+  const { data: existingLink } = await admin
+    .from("user_companies")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("company_id", company.id)
+    .maybeSingle();
+  if (!existingLink) await admin.from("user_companies").insert({ user_id: userId, company_id: company.id });
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -41,7 +81,8 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const onlyNeverSignedIn: boolean = body.only_never_signed_in !== false;
+    const onlyNeverSignedIn: boolean = body.only_never_signed_in === true;
+    const onlyMustChangePassword: boolean = body.only_must_change_password !== false;
 
     // Override mode: reset a specific email to a specific password
     if (body.override_email && body.override_password) {
