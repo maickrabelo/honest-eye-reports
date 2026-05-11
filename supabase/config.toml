@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.fix-company-passwords]
 # Requires admin authentication
+
+[functions.reset-single-company-passwords]
+# Requires admin authentication
