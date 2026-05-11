@@ -14,7 +14,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  
   const [forgotOpen, setForgotOpen] = useState(false);
   const [showCnpjNotice, setShowCnpjNotice] = useState(false);
   const navigate = useNavigate();
