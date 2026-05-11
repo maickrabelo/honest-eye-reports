@@ -86,7 +86,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .single();
 
       if (error) throw error;
-      return data;
+      return data as any;
     } catch (error) {
       console.error('Error fetching profile:', error);
       return null;
