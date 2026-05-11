@@ -13,6 +13,7 @@ interface Profile {
   company_id: string | null;
   sst_manager_id: string | null;
   must_change_password: boolean | null;
+  password_reset_reason: string | null;
 }
 
 export interface UserCompany {
