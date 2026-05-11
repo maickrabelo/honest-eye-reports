@@ -211,7 +211,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (userProfile?.must_change_password) {
       navigate('/change-password');
     } else if (userRole === 'pending') {
-      navigate('/pending-approval');
+      navigate('/');
     } else if (userRole === 'company' && userCompanies.length > 1) {
       navigate('/select-company');
     } else if (userRole === 'admin') {
