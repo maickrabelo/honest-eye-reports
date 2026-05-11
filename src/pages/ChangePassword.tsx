@@ -63,10 +63,10 @@ const ChangePassword: React.FC = () => {
 
       if (passwordError) throw passwordError;
 
-      // Update must_change_password flag
+      // Update must_change_password flag and clear reset reason
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ must_change_password: false } as any)
+        .update({ must_change_password: false, password_reset_reason: null } as any)
         .eq('id', user!.id);
 
       if (profileError) throw profileError;
