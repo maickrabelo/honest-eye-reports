@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, AlertCircle } from "lucide-react";
 import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
 
 const Auth = () => {
