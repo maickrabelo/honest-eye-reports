@@ -144,120 +144,77 @@ const Auth = () => {
           )}
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Cadastro</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              {showCnpjNotice && (
-                <div className="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 flex items-start gap-2 text-sm text-amber-900">
-                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>
-                    <strong>Aviso para empresas:</strong> Devido a uma atualização do sistema, sua senha foi alterada para o número do seu CNPJ. Insira o número sem pontos e traços e, em seguida, defina uma nova senha.
-                  </span>
-                </div>
+          {showCnpjNotice && (
+            <div className="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 flex items-start gap-2 text-sm text-amber-900">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                <strong>Aviso para empresas:</strong> Devido a uma atualização do sistema, sua senha foi alterada para o número do seu CNPJ. Insira o número sem pontos e traços e, em seguida, defina uma nova senha.
+              </span>
+            </div>
+          )}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="login-email">Email</Label>
+              <Input
+                id="login-email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="login-password">Senha</Label>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Esqueceu a senha?
+                </button>
+              </div>
+              <Input
+                id="login-password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
               )}
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <button
-                      type="button"
-                      onClick={() => setForgotOpen(true)}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Esqueceu a senha?
-                    </button>
-                  </div>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
-                    </>
-                  ) : (
-                    'Entrar'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
+            </Button>
+          </form>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nome Completo</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="Seu nome completo"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    minLength={6}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando conta...
-                    </>
-                  ) : (
-                    'Criar Conta'
-                  )}
+          <div className="mt-6 pt-6 border-t">
+            <div className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-4 text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-primary">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm font-semibold">Ainda não tem conta?</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Crie sua conta com <strong>7 dias grátis</strong> e acesso completo a todos os módulos. Sem cartão de crédito.
+              </p>
+              <Link to="/cadastro-empresa-trial">
+                <Button variant="outline" className="w-full" type="button">
+                  Iniciar teste grátis
                 </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+              </Link>
+            </div>
+          </div>
+
         </CardContent>
       </Card>
 
