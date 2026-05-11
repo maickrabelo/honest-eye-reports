@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, AlertCircle } from "lucide-react";
 import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
 
 const Auth = () => {
@@ -147,6 +147,12 @@ const Auth = () => {
             </TabsList>
 
             <TabsContent value="login">
+              <div className="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 flex items-start gap-2 text-sm text-amber-900">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>
+                  <strong>Aviso para empresas:</strong> Devido a uma atualização do sistema, sua senha foi alterada para o número do seu CNPJ. Insira o número sem pontos e traços e, em seguida, defina uma nova senha.
+                </span>
+              </div>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>

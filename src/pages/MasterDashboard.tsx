@@ -653,6 +653,33 @@ const MasterDashboard = () => {
     }
   };
 
+  const [isResettingCompanyPasswords, setIsResettingCompanyPasswords] = React.useState(false);
+
+  const handleResetSingleCompanyPasswords = async () => {
+    const ok = window.confirm(
+      'Isso vai resetar a senha de TODAS as empresas que possuem apenas 1 CNPJ vinculado ao e-mail (sem multi-empresa). A senha será o CNPJ (apenas dígitos) e o usuário será forçado a trocá-la no próximo login. Deseja continuar?'
+    );
+    if (!ok) return;
+    setIsResettingCompanyPasswords(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-single-company-passwords', { body: {} });
+      if (error) throw error;
+      toast({
+        title: 'Reset concluído',
+        description: `Resetadas: ${data?.reset ?? 0} | Multi-empresa puladas: ${data?.skipped_multi_company ?? 0} | Sem role 'company': ${data?.skipped_not_company_role ?? 0} | CNPJ inválido: ${data?.skipped_invalid_cnpj ?? 0} | Erros: ${data?.errors ?? 0}`,
+      });
+      console.log('reset-single-company-passwords result:', data);
+    } catch (e: any) {
+      toast({
+        title: 'Erro ao resetar senhas',
+        description: getSafeErrorMessage(e),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResettingCompanyPasswords(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -1903,6 +1930,25 @@ const MasterDashboard = () => {
             </TabsContent>
 
             <TabsContent value="trials" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reset em massa — Empresas single-CNPJ</CardTitle>
+                  <CardDescription>
+                    Reseta a senha de todas as empresas que possuem APENAS 1 CNPJ vinculado ao e-mail
+                    (sem multi-empresa). A senha vira o CNPJ (somente dígitos) e o usuário é forçado
+                    a trocar no próximo login. Não afeta gestoras SST nem contas multi-empresa.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="destructive"
+                    onClick={handleResetSingleCompanyPasswords}
+                    disabled={isResettingCompanyPasswords}
+                  >
+                    {isResettingCompanyPasswords ? 'Resetando...' : 'Resetar senhas das empresas single-CNPJ'}
+                  </Button>
+                </CardContent>
+              </Card>
               <TrialAccountsTab />
             </TabsContent>
 

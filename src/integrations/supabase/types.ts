@@ -1287,6 +1287,7 @@ export type Database = {
           full_name: string | null
           id: string
           must_change_password: boolean | null
+          password_reset_reason: string | null
           sst_manager_id: string | null
           updated_at: string
         }
@@ -1296,6 +1297,7 @@ export type Database = {
           full_name?: string | null
           id: string
           must_change_password?: boolean | null
+          password_reset_reason?: string | null
           sst_manager_id?: string | null
           updated_at?: string
         }
@@ -1305,6 +1307,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           must_change_password?: boolean | null
+          password_reset_reason?: string | null
           sst_manager_id?: string | null
           updated_at?: string
         }

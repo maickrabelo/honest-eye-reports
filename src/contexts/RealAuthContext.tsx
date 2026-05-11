@@ -13,6 +13,7 @@ interface Profile {
   company_id: string | null;
   sst_manager_id: string | null;
   must_change_password: boolean | null;
+  password_reset_reason: string | null;
 }
 
 export interface UserCompany {
@@ -85,7 +86,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .single();
 
       if (error) throw error;
-      return data;
+      return data as any;
     } catch (error) {
       console.error('Error fetching profile:', error);
       return null;

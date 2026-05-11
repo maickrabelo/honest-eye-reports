@@ -63,10 +63,10 @@ const ChangePassword: React.FC = () => {
 
       if (passwordError) throw passwordError;
 
-      // Update must_change_password flag
+      // Update must_change_password flag and clear reset reason
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ must_change_password: false } as any)
+        .update({ must_change_password: false, password_reset_reason: null } as any)
         .eq('id', user!.id);
 
       if (profileError) throw profileError;
@@ -117,9 +117,15 @@ const ChangePassword: React.FC = () => {
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Criar Nova Senha</CardTitle>
+          <CardTitle className="text-2xl">
+            {(profile as any)?.password_reset_reason === 'system_update'
+              ? 'Defina uma nova senha'
+              : 'Criar Nova Senha'}
+          </CardTitle>
           <CardDescription>
-            Este é seu primeiro acesso. Por segurança, crie uma nova senha para continuar.
+            {(profile as any)?.password_reset_reason === 'system_update'
+              ? 'Devido a uma atualização do sistema, sua senha foi alterada para o número do seu CNPJ. Você acabou de entrar com ela — agora defina uma nova senha para continuar.'
+              : 'Este é seu primeiro acesso. Por segurança, crie uma nova senha para continuar.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
