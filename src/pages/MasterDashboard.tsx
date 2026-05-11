@@ -653,6 +653,33 @@ const MasterDashboard = () => {
     }
   };
 
+  const [isResettingCompanyPasswords, setIsResettingCompanyPasswords] = React.useState(false);
+
+  const handleResetSingleCompanyPasswords = async () => {
+    const ok = window.confirm(
+      'Isso vai resetar a senha de TODAS as empresas que possuem apenas 1 CNPJ vinculado ao e-mail (sem multi-empresa). A senha será o CNPJ (apenas dígitos) e o usuário será forçado a trocá-la no próximo login. Deseja continuar?'
+    );
+    if (!ok) return;
+    setIsResettingCompanyPasswords(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-single-company-passwords', { body: {} });
+      if (error) throw error;
+      toast({
+        title: 'Reset concluído',
+        description: `Resetadas: ${data?.reset ?? 0} | Multi-empresa puladas: ${data?.skipped_multi_company ?? 0} | Sem role 'company': ${data?.skipped_not_company_role ?? 0} | CNPJ inválido: ${data?.skipped_invalid_cnpj ?? 0} | Erros: ${data?.errors ?? 0}`,
+      });
+      console.log('reset-single-company-passwords result:', data);
+    } catch (e: any) {
+      toast({
+        title: 'Erro ao resetar senhas',
+        description: getSafeErrorMessage(e),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResettingCompanyPasswords(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex flex-col min-h-screen">
