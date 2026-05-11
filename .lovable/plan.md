@@ -1,88 +1,77 @@
-## Slots extras de empresa para Gestoras SST
+## Objetivo
 
-Hoje, quando uma gestora SST atinge o limite de empresas do plano (`subscription_plans.max_companies` ou `sst_managers.max_companies`), o cadastro é bloqueado com um toast de erro. Vamos transformar esse bloqueio em uma oferta: comprar 1 slot extra por **R$ 19,90/mês**, cobrado junto à próxima fatura no Asaas, e liberar o cadastro imediatamente após confirmação.
+Resolver de uma vez os problemas de primeiro acesso das empresas, resetando senhas em massa **apenas** para empresas com 1 único CNPJ vinculado ao email, e exibindo um aviso claro no login orientando o uso do CNPJ como senha temporária.
 
-### 1. Banco de dados (migration)
+## Escopo
 
-**Nova coluna em `sst_managers`:**
-- `extra_company_slots integer NOT NULL DEFAULT 0` — quantos slots adicionais a gestora já contratou.
+**Incluso:**
+- Empresas (role = `company`) cujo email está vinculado a apenas 1 registro em `companies` (sem seletor de empresas).
 
-**Nova tabela `sst_extra_slot_purchases`** (histórico/auditoria + base para faturamento):
-- `id uuid PK`
-- `sst_manager_id uuid → sst_managers(id) ON DELETE CASCADE`
-- `subscription_id uuid → subscriptions(id)` (assinatura na qual o slot foi anexado)
-- `slots_added integer NOT NULL DEFAULT 1`
-- `unit_price_cents integer NOT NULL DEFAULT 1990` (R$ 19,90)
-- `status text NOT NULL DEFAULT 'active'` (`active` | `canceled`)
-- `purchased_by uuid` (user_id de quem comprou)
-- `billing_started_at timestamptz` (próxima fatura)
-- `created_at timestamptz default now()`
-- RLS: gestora vê/insere apenas seus próprios registros; admin vê todos.
+**Excluído (NÃO mexer):**
+- Gestoras SST.
+- Empresas cujo email está vinculado a 2+ CNPJs (multi-empresa, com `CompanySelector`).
+- Usuários que já trocaram a senha e cuja conta não esteja com problema.
 
-**Atualizar `validate_sst_company_limit()`**: somar `extra_company_slots` ao `max_companies` antes de comparar.
+## Etapas
 
-```sql
-SELECT COALESCE(max_companies, 50) + COALESCE(extra_company_slots, 0)
-INTO max_allowed FROM sst_managers WHERE id = NEW.sst_manager_id;
-```
+### 1. Backend — Edge function de reset em massa
 
-### 2. Edge function `purchase-extra-company-slot`
+Criar nova edge function `reset-single-company-passwords` (não reaproveitar `fix-company-passwords` para evitar efeitos colaterais nas multi-empresa):
 
-Responsável por:
-1. Validar JWT e que o usuário é admin da gestora.
-2. Buscar a `subscription` ativa do dono da gestora.
-3. Criar uma assinatura adicional recorrente no Asaas (R$ 19,90/mês) com `nextDueDate` = data da próxima fatura da assinatura principal, descrição "Slot extra de empresa - SOIA".
-   - Reaproveita `ASAAS_API_KEY` e o `asaas_customer_id` já existente.
-   - Em caso de assinatura sem Asaas (trial/legacy), apenas registra o slot e marca `metadata.pending_billing = true` para cobrança manual posterior.
-4. Incrementar `sst_managers.extra_company_slots += 1`.
-5. Inserir registro em `sst_extra_slot_purchases`.
-6. Retornar `{ success: true, new_limit, next_charge_date }`.
+- Apenas admin pode invocar.
+- Lógica:
+  1. Listar todos auth users.
+  2. Agrupar por email (lowercase).
+  3. Para cada email que aparece em **exatamente 1** `companies.email`:
+     - Validar que o usuário tem role `company` (não SST, não admin).
+     - Confirmar que `user_companies` para esse user tem apenas 1 entrada (segurança extra).
+     - Resetar senha para os dígitos do CNPJ da empresa (mínimo 8 dígitos).
+     - Setar `must_change_password = true` no profile.
+  4. Pular emails com 2+ empresas vinculadas.
+- Registrar em `config.toml` (verify_jwt = false, validação manual).
+- Retornar resumo: `{ resetados, pulados_multi_empresa, pulados_sst, erros }`.
 
-### 3. Frontend
+### 2. Backend — Flag de "reset por atualização do sistema"
 
-**`AddCompanyDialog.tsx` (SST)** — substituir o toast destrutivo do bloco `if (plan.max_companies && currCompanies >= plan.max_companies)` por:
-- Fechar o formulário e abrir um novo `<UpgradeSlotDialog />` (AlertDialog).
+Adicionar coluna `password_reset_reason` (text nullable) em `profiles` para diferenciar:
+- `'system_update'` → exibe aviso novo de "Devido a uma atualização do sistema...".
+- `null` ou outros → fluxo padrão de primeiro acesso.
 
-**Novo `src/components/sst/UpgradeSlotDialog.tsx`:**
-- Título: "Limite de empresas atingido"
-- Mensagem:
-  > Você já cadastrou {currCompanies} de {limit} empresas do seu plano.  
-  > Deseja contratar **mais 1 slot de empresa**?  
-  > Será cobrado o valor de **R$ 19,90/mês** na sua próxima fatura.
-- Botões: "Cancelar" / "Contratar slot adicional"
-- Ao confirmar: invoca `purchase-extra-company-slot`, mostra toast de sucesso ("Slot liberado! Continue o cadastro da empresa."), atualiza limites locais (refetch do hook `useSubscriptionLimits`/contador) e reabre o `AddCompanyDialog` com os campos preenchidos preservados.
+A edge function preenche `'system_update'` ao resetar.
 
-**`SSTCompanyCounter.tsx`** — mostrar `currentCount / (max + extras)` e um pequeno badge "+N slots extras" quando `extra_company_slots > 0`.
+### 3. Frontend — Aviso no login + tela de troca de senha
 
-**`useSubscriptionLimits.ts`** — somar `sst_managers.extra_company_slots` em `maxCompanies` para a categoria `manager`.
+**`src/pages/Auth.tsx` / `LoginCard.tsx`:**
+- Após login bem-sucedido, se `profile.must_change_password = true` E `password_reset_reason = 'system_update'`, exibir um `AlertDialog` ou toast destacado com a mensagem:
+  > "Devido a uma atualização do sistema sua senha foi alterada para o número do seu CNPJ. Insira o número sem pontos e traços e defina uma nova senha."
+- Em seguida redirecionar para `/change-password` (rota já existente).
 
-### 4. Painel Master (opcional rápido)
+**`src/pages/ChangePassword.tsx`:**
+- Quando `password_reset_reason = 'system_update'`, trocar o título/descrição do card para refletir a mensagem do aviso (em vez do texto genérico de primeiro acesso).
+- Ao salvar a nova senha, limpar `password_reset_reason` junto com `must_change_password = false`.
 
-Listar `sst_extra_slot_purchases` em uma aba dentro de `MasterDashboard` (apenas leitura) para acompanhamento de receita extra.
+### 4. UI Admin — Botão para disparar o reset
 
-### Fluxo do usuário
+No `MasterDashboard` (aba de empresas/SSTs), adicionar um botão "Resetar senhas de empresas single-CNPJ" com confirmação dupla, que invoca a edge function. Mostra resumo do resultado em toast.
 
-```
-Gestora clica "Adicionar Empresa"
-        ↓
-Preenche formulário → submit
-        ↓
-Limite atingido?
-   ├─ Não → cadastro normal
-   └─ Sim → Dialog "Contratar slot extra (R$19,90/mês)"
-              ├─ Cancelar → fecha
-              └─ Confirmar → edge function
-                                 ↓
-                         Asaas cria sub recorrente
-                         + extra_company_slots++
-                                 ↓
-                         Reabre AddCompanyDialog
-                                 ↓
-                         Usuário clica "Cadastrar" → sucesso
-```
+### 5. Execução
 
-### Fora de escopo
+- Após aprovar o plano e fazer deploy, disparar a função uma vez via UI admin.
+- Validar com 2-3 contas single-CNPJ e 1 conta multi-CNPJ (essa NÃO pode ter sido alterada).
 
-- Cancelamento self-service de slots (futuramente botão "Reduzir slots" listando os ativos).
-- Descontos por compra de múltiplos slots de uma vez (mantemos 1 por clique).
-- Cobrança proporcional (pro-rata) — usaremos sempre a próxima fatura cheia.
+## Detalhes técnicos
+
+- Critério "1 CNPJ vinculado": `count(*) = 1` em `companies WHERE lower(email) = lower(:email)` **E** `count(*) = 1` em `user_companies WHERE user_id = :id`. Ambos precisam bater.
+- Senha = `cnpj.replace(/\D/g,'')`. Se < 8 dígitos, pular e logar erro.
+- Não tocar em users com role `admin`, `sst`, `partner`, `affiliate`, `sales`.
+- Edge function idempotente: rodar de novo não estraga quem já trocou (pula se `must_change_password = false` e `password_reset_reason IS NULL`).
+
+## Arquivos previstos
+
+- **Novo:** `supabase/functions/reset-single-company-passwords/index.ts`
+- **Migração:** adicionar coluna `password_reset_reason` em `profiles`.
+- **Edit:** `supabase/config.toml` (registro da função).
+- **Edit:** `src/pages/Auth.tsx` ou `src/components/LoginCard.tsx` (aviso pós-login).
+- **Edit:** `src/pages/ChangePassword.tsx` (texto contextual + limpar flag).
+- **Edit:** `src/pages/MasterDashboard.tsx` (botão admin).
+- **Edit:** `src/contexts/RealAuthContext.tsx` (expor `password_reset_reason` no profile, se necessário).
