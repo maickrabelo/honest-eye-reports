@@ -1930,6 +1930,25 @@ const MasterDashboard = () => {
             </TabsContent>
 
             <TabsContent value="trials" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reset em massa — Empresas single-CNPJ</CardTitle>
+                  <CardDescription>
+                    Reseta a senha de todas as empresas que possuem APENAS 1 CNPJ vinculado ao e-mail
+                    (sem multi-empresa). A senha vira o CNPJ (somente dígitos) e o usuário é forçado
+                    a trocar no próximo login. Não afeta gestoras SST nem contas multi-empresa.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="destructive"
+                    onClick={handleResetSingleCompanyPasswords}
+                    disabled={isResettingCompanyPasswords}
+                  >
+                    {isResettingCompanyPasswords ? 'Resetando...' : 'Resetar senhas das empresas single-CNPJ'}
+                  </Button>
+                </CardContent>
+              </Card>
               <TrialAccountsTab />
             </TabsContent>
 
