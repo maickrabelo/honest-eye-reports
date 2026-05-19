@@ -117,5 +117,3 @@ verify_jwt = false
 [functions.admin-reset-user-password]
 # Requires admin authentication
 
-[functions.oneoff-reset-amanda]
-verify_jwt = false
