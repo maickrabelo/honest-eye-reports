@@ -941,6 +941,33 @@ export type Database = {
           },
         ]
       }
+      esocial_agents_catalog: {
+        Row: {
+          category: string
+          code: string
+          description: string | null
+          exposure_limit: number | null
+          name: string
+          unit: string | null
+        }
+        Insert: {
+          category: string
+          code: string
+          description?: string | null
+          exposure_limit?: number | null
+          name: string
+          unit?: string | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          description?: string | null
+          exposure_limit?: number | null
+          name?: string
+          unit?: string | null
+        }
+        Relationships: []
+      }
       hseit_answers: {
         Row: {
           answer_value: number
@@ -1276,6 +1303,401 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "licensed_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pgr_action_items: {
+        Row: {
+          control_hierarchy: string | null
+          cost: number | null
+          created_at: string
+          deadline: string | null
+          description: string
+          evidence_url: string | null
+          id: string
+          pgr_document_id: string
+          responsible: string | null
+          risk_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          control_hierarchy?: string | null
+          cost?: number | null
+          created_at?: string
+          deadline?: string | null
+          description: string
+          evidence_url?: string | null
+          id?: string
+          pgr_document_id: string
+          responsible?: string | null
+          risk_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          control_hierarchy?: string | null
+          cost?: number | null
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          evidence_url?: string | null
+          id?: string
+          pgr_document_id?: string
+          responsible?: string | null
+          risk_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_action_items_pgr_document_id_fkey"
+            columns: ["pgr_document_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pgr_action_items_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_risks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pgr_documents: {
+        Row: {
+          address: string | null
+          cnae: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          executive_summary: string | null
+          id: string
+          last_review_at: string | null
+          responsible_cpf: string | null
+          responsible_name: string | null
+          responsible_registration: string | null
+          risk_grade: string | null
+          sst_manager_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          validity_end: string | null
+          validity_start: string | null
+          version: number
+        }
+        Insert: {
+          address?: string | null
+          cnae?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          executive_summary?: string | null
+          id?: string
+          last_review_at?: string | null
+          responsible_cpf?: string | null
+          responsible_name?: string | null
+          responsible_registration?: string | null
+          risk_grade?: string | null
+          sst_manager_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          validity_end?: string | null
+          validity_start?: string | null
+          version?: number
+        }
+        Update: {
+          address?: string | null
+          cnae?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          executive_summary?: string | null
+          id?: string
+          last_review_at?: string | null
+          responsible_cpf?: string | null
+          responsible_name?: string | null
+          responsible_registration?: string | null
+          risk_grade?: string | null
+          sst_manager_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          validity_end?: string | null
+          validity_start?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      pgr_esocial_exports: {
+        Row: {
+          event_type: string
+          file_hash: string | null
+          file_path: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          pgr_document_id: string
+          reference_period: string | null
+          worker_count: number | null
+        }
+        Insert: {
+          event_type?: string
+          file_hash?: string | null
+          file_path: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          pgr_document_id: string
+          reference_period?: string | null
+          worker_count?: number | null
+        }
+        Update: {
+          event_type?: string
+          file_hash?: string | null
+          file_path?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          pgr_document_id?: string
+          reference_period?: string | null
+          worker_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_esocial_exports_pgr_document_id_fkey"
+            columns: ["pgr_document_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pgr_ghe: {
+        Row: {
+          activities_description: string | null
+          created_at: string
+          id: string
+          name: string
+          pgr_document_id: string
+          role: string | null
+          sector: string | null
+          updated_at: string
+          work_schedule: string | null
+          worker_count: number
+        }
+        Insert: {
+          activities_description?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          pgr_document_id: string
+          role?: string | null
+          sector?: string | null
+          updated_at?: string
+          work_schedule?: string | null
+          worker_count?: number
+        }
+        Update: {
+          activities_description?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          pgr_document_id?: string
+          role?: string | null
+          sector?: string | null
+          updated_at?: string
+          work_schedule?: string | null
+          worker_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_ghe_pgr_document_id_fkey"
+            columns: ["pgr_document_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pgr_ghe_workers: {
+        Row: {
+          admission_date: string | null
+          cpf: string
+          created_at: string
+          full_name: string
+          ghe_id: string
+          id: string
+          registration_number: string | null
+        }
+        Insert: {
+          admission_date?: string | null
+          cpf: string
+          created_at?: string
+          full_name: string
+          ghe_id: string
+          id?: string
+          registration_number?: string | null
+        }
+        Update: {
+          admission_date?: string | null
+          cpf?: string
+          created_at?: string
+          full_name?: string
+          ghe_id?: string
+          id?: string
+          registration_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_ghe_workers_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_ghe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pgr_monitoring: {
+        Row: {
+          created_at: string
+          id: string
+          instrument: string | null
+          measured_at: string
+          observations: string | null
+          report_url: string | null
+          risk_id: string
+          technique: string | null
+          unit: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrument?: string | null
+          measured_at: string
+          observations?: string | null
+          report_url?: string | null
+          risk_id: string
+          technique?: string | null
+          unit?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrument?: string | null
+          measured_at?: string
+          observations?: string | null
+          report_url?: string | null
+          risk_id?: string
+          technique?: string | null
+          unit?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_monitoring_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_risks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pgr_risks: {
+        Row: {
+          agent_name: string
+          category: string
+          created_at: string
+          epi_ca: string | null
+          esocial_agent_code: string | null
+          existing_epc: string | null
+          existing_epi: string | null
+          exposure_description: string | null
+          exposure_limit: number | null
+          ghe_id: string | null
+          id: string
+          measurement_unit: string | null
+          measurement_value: number | null
+          observations: string | null
+          pgr_document_id: string
+          probability: number
+          risk_level: string | null
+          severity: number
+          source: string | null
+          source_module: string | null
+          source_module_id: string | null
+          trajectory: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          category: string
+          created_at?: string
+          epi_ca?: string | null
+          esocial_agent_code?: string | null
+          existing_epc?: string | null
+          existing_epi?: string | null
+          exposure_description?: string | null
+          exposure_limit?: number | null
+          ghe_id?: string | null
+          id?: string
+          measurement_unit?: string | null
+          measurement_value?: number | null
+          observations?: string | null
+          pgr_document_id: string
+          probability?: number
+          risk_level?: string | null
+          severity?: number
+          source?: string | null
+          source_module?: string | null
+          source_module_id?: string | null
+          trajectory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          category?: string
+          created_at?: string
+          epi_ca?: string | null
+          esocial_agent_code?: string | null
+          existing_epc?: string | null
+          existing_epi?: string | null
+          exposure_description?: string | null
+          exposure_limit?: number | null
+          ghe_id?: string | null
+          id?: string
+          measurement_unit?: string | null
+          measurement_value?: number | null
+          observations?: string | null
+          pgr_document_id?: string
+          probability?: number
+          risk_level?: string | null
+          severity?: number
+          source?: string | null
+          source_module?: string | null
+          source_module_id?: string | null
+          trajectory?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_risks_ghe_id_fkey"
+            columns: ["ghe_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_ghe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pgr_risks_pgr_document_id_fkey"
+            columns: ["pgr_document_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -1649,6 +2071,7 @@ export type Database = {
           max_companies: number
           name: string
           onboarding_completed_pages: Json | null
+          pgr_module_enabled: boolean
           phone: string | null
           slug: string | null
           subscription_status: string | null
@@ -1669,6 +2092,7 @@ export type Database = {
           max_companies?: number
           name: string
           onboarding_completed_pages?: Json | null
+          pgr_module_enabled?: boolean
           phone?: string | null
           slug?: string | null
           subscription_status?: string | null
@@ -1689,6 +2113,7 @@ export type Database = {
           max_companies?: number
           name?: string
           onboarding_completed_pages?: Json | null
+          pgr_module_enabled?: boolean
           phone?: string | null
           slug?: string | null
           subscription_status?: string | null
@@ -2491,6 +2916,7 @@ export type Database = {
         Returns: number
       }
       get_user_sst_manager_id: { Args: { _user_id: string }; Returns: string }
+      has_pgr_module: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
