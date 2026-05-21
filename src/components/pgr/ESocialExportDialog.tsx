@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Download, FileText, FileCode, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { PGRDocument } from "@/pages/PGRDashboard";
+import { downloadPGRReport } from "@/components/pgr/PGRReportPDF";
 
 interface Props {
   open: boolean;
