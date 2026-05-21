@@ -1,85 +1,72 @@
-## O que muda
 
-Hoje, ao clicar em **Exportar → Relatório PGR (PDF)**, o sistema abre uma janela HTML básica e usa `window.print`. Vamos substituir isso por um PDF profissional, paginado, no padrão do modelo NR-1 anexado, gerado com `jsPDF` (mesma biblioteca já usada no `HSEITPGRReportPDF`).
+# Dashboard de Acompanhamento do PGR
 
-O modelo de saída terá **todas as seções do PGR padrão**, com os dados reais da empresa preenchidos automaticamente:
+Hoje o módulo PGR tem 4 abas (Visão Geral, GHEs, Inventário, Plano de Ação) focadas em **edição**. Vamos adicionar uma nova aba **"Dashboard"** (primeira aba, padrão) focada em **monitoramento visual** do programa vigente.
 
-```text
-┌─────────────────────────────────────┐
-│  Capa                               │ ← logo SST (se houver) + Empresa + Vigência
-├─────────────────────────────────────┤
-│  Identificação da Empresa           │ ← Razão social, CNPJ, CNAE, Grau, Endereço
-│  Regime de Trabalho                 │
-│  Controle de Revisões               │
-├─────────────────────────────────────┤
-│  PARTE I — Disposição Geral         │ ← Introdução, Objetivo, Termos &
-│   1.1 Introdução                    │   Definições, Responsabilidades
-│   1.2 Objetivo                      │   (Empregador / Direção / Líderes /
-│   1.3 Termos e Definições           │   SESMT / Empregados / CIPA),
-│   1.4 Responsabilidades             │   Documentos complementares,
-│   1.5 Documentos Complementares     │   Estratégia & Metodologia
-│   1.6 Estratégia / Metodologia      │
-├─────────────────────────────────────┤
-│  PARTE II — Antecipação,            │
-│  Reconhecimento e Avaliação         │
-│   2.1 Antecipação                   │
-│   2.2 Reconhecimento                │
-│   2.3 Avaliação                     │
-│   2.4 MATRIZ DE RISCO 5x5           │ ← desenhada nativa (cores por faixa)
-├─────────────────────────────────────┤
-│  PARTE III — Avaliação Quantitativa │ ← Critérios químicos / ruído / vibração,
-│   (Critérios, Níveis de Ação,       │   Medidas de Controle, Hierarquia,
-│   Medidas de Controle, Hierarquia,  │   Treinamentos, Eficácia, Revisões
-│   Registro e Divulgação)            │
-├─────────────────────────────────────┤
-│  PARTE IV — INVENTÁRIO DE RISCOS    │ ← Tabela por GHE com:
-│   (por GHE)                         │   agente / fonte / exposição / S × P /
-│                                     │   nível / EPC / EPI+CA / observações
-├─────────────────────────────────────┤
-│  PARTE V — PLANO DE AÇÃO            │ ← Tabela: descrição / hierarquia /
-│                                     │   responsável / prazo / status / custo
-├─────────────────────────────────────┤
-│  PARTE VI — CONCLUSÃO E             │ ← Recomendações de engenharia,
-│  RECOMENDAÇÕES                      │   administrativas, treinamentos,
-│                                     │   monitoramento e EPI
-├─────────────────────────────────────┤
-│  Assinatura Responsável Técnico     │ ← Nome, CPF, registro CREA/MTE/CRP
-└─────────────────────────────────────┘
-```
+## O que será construído
 
-Todas as páginas terão **cabeçalho** ("PGR – PROGRAMA DE GERENCIAMENTO DE RISCOS / Revisão XX / data") e **rodapé** ("Empresa / página X de Y"), igual ao modelo.
+### 1. Nova aba "Dashboard" em `PGRDashboard.tsx`
+Será a aba inicial ao abrir o PGR. As demais abas (edição) permanecem.
 
-## Como o conteúdo é preenchido
+### 2. KPIs no topo (cards)
+- Total de GHEs e trabalhadores expostos
+- Total de riscos identificados (e quantos críticos/altos)
+- Ações: total, concluídas, em andamento, pendentes, atrasadas
+- % de conclusão geral do plano de ação
+- Vigência do PGR (dias restantes + barra de progresso temporal)
 
-| Seção | Origem dos dados |
-|---|---|
-| Capa, Identificação, Vigência, CNAE, Grau, Endereço | `pgr_documents` + `companies` |
-| Resumo Executivo | `pgr_documents.executive_summary` (se vazio, texto padrão) |
-| Responsável Técnico (assinatura) | `pgr_documents.responsible_name/cpf/registration` |
-| Inventário de Riscos | `pgr_risks` agrupado por `pgr_ghe` (mostra GHE, agente, código e-Social, S, P, nível com cor, EPC, EPI+CA, observações) |
-| Plano de Ação | `pgr_action_items` |
-| Disposições, Definições, Metodologia, Conclusão | Textos fixos extraídos do modelo NR-1 anexado (boilerplate técnico) |
+### 3. Gráficos (usando `recharts`, já no projeto)
+- **Donut** — riscos por categoria (físico, químico, biológico, ergonômico, acidentes, psicossocial)
+- **Barras horizontais** — riscos por nível (matriz Prob × Sev → Trivial/Tolerável/Moderado/Substancial/Intolerável), com cores semânticas
+- **Barras** — distribuição de trabalhadores por GHE
+- **Donut** — status do plano de ação (pendente / em andamento / concluída / cancelada)
+- **Barras empilhadas** — ações por hierarquia de controle (eliminação → substituição → engenharia → administrativa → EPI)
+- **Linha do tempo** — ações por mês de prazo (próximos 12 meses) com marcação de atrasadas
 
-Quando faltarem campos obrigatórios (responsável técnico, CNPJ etc.), o PDF é emitido mesmo assim com marcação **[A PREENCHER]**, para que o usuário veja onde precisa completar (não bloqueia a emissão).
+### 4. Plano de Ação Vigente — cards com checklist
+Substitui visualmente a tabela na nova aba (a tabela editável continua na aba "Plano de Ação").
+
+Cada ação vira um **card** contendo:
+- Título (descrição), badge de status, badge de hierarquia de controle
+- Risco vinculado + GHE
+- Responsável, prazo (com destaque vermelho se atrasada, amarelo se próxima)
+- Custo estimado
+- **Barra de progresso** (0–100%) calculada pelos checklist items concluídos
+- **Checklist interno** — lista de subtarefas marcáveis com checkbox; usuário pode adicionar/remover/marcar
+- Botão "Marcar como concluída" (atualiza status diretamente)
+- Histórico simples: data de criação e última atualização
+
+Filtros no topo dos cards: por status, por GHE, por responsável, "somente atrasadas".
+
+### 5. Persistência do checklist
+Nova tabela `pgr_action_checklist_items` (id, action_item_id, title, done, order_index, timestamps) com RLS espelhando as políticas já existentes de `pgr_action_items` (acesso via `pgr_documents` → empresa/SST do usuário).
+
+## Arquivos
+
+**Criar**
+- `src/components/pgr/PGRMonitoringDashboard.tsx` — container da aba (KPIs + gráficos + lista de cards)
+- `src/components/pgr/PGRKPICards.tsx` — cards de KPI
+- `src/components/pgr/PGRCharts.tsx` — todos os gráficos recharts
+- `src/components/pgr/ActionCard.tsx` — card individual com checklist e progresso
+- `src/components/pgr/ActionChecklist.tsx` — sub-componente do checklist (add/toggle/remove)
+- `src/hooks/usePGRDashboardData.ts` — busca consolidada (GHEs, riscos, ações, checklist) com agregações memoizadas
+
+**Editar**
+- `src/pages/PGRDashboard.tsx` — adicionar 5ª aba "Dashboard" como `defaultValue`
+
+**Migration**
+- Criar `pgr_action_checklist_items` + RLS + índice por `action_item_id`
 
 ## Detalhes técnicos
 
-- Substituir `buildSimplePDF(...)` em `src/components/pgr/ESocialExportDialog.tsx` por uma chamada a um novo gerador.
-- Criar `src/components/pgr/PGRReportPDF.ts` (puro TS) com função `generatePGRReportPDF({ pgr, company, ghes, risks, actions, sstLogoUrl? }): jsPDF` que:
-  - Usa `jsPDF` A4 retrato, margens de 18mm, fonte Helvetica.
-  - Helpers reutilizáveis: `addHeader()`, `addFooter()`, `addPageBreakIfNeeded(h)`, `drawSectionTitle()`, `drawParagraph()`, `drawTable(headers, rows, colWidths)`, `drawRiskMatrix5x5()` (canvas direto no PDF, com cores por nível — verde / amarelo / laranja / vermelho / bordô).
-  - Salva como `PGR_<EmpresaSlug>_v<versao>_<yyyy-mm-dd>.pdf` via `doc.save()`.
-- Buscar logo da SST gestora (quando existir) para a capa, lendo `sst_managers.logo_url` via o `company_sst_assignments`.
-- Manter o botão e a UI do `ESocialExportDialog` exatamente como estão; apenas trocar a implementação por trás do botão "Relatório PGR (PDF)".
-- A exportação XML S-2240 **não muda** nesta tarefa.
+- Sem mudança de dependências (recharts e lucide já presentes).
+- Cores dos níveis de risco reutilizam a paleta da matriz 5×5 já definida em `PGRReportPDF.ts` (verde → vermelho escuro) via tokens HSL.
+- Cálculo de "atrasada": `deadline < hoje && status !== 'done' && status !== 'cancelled'`.
+- Progresso do card: se houver checklist, `done/total`; se não houver, 0% (pendente), 50% (em andamento), 100% (concluída).
+- Tudo client-side com Supabase queries; sem edge function.
+- Visível apenas dentro do módulo PGR, que já é restrito ao usuário "Demo ilimitado" (sem alterações de permissão).
 
-## O que NÃO está no escopo
-
-- Alterar o módulo de XML e-Social.
-- Adicionar editor de textos das seções fixas (boilerplate) — fica embutido no gerador; pode virar campo editável no futuro.
-- Mudar o modelo de dados ou criar migrações.
-- Mudar a tela do dashboard PGR (`/pgr/:companyId`) ou qualquer outro fluxo.
-
-## Validação
-
-Depois de gerar, abrirei o PDF da empresa demo (`/pgr/382745b1-...`), converterei as páginas para imagens e farei QA visual de cada página (overflow, cortes, alinhamento da matriz 5x5, quebra de tabelas longas, cabeçalho/rodapé). Ajusto até o documento sair limpo.
+## Fora do escopo (não será feito agora)
+- Notificações/e-mails de prazos vencendo
+- Exportação do dashboard em PDF (o PDF NR-1 segue separado)
+- Edição inline de campos da ação no card (segue na aba "Plano de Ação")

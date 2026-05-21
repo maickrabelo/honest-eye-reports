@@ -1307,6 +1307,44 @@ export type Database = {
           },
         ]
       }
+      pgr_action_checklist_items: {
+        Row: {
+          action_item_id: string
+          created_at: string
+          done: boolean
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_item_id: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_item_id?: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pgr_action_checklist_items_action_item_id_fkey"
+            columns: ["action_item_id"]
+            isOneToOne: false
+            referencedRelation: "pgr_action_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pgr_action_items: {
         Row: {
           control_hierarchy: string | null
