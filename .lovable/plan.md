@@ -1,158 +1,85 @@
+## O que muda
 
-# Módulo PGR Completo + Export e-Social — Beta restrito à conta "Demo Ilimitado"
+Hoje, ao clicar em **Exportar → Relatório PGR (PDF)**, o sistema abre uma janela HTML básica e usa `window.print`. Vamos substituir isso por um PDF profissional, paginado, no padrão do modelo NR-1 anexado, gerado com `jsPDF` (mesma biblioteca já usada no `HSEITPGRReportPDF`).
 
-Construir o módulo de PGR (NR-1) com export XML para e-Social, mas **liberá-lo apenas para a conta `demo.ilimitado@soia.app.br`** (e empresas atribuídas a ela) enquanto validamos. Nenhum outro SST, empresa ou admin verá o módulo até que façamos o flip do feature flag global.
-
----
-
-## 1. Estratégia de gating (o ponto chave)
-
-Adicionar coluna **`pgr_module_enabled`** (boolean, default `false`) na tabela `sst_managers`. Apenas SSTs com esse flag `true` enxergam o módulo PGR.
-
-- Migration popula `pgr_module_enabled = true` somente para o `sst_manager` vinculado a `demo.ilimitado@soia.app.br`.
-- Função SQL `has_pgr_module(_user_id uuid)` → retorna `true` se o usuário pertence a um SST com o flag ligado, OU é a empresa atribuída a esse SST.
-- Frontend: hook `usePGRModuleAccess()` controla exibição do menu/rota.
-- RLS de todas as tabelas PGR exige `has_pgr_module(auth.uid())`.
-- Para liberar geral no futuro: rodar `UPDATE sst_managers SET pgr_module_enabled = true` (sem precisar deploy).
-
-Admin (Master Dashboard) ganha toggle "Liberar módulo PGR" por SST, mas só usaremos manualmente quando quisermos expandir o beta.
-
----
-
-## 2. Modelagem de dados (NR-1 completo)
-
-Migrations criando (todas com RLS + `has_pgr_module` + isolamento por `sst_manager_id` + `company_id`):
-
-- **`pgr_documents`** — um PGR por empresa/ciclo: status (rascunho/vigente/expirado), vigência início/fim, versão, responsável técnico (CPF + registro), data revisão, executive_summary.
-- **`pgr_ghe`** — Grupos Homogêneos de Exposição: nome, setor, cargo, descrição atividades, qtd trabalhadores, jornada.
-- **`pgr_ghe_workers`** — vínculo opcional `{cpf, nome, matricula, ghe_id}` (necessário para S-2240).
-- **`pgr_risks`** — inventário: `ghe_id`, categoria (fisico/quimico/biologico/ergonomico/acidentes/psicossocial), agente, código tabela 23 e-Social, fonte geradora, trajetória, exposição (tempo/freq), severidade (1-5), probabilidade (1-5), nível calculado, EPC existentes, EPI + CA, observações.
-- **`pgr_action_items`** — plano de ação: `risk_id`, descrição, hierarquia controle (eliminação/substituição/engenharia/admin/EPI), responsável, prazo, status, custo, evidência.
-- **`pgr_monitoring`** — medições: `risk_id`, data, valor medido, unidade, técnica, instrumento, laudo (arquivo).
-- **`pgr_esocial_exports`** — auditoria: `pgr_id`, período, hash SHA-256, arquivo no Storage, gerado_por, gerado_em.
-- **`esocial_agents_catalog`** — Tabela 23 (agentes nocivos) seed com ~200 linhas.
-
-Storage bucket privado **`pgr-documents`** para PDFs, laudos e XMLs (RLS por SST/empresa).
-
----
-
-## 3. Telas e fluxo
-
-Rota nova: `/pgr/:companyId` (gated por `usePGRModuleAccess`).
+O modelo de saída terá **todas as seções do PGR padrão**, com os dados reais da empresa preenchidos automaticamente:
 
 ```text
-SSTDashboard
-  └── Card "PGR + e-Social" [BETA] (só aparece para Demo Ilimitado)
-       └── /pgr/:companyId
-            ├── Visão Geral (status, vigência, % concluído, alertas)
-            ├── GHEs (CRUD, importar de departamentos existentes)
-            ├── Inventário de Riscos (matriz 5x5 interativa por GHE)
-            ├── Plano de Ação (lista + filtros por prazo/status)
-            ├── Monitoramento (timeline + upload de laudos)
-            ├── Riscos Psicossociais (importa automaticamente HSE-IT/COPSOQ/Burnout)
-            └── Exportar
-                 ├── Relatório PGR (PDF NR-1 completo)
-                 └── e-Social S-2240 (XML único / ZIP de lote)
+┌─────────────────────────────────────┐
+│  Capa                               │ ← logo SST (se houver) + Empresa + Vigência
+├─────────────────────────────────────┤
+│  Identificação da Empresa           │ ← Razão social, CNPJ, CNAE, Grau, Endereço
+│  Regime de Trabalho                 │
+│  Controle de Revisões               │
+├─────────────────────────────────────┤
+│  PARTE I — Disposição Geral         │ ← Introdução, Objetivo, Termos &
+│   1.1 Introdução                    │   Definições, Responsabilidades
+│   1.2 Objetivo                      │   (Empregador / Direção / Líderes /
+│   1.3 Termos e Definições           │   SESMT / Empregados / CIPA),
+│   1.4 Responsabilidades             │   Documentos complementares,
+│   1.5 Documentos Complementares     │   Estratégia & Metodologia
+│   1.6 Estratégia / Metodologia      │
+├─────────────────────────────────────┤
+│  PARTE II — Antecipação,            │
+│  Reconhecimento e Avaliação         │
+│   2.1 Antecipação                   │
+│   2.2 Reconhecimento                │
+│   2.3 Avaliação                     │
+│   2.4 MATRIZ DE RISCO 5x5           │ ← desenhada nativa (cores por faixa)
+├─────────────────────────────────────┤
+│  PARTE III — Avaliação Quantitativa │ ← Critérios químicos / ruído / vibração,
+│   (Critérios, Níveis de Ação,       │   Medidas de Controle, Hierarquia,
+│   Medidas de Controle, Hierarquia,  │   Treinamentos, Eficácia, Revisões
+│   Registro e Divulgação)            │
+├─────────────────────────────────────┤
+│  PARTE IV — INVENTÁRIO DE RISCOS    │ ← Tabela por GHE com:
+│   (por GHE)                         │   agente / fonte / exposição / S × P /
+│                                     │   nível / EPC / EPI+CA / observações
+├─────────────────────────────────────┤
+│  PARTE V — PLANO DE AÇÃO            │ ← Tabela: descrição / hierarquia /
+│                                     │   responsável / prazo / status / custo
+├─────────────────────────────────────┤
+│  PARTE VI — CONCLUSÃO E             │ ← Recomendações de engenharia,
+│  RECOMENDAÇÕES                      │   administrativas, treinamentos,
+│                                     │   monitoramento e EPI
+├─────────────────────────────────────┤
+│  Assinatura Responsável Técnico     │ ← Nome, CPF, registro CREA/MTE/CRP
+└─────────────────────────────────────┘
 ```
 
-Wizard de criação: empresa → CNAE/grau de risco → importar setores como GHEs → biblioteca base de riscos por CNAE.
+Todas as páginas terão **cabeçalho** ("PGR – PROGRAMA DE GERENCIAMENTO DE RISCOS / Revisão XX / data") e **rodapé** ("Empresa / página X de Y"), igual ao modelo.
 
-Badge **"BETA — em validação"** em todas as telas do módulo.
+## Como o conteúdo é preenchido
 
----
+| Seção | Origem dos dados |
+|---|---|
+| Capa, Identificação, Vigência, CNAE, Grau, Endereço | `pgr_documents` + `companies` |
+| Resumo Executivo | `pgr_documents.executive_summary` (se vazio, texto padrão) |
+| Responsável Técnico (assinatura) | `pgr_documents.responsible_name/cpf/registration` |
+| Inventário de Riscos | `pgr_risks` agrupado por `pgr_ghe` (mostra GHE, agente, código e-Social, S, P, nível com cor, EPC, EPI+CA, observações) |
+| Plano de Ação | `pgr_action_items` |
+| Disposições, Definições, Metodologia, Conclusão | Textos fixos extraídos do modelo NR-1 anexado (boilerplate técnico) |
 
-## 4. Geração do XML S-2240
+Quando faltarem campos obrigatórios (responsável técnico, CNPJ etc.), o PDF é emitido mesmo assim com marcação **[A PREENCHER]**, para que o usuário veja onde precisa completar (não bloqueia a emissão).
 
-- Schema oficial v1.3 (XSD versionado em `supabase/functions/_shared/esocial-schemas/`).
-- Builder com `xmlbuilder2` (Deno) em edge function `generate-esocial-s2240`.
-- Estrutura: `eSocial > evtExpRisco > {ideEvento, ideEmpregador, ideVinculo, infoExpRisco{dtIniCondicao, infoAmb, infoAtiv, agNoc[], respReg}}`.
-- Campos: CNPJ, CPF trabalhador, matrícula, código agente (Tabela 23), intensidade/concentração, técnica, EPC eficaz S/N, EPI eficaz + CA, responsável técnico.
-- Saída: download `.xml` único ou `.zip` com lote (1 arquivo por trabalhador/GHE).
-- Validação local contra XSD antes do download. Mensagem clara: **"Arquivo pronto para upload pelo contador no portal e-Social. Não realizamos transmissão automática."**
-- Sem certificado digital nesta fase.
+## Detalhes técnicos
 
----
+- Substituir `buildSimplePDF(...)` em `src/components/pgr/ESocialExportDialog.tsx` por uma chamada a um novo gerador.
+- Criar `src/components/pgr/PGRReportPDF.ts` (puro TS) com função `generatePGRReportPDF({ pgr, company, ghes, risks, actions, sstLogoUrl? }): jsPDF` que:
+  - Usa `jsPDF` A4 retrato, margens de 18mm, fonte Helvetica.
+  - Helpers reutilizáveis: `addHeader()`, `addFooter()`, `addPageBreakIfNeeded(h)`, `drawSectionTitle()`, `drawParagraph()`, `drawTable(headers, rows, colWidths)`, `drawRiskMatrix5x5()` (canvas direto no PDF, com cores por nível — verde / amarelo / laranja / vermelho / bordô).
+  - Salva como `PGR_<EmpresaSlug>_v<versao>_<yyyy-mm-dd>.pdf` via `doc.save()`.
+- Buscar logo da SST gestora (quando existir) para a capa, lendo `sst_managers.logo_url` via o `company_sst_assignments`.
+- Manter o botão e a UI do `ESocialExportDialog` exatamente como estão; apenas trocar a implementação por trás do botão "Relatório PGR (PDF)".
+- A exportação XML S-2240 **não muda** nesta tarefa.
 
-## 5. Relatório PDF NR-1
+## O que NÃO está no escopo
 
-Evoluir `HSEITPGRReportPDF.tsx` → `PGRReportPDF.tsx` genérico cobrindo:
-1. Capa + identificação empresa (CNPJ, CNAE, grau risco, endereço)
-2. Responsável técnico SST (CPF, registro CREA/MTE/CRP)
-3. Inventário completo por GHE (todas as 5+1 categorias)
-4. Matriz de risco visual 5x5
-5. Plano de ação 12 meses
-6. Cronograma
-7. Registros de monitoramento
-8. Anexos (laudos)
-9. Assinatura
+- Alterar o módulo de XML e-Social.
+- Adicionar editor de textos das seções fixas (boilerplate) — fica embutido no gerador; pode virar campo editável no futuro.
+- Mudar o modelo de dados ou criar migrações.
+- Mudar a tela do dashboard PGR (`/pgr/:companyId`) ou qualquer outro fluxo.
 
-Mantém `@react-pdf/renderer` (já usado).
+## Validação
 
----
-
-## 6. Edge functions novas (registrar em `config.toml`)
-
-- `generate-esocial-s2240` (verify_jwt = true) — monta XML/ZIP.
-- `import-psychosocial-to-pgr` (verify_jwt = true) — puxa resultados HSE-IT/COPSOQ/Burnout e cria `pgr_risks` da categoria psicossocial.
-
----
-
-## 7. Entregas em fases
-
-**Fase 1 — Beta restrito (esta entrega, ~2 semanas):**
-1. Migration: tabelas + RLS + `has_pgr_module` + flag em `sst_managers` ligado só para Demo Ilimitado
-2. Seed catálogo Tabela 23 e-Social
-3. Bucket `pgr-documents`
-4. Hook + gating frontend (`usePGRModuleAccess`)
-5. Telas: Visão Geral, GHEs, Inventário com matriz 5x5, Plano de Ação simples
-6. Importação automática de riscos psicossociais
-7. Geração PDF NR-1
-8. Export XML S-2240 single + ZIP lote
-9. Toggle admin no MasterDashboard (manual)
-
-**Fase 2 (após validação Demo Ilimitado):**
-- Biblioteca pré-cadastrada de riscos por CNAE
-- Monitoramento com upload de laudos
-- Cronograma visual (Gantt)
-- Versionamento/revisão anual
-
-**Fase 3 (futuro):**
-- Transmissão direta ao e-Social com certificado A1 + ICP-Brasil
-- S-2210 (CAT) e S-2220 (ASO)
-
----
-
-## 8. Arquivos previstos
-
-**Migrations:**
-- Tabelas PGR + RLS + função `has_pgr_module` + coluna `sst_managers.pgr_module_enabled` + seed do catálogo + bucket + ativação do flag para Demo Ilimitado
-
-**Edge functions novas:**
-- `supabase/functions/generate-esocial-s2240/index.ts`
-- `supabase/functions/import-psychosocial-to-pgr/index.ts`
-- `supabase/functions/_shared/esocial-schemas/S-2240.xsd`
-- Atualizar `supabase/config.toml`
-
-**Frontend:**
-- `src/hooks/usePGRModuleAccess.ts`
-- `src/pages/PGRDashboard.tsx` (rota `/pgr/:companyId`)
-- `src/components/pgr/PGROverview.tsx`
-- `src/components/pgr/GHEManager.tsx`
-- `src/components/pgr/RiskInventory.tsx`
-- `src/components/pgr/RiskMatrix5x5.tsx`
-- `src/components/pgr/ActionPlanEditor.tsx`
-- `src/components/pgr/ESocialExportDialog.tsx`
-- `src/components/pgr/PGRReportPDF.tsx` (evolução do HSEITPGRReportPDF)
-- Card BETA no `SSTDashboard.tsx` (condicional ao hook)
-- Toggle "Módulo PGR" no `MasterDashboard.tsx` por SST
-- `src/App.tsx` (registrar rota gated)
-
----
-
-## 9. Riscos e premissas
-
-- **Tabela 23/24 do e-Social** muda — incluir nota para revisão periódica do seed.
-- **Validação XSD**: testar amostras de XML antes da entrega ao usuário Demo.
-- **Escopo apertado**: se 2 semanas não couberem todas as fases, priorizar Inventário + Matriz + PDF + XML S-2240; deixar monitoramento e cronograma visual para Fase 2.
-- **Beta isolado**: nenhuma alteração de UI/UX visível para outros SSTs, empresas ou admin — gating em RLS + frontend garante isolamento total.
-- **Como expandir depois**: basta `UPDATE sst_managers SET pgr_module_enabled = true WHERE id IN (...)` ou usar o toggle admin. Sem novo deploy.
+Depois de gerar, abrirei o PDF da empresa demo (`/pgr/382745b1-...`), converterei as páginas para imagens e farei QA visual de cada página (overflow, cortes, alinhamento da matriz 5x5, quebra de tabelas longas, cabeçalho/rodapé). Ajusto até o documento sair limpo.
