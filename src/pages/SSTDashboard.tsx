@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal } from "lucide-react";
+import { Search, AlertCircle, Loader2, ExternalLink, Copy, ClipboardList, Plus, Brain, Flame, Building2, Pencil, Trash2, Link2, ArrowRight, BarChart3, Shield, KeyRound, GraduationCap, SlidersHorizontal, FileText } from "lucide-react";
 import ManageFeaturesDialog from '@/components/sst/ManageFeaturesDialog';
+import { usePGRModuleAccess } from "@/hooks/usePGRModuleAccess";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import { useNavigate } from 'react-router-dom';
 import EmbeddedDashboard from '@/components/EmbeddedDashboard';
@@ -147,6 +148,7 @@ const SSTDashboard = () => {
   const { user, role, isLoading: authLoading, isTrialExpired, trialEndsAt } = useRealAuth();
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
+  const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
 
   useEffect(() => {
     if (!authLoading) {
@@ -512,6 +514,20 @@ const SSTDashboard = () => {
                           >
                             <KeyRound className="h-4 w-4" />
                           </Button>
+                          {hasPGRAccess && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              title="PGR + e-Social (BETA)"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/pgr/${company.id}`);
+                              }}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"

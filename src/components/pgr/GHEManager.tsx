@@ -1,0 +1,159 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2, Pencil, Loader2, Users } from "lucide-react";
+import { toast } from "sonner";
+
+interface GHE {
+  id: string;
+  name: string;
+  sector: string | null;
+  role: string | null;
+  activities_description: string | null;
+  worker_count: number;
+  work_schedule: string | null;
+}
+
+export const GHEManager = ({ pgrDocumentId }: { pgrDocumentId: string }) => {
+  const [ghes, setGhes] = useState<GHE[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<GHE | null>(null);
+  const [form, setForm] = useState({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("pgr_ghe")
+      .select("*")
+      .eq("pgr_document_id", pgrDocumentId)
+      .order("name");
+    if (error) toast.error("Erro ao carregar GHEs");
+    setGhes((data as any) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [pgrDocumentId]);
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name: "", sector: "", role: "", activities_description: "", worker_count: 0, work_schedule: "" });
+    setOpen(true);
+  };
+  const openEdit = (g: GHE) => {
+    setEditing(g);
+    setForm({
+      name: g.name,
+      sector: g.sector || "",
+      role: g.role || "",
+      activities_description: g.activities_description || "",
+      worker_count: g.worker_count || 0,
+      work_schedule: g.work_schedule || "",
+    });
+    setOpen(true);
+  };
+
+  const save = async () => {
+    if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
+    setSaving(true);
+    try {
+      if (editing) {
+        const { error } = await supabase.from("pgr_ghe").update(form as any).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("pgr_ghe").insert({ ...form, pgr_document_id: pgrDocumentId } as any);
+        if (error) throw error;
+      }
+      toast.success("GHE salvo");
+      setOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Excluir este GHE? Riscos vinculados perderão o vínculo.")) return;
+    const { error } = await supabase.from("pgr_ghe").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("GHE excluído");
+    load();
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> Grupos Homogêneos de Exposição</h3>
+            <p className="text-sm text-muted-foreground">Agrupe trabalhadores que compartilham as mesmas condições de exposição.</p>
+          </div>
+          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo GHE</Button>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        ) : ghes.length === 0 ? (
+          <div className="text-center py-12 text-sm text-muted-foreground">Nenhum GHE cadastrado ainda.</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Setor</TableHead>
+                <TableHead>Cargo</TableHead>
+                <TableHead className="text-right">Trabalhadores</TableHead>
+                <TableHead className="w-24"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ghes.map(g => (
+                <TableRow key={g.id}>
+                  <TableCell className="font-medium">{g.name}</TableCell>
+                  <TableCell>{g.sector || '-'}</TableCell>
+                  <TableCell>{g.role || '-'}</TableCell>
+                  <TableCell className="text-right">{g.worker_count}</TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(g)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => remove(g.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Novo'} GHE</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2"><Label>Nome do GHE *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: Operadores de máquina linha 1" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Cargo</Label><Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2"><Label>Nº trabalhadores</Label><Input type="number" min={0} value={form.worker_count} onChange={e => setForm({ ...form, worker_count: parseInt(e.target.value) || 0 })} /></div>
+                <div className="space-y-2"><Label>Jornada</Label><Input value={form.work_schedule} onChange={e => setForm({ ...form, work_schedule: e.target.value })} placeholder="Ex: 8h/dia 5x2" /></div>
+              </div>
+              <div className="space-y-2"><Label>Descrição das atividades</Label><Textarea rows={3} value={form.activities_description} onChange={e => setForm({ ...form, activities_description: e.target.value })} /></div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+};
