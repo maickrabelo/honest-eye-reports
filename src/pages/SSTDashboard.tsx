@@ -148,6 +148,7 @@ const SSTDashboard = () => {
   const { user, role, isLoading: authLoading, isTrialExpired, trialEndsAt } = useRealAuth();
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
+  const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
 
   useEffect(() => {
     if (!authLoading) {
