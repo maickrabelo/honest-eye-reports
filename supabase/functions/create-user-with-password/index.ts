@@ -178,12 +178,13 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error creating user:", error);
-    const safeMessage = getSafeErrorMessage(error);
+    console.error("Error creating user:", error?.message, error);
+    const rawMessage = error?.message || String(error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: safeMessage,
+        error: rawMessage,
+        details: error?.code || error?.status || null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
