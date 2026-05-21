@@ -19,76 +19,7 @@ interface Props {
 const sanitizeXml = (v: any) => String(v ?? '').replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' }[c]!));
 const onlyDigits = (v: string) => (v || '').replace(/\D/g, '');
 
-const buildSimplePDF = (pgr: PGRDocument, companyName: string, companyCnpj: string, ghes: any[], risks: any[], actions: any[]) => {
-  // Geração simples HTML → PDF via window.print no preview, ou usa Blob como fallback.
-  const html = `
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>PGR - ${companyName}</title>
-<style>
-  body { font-family: Arial, sans-serif; padding: 32px; color: #222; }
-  h1 { color: #1a1a2e; border-bottom: 3px solid #4f46e5; padding-bottom: 8px; }
-  h2 { color: #1a1a2e; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
-  th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
-  th { background: #f5f5f5; }
-  .meta { background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 8px 0; }
-  .meta strong { display: inline-block; min-width: 180px; }
-  .level-intolerable { background: #fee; color: #c00; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-  .level-substantial { background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-  .level-moderate { background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; }
-  .level-tolerable { background: #d9f99d; color: #4d7c0f; padding: 2px 6px; border-radius: 4px; }
-  .level-trivial { background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px; }
-  @media print { body { padding: 16px; } }
-</style></head><body>
-  <h1>Programa de Gerenciamento de Riscos (PGR)</h1>
-  <h2>1. Identificação da Empresa</h2>
-  <div class="meta">
-    <div><strong>Empresa:</strong> ${companyName}</div>
-    <div><strong>CNPJ:</strong> ${companyCnpj || '-'}</div>
-    <div><strong>CNAE:</strong> ${pgr.cnae || '-'}</div>
-    <div><strong>Grau de Risco (NR-4):</strong> ${pgr.risk_grade || '-'}</div>
-    <div><strong>Endereço:</strong> ${pgr.address || '-'}</div>
-    <div><strong>Vigência:</strong> ${pgr.validity_start || '-'} a ${pgr.validity_end || '-'}</div>
-    <div><strong>Versão:</strong> ${pgr.version}</div>
-  </div>
-
-  <h2>2. Responsável Técnico</h2>
-  <div class="meta">
-    <div><strong>Nome:</strong> ${pgr.responsible_name || '-'}</div>
-    <div><strong>CPF:</strong> ${pgr.responsible_cpf || '-'}</div>
-    <div><strong>Registro:</strong> ${pgr.responsible_registration || '-'}</div>
-  </div>
-
-  <h2>3. Resumo Executivo</h2>
-  <p>${(pgr.executive_summary || '—').replace(/\n/g, '<br>')}</p>
-
-  <h2>4. Grupos Homogêneos de Exposição (GHE)</h2>
-  <table><thead><tr><th>Nome</th><th>Setor</th><th>Cargo</th><th>Trabalhadores</th><th>Jornada</th></tr></thead><tbody>
-    ${ghes.map(g => `<tr><td>${g.name}</td><td>${g.sector || '-'}</td><td>${g.role || '-'}</td><td>${g.worker_count}</td><td>${g.work_schedule || '-'}</td></tr>`).join('') || '<tr><td colspan=5>Nenhum GHE cadastrado</td></tr>'}
-  </tbody></table>
-
-  <h2>5. Inventário de Riscos</h2>
-  <table><thead><tr><th>Categoria</th><th>Agente</th><th>Código e-Social</th><th>S</th><th>P</th><th>Nível</th><th>EPC/EPI</th></tr></thead><tbody>
-    ${risks.map(r => `<tr><td>${r.category}</td><td>${r.agent_name}</td><td>${r.esocial_agent_code || '-'}</td><td>${r.severity}</td><td>${r.probability}</td><td><span class="level-${r.risk_level}">${r.risk_level}</span></td><td>${(r.existing_epc || '') + ' ' + (r.existing_epi ? `EPI: ${r.existing_epi} CA: ${r.epi_ca || '-'}` : '')}</td></tr>`).join('') || '<tr><td colspan=7>Nenhum risco cadastrado</td></tr>'}
-  </tbody></table>
-
-  <h2>6. Plano de Ação</h2>
-  <table><thead><tr><th>Descrição</th><th>Hierarquia</th><th>Responsável</th><th>Prazo</th><th>Status</th></tr></thead><tbody>
-    ${actions.map(a => `<tr><td>${a.description}</td><td>${a.control_hierarchy || '-'}</td><td>${a.responsible || '-'}</td><td>${a.deadline || '-'}</td><td>${a.status}</td></tr>`).join('') || '<tr><td colspan=5>Nenhuma ação cadastrada</td></tr>'}
-  </tbody></table>
-
-  <h2>7. Assinatura</h2>
-  <div style="margin-top: 60px; border-top: 1px solid #333; padding-top: 6px; max-width: 400px;">
-    ${pgr.responsible_name || '_______________________'}<br>
-    <small>${pgr.responsible_registration || ''}</small>
-  </div>
-
-  <script>window.onload = () => window.print();</script>
-</body></html>`;
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-};
+// PDF agora é gerado pelo módulo dedicado em PGRReportPDF.ts
 
 const buildS2240Xml = (pgr: PGRDocument, companyCnpj: string, worker: any, ghe: any, risks: any[]) => {
   const cnpj = onlyDigits(companyCnpj);
