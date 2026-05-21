@@ -467,7 +467,7 @@ const MasterDashboard = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao criar usuário",
-        description: getSafeErrorMessage(error),
+        description: error?.message || getSafeErrorMessage(error),
         variant: "destructive"
       });
     } finally {
