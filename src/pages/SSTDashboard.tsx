@@ -514,6 +514,20 @@ const SSTDashboard = () => {
                           >
                             <KeyRound className="h-4 w-4" />
                           </Button>
+                          {hasPGRAccess && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              title="PGR + e-Social (BETA)"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/pgr/${company.id}`);
+                              }}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
