@@ -159,13 +159,17 @@ const PGRDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid grid-cols-4 max-w-2xl">
+          <Tabs defaultValue="dashboard" className="space-y-4">
+            <TabsList className="grid grid-cols-5 max-w-3xl">
+              <TabsTrigger value="dashboard" className="gap-1"><LayoutDashboard className="h-4 w-4" /> Dashboard</TabsTrigger>
               <TabsTrigger value="overview" className="gap-1"><FileText className="h-4 w-4" /> Visão Geral</TabsTrigger>
               <TabsTrigger value="ghe" className="gap-1"><Users className="h-4 w-4" /> GHEs</TabsTrigger>
               <TabsTrigger value="risks" className="gap-1"><FlaskConical className="h-4 w-4" /> Inventário</TabsTrigger>
               <TabsTrigger value="actions" className="gap-1"><ClipboardList className="h-4 w-4" /> Plano de Ação</TabsTrigger>
             </TabsList>
+            <TabsContent value="dashboard">
+              <PGRMonitoringDashboard pgr={pgr} />
+            </TabsContent>
             <TabsContent value="overview">
               <PGROverview pgr={pgr} onUpdated={loadPGR} companyName={companyName} companyCnpj={companyCnpj} />
             </TabsContent>
