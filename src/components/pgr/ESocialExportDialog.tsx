@@ -91,8 +91,14 @@ export const ESocialExportDialog = ({ open, onOpenChange, pgr, companyName, comp
         supabase.from('pgr_risks').select('*').eq('pgr_document_id', pgr.id),
         supabase.from('pgr_action_items').select('*').eq('pgr_document_id', pgr.id),
       ]);
-      buildSimplePDF(pgr, companyName, companyCnpj, (ghes as any) || [], (risks as any) || [], (actions as any) || []);
-      toast.success("Relatório aberto — use Imprimir → Salvar como PDF");
+      downloadPGRReport({
+        pgr,
+        company: { name: companyName, cnpj: companyCnpj },
+        ghes: (ghes as any) || [],
+        risks: (risks as any) || [],
+        actions: (actions as any) || [],
+      });
+      toast.success("Relatório PGR (PDF) gerado com sucesso");
     } catch (e: any) {
       toast.error("Erro: " + e.message);
     } finally { setGenerating(null); }
