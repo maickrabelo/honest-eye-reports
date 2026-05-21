@@ -24,8 +24,14 @@ function getSafeErrorMessage(error: any): string {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const jsonResponse = (payload: Record<string, unknown>) =>
+  new Response(JSON.stringify(payload), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status: 200,
+  });
 
 interface CreateUserRequest {
   email: string;
@@ -48,10 +54,7 @@ serve(async (req) => {
     // Verify authentication and admin role
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
+      return jsonResponse({ success: false, error: 'Sessão não encontrada. Faça login novamente.' });
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -66,24 +69,18 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
+      return jsonResponse({ success: false, error: 'Sessão inválida ou expirada. Faça login novamente.' });
     }
 
-    // Verify the user has admin role
-    const { data: roleData, error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
+    // Verify the user has admin role, even when the account has multiple roles
+    const { data: isAdmin, error: roleError } = await supabaseAdmin.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin',
+    });
 
-    if (roleError || roleData?.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Forbidden: Admin access required' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
+    if (roleError || !isAdmin) {
+      console.error('Authorization check failed:', roleError);
+      return jsonResponse({ success: false, error: 'Permissão negada. Apenas administradores podem alterar senhas.' });
     }
 
     const { email, password, full_name, role, company_id, sst_manager_id }: CreateUserRequest = await req.json();
@@ -102,8 +99,15 @@ serve(async (req) => {
     }
 
     // Verificar se o usuário já existe
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users.find(u => u.email === email);
+    const normalizedEmail = email.trim().toLowerCase();
+    let existingUser: any = null;
+    for (let page = 1; page < 50; page++) {
+      const { data: existingUsers, error: listUsersError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (listUsersError) throw listUsersError;
+
+      existingUser = existingUsers?.users.find(u => u.email?.toLowerCase() === normalizedEmail);
+      if (existingUser || !existingUsers?.users?.length || existingUsers.users.length < 1000) break;
+    }
 
     let userId: string;
 
@@ -166,17 +170,11 @@ serve(async (req) => {
 
     if (insertRoleError) throw insertRoleError;
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        user_id: userId,
-        message: existingUser ? "Senha atualizada com sucesso" : "Usuário criado com sucesso",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+    return jsonResponse({
+      success: true,
+      user_id: userId,
+      message: existingUser ? "Senha atualizada com sucesso" : "Usuário criado com sucesso",
+    });
   } catch (error: any) {
     console.error("Error creating user:", error?.message, error);
     const rawMessage = error?.message || String(error);
