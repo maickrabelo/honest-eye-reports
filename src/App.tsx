@@ -159,6 +159,7 @@ const App = () => (
                 <Route path="/copsoq/results/:id" element={<COPSOQResults />} />
                 <Route path="/sst/treinamentos" element={<SSTTrainings />} />
                 <Route path="/empresa/treinamentos" element={<CompanyTrainings />} />
+                <Route path="/pgr/:companyId" element={<PGRDashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
