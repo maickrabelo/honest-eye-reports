@@ -210,11 +210,19 @@ const SSTLandingPage = () => {
         <div className="audit-container py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             <div className="lg:col-span-1">
-              {sstManager?.logo_url ? (
+            {sstManager?.logo_url ? (
                 <img src={sstManager.logo_url} alt={`${sstManager.name} Logo`} className="h-10 object-contain brightness-0 invert mb-4" />
               ) : (
                 <span className="text-xl font-bold text-white mb-4 block">{sstManager?.name}</span>
               )}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-white/40 text-xs">Desenvolvido por</span>
+                <img
+                  src="/lovable-uploads/Logo_SOIA.png"
+                  alt="SOIA"
+                  className="h-5 object-contain brightness-0 invert opacity-60"
+                />
+              </div>
               <p className="text-white/60 text-sm mb-6">
                 Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.
               </p>
