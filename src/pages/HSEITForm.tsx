@@ -17,6 +17,7 @@ interface Assessment {
   title: string;
   description: string | null;
   is_active: boolean;
+  wording_variant?: HSEITWordingVariant | null;
   companies: {
     name: string;
     logo_url: string | null;
