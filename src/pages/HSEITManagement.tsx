@@ -412,6 +412,25 @@ export default function HSEITManagement() {
                     onCheckedChange={(checked) => setCollectionMode(checked ? 'ai' : 'form')}
                   />
                 </div>
+
+                {/* Wording Variant */}
+                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-accent/5 border border-accent/20">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-accent" />
+                      Avaliação Positiva
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {wordingVariant === 'positive'
+                        ? 'Redação alternativa, mais acolhedora, evitando palavras "gourmet" e inversão de polaridade. Não altera categorias nem cálculo de risco.'
+                        : 'Redação padrão do HSE-IT (tradução fiel do instrumento original).'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={wordingVariant === 'positive'}
+                    onCheckedChange={(checked) => setWordingVariant(checked ? 'positive' : 'standard')}
+                  />
+                </div>
               </CardContent>
             </Card>
 
