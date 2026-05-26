@@ -12,7 +12,7 @@ const HeroSection = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const msg = `Olá! Quero uma demonstração da SOIA.%0A%0ANome: ${form.name}%0AE-mail: ${form.email}%0ATelefone: ${form.phone}`;
-    window.open(`https://wa.me/5511996029222?text=${msg}`, '_blank');
+    window.open(`https://wa.me/5511999406560?text=${msg}`, '_blank');
   };
 
   return (

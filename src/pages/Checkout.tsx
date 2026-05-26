@@ -89,7 +89,7 @@ const Checkout = () => {
       };
       if (formatted.is_custom_quote) {
         const msg = `Olá! Quero contratar o plano ${formatted.name}.`;
-        window.location.href = `https://wa.me/5511996029222?text=${encodeURIComponent(msg)}`;
+        window.location.href = `https://wa.me/5511999406560?text=${encodeURIComponent(msg)}`;
         return;
       }
       setPlan(formatted);

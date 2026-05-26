@@ -21,7 +21,7 @@ const DemoRequestDialog: React.FC<Props> = ({
   open,
   onOpenChange,
   source = 'demo_form_sst',
-  whatsappNumber = '5511996029222',
+  whatsappNumber = '5511999406560',
   whatsappMessage = 'Olá! Gostaria de agendar uma demonstração do SOIA.',
 }) => {
   const { toast } = useToast();

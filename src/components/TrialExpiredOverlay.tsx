@@ -85,7 +85,7 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
   const handleContract = (plan: Plan) => {
     if (plan.is_custom_quote) {
       const msg = `Olá! Meu período de teste terminou e tenho interesse no plano ${plan.name} da SOIA.`;
-      window.open(`https://wa.me/5511996029222?text=${encodeURIComponent(msg)}`, '_blank');
+      window.open(`https://wa.me/5511999406560?text=${encodeURIComponent(msg)}`, '_blank');
       return;
     }
     navigate(`/contratar?plano=${plan.slug}&ciclo=${cycle}`);
@@ -203,7 +203,7 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
           {/* Footer actions */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-border">
             <button
-              onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Meu trial da SOIA expirou e gostaria de tirar dúvidas sobre os planos.', '_blank')}
+              onClick={() => window.open('https://wa.me/5511999406560?text=Olá! Meu trial da SOIA expirou e gostaria de tirar dúvidas sobre os planos.', '_blank')}
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2"
             >
               <MessageCircle className="h-4 w-4" />

@@ -246,7 +246,7 @@ const SSTLandingPage = () => {
               <h3 className="text-lg font-semibold mb-4">Contato</h3>
               <ul className="space-y-4 text-sm">
                 <li className="text-white/60">contato@soia.com.br</li>
-                <li className="text-white/60">+55 11 9 9602-9222</li>
+                <li className="text-white/60">+55 11 9 9940-6560</li>
               </ul>
             </div>
           </div>
