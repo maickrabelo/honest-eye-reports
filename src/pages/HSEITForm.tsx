@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, ClipboardList, Building2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, type HSEITQuestion } from '@/data/hseitQuestions';
+import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, getQuestionText, type HSEITQuestion, type HSEITWordingVariant } from '@/data/hseitQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
 
 
@@ -17,6 +17,7 @@ interface Assessment {
   title: string;
   description: string | null;
   is_active: boolean;
+  wording_variant?: HSEITWordingVariant | null;
   companies: {
     name: string;
     logo_url: string | null;
@@ -95,11 +96,18 @@ export default function HSEITForm() {
 
   const questionsPerPage = 7;
   const totalPages = Math.ceil(HSEIT_QUESTIONS_SORTED.length / questionsPerPage);
-  
+
+  // Apply wording variant (apenas troca o texto exibido — não afeta cálculos)
+  const wordingVariant: HSEITWordingVariant = assessment?.wording_variant === 'positive' ? 'positive' : 'standard';
+  const displayQuestions = useMemo(
+    () => HSEIT_QUESTIONS_SORTED.map(q => ({ ...q, text: getQuestionText(q, wordingVariant) })),
+    [wordingVariant]
+  );
+
   const currentQuestions = useMemo(() => {
     const startIndex = currentPage * questionsPerPage;
-    return HSEIT_QUESTIONS_SORTED.slice(startIndex, startIndex + questionsPerPage);
-  }, [currentPage]);
+    return displayQuestions.slice(startIndex, startIndex + questionsPerPage);
+  }, [currentPage, displayQuestions]);
 
   useEffect(() => {
     fetchAssessment();
@@ -378,7 +386,7 @@ export default function HSEITForm() {
             </div>
           ) : (
             <SoniaFormChat
-              questions={HSEIT_QUESTIONS_SORTED}
+              questions={displayQuestions}
               likertOptions={HSEIT_LIKERT_OPTIONS}
               categoryLabels={HSEIT_CATEGORY_LABELS}
               onComplete={handleAiComplete}
