@@ -190,7 +190,11 @@ const SSTDashboard = () => {
 
       const [sstResult, assignmentsResult] = await Promise.all([
         supabase.from('sst_managers').select('max_companies, slug, extra_company_slots').eq('id', currentSstManagerId).single(),
-        supabase.from('company_sst_assignments').select('company_id').eq('sst_manager_id', currentSstManagerId),
+        supabase
+          .from('company_sst_assignments')
+          .select('company_id, companies:company_id(id, name, logo_url, slug, cnpj, email, phone, address, employee_count, created_at)')
+          .eq('sst_manager_id', currentSstManagerId)
+          .limit(5000),
       ]);
 
       const { data: sstData } = sstResult;
@@ -201,21 +205,16 @@ const SSTDashboard = () => {
       if (sstData?.slug) setSstSlug(sstData.slug);
       if (assignmentsError) throw assignmentsError;
 
-      if (!assignmentsData || assignmentsData.length === 0) {
+      const companiesList = ((assignmentsData || [])
+        .map((a: any) => a.companies)
+        .filter(Boolean)) as any[];
+
+      if (companiesList.length === 0) {
         setCompanies([]);
         setIsLoading(false);
         return;
       }
 
-      const companyIds = assignmentsData.map(a => a.company_id);
-      const { data: companiesData, error: companiesError } = await supabase
-        .from('companies')
-        .select('id, name, logo_url, slug, cnpj, email, phone, address, employee_count, created_at')
-        .in('id', companyIds);
-
-      if (companiesError) throw companiesError;
-
-      const companiesList = companiesData || [];
       const fetchedIds = companiesList.map(c => c.id);
 
       // Única query agregada para TODOS os reports das empresas desse gestor
