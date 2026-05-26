@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, ClipboardList, Building2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, type HSEITQuestion } from '@/data/hseitQuestions';
+import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, getQuestionText, type HSEITQuestion, type HSEITWordingVariant } from '@/data/hseitQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
 
 
