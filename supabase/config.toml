@@ -117,8 +117,6 @@ verify_jwt = false
 [functions.admin-reset-user-password]
 # Requires admin authentication
 
-[functions.oneshot-setpw]
-verify_jwt = false
 
 
 
