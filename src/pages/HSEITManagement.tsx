@@ -138,6 +138,7 @@ export default function HSEITManagement() {
         setEndDate(assessment.end_date ? assessment.end_date.split('T')[0] : '');
         setIsActive(assessment.is_active);
         setCollectionMode((assessment as any).collection_mode || 'form');
+        setWordingVariant(((assessment as any).wording_variant === 'positive' ? 'positive' : 'standard'));
         
         // Fetch departments
         const { data: depts } = await supabase
