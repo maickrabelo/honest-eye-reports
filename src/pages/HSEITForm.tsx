@@ -386,7 +386,7 @@ export default function HSEITForm() {
             </div>
           ) : (
             <SoniaFormChat
-              questions={HSEIT_QUESTIONS_SORTED}
+              questions={displayQuestions}
               likertOptions={HSEIT_LIKERT_OPTIONS}
               categoryLabels={HSEIT_CATEGORY_LABELS}
               onComplete={handleAiComplete}
