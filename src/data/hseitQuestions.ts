@@ -2,11 +2,19 @@
 // Questionário de Avaliação de Riscos Psicossociais
 // 35 questões divididas em 7 categorias
 
+export type HSEITWordingVariant = 'standard' | 'positive';
+
 export interface HSEITQuestion {
   number: number;
   text: string;
+  textPositive: string; // Redação alternativa "Avaliação Positiva" (apenas wording — não altera cálculo)
   category: HSEITCategory;
   isInverted: boolean; // Se true, 5 = Ruim, então calcular 6 - valor
+}
+
+// Retorna o texto da questão respeitando a variante de redação configurada
+export function getQuestionText(q: HSEITQuestion, variant?: HSEITWordingVariant | null): string {
+  return variant === 'positive' && q.textPositive ? q.textPositive : q.text;
 }
 
 export type HSEITCategory = 
