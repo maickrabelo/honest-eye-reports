@@ -370,7 +370,7 @@ const CommercialPresentation = () => {
               className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
               asChild
             >
-              <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/5511999406560" target="_blank" rel="noopener noreferrer">
                 <Phone className="mr-2 w-5 h-5" />
                 WhatsApp
               </a>
@@ -384,7 +384,7 @@ const CommercialPresentation = () => {
             </div>
             <div>
               <p className="font-semibold text-primary-foreground">Telefone</p>
-              <p>(11) 99999-9999</p>
+              <p>(11) 99940-6560</p>
             </div>
             <div>
               <p className="font-semibold text-primary-foreground">Atendimento</p>

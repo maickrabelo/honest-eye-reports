@@ -111,7 +111,7 @@ const AffiliateLanding = () => {
       toast.success('Dados enviados com sucesso!');
 
       const redirectUrl = affiliate.redirect_url || 
-        'https://wa.me/5534997359222';
+        'https://wa.me/5511999406560';
       
       setTimeout(() => {
         window.open(redirectUrl, '_blank');

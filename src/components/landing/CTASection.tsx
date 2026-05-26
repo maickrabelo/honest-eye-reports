@@ -57,7 +57,7 @@ const CTASection = () => {
           </div>
 
           <button
-            onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Quero falar com um especialista da SOIA.', '_blank')}
+            onClick={() => window.open('https://wa.me/5511999406560?text=Olá! Quero falar com um especialista da SOIA.', '_blank')}
             className={`text-white/60 hover:text-white text-sm inline-flex items-center gap-2 transition-colors ${isVisible ? 'opacity-100' : 'opacity-0'}`}
             style={{ transitionDelay: '300ms' }}
           >

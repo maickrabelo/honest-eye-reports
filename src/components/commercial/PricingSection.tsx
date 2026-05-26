@@ -80,7 +80,7 @@ const PricingSection = () => {
   const handleContract = (plan: Plan, cycle: Cycle) => {
     if (plan.is_custom_quote) {
       const msg = `Olá! Tenho interesse no plano ${plan.name} da SOIA.`;
-      window.open(`https://wa.me/5511996029222?text=${encodeURIComponent(msg)}`, '_blank');
+      window.open(`https://wa.me/5511999406560?text=${encodeURIComponent(msg)}`, '_blank');
       return;
     }
     navigate(`/contratar?plano=${plan.slug}&ciclo=${cycle}`);
@@ -273,7 +273,7 @@ const PricingSection = () => {
           <Button
             size="lg"
             variant="outline"
-            onClick={() => window.open('https://wa.me/5511996029222?text=Olá! Gostaria de uma demonstração da SOIA.', '_blank')}
+            onClick={() => window.open('https://wa.me/5511999406560?text=Olá! Gostaria de uma demonstração da SOIA.', '_blank')}
           >
             Solicitar demonstração
           </Button>
