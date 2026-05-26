@@ -1,0 +1,1 @@
+ALTER TABLE public.hseit_assessments ADD COLUMN IF NOT EXISTS wording_variant TEXT NOT NULL DEFAULT 'standard';

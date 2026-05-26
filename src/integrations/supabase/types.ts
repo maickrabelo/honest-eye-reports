@@ -1013,6 +1013,7 @@ export type Database = {
           start_date: string | null
           title: string
           updated_at: string
+          wording_variant: string
         }
         Insert: {
           collection_mode?: string | null
@@ -1026,6 +1027,7 @@ export type Database = {
           start_date?: string | null
           title: string
           updated_at?: string
+          wording_variant?: string
         }
         Update: {
           collection_mode?: string | null
@@ -1039,6 +1041,7 @@ export type Database = {
           start_date?: string | null
           title?: string
           updated_at?: string
+          wording_variant?: string
         }
         Relationships: [
           {
