@@ -206,6 +206,7 @@ export default function HSEITManagement() {
         is_active: isActive,
         created_by: user?.id,
         collection_mode: collectionMode,
+        wording_variant: wordingVariant,
       };
 
       let assessmentId = id;
