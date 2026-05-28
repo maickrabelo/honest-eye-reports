@@ -289,6 +289,7 @@ export default function BurnoutDashboard() {
                               )}
                               <Button variant="ghost" size="icon" onClick={() => navigate(`/burnout/results/${a.id}`)} title="Ver resultados"><BarChart3 className="h-4 w-4" /></Button>
                               <Button variant="ghost" size="icon" onClick={() => navigate(`/burnout/${a.id}`)} title="Editar"><Edit className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id, a.title)} title="Excluir" className="text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
