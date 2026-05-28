@@ -41,7 +41,8 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  ArrowLeft
+  ArrowLeft,
+  Trash2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -399,6 +400,23 @@ export default function ClimateSurveyDashboard() {
     toast({ title: "Link copiado!" });
   };
 
+  const handleDeleteSurvey = async () => {
+    const survey = getSelectedSurvey();
+    if (!survey) return;
+    if (!window.confirm(`Excluir a pesquisa "${survey.title}"? Todas as respostas serão removidas. Esta ação é irreversível.`)) return;
+    try {
+      const { error } = await supabase.from('climate_surveys').delete().eq('id', survey.id);
+      if (error) throw error;
+      toast({ title: 'Pesquisa excluída', description: 'A pesquisa foi removida com sucesso.' });
+      const remaining = surveys.filter(s => s.id !== survey.id);
+      setSurveys(remaining);
+      setSelectedSurvey(remaining[0]?.id || '');
+    } catch (error: any) {
+      console.error('Error deleting survey:', error);
+      toast({ title: 'Erro ao excluir', description: error.message || 'Tente novamente.', variant: 'destructive' });
+    }
+  };
+
   // Mock open responses for AI analysis demo
   const getMockOpenResponses = () => {
     return [
@@ -478,6 +496,11 @@ export default function ClimateSurveyDashboard() {
                 {['admin', 'sst', 'company'].includes(role || '') && (
                   <Button id="climate-new-btn" onClick={handleCreateSurvey} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
                     <Plus className="h-4 w-4" /> Nova Pesquisa
+                  </Button>
+                )}
+                {['admin', 'sst', 'company'].includes(role || '') && getSelectedSurvey() && (
+                  <Button onClick={handleDeleteSurvey} variant="outline" className="gap-2 bg-destructive/20 border-destructive/40 text-white hover:bg-destructive/40 backdrop-blur-sm">
+                    <Trash2 className="h-4 w-4" /> Excluir Pesquisa
                   </Button>
                 )}
               </div>

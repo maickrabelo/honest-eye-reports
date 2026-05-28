@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ExternalLink, Copy, BarChart3, Flame, Building2, Users, FileText, Edit, ArrowLeft, Shield } from "lucide-react";
+import { Plus, Search, ExternalLink, Copy, BarChart3, Flame, Building2, Users, FileText, Edit, ArrowLeft, Shield, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
@@ -110,6 +110,19 @@ export default function BurnoutDashboard() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "Link copiado!", description: "O link foi copiado para a área de transferência." });
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Excluir a avaliação "${title}"? Todas as respostas serão removidas. Esta ação é irreversível.`)) return;
+    try {
+      const { error } = await supabase.from('burnout_assessments').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Avaliação excluída', description: 'A avaliação foi removida com sucesso.' });
+      setAssessments(prev => prev.filter(a => a.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting Burnout assessment:', error);
+      toast({ title: 'Erro ao excluir', description: error.message || 'Tente novamente.', variant: 'destructive' });
+    }
   };
 
   const filteredAssessments = assessments.filter(a => {
@@ -276,6 +289,7 @@ export default function BurnoutDashboard() {
                               )}
                               <Button variant="ghost" size="icon" onClick={() => navigate(`/burnout/results/${a.id}`)} title="Ver resultados"><BarChart3 className="h-4 w-4" /></Button>
                               <Button variant="ghost" size="icon" onClick={() => navigate(`/burnout/${a.id}`)} title="Editar"><Edit className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id, a.title)} title="Excluir" className="text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>

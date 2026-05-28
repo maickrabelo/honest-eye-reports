@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Search, FileText, BarChart3, Building2, Users, Eye, Copy, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, Search, FileText, BarChart3, Building2, Users, Eye, Copy, ExternalLink, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -112,6 +112,20 @@ export default function COPSOQDashboardContent() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Link copiado!', description: 'O link foi copiado para a área de transferência.' });
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Excluir a avaliação "${title}"? Todas as respostas serão removidas. Esta ação é irreversível.`)) return;
+    try {
+      await supabase.from('copsoq_responses' as any).delete().eq('assessment_id', id);
+      const { error } = await supabase.from('copsoq_assessments' as any).delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Avaliação excluída', description: 'A avaliação foi removida com sucesso.' });
+      setAssessments(prev => prev.filter(a => a.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting COPSOQ assessment:', error);
+      toast({ title: 'Erro ao excluir', description: error.message || 'Tente novamente.', variant: 'destructive' });
+    }
   };
 
   const filteredAssessments = assessments.filter(a => {
@@ -232,6 +246,7 @@ export default function COPSOQDashboardContent() {
                           <Button variant="ghost" size="icon" onClick={() => window.open(formUrl, '_blank')} title="Abrir formulário"><ExternalLink className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => navigate(`/copsoq/results/${a.id}`)} title="Ver resultados"><BarChart3 className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => navigate(`/copsoq/${a.id}`)} title="Editar"><Eye className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id, a.title)} title="Excluir" className="text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
