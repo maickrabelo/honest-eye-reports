@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ExternalLink, Copy, BarChart3, Flame, Building2, Users, FileText, Edit, ArrowLeft, Shield } from "lucide-react";
+import { Plus, Search, ExternalLink, Copy, BarChart3, Flame, Building2, Users, FileText, Edit, ArrowLeft, Shield, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
