@@ -498,6 +498,11 @@ export default function ClimateSurveyDashboard() {
                     <Plus className="h-4 w-4" /> Nova Pesquisa
                   </Button>
                 )}
+                {['admin', 'sst', 'company'].includes(role || '') && getSelectedSurvey() && (
+                  <Button onClick={handleDeleteSurvey} variant="outline" className="gap-2 bg-destructive/20 border-destructive/40 text-white hover:bg-destructive/40 backdrop-blur-sm">
+                    <Trash2 className="h-4 w-4" /> Excluir Pesquisa
+                  </Button>
+                )}
               </div>
             </div>
           </div>
