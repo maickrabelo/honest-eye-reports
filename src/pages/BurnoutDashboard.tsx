@@ -112,6 +112,19 @@ export default function BurnoutDashboard() {
     toast({ title: "Link copiado!", description: "O link foi copiado para a área de transferência." });
   };
 
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Excluir a avaliação "${title}"? Todas as respostas serão removidas. Esta ação é irreversível.`)) return;
+    try {
+      const { error } = await supabase.from('burnout_assessments').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Avaliação excluída', description: 'A avaliação foi removida com sucesso.' });
+      setAssessments(prev => prev.filter(a => a.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting Burnout assessment:', error);
+      toast({ title: 'Erro ao excluir', description: error.message || 'Tente novamente.', variant: 'destructive' });
+    }
+  };
+
   const filteredAssessments = assessments.filter(a => {
     const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase()) || a.company_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCompany = selectedCompany === "all" || a.company_id === selectedCompany;
