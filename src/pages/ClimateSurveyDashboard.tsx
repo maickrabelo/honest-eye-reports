@@ -41,7 +41,8 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  ArrowLeft
+  ArrowLeft,
+  Trash2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
