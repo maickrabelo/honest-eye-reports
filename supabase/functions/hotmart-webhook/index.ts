@@ -299,6 +299,16 @@ Deno.serve(async (req) => {
             { onConflict: 'user_id,company_id' },
           );
           await supabase.from('profiles').update({ company_id: company.id }).eq('id', userId!);
+
+          // Aplicar feature flags do plano (SMS plans: ouvidoria_enabled=false, sem IA)
+          await supabase.from('company_feature_access').upsert({
+            company_id: company.id,
+            ouvidoria_enabled: plan.ouvidoria_enabled ?? true,
+            psicossocial_enabled: true,
+            burnout_enabled: true,
+            clima_enabled: true,
+            treinamentos_enabled: true,
+          });
         }
       } else if (plan.category === 'manager') {
         const { data: mgr } = await supabase
