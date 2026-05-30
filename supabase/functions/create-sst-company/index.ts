@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
 
         await supabase.from("company_feature_access").upsert({
           company_id: existingCompany.id,
-          ouvidoria_enabled: true,
+          ouvidoria_enabled: planOuvidoriaEnabled,
           psicossocial_enabled: true,
           burnout_enabled: true,
           clima_enabled: true,
@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
 
       await supabase.from("company_feature_access").upsert({
         company_id: existingCompany.id,
-        ouvidoria_enabled: true,
+        ouvidoria_enabled: planOuvidoriaEnabled,
         psicossocial_enabled: true,
         burnout_enabled: true,
         clima_enabled: true,
@@ -344,7 +344,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("company_feature_access").upsert({
       company_id: newCompanyId,
-      ouvidoria_enabled: true,
+      ouvidoria_enabled: planOuvidoriaEnabled,
       psicossocial_enabled: true,
       burnout_enabled: true,
       clima_enabled: true,
