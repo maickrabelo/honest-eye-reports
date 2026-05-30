@@ -86,6 +86,8 @@ export default function SoniaFormChat({
     onComplete(answers);
   };
 
+  if (!aiLoading && !aiEnabled) return null;
+
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-2rem)] max-h-[700px]">
       {/* Header */}

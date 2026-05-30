@@ -91,6 +91,8 @@ const AIAnalysisCard = () => {
     return <span className="text-gray-500">→</span>;
   };
 
+  if (!aiLoading && !aiEnabled) return null;
+
   return (
     <Card>
       <CardHeader className="pb-3">
