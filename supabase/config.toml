@@ -117,6 +117,9 @@ verify_jwt = false
 [functions.admin-reset-user-password]
 # Requires admin authentication
 
+[functions.hotmart-webhook]
+verify_jwt = false
+
 
 
 
