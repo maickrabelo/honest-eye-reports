@@ -236,11 +236,13 @@ Deno.serve(async (req) => {
           treinamentos_enabled: true,
         });
 
-        await ensureCompanyAccess(
+        if (planCreateCompanyLogin) {
+          await ensureCompanyAccess(
           supabase,
           { id: existingCompany.id, name, email, cnpj },
           cnpjDigits,
         );
+        }
 
         return json({ success: true, company_id: existingCompany.id, already_linked: true });
       }
@@ -287,11 +289,13 @@ Deno.serve(async (req) => {
         treinamentos_enabled: true,
       });
 
-      await ensureCompanyAccess(
+      if (planCreateCompanyLogin) {
+          await ensureCompanyAccess(
         supabase,
         { id: existingCompany.id, name, email, cnpj },
         cnpjDigits,
       );
+        }
 
       return json({ success: true, company_id: existingCompany.id, recovered_orphan: true });
     }
@@ -355,11 +359,13 @@ Deno.serve(async (req) => {
     try {
       // Initial password = full CNPJ digits (consistent with what is shown to user)
       const initialPassword = cnpjDigits;
-      await ensureCompanyAccess(
+      if (planCreateCompanyLogin) {
+          await ensureCompanyAccess(
         supabase,
         { id: newCompanyId, name, email, cnpj },
         initialPassword,
       );
+        }
     } catch (userCreationErr: any) {
       console.error("[CREATE-SST-COMPANY] User creation failed (company still created)", userCreationErr);
     }
