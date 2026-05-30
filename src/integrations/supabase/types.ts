@@ -2110,11 +2110,13 @@ export type Database = {
         Row: {
           asaas_subscription_id: string | null
           billing_started_at: string | null
+          company_id: string | null
           created_at: string
           id: string
+          kind: string
           purchased_by: string | null
           slots_added: number
-          sst_manager_id: string
+          sst_manager_id: string | null
           status: string
           subscription_id: string | null
           unit_price_cents: number
@@ -2122,11 +2124,13 @@ export type Database = {
         Insert: {
           asaas_subscription_id?: string | null
           billing_started_at?: string | null
+          company_id?: string | null
           created_at?: string
           id?: string
+          kind?: string
           purchased_by?: string | null
           slots_added?: number
-          sst_manager_id: string
+          sst_manager_id?: string | null
           status?: string
           subscription_id?: string | null
           unit_price_cents?: number
@@ -2134,16 +2138,32 @@ export type Database = {
         Update: {
           asaas_subscription_id?: string | null
           billing_started_at?: string | null
+          company_id?: string | null
           created_at?: string
           id?: string
+          kind?: string
           purchased_by?: string | null
           slots_added?: number
-          sst_manager_id?: string
+          sst_manager_id?: string | null
           status?: string
           subscription_id?: string | null
           unit_price_cents?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "sst_extra_slot_purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sst_extra_slot_purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sst_extra_slot_purchases_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
