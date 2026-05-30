@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Loader2, ClipboardList } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Loader2, ClipboardList, KanbanSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -71,10 +72,17 @@ export const PGRMonitoringDashboard = ({ pgr }: { pgr: PGRDocument }) => {
       />
 
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <ClipboardList className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Plano de Ação Vigente</h3>
-          <span className="text-sm text-muted-foreground">({filteredActions.length} de {actions.length})</span>
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold">Plano de Ação Vigente</h3>
+            <span className="text-sm text-muted-foreground">({filteredActions.length} de {actions.length})</span>
+          </div>
+          <Button asChild size="sm" variant="outline" className="gap-1.5">
+            <Link to={`/pgr/${pgr.company_id}/kanban`}>
+              <KanbanSquare className="h-4 w-4" /> Ver em Kanban
+            </Link>
+          </Button>
         </div>
 
         <Card className="mb-4">

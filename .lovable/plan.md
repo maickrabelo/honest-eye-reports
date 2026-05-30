@@ -1,74 +1,97 @@
+## Objetivo
 
-# Planos SMS para venda na Hotmart
+1. Habilitar o módulo PGR automaticamente para todos os planos SMS (Técnico, Gestora Basic/Pro, Empresa Starter/Corporate) quando o cliente é provisionado via Hotmart.
+2. Criar uma nova página de Kanban de ações do PGR, separada do dashboard atual, com drag-and-drop entre colunas de status e confirmação ao concluir/cancelar.
 
-5 planos novos, vendidos só na Hotmart (escondidos da landing), com IA bloqueada e regras específicas de cadastro de empresas. Upgrades de excedente cobrados manualmente via Asaas no padrão atual (próxima fatura mensal cheia, sem proporcional).
+---
 
-## 1. Novos planos em `subscription_plans`
+## Parte 1 — PGR nos planos SMS
 
-| Slug | Nome | Categoria | Preço/mês | Empresas | Vidas | `create_company_login` | `ai_enabled` | `ouvidoria_enabled` |
-|---|---|---|---|---|---|---|---|---|
-| `tecnico-sst-sms` | Técnico SST SMS | manager | R$ 249,90 | 30 | 3000 | **false** | false | false |
-| `gestora-sst-sms-basic` | Gestora SST SMS Basic | manager | R$ 499,00 | 10 | 1000 | true | false | false |
-| `gestora-sst-sms-pro` | Gestora SST SMS Pro | manager | R$ 599,00 | 30 | 3000 | true | false | false |
-| `empresa-sms-starter` | Empresa SMS Starter | company | R$ 149,90 | 1 | 49 | — | false | false |
-| `empresa-sms-corporate` | Empresa SMS Corporate | company | R$ 249,90 | 1 | 99 | — | false | false |
+### Banco
+- Adicionar coluna `pgr_enabled boolean NOT NULL DEFAULT false` em `subscription_plans` (segue o padrão de `ai_enabled` e `ouvidoria_enabled`).
+- Setar `pgr_enabled = true` nos 5 planos SMS já criados: `tecnico-sst-sms`, `gestora-sst-sms-basic`, `gestora-sst-sms-pro`, `empresa-sms-starter`, `empresa-sms-corporate`.
+- Demais planos permanecem `false` (PGR continua restrito — não vaza para clientes legados).
 
-Todos com `visibility = 'hotmart_only'` → `PricingSection.tsx` adiciona `.eq('visibility','public')` e eles não aparecem na landing.
+### Provisionamento
+- `hotmart-webhook`: ao criar/atualizar a gestora SST (planos Técnico + Gestora), se `plan.pgr_enabled = true`, atualizar `sst_managers.pgr_module_enabled = true`.
+- `create-sst-company` (planos Empresa SMS, que criam uma gestora-shell própria): mesma lógica — propagar a flag.
+- Idempotente: se já estiver `true`, não faz nada.
 
-## 2. Schema (migration única)
+### Frontend
+- `usePGRModuleAccess` continua funcionando sem mudança (lê `sst_managers.pgr_module_enabled`).
+- Empresas SMS acessam PGR via a gestora-shell associada — fluxo já coberto pelo hook atual.
 
-`subscription_plans`: adicionar
-- `visibility text default 'public'` (`public` | `hotmart_only`)
-- `ai_enabled boolean default true`
-- `ouvidoria_enabled boolean default true`
-- `create_company_login boolean default true`
+---
 
-Nova tabela `plan_upgrade_pricing` (`plan_id`, `kind` `company|employee`, `unit_price_cents`) populada com:
-- `tecnico-sst-sms`: empresa R$ 8,00 / vida R$ 0,08
-- `gestora-sst-sms-basic|pro`: empresa R$ 19,90 / vida R$ 0,19
-- `empresa-sms-starter|corporate`: vida R$ 2,30 (sem empresa)
+## Parte 2 — Kanban de ações do PGR (página separada)
 
-`sst_extra_slot_purchases`: adicionar `kind text default 'company'` e `unit_price_cents int`. Nova `company_extra_employee_slots` análoga, ou reaproveitar coluna nova `extra_employee_slots` em `companies` e `sst_managers`.
+### Rota
+- Nova rota: `/pgr/:pgrId/kanban` (registrada em `App.tsx`, protegida pelo mesmo guard do `/pgr/:id`).
+- Botão "Ver em Kanban" no header do `PGRMonitoringDashboard` que leva à nova rota.
+- Botão "Voltar para Dashboard" na página Kanban.
 
-Função `has_ai_access(_user_id uuid) returns boolean` security definer: retorna `plan.ai_enabled` da subscription ativa do owner (company ou manager). Usada para gating server-side.
+### Página `PGRKanbanPage.tsx`
+Reusa `usePGRDashboardData(pgrId)` (já carrega ghes/risks/actions/checklist).
 
-## 3. Mapeamento Hotmart
+Layout: 4 colunas fixas lado a lado, scroll horizontal no mobile:
 
-5 linhas em `hotmart_product_plans` — os `product_id` da Hotmart você cadastra depois (tabela já existe).
+```text
+┌──────────┬──────────────┬──────────┬───────────┐
+│ Pendente │ Em andamento │Concluída │ Cancelada │
+│   (12)   │     (5)      │   (8)    │    (1)    │
+├──────────┼──────────────┼──────────┼───────────┤
+│ [card]   │ [card]       │ [card]   │ [card]    │
+│ [card]   │ [card]       │ [card]   │           │
+│ [card]   │              │          │           │
+└──────────┴──────────────┴──────────┴───────────┘
+```
 
-## 4. Provisionamento (`hotmart-webhook` + `create-sst-company`)
+- Cada coluna mostra contador + cards filtrados por status.
+- Cards reusam uma versão compacta do `ActionCard` (descrição, GHE, responsável, prazo com cor de atraso, badge de hierarquia, mini-progress do checklist). Sem botão "marcar como concluída" — usa drag.
+- Filtros no topo: GHE, responsável, somente atrasadas (idênticos ao dashboard).
 
-- `manager` com `create_company_login = false` (Técnico SMS): cria `sst_managers` normalmente; ao cadastrar empresa filha, `create-sst-company` ramifica e **não cria `auth.users` / `profiles` / e-mail de credenciais**. Empresa fica como registro de dados, gerenciada via o **CompanySelector** já existente no dashboard do técnico.
-- `gestora-sst-sms-basic/pro`: fluxo atual de gestora SST (cria login por empresa filha).
-- `empresa-sms-*`: fluxo atual de company (1 login, sem subempresas).
-- Ao provisionar empresa filha de qualquer plano SMS, webhook grava `company_feature_access` com `ouvidoria_enabled = false` (e demais flags como já existem).
+### Drag-and-drop
+- Lib: `@dnd-kit/core` + `@dnd-kit/sortable` (já no padrão React, leve, acessível).
+- Ao soltar em outra coluna:
+  - Atualização otimista local.
+  - `supabase.from('pgr_action_items').update({ status: <novo> }).eq('id', actionId)`.
+  - Em caso de erro: reverte e mostra toast.
+- **Confirmação modal** quando destino for `done` ou `cancelled`:
+  - "Concluir ação 'X'?" / "Cancelar ação 'X'?"
+  - Confirmar → executa update. Cancelar → reverte para coluna de origem.
+- Status `pending` ↔ `in_progress`: troca direta sem confirmação.
 
-## 5. Bloqueio de IA (UI + backend)
+### Acessibilidade
+- Cards têm `aria-label` com status atual.
+- Atalho de teclado: setas movem foco entre cards, Enter abre detalhe (modal simples reusando `ActionCard` completo, opcional fase 2).
 
-**Backend** — `sonia-chat`, `analyze-reports`, `analyze-climate-survey`, `chat-report`: chamar `has_ai_access(userId)` no início; se falso → 403 `ai_not_available_in_plan`. Garante zero consumo de crédito.
+---
 
-**Frontend** — novo hook `useAiAccess()` (padrão de `useCompanyFeatures`). Esconde:
-- `SoniaChat` (sidebar) e `SoniaFormChat` (questionário por IA)
-- Botões "Analisar com IA" em `AIAnalysisCard`, `AIInsightsCard`, fluxos de `analyze-reports`
-- Ouvidoria nos dashboards já é coberta automaticamente via `useCompanyFeatures` lendo `ouvidoria_enabled = false`
+## Arquivos
 
-## 6. Upgrades manuais via Asaas
+**Migration**
+- `supabase/migrations/<ts>_pgr_enabled_plan_flag.sql` — adiciona coluna, atualiza os 5 planos SMS.
 
-Extensão do `UpgradeSlotDialog` / `purchase-extra-company-slot` existentes:
-- Novo `UpgradeEmployeeSlotDialog` (vidas extras).
-- Nova edge function `purchase-extra-employee-slot` que cria assinatura recorrente Asaas usando `plan_upgrade_pricing.unit_price_cents`.
-- `purchase-extra-company-slot` deixa de hard-codear R$ 19,90 e passa a ler de `plan_upgrade_pricing`.
-- **Cobrança sempre na próxima fatura mensal cheia** (mantém padrão atual, sem proporcional).
-- `useSubscriptionLimits` ganha contadores de empresas e vidas; `SSTDashboard` / `AddCompanyDialog` / dashboards de empresa disparam o dialog correto ao atingir limite.
+**Edge functions**
+- `supabase/functions/hotmart-webhook/index.ts` — set `pgr_module_enabled` quando plano tem `pgr_enabled`.
+- `supabase/functions/create-sst-company/index.ts` — idem para gestora-shell de planos Empresa SMS.
 
-## 7. Itens fora da landing
+**Frontend**
+- `src/pages/PGRKanban.tsx` (novo)
+- `src/components/pgr/KanbanColumn.tsx` (novo)
+- `src/components/pgr/KanbanActionCard.tsx` (novo, versão compacta)
+- `src/components/pgr/ConfirmStatusChangeDialog.tsx` (novo)
+- `src/components/pgr/PGRMonitoringDashboard.tsx` — adicionar botão "Ver em Kanban"
+- `src/App.tsx` — registrar nova rota
+- `package.json` — `bun add @dnd-kit/core @dnd-kit/sortable`
 
-- `PricingSection.tsx`: adicionar `.eq('visibility','public')` no select de `subscription_plans`.
-- Sem rota nova, sem botão de checkout interno — venda 100% via Hotmart.
+**Memória**
+- Atualizar `mem://features/planos-sms-hotmart` para incluir `pgr_enabled = true` nos 5 planos.
+- Nova nota `mem://features/pgr-kanban-board` descrevendo a nova rota e a lógica de drag-and-drop com confirmação.
 
-## Detalhes técnicos
+---
 
-- Migration inclui `GRANT SELECT ON public.plan_upgrade_pricing TO authenticated` e mantém grants atuais de `subscription_plans`.
-- `hotmart-webhook` continua idempotente via `hotmart_transaction_id`.
-- `useAiAccess` cacheado por sessão (React Query) para evitar martelar `has_ai_access`.
-- Memory novo: `mem://features/planos-sms-hotmart` resumindo flags (`ai_enabled`, `create_company_login`, `visibility`) e padrão de upgrades para futuras alterações.
+## Fora do escopo
+- Edição inline de checklist no card do Kanban (continua disponível na view de grade do dashboard).
+- Drag para reordenar dentro da mesma coluna (sem prioridade definida no schema atual).
+- Realtime multi-usuário (Postgres changes) — pode ser fase 2 se necessário.

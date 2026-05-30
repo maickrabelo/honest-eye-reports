@@ -65,6 +65,7 @@ const CompanyTrainings = React.lazy(() => import("./pages/CompanyTrainings"));
 const CompanySelector = React.lazy(() => import("./components/CompanySelector"));
 const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
 const PGRDashboard = React.lazy(() => import("./pages/PGRDashboard"));
+const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -160,6 +161,7 @@ const App = () => (
                 <Route path="/sst/treinamentos" element={<SSTTrainings />} />
                 <Route path="/empresa/treinamentos" element={<CompanyTrainings />} />
                 <Route path="/pgr/:companyId" element={<PGRDashboard />} />
+                <Route path="/pgr/:companyId/kanban" element={<PGRKanban />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

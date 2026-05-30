@@ -34,21 +34,38 @@ export function usePGRModuleAccess() {
             .maybeSingle();
           if (!cancelled) setHasAccess(!!(data as any)?.pgr_module_enabled);
         } else if (role === 'company' && profile?.company_id) {
+          // 1. Via gestora SST atribuída
           const { data: assignments } = await supabase
             .from('company_sst_assignments')
             .select('sst_manager_id')
             .eq('company_id', profile.company_id);
           const ids = (assignments || []).map((a: any) => a.sst_manager_id);
-          if (ids.length === 0) {
-            if (!cancelled) setHasAccess(false);
-          } else {
+          let ok = false;
+          if (ids.length > 0) {
             const { data: managers } = await supabase
               .from('sst_managers')
               .select('id, pgr_module_enabled')
               .in('id', ids);
-            const ok = (managers || []).some((m: any) => m.pgr_module_enabled);
-            if (!cancelled) setHasAccess(ok);
+            ok = (managers || []).some((m: any) => m.pgr_module_enabled);
           }
+          // 2. Via plano da própria empresa (Empresa SMS Starter/Corporate)
+          if (!ok) {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('parent_subscription_id')
+              .eq('id', profile.company_id)
+              .maybeSingle();
+            const subId = (company as any)?.parent_subscription_id;
+            if (subId) {
+              const { data: sub } = await supabase
+                .from('subscriptions')
+                .select('subscription_plans(pgr_enabled)')
+                .eq('id', subId)
+                .maybeSingle();
+              ok = !!(sub as any)?.subscription_plans?.pgr_enabled;
+            }
+          }
+          if (!cancelled) setHasAccess(ok);
         } else {
           if (!cancelled) setHasAccess(false);
         }

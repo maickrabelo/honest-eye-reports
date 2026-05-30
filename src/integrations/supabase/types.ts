@@ -2529,6 +2529,7 @@ export type Database = {
           min_employees: number
           name: string
           ouvidoria_enabled: boolean
+          pgr_enabled: boolean
           price_annual_cents: number | null
           price_monthly_cents: number | null
           price_per_employee_cents: number | null
@@ -2559,6 +2560,7 @@ export type Database = {
           min_employees: number
           name: string
           ouvidoria_enabled?: boolean
+          pgr_enabled?: boolean
           price_annual_cents?: number | null
           price_monthly_cents?: number | null
           price_per_employee_cents?: number | null
@@ -2589,6 +2591,7 @@ export type Database = {
           min_employees?: number
           name?: string
           ouvidoria_enabled?: boolean
+          pgr_enabled?: boolean
           price_annual_cents?: number | null
           price_monthly_cents?: number | null
           price_per_employee_cents?: number | null

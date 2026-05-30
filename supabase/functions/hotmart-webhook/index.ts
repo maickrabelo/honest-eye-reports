@@ -318,6 +318,7 @@ Deno.serve(async (req) => {
             email: buyerEmail,
             max_companies: plan.max_companies || 10,
             subscription_status: 'active',
+            pgr_module_enabled: plan.pgr_enabled === true,
           })
           .select('id')
           .single();
