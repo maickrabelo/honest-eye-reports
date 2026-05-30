@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,22 @@ serve(async (req) => {
     };
 
     console.log(`Analyzing survey ${surveyId} with ${responses.length} question groups`);
+
+    // AI access gate via survey -> company_id
+    try {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: survey } = await supabase.from("climate_surveys").select("company_id").eq("id", surveyId).maybeSingle();
+      if (survey?.company_id) {
+        const { data: aiOk } = await supabase.rpc("entity_has_ai_access", {
+          _company_id: survey.company_id, _sst_manager_id: null,
+        });
+        if (aiOk === false) {
+          return new Response(JSON.stringify({ error: "ai_not_available_in_plan" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    } catch (_e) { /* fail-open */ }
 
     if (!responses || responses.length === 0) {
       return new Response(JSON.stringify({ error: "Sem respostas para analisar" }), {
