@@ -124,6 +124,8 @@ export default function SoniaChat({ companyId, sstManagerId, contextType = "dash
     }
   };
 
+  if (!aiLoading && !aiEnabled) return null;
+
   return (
     <>
       {/* Vertical tab on right edge - full height */}

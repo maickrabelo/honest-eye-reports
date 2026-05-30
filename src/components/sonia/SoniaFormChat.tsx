@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import soniaAvatar from "@/assets/sonia-avatar.png";
+import { useAiAccess } from "@/hooks/useAiAccess";
 
 interface Question {
   number: number;
@@ -48,6 +49,7 @@ export default function SoniaFormChat({
   assessmentTitle,
   toolName,
 }: SoniaFormChatProps) {
+  const { hasAccess: aiEnabled, isLoading: aiLoading } = useAiAccess();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showEncouragement, setShowEncouragement] = useState(false);
