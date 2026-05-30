@@ -134,6 +134,14 @@ serve(async (req) => {
     }
     const userId = userData.user.id;
 
+    // ---- AI access gate ----
+    const { data: aiOk } = await supabase.rpc("has_ai_access", { _user_id: userId });
+    if (aiOk === false) {
+      return new Response(JSON.stringify({ error: "ai_not_available_in_plan" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ---- AuthZ: verify ownership of requested scope ----
     const { data: profile } = await supabase
       .from("profiles").select("company_id, sst_manager_id").eq("id", userId).maybeSingle();
