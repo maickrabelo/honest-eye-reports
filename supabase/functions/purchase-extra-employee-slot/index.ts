@@ -141,6 +141,8 @@ Deno.serve(async (req) => {
 
     await supabase.from("sst_extra_slot_purchases").insert({
       sst_manager_id: profile.sst_manager_id ?? null,
+      company_id: profile.company_id ?? null,
+      kind: "employee",
       subscription_id: subscription.id,
       slots_added: quantity,
       unit_price_cents: unit,
