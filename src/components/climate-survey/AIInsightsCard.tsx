@@ -96,6 +96,8 @@ export const AIInsightsCard: React.FC<AIInsightsCardProps> = ({
     { name: 'Negativo', value: insights.sentiment_distribution.negative, color: '#ef4444' }
   ] : [];
 
+  if (!aiLoading && !aiEnabled) return null;
+
   return (
     <Card>
       <CardHeader>
