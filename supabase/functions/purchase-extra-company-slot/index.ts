@@ -162,9 +162,10 @@ Deno.serve(async (req) => {
     // 5. Registrar a compra
     await supabase.from("sst_extra_slot_purchases").insert({
       sst_manager_id: sstManagerId,
+      kind: "company",
       subscription_id: subscription?.id ?? null,
       slots_added: 1,
-      unit_price_cents: SLOT_PRICE_CENTS,
+      unit_price_cents: slotPriceCents,
       status: pendingBilling ? "pending_billing" : "active",
       purchased_by: userId,
       asaas_subscription_id: asaasSubscriptionId,
