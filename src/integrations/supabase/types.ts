@@ -968,6 +968,41 @@ export type Database = {
         }
         Relationships: []
       }
+      hotmart_product_plans: {
+        Row: {
+          created_at: string
+          hotmart_product_id: string
+          is_active: boolean
+          notes: string | null
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hotmart_product_id: string
+          is_active?: boolean
+          notes?: string | null
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hotmart_product_id?: string
+          is_active?: boolean
+          notes?: string | null
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotmart_product_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hseit_answers: {
         Row: {
           answer_value: number
@@ -2509,6 +2544,8 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          hotmart_subscriber_code: string | null
+          hotmart_transaction_id: string | null
           id: string
           invoice_url: string | null
           metadata: Json | null
@@ -2516,6 +2553,7 @@ export type Database = {
           owner_email: string
           owner_user_id: string | null
           plan_id: string
+          provider: string
           status: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at: string
         }
@@ -2528,6 +2566,8 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          hotmart_subscriber_code?: string | null
+          hotmart_transaction_id?: string | null
           id?: string
           invoice_url?: string | null
           metadata?: Json | null
@@ -2535,6 +2575,7 @@ export type Database = {
           owner_email: string
           owner_user_id?: string | null
           plan_id: string
+          provider?: string
           status?: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at?: string
         }
@@ -2547,6 +2588,8 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          hotmart_subscriber_code?: string | null
+          hotmart_transaction_id?: string | null
           id?: string
           invoice_url?: string | null
           metadata?: Json | null
@@ -2554,6 +2597,7 @@ export type Database = {
           owner_email?: string
           owner_user_id?: string | null
           plan_id?: string
+          provider?: string
           status?: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at?: string
         }
