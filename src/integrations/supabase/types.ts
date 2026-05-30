@@ -3035,6 +3035,10 @@ export type Database = {
         Args: { _module_id: string }
         Returns: number
       }
+      entity_has_ai_access: {
+        Args: { _company_id: string; _sst_manager_id: string }
+        Returns: boolean
+      }
       generate_tracking_code: { Args: never; Returns: string }
       get_company_features: {
         Args: { _company_id: string }
