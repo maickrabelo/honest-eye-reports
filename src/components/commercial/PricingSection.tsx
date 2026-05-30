@@ -47,11 +47,12 @@ const PricingSection = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .order('display_order' as any);
+        .eq('visibility', 'public')
+        .order('display_order');
       const formatted = (data ?? []).map((p: any) => ({
         ...p,
         features: Array.isArray(p.features) ? p.features : [],

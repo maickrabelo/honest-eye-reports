@@ -514,6 +514,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           employee_count: number
+          extra_employee_slots: number
           id: string
           legacy_plan: boolean
           logo_url: string | null
@@ -538,6 +539,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           employee_count?: number
+          extra_employee_slots?: number
           id?: string
           legacy_plan?: boolean
           logo_url?: string | null
@@ -562,6 +564,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           employee_count?: number
+          extra_employee_slots?: number
           id?: string
           legacy_plan?: boolean
           logo_url?: string | null
@@ -1778,6 +1781,38 @@ export type Database = {
           },
         ]
       }
+      plan_upgrade_pricing: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          plan_id: string
+          unit_price_cents: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          plan_id: string
+          unit_price_cents: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          plan_id?: string
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_upgrade_pricing_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_id: string | null
@@ -2075,11 +2110,13 @@ export type Database = {
         Row: {
           asaas_subscription_id: string | null
           billing_started_at: string | null
+          company_id: string | null
           created_at: string
           id: string
+          kind: string
           purchased_by: string | null
           slots_added: number
-          sst_manager_id: string
+          sst_manager_id: string | null
           status: string
           subscription_id: string | null
           unit_price_cents: number
@@ -2087,11 +2124,13 @@ export type Database = {
         Insert: {
           asaas_subscription_id?: string | null
           billing_started_at?: string | null
+          company_id?: string | null
           created_at?: string
           id?: string
+          kind?: string
           purchased_by?: string | null
           slots_added?: number
-          sst_manager_id: string
+          sst_manager_id?: string | null
           status?: string
           subscription_id?: string | null
           unit_price_cents?: number
@@ -2099,16 +2138,32 @@ export type Database = {
         Update: {
           asaas_subscription_id?: string | null
           billing_started_at?: string | null
+          company_id?: string | null
           created_at?: string
           id?: string
+          kind?: string
           purchased_by?: string | null
           slots_added?: number
-          sst_manager_id?: string
+          sst_manager_id?: string | null
           status?: string
           subscription_id?: string | null
           unit_price_cents?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "sst_extra_slot_purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sst_extra_slot_purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sst_extra_slot_purchases_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
@@ -2142,6 +2197,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           extra_company_slots: number
+          extra_employee_slots: number
           id: string
           logo_url: string | null
           max_companies: number
@@ -2163,6 +2219,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           extra_company_slots?: number
+          extra_employee_slots?: number
           id?: string
           logo_url?: string | null
           max_companies?: number
@@ -2184,6 +2241,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           extra_company_slots?: number
+          extra_employee_slots?: number
           id?: string
           logo_url?: string | null
           max_companies?: number
@@ -2455,8 +2513,10 @@ export type Database = {
       }
       subscription_plans: {
         Row: {
+          ai_enabled: boolean
           base_price_cents: number
           category: string
+          create_company_login: boolean
           created_at: string | null
           display_order: number
           features: Json | null
@@ -2468,6 +2528,7 @@ export type Database = {
           max_employees: number | null
           min_employees: number
           name: string
+          ouvidoria_enabled: boolean
           price_annual_cents: number | null
           price_monthly_cents: number | null
           price_per_employee_cents: number | null
@@ -2479,10 +2540,13 @@ export type Database = {
           stripe_product_id: string | null
           tier: string | null
           updated_at: string | null
+          visibility: string
         }
         Insert: {
+          ai_enabled?: boolean
           base_price_cents: number
           category?: string
+          create_company_login?: boolean
           created_at?: string | null
           display_order?: number
           features?: Json | null
@@ -2494,6 +2558,7 @@ export type Database = {
           max_employees?: number | null
           min_employees: number
           name: string
+          ouvidoria_enabled?: boolean
           price_annual_cents?: number | null
           price_monthly_cents?: number | null
           price_per_employee_cents?: number | null
@@ -2505,10 +2570,13 @@ export type Database = {
           stripe_product_id?: string | null
           tier?: string | null
           updated_at?: string | null
+          visibility?: string
         }
         Update: {
+          ai_enabled?: boolean
           base_price_cents?: number
           category?: string
+          create_company_login?: boolean
           created_at?: string | null
           display_order?: number
           features?: Json | null
@@ -2520,6 +2588,7 @@ export type Database = {
           max_employees?: number | null
           min_employees?: number
           name?: string
+          ouvidoria_enabled?: boolean
           price_annual_cents?: number | null
           price_monthly_cents?: number | null
           price_per_employee_cents?: number | null
@@ -2531,6 +2600,7 @@ export type Database = {
           stripe_product_id?: string | null
           tier?: string | null
           updated_at?: string | null
+          visibility?: string
         }
         Relationships: []
       }
@@ -2985,6 +3055,10 @@ export type Database = {
         Args: { _module_id: string }
         Returns: number
       }
+      entity_has_ai_access: {
+        Args: { _company_id: string; _sst_manager_id: string }
+        Returns: boolean
+      }
       generate_tracking_code: { Args: never; Returns: string }
       get_company_features: {
         Args: { _company_id: string }
@@ -3001,6 +3075,7 @@ export type Database = {
         Returns: number
       }
       get_user_sst_manager_id: { Args: { _user_id: string }; Returns: string }
+      has_ai_access: { Args: { _user_id: string }; Returns: boolean }
       has_pgr_module: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {

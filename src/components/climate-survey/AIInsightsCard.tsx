@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Sparkles, ThumbsUp, ThumbsDown, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAiAccess } from '@/hooks/useAiAccess';
 import {
   PieChart,
   Pie,
@@ -38,6 +39,7 @@ export const AIInsightsCard: React.FC<AIInsightsCardProps> = ({
   openResponses = []
 }) => {
   const { toast } = useToast();
+  const { hasAccess: aiEnabled, isLoading: aiLoading } = useAiAccess();
   const [isLoading, setIsLoading] = useState(false);
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +95,8 @@ export const AIInsightsCard: React.FC<AIInsightsCardProps> = ({
     { name: 'Neutro', value: insights.sentiment_distribution.neutral, color: '#f59e0b' },
     { name: 'Negativo', value: insights.sentiment_distribution.negative, color: '#ef4444' }
   ] : [];
+
+  if (!aiLoading && !aiEnabled) return null;
 
   return (
     <Card>

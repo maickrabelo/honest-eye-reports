@@ -38,6 +38,18 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // AI access gate
+    if (companyId) {
+      const { data: aiOk } = await supabase.rpc('entity_has_ai_access', {
+        _company_id: companyId, _sst_manager_id: null,
+      });
+      if (aiOk === false) {
+        return new Response(JSON.stringify({ error: 'ai_not_available_in_plan' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // Check rate limit - 50 requests per hour per session
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     

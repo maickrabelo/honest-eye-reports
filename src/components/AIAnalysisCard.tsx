@@ -7,9 +7,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
+import { useAiAccess } from "@/hooks/useAiAccess";
 
 const AIAnalysisCard = () => {
   const { profile } = useRealAuth();
+  const { hasAccess: aiEnabled, isLoading: aiLoading } = useAiAccess();
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<any[]>([]);
   
@@ -88,6 +90,8 @@ const AIAnalysisCard = () => {
     }
     return <span className="text-gray-500">→</span>;
   };
+
+  if (!aiLoading && !aiEnabled) return null;
 
   return (
     <Card>

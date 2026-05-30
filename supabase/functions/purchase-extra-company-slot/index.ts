@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SLOT_PRICE_CENTS = 1990; // R$ 19,90
+const DEFAULT_SLOT_PRICE_CENTS = 1990; // R$ 19,90 fallback
 const ASAAS_API_URL = Deno.env.get("ASAAS_ENV") === "production"
   ? "https://api.asaas.com/v3"
   : "https://sandbox.asaas.com/api/v3";
@@ -76,6 +76,28 @@ Deno.serve(async (req) => {
 
     log("subscription found", { hasSub: !!subscription, hasAsaas: !!subscription?.asaas_customer_id });
 
+    // Preço dinâmico por plano
+    let slotPriceCents = DEFAULT_SLOT_PRICE_CENTS;
+    try {
+      const { data: subPlan } = await supabase
+        .from("subscriptions")
+        .select("plan_id")
+        .eq("owner_user_id", userId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (subPlan?.plan_id) {
+        const { data: pricing } = await supabase
+          .from("plan_upgrade_pricing")
+          .select("unit_price_cents")
+          .eq("plan_id", subPlan.plan_id)
+          .eq("kind", "company")
+          .maybeSingle();
+        if (pricing?.unit_price_cents) slotPriceCents = pricing.unit_price_cents;
+      }
+    } catch (_e) { /* keep default */ }
+
     // 3. Criar assinatura recorrente no Asaas (se aplicável)
     let asaasSubscriptionId: string | null = null;
     let nextChargeDate: string | null = subscription?.next_charge_date ?? null;
@@ -140,9 +162,10 @@ Deno.serve(async (req) => {
     // 5. Registrar a compra
     await supabase.from("sst_extra_slot_purchases").insert({
       sst_manager_id: sstManagerId,
+      kind: "company",
       subscription_id: subscription?.id ?? null,
       slots_added: 1,
-      unit_price_cents: SLOT_PRICE_CENTS,
+      unit_price_cents: slotPriceCents,
       status: pendingBilling ? "pending_billing" : "active",
       purchased_by: userId,
       asaas_subscription_id: asaasSubscriptionId,

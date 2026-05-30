@@ -162,6 +162,30 @@ Deno.serve(async (req) => {
       .single();
     if (managerErr || !manager) return json({ error: "Gestora SST não encontrada." }, 404);
 
+    // Descobrir flags do plano (alguns planos SMS não criam login por empresa)
+    let planCreateCompanyLogin = true;
+    let planOuvidoriaEnabled = true;
+    try {
+      const { data: managerProfiles } = await supabase
+        .from("profiles").select("id").eq("sst_manager_id", sstManagerId);
+      const ownerIds = (managerProfiles ?? []).map((p: any) => p.id);
+      if (ownerIds.length > 0) {
+        const { data: sub } = await supabase
+          .from("subscriptions")
+          .select("subscription_plans(create_company_login, ouvidoria_enabled)")
+          .in("owner_user_id", ownerIds)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const sp: any = (sub as any)?.subscription_plans;
+        if (sp) {
+          planCreateCompanyLogin = sp.create_company_login ?? true;
+          planOuvidoriaEnabled = sp.ouvidoria_enabled ?? true;
+        }
+      }
+    } catch (_e) { /* ignore, keep defaults */ }
+
     const { count: currentCount, error: countErr } = await supabase
       .from("company_sst_assignments")
       .select("company_id", { count: "exact", head: true })
@@ -205,18 +229,20 @@ Deno.serve(async (req) => {
 
         await supabase.from("company_feature_access").upsert({
           company_id: existingCompany.id,
-          ouvidoria_enabled: true,
+          ouvidoria_enabled: planOuvidoriaEnabled,
           psicossocial_enabled: true,
           burnout_enabled: true,
           clima_enabled: true,
           treinamentos_enabled: true,
         });
 
-        await ensureCompanyAccess(
+        if (planCreateCompanyLogin) {
+          await ensureCompanyAccess(
           supabase,
           { id: existingCompany.id, name, email, cnpj },
           cnpjDigits,
         );
+        }
 
         return json({ success: true, company_id: existingCompany.id, already_linked: true });
       }
@@ -256,18 +282,20 @@ Deno.serve(async (req) => {
 
       await supabase.from("company_feature_access").upsert({
         company_id: existingCompany.id,
-        ouvidoria_enabled: true,
+        ouvidoria_enabled: planOuvidoriaEnabled,
         psicossocial_enabled: true,
         burnout_enabled: true,
         clima_enabled: true,
         treinamentos_enabled: true,
       });
 
-      await ensureCompanyAccess(
+      if (planCreateCompanyLogin) {
+          await ensureCompanyAccess(
         supabase,
         { id: existingCompany.id, name, email, cnpj },
         cnpjDigits,
       );
+        }
 
       return json({ success: true, company_id: existingCompany.id, recovered_orphan: true });
     }
@@ -320,7 +348,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("company_feature_access").upsert({
       company_id: newCompanyId,
-      ouvidoria_enabled: true,
+      ouvidoria_enabled: planOuvidoriaEnabled,
       psicossocial_enabled: true,
       burnout_enabled: true,
       clima_enabled: true,
@@ -331,11 +359,13 @@ Deno.serve(async (req) => {
     try {
       // Initial password = full CNPJ digits (consistent with what is shown to user)
       const initialPassword = cnpjDigits;
-      await ensureCompanyAccess(
+      if (planCreateCompanyLogin) {
+          await ensureCompanyAccess(
         supabase,
         { id: newCompanyId, name, email, cnpj },
         initialPassword,
       );
+        }
     } catch (userCreationErr: any) {
       console.error("[CREATE-SST-COMPANY] User creation failed (company still created)", userCreationErr);
     }

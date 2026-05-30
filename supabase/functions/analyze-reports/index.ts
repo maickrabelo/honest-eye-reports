@@ -27,6 +27,17 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // AI access gate
+    const { data: aiOk } = await supabase.rpc("entity_has_ai_access", {
+      _company_id: company_id,
+      _sst_manager_id: null,
+    });
+    if (aiOk === false) {
+      return new Response(JSON.stringify({ error: "ai_not_available_in_plan" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Buscar denúncias dos últimos 60 dias
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);

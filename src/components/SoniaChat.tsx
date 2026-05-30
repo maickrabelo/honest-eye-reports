@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import { useSoniaChat } from "@/contexts/SoniaChatContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import soniaAvatar from "@/assets/sonia-avatar.png";
+import { useAiAccess } from "@/hooks/useAiAccess";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -20,6 +21,7 @@ interface SoniaChatProps {
 
 export default function SoniaChat({ companyId, sstManagerId, contextType = "dashboard" }: SoniaChatProps) {
   const { isOpen: open, setIsOpen: setOpen } = useSoniaChat();
+  const { hasAccess: aiEnabled, isLoading: aiLoading } = useAiAccess();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -121,6 +123,8 @@ export default function SoniaChat({ companyId, sstManagerId, contextType = "dash
       setIsLoading(false);
     }
   };
+
+  if (!aiLoading && !aiEnabled) return null;
 
   return (
     <>
