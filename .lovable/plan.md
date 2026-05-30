@@ -1,77 +1,79 @@
-## Objetivo
+# Integração Hotmart → SOIA
 
-Adicionar uma nova opção de **Variante de Redação** na configuração da avaliação HSE-IT. Quando o gestor marcar **"Avaliação Positiva"**, o questionário apresentará uma redação alternativa (mais branda/positiva, sem palavras "gourmet" e sem inversão de polaridade) para as 35 perguntas — **sem alterar nenhuma lógica, categorias, inversão (`isInverted`), cálculo de scores ou classificação de risco**. Apenas o texto exibido muda.
+Quando uma compra for aprovada na Hotmart, criamos automaticamente a conta SOIA (empresa ou gestora SST, conforme o plano), enviamos as credenciais por e-mail e suspendemos o acesso se a compra for cancelada/reembolsada.
 
-## Mudanças
+## 1. Mapa de produtos Hotmart → Plano SOIA
 
-### 1. Banco de dados (migração)
-- Adicionar coluna `wording_variant TEXT NOT NULL DEFAULT 'standard'` em `public.hseit_assessments` (valores aceitos: `'standard'` | `'positive'`).
-- Nenhuma alteração em RLS ou grants existentes.
+Nova tabela `hotmart_product_plans` (editável depois sem deploy):
 
-### 2. Textos alternativos das perguntas
-Arquivo: `src/data/hseitQuestions.ts`
-- Adicionar a cada item de `HSEIT_QUESTIONS` um novo campo `textPositive: string` com a redação da Coluna 2 do documento enviado.
-- Mapeamento completo (número da pergunta → novo texto):
+| Coluna | Descrição |
+|---|---|
+| `hotmart_product_id` (PK) | ID do produto na Hotmart |
+| `plan_id` | FK para `subscription_plans` |
+| `account_type` | `company` ou `manager` (deriva do `plan.category`, mas guardado para clareza) |
+| `is_active` | liga/desliga sem deletar |
 
-  1 → "Tenho clareza sobre o que é esperado de mim no trabalho."
-  2 → "Tenho autonomia para gerenciar minhas pausas no trabalho."
-  3 → "Diferentes áreas me direcionam demandas que, muitas vezes, são difíceis de conciliar entre si."
-  4 → "Sinto-me capacitado e seguro para executar minhas tarefas diárias."
-  5 → "Observo comentários ou comportamentos inapropriados direcionados a mim no trabalho."
-  6 → "Os prazos estipulados para as minhas entregas são incompatíveis com o tempo necessário para execução."
-  7 → "Recebo ajuda e o suporte necessário dos meus colegas quando preciso."
-  8 → "Posso contar com a minha liderança para me apoiar na resolução de problemas no trabalho."
-  9 → "A dinâmica das minhas atividades exige um ritmo de trabalho intenso."
-  10 → "Eu tenho autonomia para definir o meu próprio ritmo de trabalho."
-  11 → "Compreendo quais são as minhas responsabilidades e meu escopo de atuação."
-  12 → "O volume de demandas pendentes faz com que algumas tarefas fiquem em segundo plano."
-  13 → "Tenho clareza sobre as metas e os objetivos estabelecidos para a minha área."
-  14 → "Há momentos de atrito entre colegas no meu ambiente de trabalho."
-  15 → "Tenho autonomia para escolher a melhor forma para realizar o meu trabalho."
-  16 → "Consigo realizar as pausas necessárias durante o expediente de trabalho."
-  17 → "Compreendo claramente como o meu trabalho contribui para os objetivos da empresa."
-  18 → "Sou pressionado a trabalhar por longas horas para além da minha jornada habitual de trabalho."
-  19 → "Tenho liberdade para decidir o que fazer no meu trabalho."
-  20 → "Tenho um ritmo de trabalho muito acelerado."
-  21 → "Vivencio situações que me fazem sentir intimidado no trabalho."
-  22 → "Sofro pressão com prazos irreais."
-  23 → "Meus colegas mostram-se disponíveis para me ouvir e me ajudar com desafios profissionais."
-  24 → "Recebo feedbacks construtivos que apoiam o desenvolvimento no trabalho." *(apoio dos colegas — mantém a categoria atual)*
-  25 → "Tenho autonomia para decidir a forma como realizo o meu trabalho."
-  26 → "Tenho oportunidades para questionar a minha liderança sobre as mudanças que ocorrem no trabalho."
-  27 → "Sou tratado com respeito pelos meus colegas de trabalho."
-  28 → "Os colaboradores são sempre consultados sobre mudanças que ocorrem no trabalho."
-  29 → "Sinto-me confortável para compartilhar minhas preocupações ou incômodos com a minha liderança."
-  30 → "O meu horário de trabalho pode ser flexível."
-  31 → "Sou tratado com respeito pelos meus colegas." *(reforço do item 27, ajustado conforme documento)*
-  32 → "Quando ocorrem mudanças no trabalho, eu tenho a clareza de como elas vão impactar na prática."
-  33 → "Sou acolhido quando preciso lidar com demandas emocionalmente desgastantes."
-  34 → "As relações no trabalho são tensas."
-  35 → "Sinto-me encorajado e motivado pela minha liderança."
+Você me passa depois os `product_id` da Hotmart e eu populo (ou você cadastra direto no painel da Lovable Cloud).
 
-- Adicionar helper `getQuestionText(q, variant)` que retorna `q.textPositive` quando `variant === 'positive'` e cair em `q.text` em qualquer outro caso.
-- **Nenhuma alteração** em `isInverted`, categorias, escala Likert, `normalizeScore`, `calculateCategoryAverage`, `getRiskLevel`, `getHealthImpact`.
+## 2. Edge Function `hotmart-webhook` (pública, `verify_jwt = false`)
 
-### 3. Configuração na tela de gestão
-Arquivo: `src/pages/HSEITManagement.tsx`
-- Adicionar estado `wordingVariant` carregado do registro e salvo no insert/update.
-- Adicionar bloco visual na seção de configurações com um `RadioGroup` (ou `Switch`) com duas opções:
-  - **Padrão (original HSE-IT)** — recomendado para validade científica plena.
-  - **Avaliação Positiva** — redação mais acolhedora, sem alterar a matriz de cálculo.
-- Texto auxiliar curto explicando que a alteração é apenas de redação e não impacta cálculo de risco.
+URL que você vai colar no painel da Hotmart:
+`https://ovednzilplbewpzpvxnf.supabase.co/functions/v1/hotmart-webhook`
 
-### 4. Renderização das perguntas
-- `src/pages/HSEITForm.tsx`: carregar `wording_variant` do assessment ao iniciar e usar `getQuestionText(question, variant)` no lugar de `question.text` (linha 49 e qualquer outra que renderize o texto).
-- `src/components/sonia/SoniaFormChat.tsx`: quando o contexto for HSE-IT, aplicar a mesma troca via `getQuestionText`.
+**Segurança:** valida o header `X-Hotmart-Hottok` (token configurado na Hotmart) contra o secret `HOTMART_HOTTOK`.
 
-### 5. Itens **não** alterados
-- Resultados, exports, PDFs (`HSEITResults.tsx`, `HSEITReportPDF.tsx`, `HSEITPGRReportPDF.tsx`, `HSEITActionPlanEditor.tsx`, `CategoryRiskIndicators.tsx`, `assessmentExport.ts`, `RelatorioDemo.tsx`) continuam usando `question.text` original — porque relatórios precisam manter a referência científica do instrumento.
+**Eventos tratados:**
 
-## Detalhes técnicos
+- `PURCHASE_APPROVED` / `PURCHASE_COMPLETE` → **provisiona conta**
+- `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK`, `PURCHASE_CANCELED`, `SUBSCRIPTION_CANCELLATION` → **suspende acesso**
+- `PURCHASE_PROTEST`, `PURCHASE_DELAYED` → log apenas
+- Demais eventos → ignora com 200 OK
 
-- A coluna `wording_variant` é `TEXT` (não enum) para evitar migração futura caso surjam novas variantes.
-- A propriedade `textPositive` é obrigatória nas 35 questões (TypeScript valida em build).
-- Como os cálculos não mudam, `getRiskLevel`/`getHealthImpact` continuam idênticos — apenas o respondente vê a redação alternativa.
+### Fluxo de aprovação (espelha `asaas-webhook`)
 
-## Resumo curto
-Toggle "Avaliação Positiva" na config do HSE-IT que troca somente os textos das 35 perguntas (sem mudar inversão, categorias nem cálculo).
+1. Extrai `buyer.email`, `buyer.name`, `product.id`, `purchase.transaction` (idempotência) e `purchase.subscription.subscriber.code` (se assinatura).
+2. Busca `hotmart_product_plans` pelo `product.id` → obtém o `subscription_plans` correspondente. Se não mapeado, devolve 200 e loga para você cadastrar depois.
+3. Idempotência: se já existir `subscriptions.hotmart_transaction_id = X`, retorna sucesso sem duplicar.
+4. Gera senha temporária aleatória (12 chars) e cria usuário com `auth.admin.createUser` + `email_confirm: true`.
+5. Conforme `plan.category`:
+   - **`company`**: cria `companies` (`max_employees = plan.max_employees`), vincula `user_companies` e `profiles.company_id`, role `company`.
+   - **`manager`**: cria `sst_managers` (`max_companies = plan.max_companies`), vincula `profiles.sst_manager_id`, role `sst`.
+6. Insere em `subscriptions` com `provider = 'hotmart'`, `hotmart_transaction_id`, `hotmart_subscriber_code`, `plan_id`, status `active`.
+7. Marca `must_change_password: true` para forçar troca no primeiro login.
+8. Envia e-mail via Resend (mesmo template do `stripe-webhook`) com login + senha temporária + link `/auth`.
+
+### Fluxo de cancelamento (suspender, mantendo dados)
+
+1. Localiza `subscriptions` por `hotmart_transaction_id` ou `hotmart_subscriber_code`.
+2. Atualiza `subscriptions.status = 'canceled'` e:
+   - `companies.subscription_status = 'inactive'` (se company), ou
+   - `sst_managers.subscription_status = 'inactive'` (se manager).
+3. O login fica bloqueado pelo guard de status já existente (mesmo padrão Asaas). Dados preservados para eventual reativação.
+
+## 3. Alterações em `subscriptions`
+
+Adicionar colunas (todas nullable, sem quebrar nada):
+
+- `provider text` (default `'asaas'` para registros existentes; novos da Hotmart = `'hotmart'`)
+- `hotmart_transaction_id text` (único)
+- `hotmart_subscriber_code text` (índice)
+
+## 4. Secrets necessários
+
+- `HOTMART_HOTTOK` — token que a Hotmart envia no header de cada postback (você cadastra no painel da Hotmart e me passa).
+- `RESEND_API_KEY` — já existe.
+
+## 5. Painel admin (opcional, posso fazer junto ou depois)
+
+Pequena tela em `/master/hotmart-plans` para CRUD do `hotmart_product_plans` — assim você adiciona novos produtos da Hotmart sem precisar de migração.
+
+## Notas técnicas
+
+- Registro de `hotmart-webhook` em `supabase/config.toml` com `verify_jwt = false`.
+- Resposta sempre 200 quando o webhook for válido, mesmo em caso de "ignorar", para a Hotmart não reenviar infinitamente. Erros reais (500) só em falha de infraestrutura.
+- Idempotência por `hotmart_transaction_id` impede contas duplicadas se a Hotmart reenviar o postback.
+- E-mail de credenciais reutiliza o HTML do `stripe-webhook` para manter visual consistente.
+
+## Pergunta aberta
+
+Quer que eu já inclua a **tela admin do mapa de produtos** (item 5) nesta entrega, ou posso te enviar os `INSERT` SQL e você cadastra manualmente os primeiros produtos enquanto a tela fica para depois?
