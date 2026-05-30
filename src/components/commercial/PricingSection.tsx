@@ -51,6 +51,7 @@ const PricingSection = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
+        .eq('visibility' as any, 'public')
         .order('display_order' as any);
       const formatted = (data ?? []).map((p: any) => ({
         ...p,
