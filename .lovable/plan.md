@@ -1,97 +1,36 @@
 ## Objetivo
 
-1. Habilitar o módulo PGR automaticamente para todos os planos SMS (Técnico, Gestora Basic/Pro, Empresa Starter/Corporate) quando o cliente é provisionado via Hotmart.
-2. Criar uma nova página de Kanban de ações do PGR, separada do dashboard atual, com drag-and-drop entre colunas de status e confirmação ao concluir/cancelar.
+Provisionar 5 contas reais de teste — uma para cada plano SMS — para você logar e conferir o que cada plano libera/bloqueia (PGR, IA, Ouvidoria, limites de empresas/funcionários).
 
----
+## Como será feito
 
-## Parte 1 — PGR nos planos SMS
+Vou rodar uma migration única que executa o mesmo fluxo do `hotmart-webhook` em modo manual (sem precisar disparar webhook real nem criar produto no Hotmart). Para cada plano:
 
-### Banco
-- Adicionar coluna `pgr_enabled boolean NOT NULL DEFAULT false` em `subscription_plans` (segue o padrão de `ai_enabled` e `ouvidoria_enabled`).
-- Setar `pgr_enabled = true` nos 5 planos SMS já criados: `tecnico-sst-sms`, `gestora-sst-sms-basic`, `gestora-sst-sms-pro`, `empresa-sms-starter`, `empresa-sms-corporate`.
-- Demais planos permanecem `false` (PGR continua restrito — não vaza para clientes legados).
+1. Cria usuário no Auth com email previsível e senha fixa de teste.
+2. Marca `must_change_password = false` (pra você não ser forçado a trocar a cada login de teste).
+3. Atribui role correta (`sst` para Técnico/Gestora, `company` para Empresa).
+4. Cria `sst_managers` (planos manager) ou `companies` + `company_feature_access` (planos company), aplicando todas as flags do plano: `pgr_module_enabled`, `pgr_enabled`, `ai_enabled=false`, `ouvidoria_enabled=false`, limites.
+5. Cria registro em `subscriptions` marcado como `provider='hotmart-test'` e `status='active'` pra simular compra aprovada.
 
-### Provisionamento
-- `hotmart-webhook`: ao criar/atualizar a gestora SST (planos Técnico + Gestora), se `plan.pgr_enabled = true`, atualizar `sst_managers.pgr_module_enabled = true`.
-- `create-sst-company` (planos Empresa SMS, que criam uma gestora-shell própria): mesma lógica — propagar a flag.
-- Idempotente: se já estiver `true`, não faz nada.
+## Contas que serão criadas
 
-### Frontend
-- `usePGRModuleAccess` continua funcionando sem mudança (lê `sst_managers.pgr_module_enabled`).
-- Empresas SMS acessam PGR via a gestora-shell associada — fluxo já coberto pelo hook atual.
+| Plano | Email | Senha | O que esperar ao logar |
+|---|---|---|---|
+| Técnico SST SMS | `teste-tecnico-sms@soia.app.br` | `TesteSMS@2026` | Dashboard SST, PGR habilitado, IA bloqueada, Ouvidoria off, 1 empresa |
+| Gestora SST SMS Basic | `teste-gestora-basic-sms@soia.app.br` | `TesteSMS@2026` | Dashboard SST, PGR habilitado, IA bloqueada, Ouvidoria off, até 5 empresas |
+| Gestora SST SMS Pro | `teste-gestora-pro-sms@soia.app.br` | `TesteSMS@2026` | Dashboard SST, PGR habilitado, IA bloqueada, Ouvidoria off, até 15 empresas |
+| Empresa SMS Starter | `teste-empresa-starter-sms@soia.app.br` | `TesteSMS@2026` | Dashboard empresa, PGR habilitado via plano, IA bloqueada, Ouvidoria off, até 50 funcionários |
+| Empresa SMS Corporate | `teste-empresa-corporate-sms@soia.app.br` | `TesteSMS@2026` | Dashboard empresa, PGR habilitado, IA bloqueada, Ouvidoria off, até 200 funcionários |
 
----
+Login em: https://soia.app.br/auth
 
-## Parte 2 — Kanban de ações do PGR (página separada)
+## Limpeza depois
 
-### Rota
-- Nova rota: `/pgr/:pgrId/kanban` (registrada em `App.tsx`, protegida pelo mesmo guard do `/pgr/:id`).
-- Botão "Ver em Kanban" no header do `PGRMonitoringDashboard` que leva à nova rota.
-- Botão "Voltar para Dashboard" na página Kanban.
+Quando você terminar de testar, é só me pedir "remover contas de teste SMS" que eu rodo uma migration que deleta os 5 usuários + entidades vinculadas em cascata.
 
-### Página `PGRKanbanPage.tsx`
-Reusa `usePGRDashboardData(pgrId)` (já carrega ghes/risks/actions/checklist).
+## Confirmações que preciso
 
-Layout: 4 colunas fixas lado a lado, scroll horizontal no mobile:
+1. Os emails acima estão ok? (são apenas marcadores — não precisa ter caixa real, já que `must_change_password=false` e a senha é fixa).
+2. Confirma a senha padrão `TesteSMS@2026` para todas as 5?
 
-```text
-┌──────────┬──────────────┬──────────┬───────────┐
-│ Pendente │ Em andamento │Concluída │ Cancelada │
-│   (12)   │     (5)      │   (8)    │    (1)    │
-├──────────┼──────────────┼──────────┼───────────┤
-│ [card]   │ [card]       │ [card]   │ [card]    │
-│ [card]   │ [card]       │ [card]   │           │
-│ [card]   │              │          │           │
-└──────────┴──────────────┴──────────┴───────────┘
-```
-
-- Cada coluna mostra contador + cards filtrados por status.
-- Cards reusam uma versão compacta do `ActionCard` (descrição, GHE, responsável, prazo com cor de atraso, badge de hierarquia, mini-progress do checklist). Sem botão "marcar como concluída" — usa drag.
-- Filtros no topo: GHE, responsável, somente atrasadas (idênticos ao dashboard).
-
-### Drag-and-drop
-- Lib: `@dnd-kit/core` + `@dnd-kit/sortable` (já no padrão React, leve, acessível).
-- Ao soltar em outra coluna:
-  - Atualização otimista local.
-  - `supabase.from('pgr_action_items').update({ status: <novo> }).eq('id', actionId)`.
-  - Em caso de erro: reverte e mostra toast.
-- **Confirmação modal** quando destino for `done` ou `cancelled`:
-  - "Concluir ação 'X'?" / "Cancelar ação 'X'?"
-  - Confirmar → executa update. Cancelar → reverte para coluna de origem.
-- Status `pending` ↔ `in_progress`: troca direta sem confirmação.
-
-### Acessibilidade
-- Cards têm `aria-label` com status atual.
-- Atalho de teclado: setas movem foco entre cards, Enter abre detalhe (modal simples reusando `ActionCard` completo, opcional fase 2).
-
----
-
-## Arquivos
-
-**Migration**
-- `supabase/migrations/<ts>_pgr_enabled_plan_flag.sql` — adiciona coluna, atualiza os 5 planos SMS.
-
-**Edge functions**
-- `supabase/functions/hotmart-webhook/index.ts` — set `pgr_module_enabled` quando plano tem `pgr_enabled`.
-- `supabase/functions/create-sst-company/index.ts` — idem para gestora-shell de planos Empresa SMS.
-
-**Frontend**
-- `src/pages/PGRKanban.tsx` (novo)
-- `src/components/pgr/KanbanColumn.tsx` (novo)
-- `src/components/pgr/KanbanActionCard.tsx` (novo, versão compacta)
-- `src/components/pgr/ConfirmStatusChangeDialog.tsx` (novo)
-- `src/components/pgr/PGRMonitoringDashboard.tsx` — adicionar botão "Ver em Kanban"
-- `src/App.tsx` — registrar nova rota
-- `package.json` — `bun add @dnd-kit/core @dnd-kit/sortable`
-
-**Memória**
-- Atualizar `mem://features/planos-sms-hotmart` para incluir `pgr_enabled = true` nos 5 planos.
-- Nova nota `mem://features/pgr-kanban-board` descrevendo a nova rota e a lógica de drag-and-drop com confirmação.
-
----
-
-## Fora do escopo
-- Edição inline de checklist no card do Kanban (continua disponível na view de grade do dashboard).
-- Drag para reordenar dentro da mesma coluna (sem prioridade definida no schema atual).
-- Realtime multi-usuário (Postgres changes) — pode ser fase 2 se necessário.
+Se preferir outros emails/senha, é só me dizer antes de eu rodar.

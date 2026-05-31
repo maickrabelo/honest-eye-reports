@@ -123,6 +123,9 @@ verify_jwt = false
 [functions.hotmart-webhook]
 verify_jwt = false
 
+[functions.seed-sms-test-accounts]
+verify_jwt = false
+
 
 
 
