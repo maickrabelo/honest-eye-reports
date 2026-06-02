@@ -126,6 +126,9 @@ verify_jwt = false
 [functions.seed-sms-test-accounts]
 verify_jwt = false
 
+[functions.seed-di-santinni-companies]
+verify_jwt = false
+
 
 
 
