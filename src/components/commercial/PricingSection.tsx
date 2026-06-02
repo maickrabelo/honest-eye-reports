@@ -53,10 +53,12 @@ const PricingSection = () => {
         .eq('is_active', true)
         .eq('visibility', 'public')
         .order('display_order');
-      const formatted = (data ?? []).map((p: any) => ({
-        ...p,
-        features: Array.isArray(p.features) ? p.features : [],
-      }));
+      const formatted = (data ?? [])
+        .filter((p: any) => p.visibility === 'public')
+        .map((p: any) => ({
+          ...p,
+          features: Array.isArray(p.features) ? p.features : [],
+        }));
       setPlans(formatted as Plan[]);
       setLoading(false);
     })();
