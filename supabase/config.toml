@@ -129,6 +129,17 @@ verify_jwt = false
 [functions.seed-di-santinni-companies]
 verify_jwt = false
 
+[functions.invite-sector-viewer]
+verify_jwt = false
+
+[functions.accept-sector-viewer-invitation]
+verify_jwt = false
+
+[functions.revoke-sector-viewer-access]
+verify_jwt = false
+
+
+
 
 
 
