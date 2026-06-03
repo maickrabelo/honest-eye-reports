@@ -66,6 +66,8 @@ const CompanySelector = React.lazy(() => import("./components/CompanySelector"))
 const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
 const PGRDashboard = React.lazy(() => import("./pages/PGRDashboard"));
 const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
+const AcceptSectorInvitation = React.lazy(() => import("./pages/AcceptSectorInvitation"));
+const SectorViewerDashboard = React.lazy(() => import("./pages/SectorViewerDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
