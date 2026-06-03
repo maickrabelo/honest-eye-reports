@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2 } from 'lucide-react';
 import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
-import { Button as ButtonShare } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
