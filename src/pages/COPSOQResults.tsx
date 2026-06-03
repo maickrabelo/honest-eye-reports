@@ -37,6 +37,7 @@ export default function COPSOQResults() {
   const [responses, setResponses] = useState<Response[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
