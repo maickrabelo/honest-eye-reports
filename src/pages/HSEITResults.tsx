@@ -110,6 +110,7 @@ export default function HSEITResults() {
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sstName, setSstName] = useState<string | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const { shouldShowTour, completeTour } = useOnboarding('hseit-results');
 
   useEffect(() => {
