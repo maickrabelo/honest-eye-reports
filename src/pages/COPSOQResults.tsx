@@ -161,8 +161,25 @@ export default function COPSOQResults() {
               assessmentTitle={assessment.title}
               companyName={assessment.companies?.name}
             />
+            {(role === 'sst' || role === 'admin') && departments.length > 0 && assessment.companies?.id && (
+              <Button variant="outline" onClick={() => setIsShareOpen(true)}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Compartilhar setor
+              </Button>
+            )}
           </div>
         </div>
+
+        {assessment.companies?.id && (
+          <ShareSectorDialog
+            open={isShareOpen}
+            onOpenChange={setIsShareOpen}
+            assessmentId={assessment.id}
+            assessmentType="copsoq"
+            companyId={assessment.companies.id}
+            availableDepartments={departments}
+          />
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
