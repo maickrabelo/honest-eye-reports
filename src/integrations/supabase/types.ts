@@ -2106,6 +2106,87 @@ export type Database = {
         }
         Relationships: []
       }
+      sector_viewer_access: {
+        Row: {
+          assessment_type: string
+          company_id: string
+          created_at: string
+          department_name: string
+          granted_by: string | null
+          id: string
+          sst_manager_id: string
+          user_id: string
+        }
+        Insert: {
+          assessment_type: string
+          company_id: string
+          created_at?: string
+          department_name: string
+          granted_by?: string | null
+          id?: string
+          sst_manager_id: string
+          user_id: string
+        }
+        Update: {
+          assessment_type?: string
+          company_id?: string
+          created_at?: string
+          department_name?: string
+          granted_by?: string | null
+          id?: string
+          sst_manager_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sector_viewer_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          assessment_type: string
+          company_id: string
+          created_at: string
+          department_names: string[]
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          sst_manager_id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          assessment_type: string
+          company_id: string
+          created_at?: string
+          department_names: string[]
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          sst_manager_id: string
+          status?: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          assessment_type?: string
+          company_id?: string
+          created_at?: string
+          department_names?: string[]
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          sst_manager_id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: []
+      }
       sst_extra_slot_purchases: {
         Row: {
           asaas_subscription_id: string | null
@@ -3077,12 +3158,30 @@ export type Database = {
         Args: { _sst_manager_id: string }
         Returns: number
       }
+      get_user_sector_access: {
+        Args: { _user_id: string }
+        Returns: {
+          assessment_type: string
+          company_id: string
+          company_name: string
+          department_name: string
+        }[]
+      }
       get_user_sst_manager_id: { Args: { _user_id: string }; Returns: string }
       has_ai_access: { Args: { _user_id: string }; Returns: boolean }
       has_pgr_module: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_sector_access: {
+        Args: {
+          _assessment_type: string
+          _company_id: string
+          _department_name: string
           _user_id: string
         }
         Returns: boolean
@@ -3109,6 +3208,7 @@ export type Database = {
         | "partner"
         | "affiliate"
         | "sales"
+        | "sector_viewer"
       billing_cycle_enum: "monthly" | "quarterly" | "annual"
       subscription_status_enum:
         | "pending"
@@ -3257,6 +3357,7 @@ export const Constants = {
         "partner",
         "affiliate",
         "sales",
+        "sector_viewer",
       ],
       billing_cycle_enum: ["monthly", "quarterly", "annual"],
       subscription_status_enum: [
