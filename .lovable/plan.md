@@ -1,36 +1,89 @@
 ## Objetivo
 
-Provisionar 5 contas reais de teste — uma para cada plano SMS — para você logar e conferir o que cada plano libera/bloqueia (PGR, IA, Ouvidoria, limites de empresas/funcionários).
+Permitir que uma gestora SST conceda acesso somente-leitura a setores (departments) específicos de avaliações HSE-IT e COPSOQ, para usuários externos que só verão o dashboard filtrado daquele(s) setor(es). Um mesmo usuário pode acumular vários setores em várias empresas da mesma gestora.
 
-## Como será feito
+## Modelo de dados
 
-Vou rodar uma migration única que executa o mesmo fluxo do `hotmart-webhook` em modo manual (sem precisar disparar webhook real nem criar produto no Hotmart). Para cada plano:
+Nova role `sector_viewer` em `app_role`.
 
-1. Cria usuário no Auth com email previsível e senha fixa de teste.
-2. Marca `must_change_password = false` (pra você não ser forçado a trocar a cada login de teste).
-3. Atribui role correta (`sst` para Técnico/Gestora, `company` para Empresa).
-4. Cria `sst_managers` (planos manager) ou `companies` + `company_feature_access` (planos company), aplicando todas as flags do plano: `pgr_module_enabled`, `pgr_enabled`, `ai_enabled=false`, `ouvidoria_enabled=false`, limites.
-5. Cria registro em `subscriptions` marcado como `provider='hotmart-test'` e `status='active'` pra simular compra aprovada.
+Nova tabela `public.sector_viewer_access`:
+- `user_id` (uuid)
+- `sst_manager_id` (uuid) — gestora dona do convite (escopo)
+- `company_id` (uuid)
+- `assessment_type` (`'hseit' | 'copsoq'`)
+- `department_name` (text) — nome do setor (HSE-IT usa `hseit_departments.name`; para COPSOQ, usar o mesmo nome textual coletado no formulário)
+- `granted_by` (uuid)
+- timestamps + UNIQUE(user_id, company_id, assessment_type, department_name)
 
-## Contas que serão criadas
+Tabela `public.sector_viewer_invitations` (convite por e-mail, modelo igual a `account_invitations`):
+- token, email, sst_manager_id, company_id, assessment_type, department_name[], expires_at, accepted_at.
 
-| Plano | Email | Senha | O que esperar ao logar |
-|---|---|---|---|
-| Técnico SST SMS | `teste-tecnico-sms@soia.app.br` | `TesteSMS@2026` | Dashboard SST, PGR habilitado, IA bloqueada, Ouvidoria off, 1 empresa |
-| Gestora SST SMS Basic | `teste-gestora-basic-sms@soia.app.br` | `TesteSMS@2026` | Dashboard SST, PGR habilitado, IA bloqueada, Ouvidoria off, até 5 empresas |
-| Gestora SST SMS Pro | `teste-gestora-pro-sms@soia.app.br` | `TesteSMS@2026` | Dashboard SST, PGR habilitado, IA bloqueada, Ouvidoria off, até 15 empresas |
-| Empresa SMS Starter | `teste-empresa-starter-sms@soia.app.br` | `TesteSMS@2026` | Dashboard empresa, PGR habilitado via plano, IA bloqueada, Ouvidoria off, até 50 funcionários |
-| Empresa SMS Corporate | `teste-empresa-corporate-sms@soia.app.br` | `TesteSMS@2026` | Dashboard empresa, PGR habilitado, IA bloqueada, Ouvidoria off, até 200 funcionários |
+GRANTs + RLS:
+- `sector_viewer_access`: SELECT pelo próprio usuário; INSERT/DELETE pelo gestor SST dono (via `get_user_sst_manager_id`).
+- Função `has_sector_access(_user, _company, _type, _dept)` SECURITY DEFINER.
+- Função `get_user_sector_filters(_user, _company, _type)` retorna array de setores liberados.
 
-Login em: https://soia.app.br/auth
+## Backend (edge functions)
 
-## Limpeza depois
+1. `invite-sector-viewer` — gestor SST cria convite, envia e-mail (Resend) com link `/convite-setor/:token`.
+2. `accept-sector-viewer-invitation` — cria usuário (ou vincula existente), grava `user_roles` (sector_viewer) + linhas em `sector_viewer_access`, marca `must_change_password`.
+3. `revoke-sector-viewer-access` — remove linhas específicas.
 
-Quando você terminar de testar, é só me pedir "remover contas de teste SMS" que eu rodo uma migration que deleta os 5 usuários + entidades vinculadas em cascata.
+Registrar as 3 funções em `supabase/config.toml`.
 
-## Confirmações que preciso
+## RLS dos dados de avaliação
 
-1. Os emails acima estão ok? (são apenas marcadores — não precisa ter caixa real, já que `must_change_password=false` e a senha é fixa).
-2. Confirma a senha padrão `TesteSMS@2026` para todas as 5?
+Ampliar policies de SELECT em:
+- `hseit_responses`, `hseit_departments`, `hseit_assessments`
+- `copsoq_responses`, `copsoq_assessments`
 
-Se preferir outros emails/senha, é só me dizer antes de eu rodar.
+Adicionar policy: usuário com role `sector_viewer` pode ler linhas cujo `(company_id, assessment_type, department)` esteja em `sector_viewer_access`. Para `hseit_responses` o filtro é por `department_id → hseit_departments.name`; para COPSOQ, por campo de setor da resposta.
+
+## Frontend
+
+**Gestão (gestor SST):**
+- Em `HSEITManagement.tsx` e `COPSOQManagement.tsx`, novo botão "Compartilhar setor" abrindo `ShareSectorDialog` (e-mail + multi-select de setores). Lista de acessos já concedidos com botão revogar.
+
+**Onboarding do convidado:**
+- Rota `/convite-setor/:token` (componente novo `AcceptSectorInvitation.tsx`) — define senha e entra.
+- Após login com role `sector_viewer`, redirecionar para nova página `/setor/dashboard` (em `RealAuthContext.navigateByRole`).
+
+**Dashboard do sector_viewer (`SectorViewerDashboard.tsx`):**
+- Lista acessos do usuário (empresa + tipo + setor) e abre visualização filtrada.
+- Reusa `HSEITDashboardContent` e `COPSOQDashboardContent`, mas passando prop `sectorFilter` que força filtros e oculta seletor de empresa/avaliação.
+- Bloquear export, edição, PDF — só leitura visual.
+
+**Guard:** novo `useSectorViewerGuard` impede `sector_viewer` de acessar rotas fora de `/setor/*` e `/change-password`.
+
+## Arquivos previstos
+
+Novos:
+- `supabase/functions/invite-sector-viewer/index.ts`
+- `supabase/functions/accept-sector-viewer-invitation/index.ts`
+- `supabase/functions/revoke-sector-viewer-access/index.ts`
+- `src/pages/AcceptSectorInvitation.tsx`
+- `src/pages/SectorViewerDashboard.tsx`
+- `src/components/sector-sharing/ShareSectorDialog.tsx`
+- `src/components/sector-sharing/SectorAccessList.tsx`
+- `src/hooks/useSectorViewerAccess.ts`
+
+Editados:
+- `src/App.tsx` (rotas)
+- `src/contexts/RealAuthContext.tsx` (role nova + redirect)
+- `src/pages/HSEITManagement.tsx`, `src/pages/COPSOQManagement.tsx` (botão)
+- `src/components/psychosocial/HSEITDashboardContent.tsx`, `COPSOQDashboardContent.tsx` (prop `sectorFilter`)
+- `supabase/config.toml`
+
+## Migration (resumo)
+
+1. `ALTER TYPE app_role ADD VALUE 'sector_viewer'`
+2. CREATE TABLE `sector_viewer_access` + GRANTs + RLS
+3. CREATE TABLE `sector_viewer_invitations` + GRANTs + RLS
+4. Funções `has_sector_access`, `get_user_sector_filters`
+5. Policies adicionais em tabelas HSE-IT/COPSOQ
+
+## Fora do escopo
+
+- Burnout, Clima, Ouvidoria (apenas HSE-IT + COPSOQ, conforme respondido).
+- Download de PDF/relatório para sector_viewer.
+- Convite por usuário não-SST.
