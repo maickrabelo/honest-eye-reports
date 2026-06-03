@@ -66,6 +66,8 @@ const CompanySelector = React.lazy(() => import("./components/CompanySelector"))
 const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
 const PGRDashboard = React.lazy(() => import("./pages/PGRDashboard"));
 const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
+const AcceptSectorInvitation = React.lazy(() => import("./pages/AcceptSectorInvitation"));
+const SectorViewerDashboard = React.lazy(() => import("./pages/SectorViewerDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,6 +113,8 @@ const App = () => (
                 <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/convite/:token" element={<AcceptInvitation />} />
+                <Route path="/convite-setor/:token" element={<AcceptSectorInvitation />} />
+                <Route path="/setor/dashboard" element={<SectorViewerDashboard />} />
                 <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />

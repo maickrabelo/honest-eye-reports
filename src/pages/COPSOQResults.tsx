@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2 } from 'lucide-react';
+import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
 import { toast } from '@/hooks/use-toast';
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -36,6 +37,7 @@ export default function COPSOQResults() {
   const [responses, setResponses] = useState<Response[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -159,8 +161,25 @@ export default function COPSOQResults() {
               assessmentTitle={assessment.title}
               companyName={assessment.companies?.name}
             />
+            {(role === 'sst' || role === 'admin') && departments.length > 0 && assessment.companies?.id && (
+              <Button variant="outline" onClick={() => setIsShareOpen(true)}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Compartilhar setor
+              </Button>
+            )}
           </div>
         </div>
+
+        {assessment.companies?.id && (
+          <ShareSectorDialog
+            open={isShareOpen}
+            onOpenChange={setIsShareOpen}
+            assessmentId={assessment.id}
+            assessmentType="copsoq"
+            companyId={assessment.companies.id}
+            availableDepartments={departments}
+          />
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

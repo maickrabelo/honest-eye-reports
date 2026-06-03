@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, ClipboardList } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, ClipboardList, Share2 } from 'lucide-react';
+import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
 import { toast } from '@/hooks/use-toast';
 import {
   ResponsiveContainer,
@@ -109,6 +110,7 @@ export default function HSEITResults() {
   const [sstLogoUrl, setSstLogoUrl] = useState<string | null>(null);
   const [sstName, setSstName] = useState<string | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const { shouldShowTour, completeTour } = useOnboarding('hseit-results');
 
   useEffect(() => {
@@ -420,12 +422,30 @@ export default function HSEITResults() {
               companyName={assessment.companies?.name}
             />
 
+            {(role === 'sst' || role === 'admin') && departments.length > 0 && (
+              <Button variant="outline" onClick={() => setIsShareOpen(true)}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Compartilhar setor
+              </Button>
+            )}
+
             <Button id="hseit-report-btn" onClick={() => setIsReportEditorOpen(true)}>
               <ClipboardList className="h-4 w-4 mr-2" />
               Preparar Relatório PDF
             </Button>
           </div>
         </div>
+
+        {assessment.companies?.id && (
+          <ShareSectorDialog
+            open={isShareOpen}
+            onOpenChange={setIsShareOpen}
+            assessmentId={assessment.id}
+            assessmentType="hseit"
+            companyId={assessment.companies.id}
+            availableDepartments={departments}
+          />
+        )}
 
         {/* Report Editor Modal */}
         <HSEITReportEditor
