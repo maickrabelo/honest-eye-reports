@@ -113,6 +113,8 @@ const App = () => (
                 <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/convite/:token" element={<AcceptInvitation />} />
+                <Route path="/convite-setor/:token" element={<AcceptSectorInvitation />} />
+                <Route path="/setor/dashboard" element={<SectorViewerDashboard />} />
                 <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
