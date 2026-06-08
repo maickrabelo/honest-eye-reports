@@ -52,7 +52,7 @@ const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'
 
 const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: string; hideNavigation?: boolean } = {}) => {
   const { id: urlCompanyParam } = useParams();
-  const { profile, isTrialExpired, trialEndsAt } = useRealAuth();
+  const { profile, role, isTrialExpired, trialEndsAt } = useRealAuth();
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseText, setResponseText] = useState("");
@@ -85,6 +85,15 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
     { targetId: 'company-tool-clima', title: 'Pesquisa de Clima', description: 'Avalie o clima organizacional e descubra oportunidades de melhoria.', position: 'top' },
     { targetId: 'company-tool-treinamentos', title: 'Treinamentos', description: 'Acesse módulos educativos para capacitar sua equipe.', position: 'top' },
   ];
+
+  // SST managers visiting /dashboard directly should be sent to their SST dashboard
+  useEffect(() => {
+    if (!hideNavigation && !embeddedCompanyId && !urlCompanyParam && role === 'sst') {
+      navigate('/sst-dashboard', { replace: true });
+    } else if (!hideNavigation && !embeddedCompanyId && !urlCompanyParam && role === 'admin') {
+      navigate('/master-dashboard', { replace: true });
+    }
+  }, [role, embeddedCompanyId, urlCompanyParam, hideNavigation, navigate]);
 
   useEffect(() => {
     const initCompanyId = async () => {
