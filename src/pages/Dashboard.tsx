@@ -52,7 +52,7 @@ const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'
 
 const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: string; hideNavigation?: boolean } = {}) => {
   const { id: urlCompanyParam } = useParams();
-  const { profile, isTrialExpired, trialEndsAt } = useRealAuth();
+  const { profile, role, isTrialExpired, trialEndsAt } = useRealAuth();
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseText, setResponseText] = useState("");
