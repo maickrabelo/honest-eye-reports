@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ReportChatProps {
   companyId?: string;
+  companyName?: string;
 }
 
 interface Attachment {
