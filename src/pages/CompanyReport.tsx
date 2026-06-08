@@ -102,7 +102,7 @@ const CompanyReport = () => {
           </div>
           
           {/* Reuse the ReportChat component */}
-          <ReportChat companyId={company.id} />
+          <ReportChat companyId={company.id} companyName={company.name} />
         </div>
       </main>
       <Footer />
