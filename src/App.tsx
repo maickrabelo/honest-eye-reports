@@ -132,6 +132,7 @@ const App = () => (
                 <Route path="/user-management" element={<UserManagement />} />
                 <Route path="/company-dashboard/:id" element={<Dashboard />} />
                 <Route path="/report/:companySlug" element={<CompanyReport />} />
+                <Route path="/denuncia-enviada" element={<ReportThankYou />} />
                 <Route path="/pesquisa/:companySlug" element={<ClimateSurvey />} />
                 <Route path="/pesquisa/:companySlug/:surveyId" element={<ClimateSurvey />} />
                 <Route path="/climate-dashboard" element={<ClimateSurveyDashboard />} />
