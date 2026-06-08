@@ -71,7 +71,7 @@ const ReportChat = () => {
               </CardContent>
             </Card>
           ) : (
-            <ReportChatContent companyId={selectedCompany} />
+            <ReportChatContent companyId={selectedCompany} companyName={companies.find(c => c.id === selectedCompany)?.name} />
           )}
         </div>
       </main>
