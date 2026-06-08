@@ -1,8 +1,9 @@
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { CheckCircle2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
 const ReportThankYou = () => {
   const location = useLocation();
