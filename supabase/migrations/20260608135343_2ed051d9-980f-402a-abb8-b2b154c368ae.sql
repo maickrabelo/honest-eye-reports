@@ -1,0 +1,1 @@
+UPDATE public.sst_managers SET logo_url='https://ovednzilplbewpzpvxnf.supabase.co/storage/v1/object/public/company-logos/ergogroup-logo.png' WHERE id='aff1b89f-933f-4e05-a921-64440c7c693e';

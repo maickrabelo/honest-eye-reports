@@ -148,10 +148,10 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (sstPathMatch) {
           const slug = sstPathMatch[1];
           const { data: sstManager } = await supabase
-            .from('sst_managers')
+            .from('sst_managers_public' as any)
             .select('logo_url, name, slug, brand_color, id')
             .eq('slug', slug)
-            .maybeSingle();
+            .maybeSingle() as { data: any };
 
           if (sstManager) {
             setBrandLogo(sstManager.logo_url);
