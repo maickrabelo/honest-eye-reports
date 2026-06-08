@@ -48,9 +48,6 @@ const ReportThankYou = () => {
           Guarde este código em local seguro. Você precisará dele para consultar o status da sua denúncia.
         </p>
 
-        <Link to="/">
-          <Button variant="ghost">Voltar ao início</Button>
-        </Link>
       </div>
     </div>
   );
