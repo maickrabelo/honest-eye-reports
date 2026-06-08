@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ReportChatProps {
   companyId?: string;
+  companyName?: string;
 }
 
 interface Attachment {
@@ -30,7 +31,7 @@ const initialMessages = [
   },
 ];
 
-export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
+export const ReportChat: React.FC<ReportChatProps> = ({ companyId, companyName }) => {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -676,13 +677,9 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
             </Button>
             <Button onClick={() => {
               setShowIdDialog(false);
-              toast({
-                title: "Obrigado!",
-                description: "Você será redirecionado para a página inicial."
+              navigate('/denuncia-enviada', {
+                state: { companyName, trackingCode: reportId },
               });
-              setTimeout(() => {
-                navigate('/');
-              }, 1500);
             }}>
               Fechar
             </Button>

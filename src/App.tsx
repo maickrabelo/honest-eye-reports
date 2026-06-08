@@ -68,6 +68,7 @@ const PGRDashboard = React.lazy(() => import("./pages/PGRDashboard"));
 const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
 const AcceptSectorInvitation = React.lazy(() => import("./pages/AcceptSectorInvitation"));
 const SectorViewerDashboard = React.lazy(() => import("./pages/SectorViewerDashboard"));
+const ReportThankYou = React.lazy(() => import("./pages/ReportThankYou"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -131,6 +132,7 @@ const App = () => (
                 <Route path="/user-management" element={<UserManagement />} />
                 <Route path="/company-dashboard/:id" element={<Dashboard />} />
                 <Route path="/report/:companySlug" element={<CompanyReport />} />
+                <Route path="/denuncia-enviada" element={<ReportThankYou />} />
                 <Route path="/pesquisa/:companySlug" element={<ClimateSurvey />} />
                 <Route path="/pesquisa/:companySlug/:surveyId" element={<ClimateSurvey />} />
                 <Route path="/climate-dashboard" element={<ClimateSurveyDashboard />} />
