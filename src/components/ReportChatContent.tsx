@@ -677,13 +677,9 @@ export const ReportChat: React.FC<ReportChatProps> = ({ companyId, companyName }
             </Button>
             <Button onClick={() => {
               setShowIdDialog(false);
-              toast({
-                title: "Obrigado!",
-                description: "Você será redirecionado para a página inicial."
+              navigate('/denuncia-enviada', {
+                state: { companyName, trackingCode: reportId },
               });
-              setTimeout(() => {
-                navigate('/');
-              }, 1500);
             }}>
               Fechar
             </Button>
