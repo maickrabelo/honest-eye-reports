@@ -86,6 +86,15 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
     { targetId: 'company-tool-treinamentos', title: 'Treinamentos', description: 'Acesse módulos educativos para capacitar sua equipe.', position: 'top' },
   ];
 
+  // SST managers visiting /dashboard directly should be sent to their SST dashboard
+  useEffect(() => {
+    if (!hideNavigation && !embeddedCompanyId && !urlCompanyParam && role === 'sst') {
+      navigate('/sst-dashboard', { replace: true });
+    } else if (!hideNavigation && !embeddedCompanyId && !urlCompanyParam && role === 'admin') {
+      navigate('/master-dashboard', { replace: true });
+    }
+  }, [role, embeddedCompanyId, urlCompanyParam, hideNavigation, navigate]);
+
   useEffect(() => {
     const initCompanyId = async () => {
       const fetchCompanyId = async (identifier: string) => {
