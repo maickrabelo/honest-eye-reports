@@ -31,7 +31,7 @@ const initialMessages = [
   },
 ];
 
-export const ReportChat: React.FC<ReportChatProps> = ({ companyId }) => {
+export const ReportChat: React.FC<ReportChatProps> = ({ companyId, companyName }) => {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
