@@ -8,6 +8,7 @@ import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 const ReportThankYou = () => {
   const location = useLocation();
   const { toast } = useToast();
+  const { brandLogo, brandName } = useWhiteLabel();
   const state = (location.state || {}) as { companyName?: string; trackingCode?: string };
   const companyName = state.companyName || 'a empresa';
   const trackingCode = state.trackingCode || '';
@@ -21,6 +22,11 @@ const ReportThankYou = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+        {brandLogo && (
+          <div className="flex justify-center mb-6">
+            <img src={brandLogo} alt={brandName || 'Logo'} className="h-12 object-contain" />
+          </div>
+        )}
         <div className="flex justify-center mb-6">
           <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
             <CheckCircle2 className="h-10 w-10 text-green-600" />
