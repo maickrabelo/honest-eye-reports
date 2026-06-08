@@ -84,6 +84,7 @@ const WhiteLabelContext = createContext<WhiteLabelBrand>({
 const applyColorTheme = (color: BrandColorTheme | null) => {
   const palette = COLOR_PALETTES[color || 'green'];
   const root = document.documentElement;
+  // SST-prefixed tokens
   root.style.setProperty('--sst-primary', palette.primary);
   root.style.setProperty('--sst-primary-dark', palette.primaryDark);
   root.style.setProperty('--sst-primary-mid', palette.primaryMid);
@@ -92,6 +93,24 @@ const applyColorTheme = (color: BrandColorTheme | null) => {
   root.style.setProperty('--sst-gradient-from', palette.gradientFrom);
   root.style.setProperty('--sst-gradient-via', palette.gradientVia);
   root.style.setProperty('--sst-gradient-to', palette.gradientTo);
+
+  if (color) {
+    // Override global design tokens so all bg-primary/text-primary/audit-primary classes follow the brand
+    root.style.setProperty('--primary', palette.primary);
+    root.style.setProperty('--secondary', palette.primaryMid);
+    root.style.setProperty('--accent', palette.primaryDark);
+    root.style.setProperty('--ring', palette.primaryMid);
+    root.style.setProperty('--audit-primary', palette.primaryDark);
+    root.style.setProperty('--audit-secondary', palette.primaryMid);
+  } else {
+    // Restore defaults defined in index.css
+    root.style.removeProperty('--primary');
+    root.style.removeProperty('--secondary');
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--ring');
+    root.style.removeProperty('--audit-primary');
+    root.style.removeProperty('--audit-secondary');
+  }
 };
 
 export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
