@@ -109,12 +109,19 @@ export const SalesTeamTab = () => {
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
-  // Active leads (no result) for kanban/table
-  const activeLeads = leads.filter(l => !l.result);
-  // History leads (with result)
-  const historyLeads = leads.filter(l => !!l.result);
+  // Active leads (no result, not archived) for kanban/table
+  const activeLeads = leads.filter(l => !l.result && !l.archived);
+  // History leads (with result, not archived)
+  const historyLeads = leads.filter(l => !!l.result && !l.archived);
+  // Archived leads
+  const archivedLeads = leads.filter(l => !!l.archived);
 
   const filtered = activeLeads.filter(l =>
+    l.company_name.toLowerCase().includes(search.toLowerCase()) ||
+    (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const filteredArchived = archivedLeads.filter(l =>
     l.company_name.toLowerCase().includes(search.toLowerCase()) ||
     (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
   );
