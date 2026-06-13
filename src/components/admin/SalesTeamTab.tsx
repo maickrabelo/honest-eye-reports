@@ -55,6 +55,16 @@ export const SalesTeamTab = () => {
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]);
+  const [dismissedExternal, setDismissedExternal] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('crm_dismissed_external') || '[]')); } catch { return new Set(); }
+  });
+  const dismissExternal = (id: string) => {
+    setDismissedExternal(prev => {
+      const next = new Set(prev); next.add(id);
+      localStorage.setItem('crm_dismissed_external', JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   // Meeting scheduling dialog
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
