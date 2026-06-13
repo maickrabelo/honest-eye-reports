@@ -119,6 +119,24 @@ export const SalesTeamTab = () => {
     (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
   );
 
+  // Exclude external entries that already exist as real leads (match by company name)
+  const existingNames = new Set(leads.map(l => (l.company_name || '').trim().toLowerCase()));
+  const filteredExternal = externalLeads
+    .filter(e => !existingNames.has((e.company_name || '').trim().toLowerCase()))
+    .filter(e =>
+      e.company_name.toLowerCase().includes(search.toLowerCase()) ||
+      (e.contact_name && e.contact_name.toLowerCase().includes(search.toLowerCase()))
+    )
+    .sort((a, b) => {
+      // Closest to selling first: trials with fewest days remaining, then newest external leads
+      const da = daysUntil(a.trial_ends_at);
+      const db = daysUntil(b.trial_ends_at);
+      if (da !== null && db !== null) return da - db;
+      if (da !== null) return -1;
+      if (db !== null) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
   const openNew = () => {
     setEditingLead(null);
     setForm({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
