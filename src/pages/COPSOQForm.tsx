@@ -18,6 +18,7 @@ interface Assessment {
   title: string;
   description: string | null;
   is_active: boolean;
+  multi_sector_enabled?: boolean | null;
   companies: { name: string; logo_url: string | null; };
 }
 
