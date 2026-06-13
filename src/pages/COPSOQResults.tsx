@@ -184,6 +184,18 @@ export default function COPSOQResults() {
           />
         )}
 
+        {assessment.multiSectorEnabled && (
+          <div className="mb-6 flex gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 text-sm">
+            <Users className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-foreground mb-1">Avaliação multisetorial</p>
+              <p className="text-muted-foreground">
+                Esta avaliação foi configurada como multisetorial. Colaboradores que atuam em mais de um setor são contabilizados em <strong>cada setor selecionado</strong> — tanto na pontuação quanto no total de respondentes do setor — para refletir corretamente o percentual de participação em cada um.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card><CardContent className="pt-6"><div className="flex items-center gap-4"><div className="p-3 bg-primary/10 rounded-lg"><Users className="h-6 w-6 text-primary" /></div><div><p className="text-sm text-muted-foreground">Respostas</p><p className="text-2xl font-bold">{filteredResponses.length}</p></div></div></CardContent></Card>
