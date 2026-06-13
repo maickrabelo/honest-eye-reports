@@ -314,9 +314,55 @@ export const SalesTeamTab = () => {
     }
   };
 
-  // Drag handlers
+  const handleArchive = async (id: string, archived: boolean) => {
+    const { error } = await (supabase.from('sales_leads' as any).update({
+      archived,
+      archived_at: archived ? new Date().toISOString() : null,
+    }).eq('id', id) as any);
+    if (error) {
+      toast({ title: 'Erro ao arquivar', description: getSafeErrorMessage(error), variant: 'destructive' });
+    } else {
+      toast({ title: archived ? 'Lead arquivado' : 'Lead restaurado' });
+      fetchLeads();
+    }
+  };
+
+  const convertExternalToLead = async (ext: ExternalLead, targetStatus: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const originNote = `Origem: ${ext.source_label}${ext.email ? ` · ${ext.email}` : ''}${ext.notes ? `\n${ext.notes}` : ''}`;
+      const { data, error } = await (supabase.from('sales_leads' as any).insert({
+        company_name: ext.company_name,
+        contact_name: ext.contact_name || null,
+        phone: ext.phone || null,
+        city: ext.city || null,
+        notes: originNote,
+        status: 'prospect',
+        created_by: user?.id || null,
+      }).select().single() as any);
+      if (error) throw error;
+      // Remove from external list to avoid duplicate render before refresh
+      setExternalLeads(prev => prev.filter(e => e.external_id !== ext.external_id));
+      if (targetStatus && targetStatus !== 'prospect' && data?.id) {
+        await moveToStatus(data.id, targetStatus);
+      } else {
+        fetchLeads();
+      }
+    } catch (error) {
+      toast({ title: 'Erro ao converter lead', description: getSafeErrorMessage(error), variant: 'destructive' });
+    }
+  };
+
+  // Drag handlers — support both real leads and external leads
+  const [draggedExternal, setDraggedExternal] = useState<ExternalLead | null>(null);
   const onDragStart = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
+    setDraggedExternal(null);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const onDragStartExternal = (e: React.DragEvent, ext: ExternalLead) => {
+    setDraggedExternal(ext);
+    setDraggedId(null);
     e.dataTransfer.effectAllowed = 'move';
   };
   const onDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
@@ -325,6 +371,9 @@ export const SalesTeamTab = () => {
     if (draggedId) {
       moveToStatus(draggedId, status);
       setDraggedId(null);
+    } else if (draggedExternal) {
+      convertExternalToLead(draggedExternal, status);
+      setDraggedExternal(null);
     }
   };
 
