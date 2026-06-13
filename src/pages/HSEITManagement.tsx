@@ -44,6 +44,7 @@ export default function HSEITManagement() {
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
   const [wordingVariant, setWordingVariant] = useState<'standard' | 'positive'>('standard');
+  const [multiSectorEnabled, setMultiSectorEnabled] = useState(false);
   const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
   const [pendingRemaining, setPendingRemaining] = useState(0);
   const deptManagerRef = useRef<DepartmentManagerHandle>(null);
