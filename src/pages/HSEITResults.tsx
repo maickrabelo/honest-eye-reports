@@ -669,7 +669,7 @@ export default function HSEITResults() {
 
             {sectorViewDepartment ? (() => {
               const dept = sectorViewDepartment;
-              const deptResponses = responses.filter(r => r.department === dept);
+              const deptResponses = responses.filter(r => r.departments.includes(dept));
               const deptAnswers: Answer[] = [];
               deptResponses.forEach(r => deptAnswers.push(...r.answers));
 
