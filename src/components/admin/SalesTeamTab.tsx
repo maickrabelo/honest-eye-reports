@@ -413,6 +413,50 @@ export const SalesTeamTab = () => {
         </div>
       ) : view === 'history' ? (
         <SalesHistoryList leads={historyLeads} />
+      ) : view === 'archived' ? (
+        <Card>
+          <CardContent className="p-0">
+            {filteredArchived.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">Nenhum lead arquivado</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Cidade</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Arquivado em</TableHead>
+                    <TableHead className="w-32">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredArchived.map(lead => (
+                    <TableRow key={lead.id}>
+                      <TableCell className="font-medium">{lead.company_name}</TableCell>
+                      <TableCell>{lead.contact_name || '—'}</TableCell>
+                      <TableCell>{lead.city || '—'}</TableCell>
+                      <TableCell>{lead.phone || '—'}</TableCell>
+                      <TableCell>{STATUS_LABEL[lead.status] || lead.status}</TableCell>
+                      <TableCell className="text-xs">{lead.archived_at ? format(new Date(lead.archived_at), 'dd/MM/yyyy') : '—'}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Restaurar" onClick={() => handleArchive(lead.id, false)}>
+                            <ArchiveRestore className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(lead.id)}>
+                            <Trash className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       ) : view === 'kanban' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {STATUSES.map(col => {
