@@ -166,116 +166,12 @@ const UserManagement = () => {
               <p className="text-muted-foreground">Gerencie papéis e permissões dos usuários</p>
             </div>
 
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Criar Usuário
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Criar Novo Usuário</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-2">
-                  <div className="space-y-2">
-                    <Label>Nome completo *</Label>
-                    <Input
-                      value={newUser.full_name}
-                      onChange={(e) => setNewUser(prev => ({ ...prev, full_name: e.target.value }))}
-                      placeholder="Nome do usuário"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email *</Label>
-                    <Input
-                      type="email"
-                      value={newUser.email}
-                      onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Senha *</Label>
-                    <Input
-                      type="password"
-                      value={newUser.password}
-                      onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                      placeholder="Senha inicial"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Papel *</Label>
-                    <Select
-                      value={newUser.role}
-                      onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value, company_id: '', sst_manager_id: '' }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="company">Empresa</SelectItem>
-                        <SelectItem value="sst">SST</SelectItem>
-                        <SelectItem value="sales">Comercial</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <CreateUserDialog
+              companies={companies}
+              sstManagers={sstManagers}
+              onCreated={fetchUsers}
+            />
 
-                  {newUser.role === 'company' && (
-                    <div className="space-y-2">
-                      <Label>Empresa *</Label>
-                      <Select
-                        value={newUser.company_id || undefined}
-                        onValueChange={(value) => setNewUser(prev => ({ ...prev, company_id: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecionar empresa" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {companies.map((company) => (
-                            <SelectItem key={company.id} value={company.id}>
-                              {company.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {newUser.role === 'sst' && (
-                    <div className="space-y-2">
-                      <Label>Gestora SST *</Label>
-                      <Select
-                        value={newUser.sst_manager_id || undefined}
-                        onValueChange={(value) => setNewUser(prev => ({ ...prev, sst_manager_id: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecionar gestora" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {sstManagers.map((sst) => (
-                            <SelectItem key={sst.id} value={sst.id}>
-                              {sst.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button onClick={handleCreateUser} disabled={creating}>
-                    {creating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Criar
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
 
           <div className="grid gap-4">
