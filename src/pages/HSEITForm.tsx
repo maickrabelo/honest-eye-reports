@@ -385,18 +385,41 @@ export default function HSEITForm() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
-          {departments.length > 0 && !selectedDepartment ? (
+          {departments.length > 0 && !hasSectorSelection ? (
             <div className="max-w-md mx-auto">
               <Card>
                 <CardHeader>
-                  <CardTitle>Selecione seu setor</CardTitle>
-                  <CardDescription>Antes de começar, informe o setor em que você trabalha.</CardDescription>
+                  <CardTitle>{isMultiSector ? 'Selecione seus setores' : 'Selecione seu setor'}</CardTitle>
+                  <CardDescription>
+                    {isMultiSector
+                      ? 'Marque todos os setores em que você atua. Sua resposta será contabilizada em cada um deles.'
+                      : 'Antes de começar, informe o setor em que você trabalha.'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
-                    <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
-                  </Select>
+                  {isMultiSector ? (
+                    <div className="space-y-2">
+                      {departments.map(d => {
+                        const checked = selectedDepartments.includes(d.name);
+                        return (
+                          <label key={d.id} className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover:bg-muted/50">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                setSelectedDepartments(prev => c ? [...prev, d.name] : prev.filter(x => x !== d.name));
+                              }}
+                            />
+                            <span className="text-sm">{d.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                      <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
+                      <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )}
                 </CardContent>
               </Card>
             </div>
