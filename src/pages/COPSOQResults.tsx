@@ -24,9 +24,9 @@ import {
 } from '@/data/copsoqQuestions';
 import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
 
-interface Assessment { id: string; title: string; description: string | null; createdAt: string; companies: { id: string; name: string; }; }
+interface Assessment { id: string; title: string; description: string | null; createdAt: string; multiSectorEnabled?: boolean; companies: { id: string; name: string; }; }
 interface Answer { questionNumber: number; value: number; }
-interface Response { id: string; department: string | null; completedAt: string | null; answers: Answer[]; }
+interface Response { id: string; department: string | null; departments: string[]; completedAt: string | null; answers: Answer[]; }
 
 export default function COPSOQResults() {
   const navigate = useNavigate();
