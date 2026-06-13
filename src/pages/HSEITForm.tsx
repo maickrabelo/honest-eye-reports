@@ -188,11 +188,13 @@ export default function HSEITForm() {
   }, []);
 
   const handleNext = () => {
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
       setShowDepartmentError(true);
       toast({
         title: 'Setor obrigatório',
-        description: 'Por favor, selecione o setor em que você trabalha.',
+        description: isMultiSector
+          ? 'Selecione pelo menos um setor em que você atua.'
+          : 'Por favor, selecione o setor em que você trabalha.',
         variant: 'destructive'
       });
       return;
