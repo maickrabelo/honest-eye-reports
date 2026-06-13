@@ -394,7 +394,8 @@ export const SalesTeamTab = () => {
           <ToggleGroup type="single" value={view} onValueChange={v => v && setView(v)} size="sm">
             <ToggleGroupItem value="kanban" aria-label="Kanban"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
             <ToggleGroupItem value="table" aria-label="Tabela"><List className="h-4 w-4" /></ToggleGroupItem>
-            <ToggleGroupItem value="history" aria-label="Histórico"><Archive className="h-4 w-4" /></ToggleGroupItem>
+            <ToggleGroupItem value="history" aria-label="Histórico"><Inbox className="h-4 w-4" /></ToggleGroupItem>
+            <ToggleGroupItem value="archived" aria-label="Arquivados"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
