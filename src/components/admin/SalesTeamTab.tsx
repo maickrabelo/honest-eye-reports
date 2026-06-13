@@ -54,6 +54,7 @@ export const SalesTeamTab = () => {
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]);
 
   // Meeting scheduling dialog
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
