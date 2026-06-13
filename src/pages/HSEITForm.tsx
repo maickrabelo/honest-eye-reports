@@ -168,9 +168,12 @@ export default function HSEITForm() {
     return (answered / HSEIT_QUESTIONS_SORTED.length) * 100;
   };
 
+  const isMultiSector = !!assessment?.multi_sector_enabled;
+  const hasSectorSelection = isMultiSector ? selectedDepartments.length > 0 : !!selectedDepartment;
+
   const canGoNext = () => {
     // On first page, department is mandatory if departments exist
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
       return false;
     }
     return currentQuestions.every(q => answers[q.number] !== undefined);
