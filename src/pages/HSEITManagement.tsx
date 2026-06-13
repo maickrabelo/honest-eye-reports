@@ -200,7 +200,7 @@ export default function HSEITManagement() {
     try {
       setIsSaving(true);
       
-      const assessmentData = {
+      const assessmentData: any = {
         company_id: selectedCompany,
         title,
         description: description || null,
@@ -210,6 +210,7 @@ export default function HSEITManagement() {
         created_by: user?.id,
         collection_mode: collectionMode,
         wording_variant: wordingVariant,
+        multi_sector_enabled: multiSectorEnabled,
       };
 
       let assessmentId = id;
