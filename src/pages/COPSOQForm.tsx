@@ -155,7 +155,7 @@ export default function COPSOQForm() {
     if (!assessment) return;
     try {
       setIsSubmitting(true);
-      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert({ assessment_id: assessment.id, department: selectedDepartment || null, respondent_token: crypto.randomUUID(), demographics: {}, completed_at: new Date().toISOString() }).select('id').single();
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert(buildResponsePayload()).select('id').single();
       if (re) throw re;
       const data = Object.entries(aiAnswers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
       const { error: ae } = await supabase.from('copsoq_answers' as any).insert(data);
@@ -165,15 +165,47 @@ export default function COPSOQForm() {
     finally { setIsSubmitting(false); }
   };
 
+  const SectorPicker = ({ compact = false }: { compact?: boolean }) => (
+    isMultiSector ? (
+      <div className="space-y-2">
+        <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs text-foreground/90">
+          <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <p>Marque todos os setores em que você atua. Sua resposta será contabilizada em cada um.</p>
+        </div>
+        {departments.map(d => {
+          const checked = selectedDepartments.includes(d.name);
+          return (
+            <label key={d.id} className="flex items-center gap-3 p-2 rounded-md border cursor-pointer hover:bg-muted/50">
+              <Checkbox
+                checked={checked}
+                onCheckedChange={(c) => {
+                  setSelectedDepartments(prev => c ? [...prev, d.name] : prev.filter(x => x !== d.name));
+                  setShowDepartmentError(false);
+                }}
+              />
+              <span className="text-sm">{d.name}</span>
+            </label>
+          );
+        })}
+      </div>
+    ) : (
+      <Select value={selectedDepartment} onValueChange={v => { setSelectedDepartment(v); setShowDepartmentError(false); }}>
+        <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
+          <SelectValue placeholder={compact ? 'Selecione' : 'Escolha seu setor'} />
+        </SelectTrigger>
+        <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+      </Select>
+    )
+  );
 
   if (isAiMode) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
-          {departments.length > 0 && !selectedDepartment ? (
+          {departments.length > 0 && !hasSectorSelection ? (
             <div className="max-w-md mx-auto">
-              <Card><CardHeader><CardTitle>Selecione seu setor</CardTitle></CardHeader>
-              <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
+              <Card><CardHeader><CardTitle>{isMultiSector ? 'Selecione seus setores' : 'Selecione seu setor'}</CardTitle></CardHeader>
+              <CardContent><SectorPicker compact /></CardContent></Card>
             </div>
           ) : (
             <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" />
