@@ -78,6 +78,7 @@ interface Assessment {
   title: string;
   description: string | null;
   createdAt: string;
+  multiSectorEnabled?: boolean;
   companies: {
     id: string;
     name: string;
@@ -92,6 +93,7 @@ interface Answer {
 interface Response {
   id: string;
   department: string | null;
+  departments: string[];
   completedAt: string | null;
   answers: Answer[];
 }
