@@ -226,10 +226,12 @@ export default function HSEITForm() {
     if (!assessment) return;
 
     // Check department
-    if (departments.length > 0 && !selectedDepartment) {
+    if (departments.length > 0 && !hasSectorSelection) {
       toast({
         title: 'Setor obrigatório',
-        description: 'Por favor, selecione o setor em que você trabalha.',
+        description: isMultiSector
+          ? 'Selecione pelo menos um setor em que você atua.'
+          : 'Por favor, selecione o setor em que você trabalha.',
         variant: 'destructive'
       });
       return;
@@ -250,16 +252,19 @@ export default function HSEITForm() {
       setIsSubmitting(true);
 
       const respondentToken = crypto.randomUUID();
+      const finalDepartments = isMultiSector ? selectedDepartments : (selectedDepartment ? [selectedDepartment] : []);
+      const primaryDepartment = finalDepartments[0] || null;
 
       const { data: response, error: responseError } = await supabase
         .from('hseit_responses')
         .insert({
           assessment_id: assessment.id,
-          department: selectedDepartment || null,
+          department: primaryDepartment,
+          departments: finalDepartments.length > 0 ? finalDepartments : null,
           respondent_token: respondentToken,
           demographics: {},
           completed_at: new Date().toISOString()
-        })
+        } as any)
         .select('id')
         .single();
 
