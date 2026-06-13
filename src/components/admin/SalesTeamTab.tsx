@@ -14,12 +14,33 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
 import { SalesClosingDialog } from '@/components/sales/SalesClosingDialog';
 import { SalesDenialDialog } from '@/components/sales/SalesDenialDialog';
 import { SalesHistoryList } from '@/components/sales/SalesHistoryList';
+
+type ExternalLead = {
+  external_id: string;
+  source: string;
+  source_label: string;
+  company_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  trial_ends_at: string | null;
+  created_at: string;
+  notes?: string | null;
+};
+
+const daysUntil = (iso: string | null): number | null => {
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  return Math.ceil(diff / 86400000);
+};
 
 export const SalesTeamTab = () => {
   const [leads, setLeads] = useState<SalesLead[]>([]);
@@ -33,6 +54,7 @@ export const SalesTeamTab = () => {
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]);
 
   // Meeting scheduling dialog
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
@@ -60,19 +82,23 @@ export const SalesTeamTab = () => {
     
     setLoadingProgress(30);
     setLoadingStep('Buscando leads do CRM...');
-    const { data, error } = await (supabase
-      .from('sales_leads' as any)
-      .select('*') as any)
-      .order('created_at', { ascending: false });
-    
+    const [leadsRes, extRes] = await Promise.all([
+      (supabase.from('sales_leads' as any).select('*') as any).order('created_at', { ascending: false }),
+      supabase.functions.invoke('list-crm-external-leads'),
+    ]);
+
     setLoadingProgress(70);
     setLoadingStep('Organizando dados...');
     await new Promise(r => setTimeout(r, 150));
-    
-    if (error) {
-      toast({ title: 'Erro ao carregar leads', description: getSafeErrorMessage(error), variant: 'destructive' });
+
+    if (leadsRes.error) {
+      toast({ title: 'Erro ao carregar leads', description: getSafeErrorMessage(leadsRes.error), variant: 'destructive' });
     } else {
-      setLeads((data as SalesLead[]) || []);
+      setLeads((leadsRes.data as SalesLead[]) || []);
+    }
+
+    if (!extRes.error && extRes.data?.items) {
+      setExternalLeads(extRes.data.items as ExternalLead[]);
     }
     
     setLoadingProgress(100);
@@ -92,6 +118,24 @@ export const SalesTeamTab = () => {
     l.company_name.toLowerCase().includes(search.toLowerCase()) ||
     (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // Exclude external entries that already exist as real leads (match by company name)
+  const existingNames = new Set(leads.map(l => (l.company_name || '').trim().toLowerCase()));
+  const filteredExternal = externalLeads
+    .filter(e => !existingNames.has((e.company_name || '').trim().toLowerCase()))
+    .filter(e =>
+      e.company_name.toLowerCase().includes(search.toLowerCase()) ||
+      (e.contact_name && e.contact_name.toLowerCase().includes(search.toLowerCase()))
+    )
+    .sort((a, b) => {
+      // Closest to selling first: trials with fewest days remaining, then newest external leads
+      const da = daysUntil(a.trial_ends_at);
+      const db = daysUntil(b.trial_ends_at);
+      if (da !== null && db !== null) return da - db;
+      if (da !== null) return -1;
+      if (db !== null) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   const openNew = () => {
     setEditingLead(null);
@@ -325,9 +369,46 @@ export const SalesTeamTab = () => {
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-sm">{col.label}</h3>
-                  <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">{colLeads.length}</span>
+                  <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">
+                    {colLeads.length + (col.value === 'prospect' ? filteredExternal.length : 0)}
+                  </span>
                 </div>
                 <div className="space-y-2">
+                  {col.value === 'prospect' && filteredExternal.map(ext => {
+                    const days = daysUntil(ext.trial_ends_at);
+                    const trialColor = days === null ? '' : days < 0 ? 'bg-destructive text-destructive-foreground' : days <= 2 ? 'bg-destructive text-destructive-foreground' : days <= 5 ? 'bg-orange-500 text-white' : 'bg-amber-500 text-white';
+                    return (
+                      <div key={ext.external_id} className="bg-background border border-dashed border-primary/40 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between gap-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <span className="font-medium text-sm truncate">{ext.company_name}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{ext.source_label}</Badge>
+                          {days !== null && (
+                            <Badge className={`text-[10px] px-1.5 py-0 border-none ${trialColor}`}>
+                              {days < 0 ? `Trial expirado há ${Math.abs(days)}d` : days === 0 ? 'Expira hoje' : `${days}d para expirar`}
+                            </Badge>
+                          )}
+                        </div>
+                        {ext.contact_name && (
+                          <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground"><User className="h-3 w-3" />{ext.contact_name}</div>
+                        )}
+                        {ext.email && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground"><Mail className="h-3 w-3" /><span className="truncate">{ext.email}</span></div>
+                        )}
+                        {ext.phone && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground"><Phone className="h-3 w-3" />{ext.phone}</div>
+                        )}
+                        {ext.city && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground"><MapPin className="h-3 w-3" />{ext.city}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+
                   {colLeads.map(lead => (
                     <div
                       key={lead.id}

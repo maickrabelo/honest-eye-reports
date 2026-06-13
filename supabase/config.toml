@@ -138,6 +138,11 @@ verify_jwt = false
 [functions.revoke-sector-viewer-access]
 verify_jwt = false
 
+[functions.list-crm-external-leads]
+# Requires authentication (admin or sales)
+
+
+
 
 
 
