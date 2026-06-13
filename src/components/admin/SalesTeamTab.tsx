@@ -14,12 +14,33 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
 import { SalesClosingDialog } from '@/components/sales/SalesClosingDialog';
 import { SalesDenialDialog } from '@/components/sales/SalesDenialDialog';
 import { SalesHistoryList } from '@/components/sales/SalesHistoryList';
+
+type ExternalLead = {
+  external_id: string;
+  source: string;
+  source_label: string;
+  company_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  trial_ends_at: string | null;
+  created_at: string;
+  notes?: string | null;
+};
+
+const daysUntil = (iso: string | null): number | null => {
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  return Math.ceil(diff / 86400000);
+};
 
 export const SalesTeamTab = () => {
   const [leads, setLeads] = useState<SalesLead[]>([]);
