@@ -230,10 +230,10 @@ export default function HSEITResults() {
     }
   };
 
-  // Filter responses by department
+  // Filter responses by department (a response belongs to all sectors in its departments array)
   const filteredResponses = useMemo(() => {
     if (selectedDepartment === 'all') return responses;
-    return responses.filter(r => r.department === selectedDepartment);
+    return responses.filter(r => r.departments.includes(selectedDepartment));
   }, [responses, selectedDepartment]);
 
   // Calculate aggregated answers for filtered responses
