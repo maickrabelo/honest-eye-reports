@@ -241,12 +241,13 @@ export default function COPSOQForm() {
             <CardContent>
               {departments.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1">Selecione seu setor <span className="text-destructive">*</span></Label>
-                  <Select value={selectedDepartment} onValueChange={v => { setSelectedDepartment(v); setShowDepartmentError(false); }}>
-                    <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}><SelectValue placeholder="Escolha seu setor" /></SelectTrigger>
-                    <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  {showDepartmentError && !selectedDepartment && <p className="text-sm text-destructive">Selecione o setor.</p>}
+                  <Label className="flex items-center gap-1">
+                    {isMultiSector ? 'Selecione todos os setores em que você atua' : 'Selecione seu setor'} <span className="text-destructive">*</span>
+                  </Label>
+                  <SectorPicker />
+                  {showDepartmentError && !hasSectorSelection && (
+                    <p className="text-sm text-destructive">{isMultiSector ? 'Selecione ao menos um setor.' : 'Selecione o setor.'}</p>
+                  )}
                 </div>
               )}
             </CardContent>
