@@ -141,6 +141,7 @@ export default function HSEITManagement() {
         setIsActive(assessment.is_active);
         setCollectionMode((assessment as any).collection_mode || 'form');
         setWordingVariant(((assessment as any).wording_variant === 'positive' ? 'positive' : 'standard'));
+        setMultiSectorEnabled(!!(assessment as any).multi_sector_enabled);
         
         // Fetch departments
         const { data: depts } = await supabase
