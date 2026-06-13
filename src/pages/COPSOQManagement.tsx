@@ -94,6 +94,7 @@ export default function COPSOQManagement() {
         setEndDate(a.end_date ? a.end_date.split('T')[0] : '');
         setIsActive(a.is_active);
         setCollectionMode(a.collection_mode || 'form');
+        setMultiSectorEnabled(!!a.multi_sector_enabled);
         const { data: depts } = await supabase.from('copsoq_departments' as any).select('*').eq('assessment_id', id).order('order_index');
         setDepartments((depts as any[]) || []);
       } else if (companiesData.length === 1) {
