@@ -479,9 +479,13 @@ export const SalesTeamTab = () => {
                     const days = daysUntil(ext.trial_ends_at);
                     const trialColor = days === null ? '' : days < 0 ? 'bg-destructive text-destructive-foreground' : days <= 2 ? 'bg-destructive text-destructive-foreground' : days <= 5 ? 'bg-orange-500 text-white' : 'bg-amber-500 text-white';
                     return (
-                      <div key={ext.external_id} className="bg-background border border-dashed border-primary/40 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={ext.external_id}
+                        draggable
+                        onDragStart={e => onDragStartExternal(e, ext)}
+                        className="bg-background border border-dashed border-primary/40 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
                         <div className="flex items-start justify-between gap-1">
                           <div className="flex items-center gap-1.5 min-w-0">
+                            <GripVertical className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                             <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
                             <span className="font-medium text-sm truncate">{ext.company_name}</span>
                           </div>
