@@ -35,6 +35,7 @@ export default function COPSOQManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
+  const [multiSectorEnabled, setMultiSectorEnabled] = useState(false);
   const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
   const [pendingRemaining, setPendingRemaining] = useState(0);
   const deptManagerRef = useRef<DepartmentManagerHandle>(null);
