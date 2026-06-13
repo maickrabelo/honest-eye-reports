@@ -2051,6 +2051,8 @@ export type Database = {
       }
       sales_leads: {
         Row: {
+          archived: boolean
+          archived_at: string | null
           assisted_companies_count: number | null
           city: string | null
           closing_meeting_date: string | null
@@ -2073,6 +2075,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
           assisted_companies_count?: number | null
           city?: string | null
           closing_meeting_date?: string | null
@@ -2095,6 +2099,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
           assisted_companies_count?: number | null
           city?: string | null
           closing_meeting_date?: string | null

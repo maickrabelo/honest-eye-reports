@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
@@ -109,12 +109,19 @@ export const SalesTeamTab = () => {
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
-  // Active leads (no result) for kanban/table
-  const activeLeads = leads.filter(l => !l.result);
-  // History leads (with result)
-  const historyLeads = leads.filter(l => !!l.result);
+  // Active leads (no result, not archived) for kanban/table
+  const activeLeads = leads.filter(l => !l.result && !l.archived);
+  // History leads (with result, not archived)
+  const historyLeads = leads.filter(l => !!l.result && !l.archived);
+  // Archived leads
+  const archivedLeads = leads.filter(l => !!l.archived);
 
   const filtered = activeLeads.filter(l =>
+    l.company_name.toLowerCase().includes(search.toLowerCase()) ||
+    (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const filteredArchived = archivedLeads.filter(l =>
     l.company_name.toLowerCase().includes(search.toLowerCase()) ||
     (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
   );
@@ -307,9 +314,55 @@ export const SalesTeamTab = () => {
     }
   };
 
-  // Drag handlers
+  const handleArchive = async (id: string, archived: boolean) => {
+    const { error } = await (supabase.from('sales_leads' as any).update({
+      archived,
+      archived_at: archived ? new Date().toISOString() : null,
+    }).eq('id', id) as any);
+    if (error) {
+      toast({ title: 'Erro ao arquivar', description: getSafeErrorMessage(error), variant: 'destructive' });
+    } else {
+      toast({ title: archived ? 'Lead arquivado' : 'Lead restaurado' });
+      fetchLeads();
+    }
+  };
+
+  const convertExternalToLead = async (ext: ExternalLead, targetStatus: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const originNote = `Origem: ${ext.source_label}${ext.email ? ` · ${ext.email}` : ''}${ext.notes ? `\n${ext.notes}` : ''}`;
+      const { data, error } = await (supabase.from('sales_leads' as any).insert({
+        company_name: ext.company_name,
+        contact_name: ext.contact_name || null,
+        phone: ext.phone || null,
+        city: ext.city || null,
+        notes: originNote,
+        status: 'prospect',
+        created_by: user?.id || null,
+      }).select().single() as any);
+      if (error) throw error;
+      // Remove from external list to avoid duplicate render before refresh
+      setExternalLeads(prev => prev.filter(e => e.external_id !== ext.external_id));
+      if (targetStatus && targetStatus !== 'prospect' && data?.id) {
+        await moveToStatus(data.id, targetStatus);
+      } else {
+        fetchLeads();
+      }
+    } catch (error) {
+      toast({ title: 'Erro ao converter lead', description: getSafeErrorMessage(error), variant: 'destructive' });
+    }
+  };
+
+  // Drag handlers — support both real leads and external leads
+  const [draggedExternal, setDraggedExternal] = useState<ExternalLead | null>(null);
   const onDragStart = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
+    setDraggedExternal(null);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const onDragStartExternal = (e: React.DragEvent, ext: ExternalLead) => {
+    setDraggedExternal(ext);
+    setDraggedId(null);
     e.dataTransfer.effectAllowed = 'move';
   };
   const onDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
@@ -318,6 +371,9 @@ export const SalesTeamTab = () => {
     if (draggedId) {
       moveToStatus(draggedId, status);
       setDraggedId(null);
+    } else if (draggedExternal) {
+      convertExternalToLead(draggedExternal, status);
+      setDraggedExternal(null);
     }
   };
 
@@ -338,7 +394,8 @@ export const SalesTeamTab = () => {
           <ToggleGroup type="single" value={view} onValueChange={v => v && setView(v)} size="sm">
             <ToggleGroupItem value="kanban" aria-label="Kanban"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
             <ToggleGroupItem value="table" aria-label="Tabela"><List className="h-4 w-4" /></ToggleGroupItem>
-            <ToggleGroupItem value="history" aria-label="Histórico"><Archive className="h-4 w-4" /></ToggleGroupItem>
+            <ToggleGroupItem value="history" aria-label="Histórico"><Inbox className="h-4 w-4" /></ToggleGroupItem>
+            <ToggleGroupItem value="archived" aria-label="Arquivados"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
@@ -356,6 +413,50 @@ export const SalesTeamTab = () => {
         </div>
       ) : view === 'history' ? (
         <SalesHistoryList leads={historyLeads} />
+      ) : view === 'archived' ? (
+        <Card>
+          <CardContent className="p-0">
+            {filteredArchived.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">Nenhum lead arquivado</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Cidade</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Arquivado em</TableHead>
+                    <TableHead className="w-32">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredArchived.map(lead => (
+                    <TableRow key={lead.id}>
+                      <TableCell className="font-medium">{lead.company_name}</TableCell>
+                      <TableCell>{lead.contact_name || '—'}</TableCell>
+                      <TableCell>{lead.city || '—'}</TableCell>
+                      <TableCell>{lead.phone || '—'}</TableCell>
+                      <TableCell>{STATUS_LABEL[lead.status] || lead.status}</TableCell>
+                      <TableCell className="text-xs">{lead.archived_at ? format(new Date(lead.archived_at), 'dd/MM/yyyy') : '—'}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Restaurar" onClick={() => handleArchive(lead.id, false)}>
+                            <ArchiveRestore className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(lead.id)}>
+                            <Trash className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       ) : view === 'kanban' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {STATUSES.map(col => {
@@ -378,9 +479,13 @@ export const SalesTeamTab = () => {
                     const days = daysUntil(ext.trial_ends_at);
                     const trialColor = days === null ? '' : days < 0 ? 'bg-destructive text-destructive-foreground' : days <= 2 ? 'bg-destructive text-destructive-foreground' : days <= 5 ? 'bg-orange-500 text-white' : 'bg-amber-500 text-white';
                     return (
-                      <div key={ext.external_id} className="bg-background border border-dashed border-primary/40 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={ext.external_id}
+                        draggable
+                        onDragStart={e => onDragStartExternal(e, ext)}
+                        className="bg-background border border-dashed border-primary/40 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
                         <div className="flex items-start justify-between gap-1">
                           <div className="flex items-center gap-1.5 min-w-0">
+                            <GripVertical className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                             <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
                             <span className="font-medium text-sm truncate">{ext.company_name}</span>
                           </div>
@@ -423,6 +528,7 @@ export const SalesTeamTab = () => {
                         </div>
                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(lead)}><Edit className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={() => handleArchive(lead.id, true)}><Archive className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(lead.id)}><Trash className="h-3 w-3" /></Button>
                         </div>
                       </div>
@@ -517,6 +623,7 @@ export const SalesTeamTab = () => {
                           </>
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(lead)}><Edit className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" title="Arquivar" onClick={() => handleArchive(lead.id, true)}><Archive className="h-3.5 w-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(lead.id)}><Trash className="h-3.5 w-3.5" /></Button>
                       </div>
                     </TableCell>

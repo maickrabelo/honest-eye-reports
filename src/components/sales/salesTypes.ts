@@ -19,6 +19,8 @@ export type SalesLead = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  archived?: boolean | null;
+  archived_at?: string | null;
 };
 
 export const STATUSES = [

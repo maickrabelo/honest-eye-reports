@@ -1,0 +1,1 @@
+ALTER TABLE public.sales_leads ADD COLUMN IF NOT EXISTS archived boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS archived_at timestamptz;
