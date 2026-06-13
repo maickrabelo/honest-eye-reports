@@ -1,89 +1,60 @@
-## Objetivo
+# Modo Multisetorial — HSE-IT e COPSOQ
 
-Permitir que uma gestora SST conceda acesso somente-leitura a setores (departments) específicos de avaliações HSE-IT e COPSOQ, para usuários externos que só verão o dashboard filtrado daquele(s) setor(es). Um mesmo usuário pode acumular vários setores em várias empresas da mesma gestora.
+Permitir que avaliações sejam configuradas como multisetoriais. Nesse modo, o respondente que atua em mais de um setor marca todos os setores em que atua, e sua resposta é contabilizada em cada um deles (tanto na pontuação quanto no denominador de participação por setor).
 
-## Modelo de dados
+## 1. Banco de dados
 
-Nova role `sector_viewer` em `app_role`.
+Migration única adicionando:
 
-Nova tabela `public.sector_viewer_access`:
-- `user_id` (uuid)
-- `sst_manager_id` (uuid) — gestora dona do convite (escopo)
-- `company_id` (uuid)
-- `assessment_type` (`'hseit' | 'copsoq'`)
-- `department_name` (text) — nome do setor (HSE-IT usa `hseit_departments.name`; para COPSOQ, usar o mesmo nome textual coletado no formulário)
-- `granted_by` (uuid)
-- timestamps + UNIQUE(user_id, company_id, assessment_type, department_name)
+- `hseit_assessments.multi_sector_enabled boolean default false`
+- `copsoq_assessments.multi_sector_enabled boolean default false`
+- Coluna `departments text[]` em `hseit_responses` e `copsoq_responses` (mantém `department` para compatibilidade — quando multi, ficará com o primeiro selecionado e o array conterá todos).
+- Coluna `multi_sector_count integer default 0` em `hseit_departments` e `copsoq_departments` (opcional — pode ser calculado em tempo real; mantém-se como cache se necessário). *Decisão: calcular em tempo real para evitar dessincronização.*
 
-Tabela `public.sector_viewer_invitations` (convite por e-mail, modelo igual a `account_invitations`):
-- token, email, sst_manager_id, company_id, assessment_type, department_name[], expires_at, accepted_at.
+## 2. Configuração da avaliação (criação/edição)
 
-GRANTs + RLS:
-- `sector_viewer_access`: SELECT pelo próprio usuário; INSERT/DELETE pelo gestor SST dono (via `get_user_sst_manager_id`).
-- Função `has_sector_access(_user, _company, _type, _dept)` SECURITY DEFINER.
-- Função `get_user_sector_filters(_user, _company, _type)` retorna array de setores liberados.
+Em `HSEITManagement.tsx` e `COPSOQManagement.tsx`, no formulário de criar/editar avaliação:
 
-## Backend (edge functions)
+- Novo checkbox **"Permitir avaliação multisetorial (colaborador atua em mais de um setor)"**.
+- Abaixo do checkbox, quando marcado, um banner informativo explicando:
+  > "Nesta modalidade, colaboradores que atuam em mais de um setor poderão marcar todos os setores em que atuam. A resposta será contabilizada em cada setor selecionado — tanto na pontuação quanto no total de colaboradores do setor, para que o percentual de participação fique correto."
 
-1. `invite-sector-viewer` — gestor SST cria convite, envia e-mail (Resend) com link `/convite-setor/:token`.
-2. `accept-sector-viewer-invitation` — cria usuário (ou vincula existente), grava `user_roles` (sector_viewer) + linhas em `sector_viewer_access`, marca `must_change_password`.
-3. `revoke-sector-viewer-access` — remove linhas específicas.
+## 3. Formulário do respondente
 
-Registrar as 3 funções em `supabase/config.toml`.
+Em `HSEITForm.tsx` e `COPSOQForm.tsx`, no passo de seleção de setor:
 
-## RLS dos dados de avaliação
+- Se `multi_sector_enabled = true`:
+  - Substituir o `Select` por uma lista de **checkboxes** com todos os setores disponíveis.
+  - Texto: "Selecione todos os setores em que você atua".
+  - Validação: pelo menos 1 selecionado.
+- Se `false`: comportamento atual (single select).
+- Ao submeter, gravar `departments: string[]` (e `department` = primeiro item para compatibilidade).
 
-Ampliar policies de SELECT em:
-- `hseit_responses`, `hseit_departments`, `hseit_assessments`
-- `copsoq_responses`, `copsoq_assessments`
+## 4. Resultados / Dashboards
 
-Adicionar policy: usuário com role `sector_viewer` pode ler linhas cujo `(company_id, assessment_type, department)` esteja em `sector_viewer_access`. Para `hseit_responses` o filtro é por `department_id → hseit_departments.name`; para COPSOQ, por campo de setor da resposta.
+Em `HSEITResults.tsx`, `COPSOQResults.tsx`, `HSEITDashboardContent.tsx`, `COPSOQDashboardContent.tsx` e nos componentes de exportação (`AssessmentExportButton`, PDFs):
 
-## Frontend
+- Ao agregar dados por setor, "expandir" cada resposta: uma resposta com `departments = ['A','B']` conta como 1 em A e 1 em B (tanto para pontuação média quanto para contagem de participantes).
+- Manter contagem global de respondentes únicos (sem duplicar) usando `respondent_token` — exibir como "Total de respondentes" separado de "Soma de participações por setor".
+- Adicionar um **aviso visual (callout)** no topo dos resultados quando a avaliação for multisetorial:
+  > "Esta avaliação foi configurada como multisetorial. Colaboradores que atuam em mais de um setor são contabilizados em cada setor que selecionaram, para refletir corretamente o percentual de participação em cada um."
 
-**Gestão (gestor SST):**
-- Em `HSEITManagement.tsx` e `COPSOQManagement.tsx`, novo botão "Compartilhar setor" abrindo `ShareSectorDialog` (e-mail + multi-select de setores). Lista de acessos já concedidos com botão revogar.
+## 5. Detalhes técnicos
 
-**Onboarding do convidado:**
-- Rota `/convite-setor/:token` (componente novo `AcceptSectorInvitation.tsx`) — define senha e entra.
-- Após login com role `sector_viewer`, redirecionar para nova página `/setor/dashboard` (em `RealAuthContext.navigateByRole`).
+- Migration usa `ALTER TABLE ADD COLUMN IF NOT EXISTS`; preencher `departments` retroativo com `ARRAY[department]` quando `department IS NOT NULL` para respostas existentes.
+- RLS não muda (colunas novas em tabelas existentes).
+- Tipos do Supabase serão regenerados após a migration.
+- Hooks de leitura (`usePGRDashboardData` se usar setores, e queries diretas nas páginas de resultados) precisam normalizar `departments ?? [department].filter(Boolean)` para a agregação por setor.
+- Burnout e Clima **não** recebem essa funcionalidade nesta entrega (escopo é HSE-IT e COPSOQ, conforme pedido).
 
-**Dashboard do sector_viewer (`SectorViewerDashboard.tsx`):**
-- Lista acessos do usuário (empresa + tipo + setor) e abre visualização filtrada.
-- Reusa `HSEITDashboardContent` e `COPSOQDashboardContent`, mas passando prop `sectorFilter` que força filtros e oculta seletor de empresa/avaliação.
-- Bloquear export, edição, PDF — só leitura visual.
+## Arquivos afetados (principais)
 
-**Guard:** novo `useSectorViewerGuard` impede `sector_viewer` de acessar rotas fora de `/setor/*` e `/change-password`.
+- `supabase/migrations/*` (nova)
+- `src/pages/HSEITManagement.tsx`, `src/pages/COPSOQManagement.tsx`
+- `src/pages/HSEITForm.tsx`, `src/pages/COPSOQForm.tsx`
+- `src/pages/HSEITResults.tsx`, `src/pages/COPSOQResults.tsx`
+- `src/components/psychosocial/HSEITDashboardContent.tsx`, `COPSOQDashboardContent.tsx`
+- `src/components/assessments/AssessmentExportButton.tsx`
+- PDFs (`HSEITReportPDF.tsx`, `HSEITPGRReportPDF.tsx`, e equivalente COPSOQ) — ajustar agregação por setor
 
-## Arquivos previstos
-
-Novos:
-- `supabase/functions/invite-sector-viewer/index.ts`
-- `supabase/functions/accept-sector-viewer-invitation/index.ts`
-- `supabase/functions/revoke-sector-viewer-access/index.ts`
-- `src/pages/AcceptSectorInvitation.tsx`
-- `src/pages/SectorViewerDashboard.tsx`
-- `src/components/sector-sharing/ShareSectorDialog.tsx`
-- `src/components/sector-sharing/SectorAccessList.tsx`
-- `src/hooks/useSectorViewerAccess.ts`
-
-Editados:
-- `src/App.tsx` (rotas)
-- `src/contexts/RealAuthContext.tsx` (role nova + redirect)
-- `src/pages/HSEITManagement.tsx`, `src/pages/COPSOQManagement.tsx` (botão)
-- `src/components/psychosocial/HSEITDashboardContent.tsx`, `COPSOQDashboardContent.tsx` (prop `sectorFilter`)
-- `supabase/config.toml`
-
-## Migration (resumo)
-
-1. `ALTER TYPE app_role ADD VALUE 'sector_viewer'`
-2. CREATE TABLE `sector_viewer_access` + GRANTs + RLS
-3. CREATE TABLE `sector_viewer_invitations` + GRANTs + RLS
-4. Funções `has_sector_access`, `get_user_sector_filters`
-5. Policies adicionais em tabelas HSE-IT/COPSOQ
-
-## Fora do escopo
-
-- Burnout, Clima, Ouvidoria (apenas HSE-IT + COPSOQ, conforme respondido).
-- Download de PDF/relatório para sector_viewer.
-- Convite por usuário não-SST.
+Quer que eu siga com a implementação?

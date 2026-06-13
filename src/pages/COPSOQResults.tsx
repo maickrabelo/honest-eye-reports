@@ -24,9 +24,9 @@ import {
 } from '@/data/copsoqQuestions';
 import { AssessmentComparison } from '@/components/psychosocial/AssessmentComparison';
 
-interface Assessment { id: string; title: string; description: string | null; createdAt: string; companies: { id: string; name: string; }; }
+interface Assessment { id: string; title: string; description: string | null; createdAt: string; multiSectorEnabled?: boolean; companies: { id: string; name: string; }; }
 interface Answer { questionNumber: number; value: number; }
-interface Response { id: string; department: string | null; completedAt: string | null; answers: Answer[]; }
+interface Response { id: string; department: string | null; departments: string[]; completedAt: string | null; answers: Answer[]; }
 
 export default function COPSOQResults() {
   const navigate = useNavigate();
@@ -50,12 +50,12 @@ export default function COPSOQResults() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const { data: ad, error: ae } = await supabase.from('copsoq_assessments' as any).select('id, title, description, created_at, companies(id, name)').eq('id', id).single();
+      const { data: ad, error: ae } = await supabase.from('copsoq_assessments' as any).select('id, title, description, created_at, multi_sector_enabled, companies(id, name)').eq('id', id).single();
       if (ae) throw ae;
       const a = ad as any;
-      setAssessment({ id: a.id, title: a.title, description: a.description, createdAt: a.created_at, companies: a.companies });
+      setAssessment({ id: a.id, title: a.title, description: a.description, createdAt: a.created_at, multiSectorEnabled: !!a.multi_sector_enabled, companies: a.companies });
 
-      const { data: rd, error: re } = await supabase.from('copsoq_responses' as any).select('id, department, completed_at').eq('assessment_id', id).not('completed_at', 'is', null);
+      const { data: rd, error: re } = await supabase.from('copsoq_responses' as any).select('id, department, departments, completed_at').eq('assessment_id', id).not('completed_at', 'is', null);
       if (re) throw re;
       const responseIds = (rd as any[])?.map((r: any) => r.id) || [];
       let allAnswers: any[] = [];
@@ -63,17 +63,20 @@ export default function COPSOQResults() {
         const { data: ans } = await supabase.from('copsoq_answers' as any).select('response_id, question_number, answer_value').in('response_id', responseIds);
         allAnswers = (ans as any[]) || [];
       }
-      const mapped: Response[] = ((rd as any[]) || []).map((r: any) => ({
-        id: r.id, department: r.department, completedAt: r.completed_at,
-        answers: allAnswers.filter((a: any) => a.response_id === r.id).map((a: any) => ({ questionNumber: a.question_number, value: a.answer_value }))
-      }));
+      const mapped: Response[] = ((rd as any[]) || []).map((r: any) => {
+        const deptList: string[] = Array.isArray(r.departments) && r.departments.length > 0 ? r.departments : (r.department ? [r.department] : []);
+        return {
+          id: r.id, department: r.department, departments: deptList, completedAt: r.completed_at,
+          answers: allAnswers.filter((a: any) => a.response_id === r.id).map((a: any) => ({ questionNumber: a.question_number, value: a.answer_value }))
+        };
+      });
       setResponses(mapped);
-      setDepartments([...new Set(mapped.map(r => r.department).filter(Boolean) as string[])]);
+      setDepartments([...new Set(mapped.flatMap(r => r.departments))]);
     } catch (e) { console.error(e); toast({ title: 'Erro ao carregar dados', variant: 'destructive' }); }
     finally { setIsLoading(false); }
   };
 
-  const filteredResponses = useMemo(() => selectedDepartment === 'all' ? responses : responses.filter(r => r.department === selectedDepartment), [responses, selectedDepartment]);
+  const filteredResponses = useMemo(() => selectedDepartment === 'all' ? responses : responses.filter(r => r.departments.includes(selectedDepartment)), [responses, selectedDepartment]);
   const aggregatedAnswers = useMemo(() => filteredResponses.flatMap(r => r.answers), [filteredResponses]);
 
   const categoryAverages = useMemo(() => {
@@ -179,6 +182,18 @@ export default function COPSOQResults() {
             companyId={assessment.companies.id}
             availableDepartments={departments}
           />
+        )}
+
+        {assessment.multiSectorEnabled && (
+          <div className="mb-6 flex gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 text-sm">
+            <Users className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-foreground mb-1">Avaliação multisetorial</p>
+              <p className="text-muted-foreground">
+                Esta avaliação foi configurada como multisetorial. Colaboradores que atuam em mais de um setor são contabilizados em <strong>cada setor selecionado</strong> — tanto na pontuação quanto no total de respondentes do setor — para refletir corretamente o percentual de participação em cada um.
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Summary Cards */}

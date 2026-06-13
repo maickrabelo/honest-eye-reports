@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, Building2 } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, Building2, Info } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { COPSOQ_QUESTIONS_SORTED, COPSOQ_SCALES, COPSOQ_CATEGORY_LABELS, type COPSOQQuestion } from '@/data/copsoqQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
@@ -17,6 +18,7 @@ interface Assessment {
   title: string;
   description: string | null;
   is_active: boolean;
+  multi_sector_enabled?: boolean | null;
   companies: { name: string; logo_url: string | null; };
 }
 
@@ -64,6 +66,7 @@ export default function COPSOQForm() {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -92,16 +95,19 @@ export default function COPSOQForm() {
 
   const handleAnswer = useCallback((qn: number, v: number) => setAnswers(prev => ({ ...prev, [qn]: v })), []);
   const getProgress = () => (Object.keys(answers).length / COPSOQ_QUESTIONS_SORTED.length) * 100;
+  const isMultiSector = !!assessment?.multi_sector_enabled;
+  const hasSectorSelection = isMultiSector ? selectedDepartments.length > 0 : !!selectedDepartment;
+
   const canGoNext = () => {
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) return false;
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) return false;
     return currentQuestions.every(q => answers[q.number] !== undefined);
   };
   const scrollToTop = useCallback(() => { topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
 
   const handleNext = () => {
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
       setShowDepartmentError(true);
-      toast({ title: 'Setor obrigatório', description: 'Selecione o setor em que você trabalha.', variant: 'destructive' });
+      toast({ title: 'Setor obrigatório', description: isMultiSector ? 'Selecione pelo menos um setor.' : 'Selecione o setor em que você trabalha.', variant: 'destructive' });
       return;
     }
     if (!canGoNext()) { toast({ title: 'Questões obrigatórias', description: 'Responda todas antes de avançar.', variant: 'destructive' }); return; }
@@ -109,14 +115,26 @@ export default function COPSOQForm() {
   };
   const handlePrev = () => { if (currentPage > 0) { setCurrentPage(p => p - 1); setTimeout(scrollToTop, 50); } };
 
+  const buildResponsePayload = () => {
+    const finalDepartments = isMultiSector ? selectedDepartments : (selectedDepartment ? [selectedDepartment] : []);
+    return {
+      assessment_id: assessment!.id,
+      department: finalDepartments[0] || null,
+      departments: finalDepartments.length > 0 ? finalDepartments : null,
+      respondent_token: crypto.randomUUID(),
+      demographics: {},
+      completed_at: new Date().toISOString(),
+    };
+  };
+
   const handleSubmit = async () => {
     if (!assessment) return;
-    if (departments.length > 0 && !selectedDepartment) { toast({ title: 'Setor obrigatório', variant: 'destructive' }); return; }
+    if (departments.length > 0 && !hasSectorSelection) { toast({ title: 'Setor obrigatório', variant: 'destructive' }); return; }
     const unanswered = COPSOQ_QUESTIONS_SORTED.filter(q => answers[q.number] === undefined);
     if (unanswered.length > 0) { toast({ title: 'Questões não respondidas', description: `Faltam ${unanswered.length} questão(ões).`, variant: 'destructive' }); return; }
     try {
       setIsSubmitting(true);
-      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert({ assessment_id: assessment.id, department: selectedDepartment || null, respondent_token: crypto.randomUUID(), demographics: {}, completed_at: new Date().toISOString() }).select('id').single();
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert(buildResponsePayload()).select('id').single();
       if (re) throw re;
       const answersData = Object.entries(answers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
       const { error: ae } = await supabase.from('copsoq_answers' as any).insert(answersData);
@@ -137,7 +155,7 @@ export default function COPSOQForm() {
     if (!assessment) return;
     try {
       setIsSubmitting(true);
-      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert({ assessment_id: assessment.id, department: selectedDepartment || null, respondent_token: crypto.randomUUID(), demographics: {}, completed_at: new Date().toISOString() }).select('id').single();
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert(buildResponsePayload()).select('id').single();
       if (re) throw re;
       const data = Object.entries(aiAnswers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
       const { error: ae } = await supabase.from('copsoq_answers' as any).insert(data);
@@ -147,15 +165,47 @@ export default function COPSOQForm() {
     finally { setIsSubmitting(false); }
   };
 
+  const SectorPicker = ({ compact = false }: { compact?: boolean }) => (
+    isMultiSector ? (
+      <div className="space-y-2">
+        <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs text-foreground/90">
+          <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <p>Marque todos os setores em que você atua. Sua resposta será contabilizada em cada um.</p>
+        </div>
+        {departments.map(d => {
+          const checked = selectedDepartments.includes(d.name);
+          return (
+            <label key={d.id} className="flex items-center gap-3 p-2 rounded-md border cursor-pointer hover:bg-muted/50">
+              <Checkbox
+                checked={checked}
+                onCheckedChange={(c) => {
+                  setSelectedDepartments(prev => c ? [...prev, d.name] : prev.filter(x => x !== d.name));
+                  setShowDepartmentError(false);
+                }}
+              />
+              <span className="text-sm">{d.name}</span>
+            </label>
+          );
+        })}
+      </div>
+    ) : (
+      <Select value={selectedDepartment} onValueChange={v => { setSelectedDepartment(v); setShowDepartmentError(false); }}>
+        <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
+          <SelectValue placeholder={compact ? 'Selecione' : 'Escolha seu setor'} />
+        </SelectTrigger>
+        <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+      </Select>
+    )
+  );
 
   if (isAiMode) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
-          {departments.length > 0 && !selectedDepartment ? (
+          {departments.length > 0 && !hasSectorSelection ? (
             <div className="max-w-md mx-auto">
-              <Card><CardHeader><CardTitle>Selecione seu setor</CardTitle></CardHeader>
-              <CardContent><Select value={selectedDepartment} onValueChange={setSelectedDepartment}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></CardContent></Card>
+              <Card><CardHeader><CardTitle>{isMultiSector ? 'Selecione seus setores' : 'Selecione seu setor'}</CardTitle></CardHeader>
+              <CardContent><SectorPicker compact /></CardContent></Card>
             </div>
           ) : (
             <SoniaFormChat questions={COPSOQ_QUESTIONS_SORTED} likertOptions={defaultScale} categoryLabels={COPSOQ_CATEGORY_LABELS} onComplete={handleAiComplete} assessmentTitle={assessment?.title || 'COPSOQ II'} toolName="COPSOQ II" />
@@ -191,12 +241,13 @@ export default function COPSOQForm() {
             <CardContent>
               {departments.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1">Selecione seu setor <span className="text-destructive">*</span></Label>
-                  <Select value={selectedDepartment} onValueChange={v => { setSelectedDepartment(v); setShowDepartmentError(false); }}>
-                    <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}><SelectValue placeholder="Escolha seu setor" /></SelectTrigger>
-                    <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  {showDepartmentError && !selectedDepartment && <p className="text-sm text-destructive">Selecione o setor.</p>}
+                  <Label className="flex items-center gap-1">
+                    {isMultiSector ? 'Selecione todos os setores em que você atua' : 'Selecione seu setor'} <span className="text-destructive">*</span>
+                  </Label>
+                  <SectorPicker />
+                  {showDepartmentError && !hasSectorSelection && (
+                    <p className="text-sm text-destructive">{isMultiSector ? 'Selecione ao menos um setor.' : 'Selecione o setor.'}</p>
+                  )}
                 </div>
               )}
             </CardContent>

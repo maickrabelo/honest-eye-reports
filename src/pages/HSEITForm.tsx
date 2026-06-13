@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, ClipboardList, Building2 } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, ClipboardList, Building2, Info } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { HSEIT_QUESTIONS_SORTED, HSEIT_LIKERT_OPTIONS, HSEIT_CATEGORY_LABELS, getQuestionText, type HSEITQuestion, type HSEITWordingVariant } from '@/data/hseitQuestions';
 import SoniaFormChat from '@/components/sonia/SoniaFormChat';
@@ -17,6 +18,7 @@ interface Assessment {
   title: string;
   description: string | null;
   is_active: boolean;
+  multi_sector_enabled?: boolean | null;
   wording_variant?: HSEITWordingVariant | null;
   companies: {
     name: string;
@@ -88,6 +90,7 @@ export default function HSEITForm() {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -165,9 +168,12 @@ export default function HSEITForm() {
     return (answered / HSEIT_QUESTIONS_SORTED.length) * 100;
   };
 
+  const isMultiSector = !!assessment?.multi_sector_enabled;
+  const hasSectorSelection = isMultiSector ? selectedDepartments.length > 0 : !!selectedDepartment;
+
   const canGoNext = () => {
     // On first page, department is mandatory if departments exist
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
       return false;
     }
     return currentQuestions.every(q => answers[q.number] !== undefined);
@@ -182,11 +188,13 @@ export default function HSEITForm() {
   }, []);
 
   const handleNext = () => {
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
       setShowDepartmentError(true);
       toast({
         title: 'Setor obrigatório',
-        description: 'Por favor, selecione o setor em que você trabalha.',
+        description: isMultiSector
+          ? 'Selecione pelo menos um setor em que você atua.'
+          : 'Por favor, selecione o setor em que você trabalha.',
         variant: 'destructive'
       });
       return;
@@ -218,10 +226,12 @@ export default function HSEITForm() {
     if (!assessment) return;
 
     // Check department
-    if (departments.length > 0 && !selectedDepartment) {
+    if (departments.length > 0 && !hasSectorSelection) {
       toast({
         title: 'Setor obrigatório',
-        description: 'Por favor, selecione o setor em que você trabalha.',
+        description: isMultiSector
+          ? 'Selecione pelo menos um setor em que você atua.'
+          : 'Por favor, selecione o setor em que você trabalha.',
         variant: 'destructive'
       });
       return;
@@ -242,16 +252,19 @@ export default function HSEITForm() {
       setIsSubmitting(true);
 
       const respondentToken = crypto.randomUUID();
+      const finalDepartments = isMultiSector ? selectedDepartments : (selectedDepartment ? [selectedDepartment] : []);
+      const primaryDepartment = finalDepartments[0] || null;
 
       const { data: response, error: responseError } = await supabase
         .from('hseit_responses')
         .insert({
           assessment_id: assessment.id,
-          department: selectedDepartment || null,
+          department: primaryDepartment,
+          departments: finalDepartments.length > 0 ? finalDepartments : null,
           respondent_token: respondentToken,
           demographics: {},
           completed_at: new Date().toISOString()
-        })
+        } as any)
         .select('id')
         .single();
 
@@ -337,15 +350,18 @@ export default function HSEITForm() {
     try {
       setIsSubmitting(true);
       const respondentToken = crypto.randomUUID();
+      const finalDepartments = isMultiSector ? selectedDepartments : (selectedDepartment ? [selectedDepartment] : []);
+      const primaryDepartment = finalDepartments[0] || null;
       const { data: response, error: responseError } = await supabase
         .from('hseit_responses')
         .insert({
           assessment_id: assessment.id,
-          department: selectedDepartment || null,
+          department: primaryDepartment,
+          departments: finalDepartments.length > 0 ? finalDepartments : null,
           respondent_token: respondentToken,
           demographics: {},
           completed_at: new Date().toISOString()
-        })
+        } as any)
         .select('id')
         .single();
       if (responseError) throw responseError;
@@ -369,18 +385,41 @@ export default function HSEITForm() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8">
         <div className="container mx-auto px-4">
-          {departments.length > 0 && !selectedDepartment ? (
+          {departments.length > 0 && !hasSectorSelection ? (
             <div className="max-w-md mx-auto">
               <Card>
                 <CardHeader>
-                  <CardTitle>Selecione seu setor</CardTitle>
-                  <CardDescription>Antes de começar, informe o setor em que você trabalha.</CardDescription>
+                  <CardTitle>{isMultiSector ? 'Selecione seus setores' : 'Selecione seu setor'}</CardTitle>
+                  <CardDescription>
+                    {isMultiSector
+                      ? 'Marque todos os setores em que você atua. Sua resposta será contabilizada em cada um deles.'
+                      : 'Antes de começar, informe o setor em que você trabalha.'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
-                    <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
-                  </Select>
+                  {isMultiSector ? (
+                    <div className="space-y-2">
+                      {departments.map(d => {
+                        const checked = selectedDepartments.includes(d.name);
+                        return (
+                          <label key={d.id} className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover:bg-muted/50">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                setSelectedDepartments(prev => c ? [...prev, d.name] : prev.filter(x => x !== d.name));
+                              }}
+                            />
+                            <span className="text-sm">{d.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                      <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
+                      <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -444,29 +483,58 @@ export default function HSEITForm() {
             <CardContent>
               {departments.length > 0 && (
                 <div className="space-y-2">
-                  <Label htmlFor="department" className="flex items-center gap-1">
-                    Selecione seu setor <span className="text-destructive">*</span>
+                  <Label className="flex items-center gap-1">
+                    {isMultiSector ? 'Selecione todos os setores em que você atua' : 'Selecione seu setor'}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
-                  <Select 
-                    value={selectedDepartment} 
-                    onValueChange={(val) => {
-                      setSelectedDepartment(val);
-                      setShowDepartmentError(false);
-                    }}
-                  >
-                    <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
-                      <SelectValue placeholder="Escolha seu setor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept.id} value={dept.name}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {showDepartmentError && !selectedDepartment && (
-                    <p className="text-sm text-destructive">Selecione o setor em que você trabalha.</p>
+                  {isMultiSector ? (
+                    <>
+                      <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs text-foreground/90 mb-2">
+                        <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <p>Sua resposta será contabilizada em cada setor selecionado.</p>
+                      </div>
+                      <div className={`space-y-2 ${showDepartmentError && !hasSectorSelection ? 'p-2 border border-destructive rounded-md' : ''}`}>
+                        {departments.map(dept => {
+                          const checked = selectedDepartments.includes(dept.name);
+                          return (
+                            <label key={dept.id} className="flex items-center gap-3 p-2 rounded-md border cursor-pointer hover:bg-muted/50">
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(c) => {
+                                  setSelectedDepartments(prev => c ? [...prev, dept.name] : prev.filter(x => x !== dept.name));
+                                  setShowDepartmentError(false);
+                                }}
+                              />
+                              <span className="text-sm">{dept.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <Select
+                      value={selectedDepartment}
+                      onValueChange={(val) => {
+                        setSelectedDepartment(val);
+                        setShowDepartmentError(false);
+                      }}
+                    >
+                      <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Escolha seu setor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(dept => (
+                          <SelectItem key={dept.id} value={dept.name}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {showDepartmentError && !hasSectorSelection && (
+                    <p className="text-sm text-destructive">
+                      {isMultiSector ? 'Selecione ao menos um setor.' : 'Selecione o setor em que você trabalha.'}
+                    </p>
                   )}
                 </div>
               )}

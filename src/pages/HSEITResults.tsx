@@ -78,6 +78,7 @@ interface Assessment {
   title: string;
   description: string | null;
   createdAt: string;
+  multiSectorEnabled?: boolean;
   companies: {
     id: string;
     name: string;
@@ -92,6 +93,7 @@ interface Answer {
 interface Response {
   id: string;
   department: string | null;
+  departments: string[];
   completedAt: string | null;
   answers: Answer[];
 }
@@ -134,7 +136,7 @@ export default function HSEITResults() {
       // Fetch assessment
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('hseit_assessments')
-        .select('id, title, description, created_at, companies(id, name)')
+        .select('id, title, description, created_at, multi_sector_enabled, companies(id, name)')
         .eq('id', id)
         .single();
 
@@ -145,6 +147,7 @@ export default function HSEITResults() {
         title: assessmentData.title,
         description: assessmentData.description,
         createdAt: assessmentData.created_at,
+        multiSectorEnabled: !!(assessmentData as any).multi_sector_enabled,
         companies: assessmentData.companies as unknown as { id: string; name: string }
       };
       setAssessment(mappedAssessment);
@@ -174,7 +177,7 @@ export default function HSEITResults() {
       // Fetch responses with answers
       const { data: responsesData, error: responsesError } = await supabase
         .from('hseit_responses')
-        .select('id, department, completed_at')
+        .select('id, department, departments, completed_at')
         .eq('assessment_id', id)
         .not('completed_at', 'is', null);
 
@@ -194,19 +197,25 @@ export default function HSEITResults() {
       }
 
       // Map responses with their answers
-      const mappedResponses: Response[] = (responsesData || []).map(r => ({
-        id: r.id,
-        department: r.department,
-        completedAt: r.completed_at,
-        answers: allAnswers
-          .filter(a => a.response_id === r.id)
-          .map(a => ({ questionNumber: a.question_number, value: a.answer_value }))
-      }));
+      const mappedResponses: Response[] = (responsesData || []).map((r: any) => {
+        const deptList: string[] = Array.isArray(r.departments) && r.departments.length > 0
+          ? r.departments
+          : (r.department ? [r.department] : []);
+        return {
+          id: r.id,
+          department: r.department,
+          departments: deptList,
+          completedAt: r.completed_at,
+          answers: allAnswers
+            .filter(a => a.response_id === r.id)
+            .map(a => ({ questionNumber: a.question_number, value: a.answer_value })),
+        };
+      });
 
       setResponses(mappedResponses);
 
-      // Extract unique departments
-      const depts = [...new Set(mappedResponses.map(r => r.department).filter(Boolean) as string[])];
+      // Extract unique departments (across all sector memberships)
+      const depts = [...new Set(mappedResponses.flatMap(r => r.departments))];
       setDepartments(depts);
 
     } catch (error) {
@@ -221,10 +230,10 @@ export default function HSEITResults() {
     }
   };
 
-  // Filter responses by department
+  // Filter responses by department (a response belongs to all sectors in its departments array)
   const filteredResponses = useMemo(() => {
     if (selectedDepartment === 'all') return responses;
-    return responses.filter(r => r.department === selectedDepartment);
+    return responses.filter(r => r.departments.includes(selectedDepartment));
   }, [responses, selectedDepartment]);
 
   // Calculate aggregated answers for filtered responses
@@ -475,6 +484,18 @@ export default function HSEITResults() {
           sstName={sstName}
         />
 
+        {assessment.multiSectorEnabled && (
+          <div className="mb-6 flex gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 text-sm">
+            <Users className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-foreground mb-1">Avaliação multisetorial</p>
+              <p className="text-muted-foreground">
+                Esta avaliação foi configurada como multisetorial. Colaboradores que atuam em mais de um setor são contabilizados em <strong>cada setor selecionado</strong> — tanto na pontuação quanto no total de respondentes do setor — para refletir corretamente o percentual de participação em cada um.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Summary Cards */}
         <div id="hseit-results-summary" className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
@@ -660,7 +681,7 @@ export default function HSEITResults() {
 
             {sectorViewDepartment ? (() => {
               const dept = sectorViewDepartment;
-              const deptResponses = responses.filter(r => r.department === dept);
+              const deptResponses = responses.filter(r => r.departments.includes(dept));
               const deptAnswers: Answer[] = [];
               deptResponses.forEach(r => deptAnswers.push(...r.answers));
 

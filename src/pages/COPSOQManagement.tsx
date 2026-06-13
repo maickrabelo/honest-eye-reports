@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles, Users2, Info } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
 import { QRCodePreview } from '@/components/climate-survey/QRCodePreview';
@@ -34,6 +35,7 @@ export default function COPSOQManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
+  const [multiSectorEnabled, setMultiSectorEnabled] = useState(false);
   const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
   const [pendingRemaining, setPendingRemaining] = useState(0);
   const deptManagerRef = useRef<DepartmentManagerHandle>(null);
@@ -92,6 +94,7 @@ export default function COPSOQManagement() {
         setEndDate(a.end_date ? a.end_date.split('T')[0] : '');
         setIsActive(a.is_active);
         setCollectionMode(a.collection_mode || 'form');
+        setMultiSectorEnabled(!!a.multi_sector_enabled);
         const { data: depts } = await supabase.from('copsoq_departments' as any).select('*').eq('assessment_id', id).order('order_index');
         setDepartments((depts as any[]) || []);
       } else if (companiesData.length === 1) {
@@ -128,7 +131,7 @@ export default function COPSOQManagement() {
   const persistAssessment = async () => {
     try {
       setIsSaving(true);
-      const data = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: collectionMode };
+      const data: any = { company_id: selectedCompany, title, description: description || null, start_date: startDate || null, end_date: endDate || null, is_active: isActive, created_by: user?.id, collection_mode: collectionMode, multi_sector_enabled: multiSectorEnabled };
       let assessmentId = id;
 
       if (isEditing) {
@@ -254,6 +257,35 @@ export default function COPSOQManagement() {
                       </div>
                     </button>
                   </div>
+                </div>
+
+                {/* Multi-sector mode */}
+                <div className="space-y-3 pt-2 px-4 pb-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="copsoqMultiSector"
+                      checked={multiSectorEnabled}
+                      onCheckedChange={(c) => setMultiSectorEnabled(!!c)}
+                      className="mt-1"
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="copsoqMultiSector" className="flex items-center gap-2 cursor-pointer">
+                        <Users2 className="h-4 w-4 text-blue-600" />
+                        Avaliação multisetorial
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permitir que colaboradores que atuam em mais de um setor marquem todos os setores em que trabalham.
+                      </p>
+                    </div>
+                  </div>
+                  {multiSectorEnabled && (
+                    <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-sm text-foreground/90">
+                      <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <p>
+                        Nesta modalidade, a resposta do colaborador será contabilizada em <strong>cada setor</strong> selecionado — tanto na pontuação quanto no total de colaboradores do setor, para que o percentual de participação fique correto em cada um.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

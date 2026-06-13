@@ -747,6 +747,7 @@ export type Database = {
           end_date: string | null
           id: string
           is_active: boolean
+          multi_sector_enabled: boolean
           start_date: string | null
           title: string
           updated_at: string
@@ -760,6 +761,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          multi_sector_enabled?: boolean
           start_date?: string | null
           title: string
           updated_at?: string
@@ -773,6 +775,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          multi_sector_enabled?: boolean
           start_date?: string | null
           title?: string
           updated_at?: string
@@ -836,6 +839,7 @@ export type Database = {
           created_at: string
           demographics: Json | null
           department: string | null
+          departments: string[] | null
           id: string
           respondent_token: string
         }
@@ -845,6 +849,7 @@ export type Database = {
           created_at?: string
           demographics?: Json | null
           department?: string | null
+          departments?: string[] | null
           id?: string
           respondent_token: string
         }
@@ -854,6 +859,7 @@ export type Database = {
           created_at?: string
           demographics?: Json | null
           department?: string | null
+          departments?: string[] | null
           id?: string
           respondent_token?: string
         }
@@ -1048,6 +1054,7 @@ export type Database = {
           end_date: string | null
           id: string
           is_active: boolean
+          multi_sector_enabled: boolean
           start_date: string | null
           title: string
           updated_at: string
@@ -1062,6 +1069,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          multi_sector_enabled?: boolean
           start_date?: string | null
           title: string
           updated_at?: string
@@ -1076,6 +1084,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          multi_sector_enabled?: boolean
           start_date?: string | null
           title?: string
           updated_at?: string
@@ -1140,6 +1149,7 @@ export type Database = {
           created_at: string
           demographics: Json | null
           department: string | null
+          departments: string[] | null
           id: string
           respondent_token: string
         }
@@ -1149,6 +1159,7 @@ export type Database = {
           created_at?: string
           demographics?: Json | null
           department?: string | null
+          departments?: string[] | null
           id?: string
           respondent_token: string
         }
@@ -1158,6 +1169,7 @@ export type Database = {
           created_at?: string
           demographics?: Json | null
           department?: string | null
+          departments?: string[] | null
           id?: string
           respondent_token?: string
         }
