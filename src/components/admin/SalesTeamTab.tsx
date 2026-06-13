@@ -139,7 +139,7 @@ export const SalesTeamTab = () => {
   // Exclude external entries that already exist as real leads (match by company name)
   const existingNames = new Set(leads.map(l => (l.company_name || '').trim().toLowerCase()));
   const filteredExternal = externalLeads
-    .filter(e => !existingNames.has((e.company_name || '').trim().toLowerCase()))
+    .filter(e => !existingNames.has((e.company_name || '').trim().toLowerCase()) && !dismissedExternal.has(e.external_id))
     .filter(e =>
       e.company_name.toLowerCase().includes(search.toLowerCase()) ||
       (e.contact_name && e.contact_name.toLowerCase().includes(search.toLowerCase()))
