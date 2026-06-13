@@ -3,17 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Shield, User, UserPlus } from "lucide-react";
+import { Loader2, Shield, User } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
+import CreateUserDialog from '@/components/admin/CreateUserDialog';
 
 interface UserWithRole {
   id: string;
@@ -30,19 +27,10 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<any[]>([]);
   const [sstManagers, setSstManagers] = useState<any[]>([]);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [newUser, setNewUser] = useState({
-    email: '',
-    password: '',
-    full_name: '',
-    role: 'sales' as string,
-    company_id: '',
-    sst_manager_id: '',
-  });
   const { toast } = useToast();
   const { role } = useRealAuth();
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (role !== 'admin') {
