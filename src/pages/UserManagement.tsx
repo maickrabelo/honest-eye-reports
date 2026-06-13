@@ -72,52 +72,6 @@ const UserManagement = () => {
     setSstManagers(data || []);
   };
 
-  const handleCreateUser = async () => {
-    if (!newUser.email || !newUser.password || !newUser.full_name || !newUser.role) {
-      toast({ title: "Campos obrigatórios", description: "Preencha email, senha, nome e papel.", variant: "destructive" });
-      return;
-    }
-    if (newUser.role === 'company' && !newUser.company_id) {
-      toast({ title: "Empresa obrigatória", description: "Selecione uma empresa para este papel.", variant: "destructive" });
-      return;
-    }
-    if (newUser.role === 'sst' && !newUser.sst_manager_id) {
-      toast({ title: "Gestora SST obrigatória", description: "Selecione uma gestora SST para este papel.", variant: "destructive" });
-      return;
-    }
-
-    try {
-      setCreating(true);
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) throw new Error('Não autenticado');
-
-      const body: any = {
-        email: newUser.email,
-        password: newUser.password,
-        full_name: newUser.full_name,
-        role: newUser.role,
-      };
-      if (newUser.role === 'company') body.company_id = newUser.company_id;
-      if (newUser.role === 'sst') body.sst_manager_id = newUser.sst_manager_id;
-
-      const { data, error } = await supabase.functions.invoke('create-user-with-password', {
-        headers: { Authorization: `Bearer ${session.session.access_token}` },
-        body,
-      });
-
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-
-      toast({ title: "Usuário criado", description: `${newUser.full_name} foi criado com sucesso.` });
-      setCreateDialogOpen(false);
-      setNewUser({ email: '', password: '', full_name: '', role: 'sales', company_id: '', sst_manager_id: '' });
-      fetchUsers();
-    } catch (error: any) {
-      toast({ title: "Erro ao criar usuário", description: getSafeErrorMessage(error), variant: "destructive" });
-    } finally {
-      setCreating(false);
-    }
-  };
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
