@@ -483,29 +483,58 @@ export default function HSEITForm() {
             <CardContent>
               {departments.length > 0 && (
                 <div className="space-y-2">
-                  <Label htmlFor="department" className="flex items-center gap-1">
-                    Selecione seu setor <span className="text-destructive">*</span>
+                  <Label className="flex items-center gap-1">
+                    {isMultiSector ? 'Selecione todos os setores em que você atua' : 'Selecione seu setor'}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
-                  <Select 
-                    value={selectedDepartment} 
-                    onValueChange={(val) => {
-                      setSelectedDepartment(val);
-                      setShowDepartmentError(false);
-                    }}
-                  >
-                    <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
-                      <SelectValue placeholder="Escolha seu setor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept.id} value={dept.name}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {showDepartmentError && !selectedDepartment && (
-                    <p className="text-sm text-destructive">Selecione o setor em que você trabalha.</p>
+                  {isMultiSector ? (
+                    <>
+                      <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs text-foreground/90 mb-2">
+                        <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <p>Sua resposta será contabilizada em cada setor selecionado.</p>
+                      </div>
+                      <div className={`space-y-2 ${showDepartmentError && !hasSectorSelection ? 'p-2 border border-destructive rounded-md' : ''}`}>
+                        {departments.map(dept => {
+                          const checked = selectedDepartments.includes(dept.name);
+                          return (
+                            <label key={dept.id} className="flex items-center gap-3 p-2 rounded-md border cursor-pointer hover:bg-muted/50">
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(c) => {
+                                  setSelectedDepartments(prev => c ? [...prev, dept.name] : prev.filter(x => x !== dept.name));
+                                  setShowDepartmentError(false);
+                                }}
+                              />
+                              <span className="text-sm">{dept.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <Select
+                      value={selectedDepartment}
+                      onValueChange={(val) => {
+                        setSelectedDepartment(val);
+                        setShowDepartmentError(false);
+                      }}
+                    >
+                      <SelectTrigger className={showDepartmentError && !selectedDepartment ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Escolha seu setor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(dept => (
+                          <SelectItem key={dept.id} value={dept.name}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {showDepartmentError && !hasSectorSelection && (
+                    <p className="text-sm text-destructive">
+                      {isMultiSector ? 'Selecione ao menos um setor.' : 'Selecione o setor em que você trabalha.'}
+                    </p>
                   )}
                 </div>
               )}
