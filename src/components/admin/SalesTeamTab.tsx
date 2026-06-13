@@ -369,9 +369,46 @@ export const SalesTeamTab = () => {
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-sm">{col.label}</h3>
-                  <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">{colLeads.length}</span>
+                  <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">
+                    {colLeads.length + (col.value === 'prospect' ? filteredExternal.length : 0)}
+                  </span>
                 </div>
                 <div className="space-y-2">
+                  {col.value === 'prospect' && filteredExternal.map(ext => {
+                    const days = daysUntil(ext.trial_ends_at);
+                    const trialColor = days === null ? '' : days < 0 ? 'bg-destructive text-destructive-foreground' : days <= 2 ? 'bg-destructive text-destructive-foreground' : days <= 5 ? 'bg-orange-500 text-white' : 'bg-amber-500 text-white';
+                    return (
+                      <div key={ext.external_id} className="bg-background border border-dashed border-primary/40 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between gap-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <span className="font-medium text-sm truncate">{ext.company_name}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{ext.source_label}</Badge>
+                          {days !== null && (
+                            <Badge className={`text-[10px] px-1.5 py-0 border-none ${trialColor}`}>
+                              {days < 0 ? `Trial expirado há ${Math.abs(days)}d` : days === 0 ? 'Expira hoje' : `${days}d para expirar`}
+                            </Badge>
+                          )}
+                        </div>
+                        {ext.contact_name && (
+                          <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground"><User className="h-3 w-3" />{ext.contact_name}</div>
+                        )}
+                        {ext.email && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground"><Mail className="h-3 w-3" /><span className="truncate">{ext.email}</span></div>
+                        )}
+                        {ext.phone && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground"><Phone className="h-3 w-3" />{ext.phone}</div>
+                        )}
+                        {ext.city && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground"><MapPin className="h-3 w-3" />{ext.city}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+
                   {colLeads.map(lead => (
                     <div
                       key={lead.id}
