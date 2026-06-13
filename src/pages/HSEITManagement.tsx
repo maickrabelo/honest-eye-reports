@@ -435,6 +435,35 @@ export default function HSEITManagement() {
                     onCheckedChange={(checked) => setWordingVariant(checked ? 'positive' : 'standard')}
                   />
                 </div>
+
+                {/* Multi-sector mode */}
+                <div className="space-y-3 pt-2 px-4 pb-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="multiSector"
+                      checked={multiSectorEnabled}
+                      onCheckedChange={(c) => setMultiSectorEnabled(!!c)}
+                      className="mt-1"
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="multiSector" className="flex items-center gap-2 cursor-pointer">
+                        <Users2 className="h-4 w-4 text-blue-600" />
+                        Avaliação multisetorial
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permitir que colaboradores que atuam em mais de um setor marquem todos os setores em que trabalham.
+                      </p>
+                    </div>
+                  </div>
+                  {multiSectorEnabled && (
+                    <div className="flex gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-sm text-foreground/90">
+                      <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <p>
+                        Nesta modalidade, a resposta do colaborador será contabilizada em <strong>cada setor</strong> selecionado — tanto na pontuação quanto no total de colaboradores do setor, para que o percentual de participação fique correto em cada um.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
