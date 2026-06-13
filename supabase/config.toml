@@ -138,8 +138,7 @@ verify_jwt = false
 [functions.revoke-sector-viewer-access]
 verify_jwt = false
 
-[functions.admin-send-wr-welcome]
-verify_jwt = false
+
 
 
 
