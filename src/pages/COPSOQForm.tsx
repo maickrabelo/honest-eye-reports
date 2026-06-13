@@ -95,16 +95,19 @@ export default function COPSOQForm() {
 
   const handleAnswer = useCallback((qn: number, v: number) => setAnswers(prev => ({ ...prev, [qn]: v })), []);
   const getProgress = () => (Object.keys(answers).length / COPSOQ_QUESTIONS_SORTED.length) * 100;
+  const isMultiSector = !!assessment?.multi_sector_enabled;
+  const hasSectorSelection = isMultiSector ? selectedDepartments.length > 0 : !!selectedDepartment;
+
   const canGoNext = () => {
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) return false;
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) return false;
     return currentQuestions.every(q => answers[q.number] !== undefined);
   };
   const scrollToTop = useCallback(() => { topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
 
   const handleNext = () => {
-    if (currentPage === 0 && departments.length > 0 && !selectedDepartment) {
+    if (currentPage === 0 && departments.length > 0 && !hasSectorSelection) {
       setShowDepartmentError(true);
-      toast({ title: 'Setor obrigatório', description: 'Selecione o setor em que você trabalha.', variant: 'destructive' });
+      toast({ title: 'Setor obrigatório', description: isMultiSector ? 'Selecione pelo menos um setor.' : 'Selecione o setor em que você trabalha.', variant: 'destructive' });
       return;
     }
     if (!canGoNext()) { toast({ title: 'Questões obrigatórias', description: 'Responda todas antes de avançar.', variant: 'destructive' }); return; }
@@ -112,14 +115,26 @@ export default function COPSOQForm() {
   };
   const handlePrev = () => { if (currentPage > 0) { setCurrentPage(p => p - 1); setTimeout(scrollToTop, 50); } };
 
+  const buildResponsePayload = () => {
+    const finalDepartments = isMultiSector ? selectedDepartments : (selectedDepartment ? [selectedDepartment] : []);
+    return {
+      assessment_id: assessment!.id,
+      department: finalDepartments[0] || null,
+      departments: finalDepartments.length > 0 ? finalDepartments : null,
+      respondent_token: crypto.randomUUID(),
+      demographics: {},
+      completed_at: new Date().toISOString(),
+    };
+  };
+
   const handleSubmit = async () => {
     if (!assessment) return;
-    if (departments.length > 0 && !selectedDepartment) { toast({ title: 'Setor obrigatório', variant: 'destructive' }); return; }
+    if (departments.length > 0 && !hasSectorSelection) { toast({ title: 'Setor obrigatório', variant: 'destructive' }); return; }
     const unanswered = COPSOQ_QUESTIONS_SORTED.filter(q => answers[q.number] === undefined);
     if (unanswered.length > 0) { toast({ title: 'Questões não respondidas', description: `Faltam ${unanswered.length} questão(ões).`, variant: 'destructive' }); return; }
     try {
       setIsSubmitting(true);
-      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert({ assessment_id: assessment.id, department: selectedDepartment || null, respondent_token: crypto.randomUUID(), demographics: {}, completed_at: new Date().toISOString() }).select('id').single();
+      const { data: response, error: re } = await supabase.from('copsoq_responses' as any).insert(buildResponsePayload()).select('id').single();
       if (re) throw re;
       const answersData = Object.entries(answers).map(([qn, v]) => ({ response_id: (response as any).id, question_number: parseInt(qn), answer_value: v }));
       const { error: ae } = await supabase.from('copsoq_answers' as any).insert(answersData);
