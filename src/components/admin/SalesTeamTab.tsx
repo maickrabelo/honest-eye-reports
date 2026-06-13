@@ -82,19 +82,23 @@ export const SalesTeamTab = () => {
     
     setLoadingProgress(30);
     setLoadingStep('Buscando leads do CRM...');
-    const { data, error } = await (supabase
-      .from('sales_leads' as any)
-      .select('*') as any)
-      .order('created_at', { ascending: false });
-    
+    const [leadsRes, extRes] = await Promise.all([
+      (supabase.from('sales_leads' as any).select('*') as any).order('created_at', { ascending: false }),
+      supabase.functions.invoke('list-crm-external-leads'),
+    ]);
+
     setLoadingProgress(70);
     setLoadingStep('Organizando dados...');
     await new Promise(r => setTimeout(r, 150));
-    
-    if (error) {
-      toast({ title: 'Erro ao carregar leads', description: getSafeErrorMessage(error), variant: 'destructive' });
+
+    if (leadsRes.error) {
+      toast({ title: 'Erro ao carregar leads', description: getSafeErrorMessage(leadsRes.error), variant: 'destructive' });
     } else {
-      setLeads((data as SalesLead[]) || []);
+      setLeads((leadsRes.data as SalesLead[]) || []);
+    }
+
+    if (!extRes.error && extRes.data?.items) {
+      setExternalLeads(extRes.data.items as ExternalLead[]);
     }
     
     setLoadingProgress(100);
