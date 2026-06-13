@@ -136,6 +136,9 @@ const Footer = () => {
             <p>&copy; {new Date().getFullYear()} SOIA - Sistema NR-01 para Riscos Psicossociais. Todos os direitos reservados.</p>
             <p>Desenvolvido com 💚 para empresas que cuidam das pessoas.</p>
           </div>
+          <div className="mt-4 pt-4 border-t border-white/5 text-center text-xs text-white/40">
+            <p>SOIA TECNOLOGIA E DESENVOLVIMENTO DE SISTEMAS LTDA — CNPJ 66.895.503/0001-80</p>
+          </div>
         </div>
       </div>
     </footer>
