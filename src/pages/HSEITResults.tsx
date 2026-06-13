@@ -177,7 +177,7 @@ export default function HSEITResults() {
       // Fetch responses with answers
       const { data: responsesData, error: responsesError } = await supabase
         .from('hseit_responses')
-        .select('id, department, completed_at')
+        .select('id, department, departments, completed_at')
         .eq('assessment_id', id)
         .not('completed_at', 'is', null);
 
@@ -197,19 +197,25 @@ export default function HSEITResults() {
       }
 
       // Map responses with their answers
-      const mappedResponses: Response[] = (responsesData || []).map(r => ({
-        id: r.id,
-        department: r.department,
-        completedAt: r.completed_at,
-        answers: allAnswers
-          .filter(a => a.response_id === r.id)
-          .map(a => ({ questionNumber: a.question_number, value: a.answer_value }))
-      }));
+      const mappedResponses: Response[] = (responsesData || []).map((r: any) => {
+        const deptList: string[] = Array.isArray(r.departments) && r.departments.length > 0
+          ? r.departments
+          : (r.department ? [r.department] : []);
+        return {
+          id: r.id,
+          department: r.department,
+          departments: deptList,
+          completedAt: r.completed_at,
+          answers: allAnswers
+            .filter(a => a.response_id === r.id)
+            .map(a => ({ questionNumber: a.question_number, value: a.answer_value })),
+        };
+      });
 
       setResponses(mappedResponses);
 
-      // Extract unique departments
-      const depts = [...new Set(mappedResponses.map(r => r.department).filter(Boolean) as string[])];
+      // Extract unique departments (across all sector memberships)
+      const depts = [...new Set(mappedResponses.flatMap(r => r.departments))];
       setDepartments(depts);
 
     } catch (error) {
