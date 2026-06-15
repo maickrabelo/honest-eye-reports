@@ -513,9 +513,9 @@ const SSTDashboard = () => {
                       </div>
                     </div>
                     <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{company.name}</CardTitle>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <CardTitle className="text-lg flex-1 min-w-0">{company.name}</CardTitle>
+                        <div className="flex items-center gap-1 flex-wrap justify-end">
                           <Button
                             variant="ghost"
                             size="sm"
