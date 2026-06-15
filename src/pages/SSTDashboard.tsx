@@ -90,6 +90,8 @@ interface Company {
 
 type SortOption = 'alphabetical' | 'newest' | 'last_activity';
 
+const onlyDigits = (value: string | null | undefined) => String(value ?? '').replace(/\D/g, '');
+
 const tools = [
   {
     id: 'tool-hseit',
@@ -271,10 +273,12 @@ const SSTDashboard = () => {
   const filteredCompanies = companies
     .filter(company => {
       const term = searchTerm.toLowerCase().trim();
+      const termDigits = onlyDigits(term);
       if (!term) return true;
       return (
         company.name.toLowerCase().includes(term) ||
         (company.cnpj || '').toLowerCase().includes(term) ||
+        (!!termDigits && onlyDigits(company.cnpj).includes(termDigits)) ||
         (company.email || '').toLowerCase().includes(term)
       );
     })
