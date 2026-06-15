@@ -12,7 +12,7 @@ interface AddCompanyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sstManagerId: string;
-  onCompanyAdded: () => void;
+  onCompanyAdded: (companyId?: string) => void;
 }
 
 const extractCnpjDigits = (cnpj: string): string => cnpj.replace(/\D/g, '');
@@ -176,7 +176,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
       resetForm();
       onOpenChange(false);
-      onCompanyAdded();
+      onCompanyAdded(companyResult?.company_id);
     } catch (error: any) {
       console.error('Error creating company:', error);
       let message = 'Não foi possível cadastrar a empresa. Tente novamente.';
@@ -220,7 +220,7 @@ const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             });
             resetForm();
             onOpenChange(false);
-            onCompanyAdded();
+            onCompanyAdded((existing as any).id);
             return;
           }
           message = 'Este CNPJ já está cadastrado no sistema e vinculado a outra gestora. Verifique o número informado.';

@@ -90,6 +90,8 @@ interface Company {
 
 type SortOption = 'alphabetical' | 'newest' | 'last_activity';
 
+const onlyDigits = (value: string | null | undefined) => String(value ?? '').replace(/\D/g, '');
+
 const tools = [
   {
     id: 'tool-hseit',
@@ -150,26 +152,7 @@ const SSTDashboard = () => {
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
 
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-      if (role !== 'sst') {
-        toast({
-          title: "Acesso negado",
-          description: "Você não tem permissão para acessar esta página.",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
-      }
-      fetchCompanies();
-    }
-  }, [user, role, authLoading, navigate, toast]);
-
-  const fetchCompanies = async () => {
+  const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
       setIsLoading(true);
       const { data: profileData, error: profileError } = await supabase
@@ -248,6 +231,18 @@ const SSTDashboard = () => {
       });
 
       setCompanies(companiesWithCounts);
+
+      if (highlightCompanyId) {
+        const createdCompany = companiesWithCounts.find((company) => company.id === highlightCompanyId);
+        setSearchTerm('');
+        setSortBy('newest');
+        if (createdCompany) {
+          toast({
+            title: "Empresa disponível na lista",
+            description: `${createdCompany.name} aparece em “Últimas cadastradas”.`,
+          });
+        }
+      }
     } catch (error: any) {
       console.error('Error fetching companies:', error);
       toast({ title: "Erro ao carregar empresas", description: error.message, variant: "destructive" });
@@ -256,13 +251,34 @@ const SSTDashboard = () => {
     }
   };
 
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+      if (role !== 'sst') {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar esta página.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+      fetchCompanies();
+    }
+  }, [user, role, authLoading, navigate, toast]);
+
   const filteredCompanies = companies
     .filter(company => {
       const term = searchTerm.toLowerCase().trim();
+      const termDigits = onlyDigits(term);
       if (!term) return true;
       return (
         company.name.toLowerCase().includes(term) ||
         (company.cnpj || '').toLowerCase().includes(term) ||
+        (!!termDigits && onlyDigits(company.cnpj).includes(termDigits)) ||
         (company.email || '').toLowerCase().includes(term)
       );
     })
