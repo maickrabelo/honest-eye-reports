@@ -301,7 +301,7 @@ export type Database = {
       }
       beta_ouvidoria_reports: {
         Row: {
-          access_key_hash: string
+          access_key_hash: string | null
           category: string
           category_other: string | null
           company_id: string
@@ -317,7 +317,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          access_key_hash: string
+          access_key_hash?: string | null
           category: string
           category_other?: string | null
           company_id: string
@@ -333,7 +333,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          access_key_hash?: string
+          access_key_hash?: string | null
           category?: string
           category_other?: string | null
           company_id?: string
