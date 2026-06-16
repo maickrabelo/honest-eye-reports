@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, AlertTriangle, Eye, Copy, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, AlertTriangle, Eye, Copy, ExternalLink, ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -201,6 +201,19 @@ export default function HSEITDashboard() {
       title: 'Link copiado!',
       description: 'O link foi copiado para a área de transferência.'
     });
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Excluir a avaliação "${title}"? Todas as respostas serão removidas. Esta ação é irreversível.`)) return;
+    try {
+      const { error } = await supabase.from('hseit_assessments').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Avaliação excluída', description: 'A avaliação foi removida com sucesso.' });
+      setAssessments(prev => prev.filter(a => a.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting assessment:', error);
+      toast({ title: 'Erro ao excluir', description: error.message || 'Tente novamente.', variant: 'destructive' });
+    }
   };
 
   const filteredAssessments = assessments.filter(assessment => {
@@ -439,6 +452,15 @@ export default function HSEITDashboard() {
                               title="Editar avaliação"
                             >
                               <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(assessment.id, assessment.title)}
+                              title="Excluir avaliação"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
