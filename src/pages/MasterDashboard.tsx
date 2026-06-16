@@ -2037,6 +2037,13 @@ const MasterDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AssignManualPlanDialog
+        open={!!assignPlanSST}
+        onOpenChange={(o) => { if (!o) setAssignPlanSST(null); }}
+        sstManager={assignPlanSST}
+        onAssigned={() => loadData()}
+      />
     </div>
   );
 };
