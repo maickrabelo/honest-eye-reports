@@ -261,6 +261,127 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_ouvidoria_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          report_id: string
+          size_bytes: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          report_id: string
+          size_bytes?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          report_id?: string
+          size_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_ouvidoria_attachments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "beta_ouvidoria_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_ouvidoria_reports: {
+        Row: {
+          access_key_hash: string
+          category: string
+          category_other: string | null
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          location_sector: string | null
+          occurrence_date: string | null
+          occurrence_type: string
+          report_type: string
+          status: string
+          tracking_code: string
+          updated_at: string
+        }
+        Insert: {
+          access_key_hash: string
+          category: string
+          category_other?: string | null
+          company_id: string
+          created_at?: string
+          description: string
+          id?: string
+          location_sector?: string | null
+          occurrence_date?: string | null
+          occurrence_type: string
+          report_type: string
+          status?: string
+          tracking_code: string
+          updated_at?: string
+        }
+        Update: {
+          access_key_hash?: string
+          category?: string
+          category_other?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          location_sector?: string | null
+          occurrence_date?: string | null
+          occurrence_type?: string
+          report_type?: string
+          status?: string
+          tracking_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      beta_ouvidoria_updates: {
+        Row: {
+          author_type: string
+          created_at: string
+          id: string
+          message: string
+          report_id: string
+        }
+        Insert: {
+          author_type: string
+          created_at?: string
+          id?: string
+          message: string
+          report_id: string
+        }
+        Update: {
+          author_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_ouvidoria_updates_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "beta_ouvidoria_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       burnout_answers: {
         Row: {
           answer_value: number
