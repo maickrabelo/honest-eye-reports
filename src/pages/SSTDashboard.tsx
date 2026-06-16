@@ -162,6 +162,7 @@ const SSTDashboard = () => {
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
+  const { isSmartOnly } = useSmartOnlyPlan();
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
