@@ -413,7 +413,7 @@ const SSTDashboard = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {(() => {
-                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id));
+                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
                 const displayedTools = hasBetaCompany
                   ? [...tools, {
                       id: 'tool-ouvidoria-smart',
