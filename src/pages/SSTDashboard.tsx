@@ -415,9 +415,9 @@ const SSTDashboard = () => {
                 const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id));
                 const displayedTools = hasBetaCompany
                   ? [...tools, {
-                      id: 'tool-ouvidoria-ssmart',
+                      id: 'tool-ouvidoria-smart',
                       icon: ClipboardList,
-                      title: 'Ouvidoria Ssmart',
+                      title: 'Ouvidoria Smart',
                       description: 'Canal anônimo (formulário estático)',
                       highlights: ['Anônimo'],
                       path: '/ouvidoria-beta/painel',
