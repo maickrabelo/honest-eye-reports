@@ -618,7 +618,7 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
         r.source || '—',
         r.measurement_value != null ? `${r.measurement_value} ${r.measurement_unit || ''}` : '—',
         r.exposure_limit != null ? String(r.exposure_limit) : '—',
-        `S${r.severity}×P${r.probability}\n${(r.risk_level || '').toUpperCase()}`,
+        `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${(r.risk_level || '').toUpperCase()}`,
         [r.existing_epc, r.existing_epi ? `EPI: ${r.existing_epi}${r.epi_ca ? ` (CA ${r.epi_ca})` : ''}` : '']
           .filter(Boolean).join('\n') || '—',
       ]);
