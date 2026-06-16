@@ -141,6 +141,7 @@ const SSTDashboard = () => {
   const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [smartOuvidoriaIds, setSmartOuvidoriaIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
@@ -240,6 +241,19 @@ const SSTDashboard = () => {
       });
 
       setCompanies(companiesWithCounts);
+
+      // Check Smart Ouvidoria access for these companies (SST Smart plan)
+      try {
+        const checks = await Promise.all(
+          companiesWithCounts.map(async (c) => {
+            const { data } = await (supabase as any).rpc('company_has_smart_ouvidoria', { _company_id: c.id });
+            return data ? c.id : null;
+          })
+        );
+        setSmartOuvidoriaIds(new Set(checks.filter(Boolean) as string[]));
+      } catch (e) {
+        console.warn('smart ouvidoria check failed', e);
+      }
 
       if (highlightCompanyId) {
         const createdCompany = companiesWithCounts.find((company) => company.id === highlightCompanyId);
@@ -412,7 +426,7 @@ const SSTDashboard = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {(() => {
-                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id));
+                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
                 const displayedTools = hasBetaCompany
                   ? [...tools, {
                       id: 'tool-ouvidoria-smart',

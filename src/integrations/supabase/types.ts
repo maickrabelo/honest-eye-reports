@@ -3516,6 +3516,10 @@ export type Database = {
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       company_has_no_sst: { Args: { _company_id: string }; Returns: boolean }
+      company_has_smart_ouvidoria: {
+        Args: { _company_id: string }
+        Returns: boolean
+      }
       count_sst_companies: {
         Args: { _sst_manager_id: string }
         Returns: number
@@ -3607,6 +3611,8 @@ export type Database = {
         | "past_due"
         | "canceled"
         | "expired"
+        | "trial"
+        | "trialing"
       survey_question_type:
         | "likert"
         | "single_choice"
@@ -3757,6 +3763,8 @@ export const Constants = {
         "past_due",
         "canceled",
         "expired",
+        "trial",
+        "trialing",
       ],
       survey_question_type: [
         "likert",

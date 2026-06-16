@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download } from "lucide-react";
+import { Search, Plus, Building, UserCheck, Edit, Trash, ArrowLeft, Key, Copy, Upload, ClipboardList, BarChart3, Users, Globe, Activity, Download, Sparkles } from "lucide-react";
 import { downloadJsonAsExcel } from '@/lib/excelExport';
 import { PendingPartnersManager } from '@/components/admin/PendingPartnersManager';
 import { PendingAffiliatesManager } from '@/components/admin/PendingAffiliatesManager';
@@ -19,6 +19,7 @@ import StatisticsTab from '@/components/admin/StatisticsTab';
 import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
+import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,6 +88,7 @@ const MasterDashboard = () => {
   const [sstLogoPreview, setSstLogoPreview] = useState<string | null>(null);
   const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
   const [testUsersResult, setTestUsersResult] = useState<any>(null);
+  const [assignPlanSST, setAssignPlanSST] = useState<SSTManager | null>(null);
   const { toast } = useToast();
   const { session, role, isLoading: authLoading } = useRealAuth();
   
@@ -1861,6 +1863,15 @@ const MasterDashboard = () => {
                                     <Key className="h-4 w-4 mr-1" />
                                     Senha
                                   </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setAssignPlanSST(manager)}
+                                    title="Atribuir plano manual"
+                                  >
+                                    <Sparkles className="h-4 w-4 mr-1" />
+                                    Plano
+                                  </Button>
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
@@ -2026,6 +2037,13 @@ const MasterDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AssignManualPlanDialog
+        open={!!assignPlanSST}
+        onOpenChange={(o) => { if (!o) setAssignPlanSST(null); }}
+        sstManager={assignPlanSST}
+        onAssigned={() => loadData()}
+      />
     </div>
   );
 };

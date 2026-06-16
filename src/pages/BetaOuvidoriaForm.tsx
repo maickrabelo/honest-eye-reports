@@ -51,10 +51,13 @@ const BetaOuvidoriaForm = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (!companyId || !isBetaOuvidoriaCompany(companyId)) {
-        setLoading(false);
-        return;
+      if (!companyId) { setLoading(false); return; }
+      let allowed = isBetaOuvidoriaCompany(companyId);
+      if (!allowed) {
+        const { data: rpc } = await (supabase as any).rpc('company_has_smart_ouvidoria', { _company_id: companyId });
+        allowed = !!rpc;
       }
+      if (!allowed) { setLoading(false); return; }
       const { data } = await supabase.from("companies").select("id, name").eq("id", companyId).maybeSingle();
       setCompany(data as any);
       setLoading(false);
