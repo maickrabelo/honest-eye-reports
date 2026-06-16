@@ -128,7 +128,6 @@ const PGRDashboard = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold">PGR — {companyName}</h1>
-                <Badge variant="outline" className="border-orange-400 text-orange-600">BETA — em validação</Badge>
               </div>
               <p className="text-xs text-muted-foreground">
                 Programa de Gerenciamento de Riscos (NR-1) + Exportação e-Social S-2240
