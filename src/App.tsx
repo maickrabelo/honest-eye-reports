@@ -9,6 +9,7 @@ import { useRealAuth } from "./contexts/RealAuthContext";
 import { useAccessLogger } from "./hooks/useAccessLogger";
 import React, { Suspense } from "react";
 import { MetaPixelRouteTracker } from "./components/MetaPixelRouteTracker";
+import BackToHomeButton from "./components/BackToHomeButton";
 
 // Eagerly load critical/frequently accessed pages
 import Index from "./pages/Index";
@@ -113,6 +114,7 @@ const App = () => (
           <WhiteLabelProvider>
             <AppContent />
             <MetaPixelRouteTracker />
+            <BackToHomeButton />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
