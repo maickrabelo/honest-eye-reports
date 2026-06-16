@@ -141,6 +141,7 @@ const SSTDashboard = () => {
   const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [smartOuvidoriaIds, setSmartOuvidoriaIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
