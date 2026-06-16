@@ -1655,12 +1655,16 @@ const MasterDashboard = () => {
                               <Input id="sstName" name="sstName" placeholder="Nome da empresa" required />
                             </div>
                             <div className="grid gap-2">
-                              <Label htmlFor="sstEmail">Email</Label>
+                              <Label htmlFor="sstResponsible">Nome do Responsável (login)</Label>
+                              <Input id="sstResponsible" name="sstResponsible" placeholder="Nome completo do usuário titular" required />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="sstEmail">Email (acesso)</Label>
                               <Input id="sstEmail" name="sstEmail" type="email" placeholder="contato@gestora.com" required />
                             </div>
                             <div className="grid gap-2">
-                              <Label htmlFor="sstCNPJ">CNPJ</Label>
-                              <Input id="sstCNPJ" name="sstCNPJ" placeholder="00.000.000/0000-00" />
+                              <Label htmlFor="sstCNPJ">CNPJ (será a senha inicial)</Label>
+                              <Input id="sstCNPJ" name="sstCNPJ" placeholder="00.000.000/0000-00" required />
                             </div>
                             <div className="grid gap-2">
                               <Label htmlFor="sstPhone">Telefone</Label>
@@ -1670,6 +1674,30 @@ const MasterDashboard = () => {
                               <Label htmlFor="sstAddress">Endereço</Label>
                               <Input id="sstAddress" name="sstAddress" placeholder="Endereço completo" />
                             </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="grid gap-2">
+                                <Label htmlFor="sstPlanId">Plano (opcional)</Label>
+                                <select
+                                  id="sstPlanId"
+                                  name="sstPlanId"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  defaultValue=""
+                                >
+                                  <option value="">Sem plano (definir depois)</option>
+                                  {manualPlans.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="sstTrialDays">Dias de teste grátis</Label>
+                                <Input id="sstTrialDays" name="sstTrialDays" type="number" min={0} max={365} defaultValue={7} />
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Será criada uma conta de acesso para o responsável. A senha inicial é o CNPJ (somente números) e a troca é exigida no primeiro login.
+                            </p>
+
                           </div>
                           <DialogFooter>
                             <Button type="submit">Adicionar Gestora SST</Button>
