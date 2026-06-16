@@ -506,8 +506,8 @@ const SSTDashboard = () => {
               <div className="mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground">Portal de Ouvidoria</h2>
-                    <p className="text-muted-foreground text-sm">Clique para acessar o canal de ouvidoria de cada empresa</p>
+                    <h2 className="text-2xl font-bold text-foreground">{isSmartOnly ? 'Empresas' : 'Portal de Ouvidoria'}</h2>
+                    <p className="text-muted-foreground text-sm">{isSmartOnly ? 'Empresas sob sua gestão' : 'Clique para acessar o canal de ouvidoria de cada empresa'}</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <div className="relative w-full sm:w-72">
