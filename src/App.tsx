@@ -73,6 +73,9 @@ const PulseSurveyDashboard = React.lazy(() => import("./pages/PulseSurveyDashboa
 const PulseSurveyManagement = React.lazy(() => import("./pages/PulseSurveyManagement"));
 const PulseSurveyDetail = React.lazy(() => import("./pages/PulseSurveyDetail"));
 const PulseSurveyForm = React.lazy(() => import("./pages/PulseSurveyForm"));
+const BetaOuvidoriaForm = React.lazy(() => import("./pages/BetaOuvidoriaForm"));
+const BetaOuvidoriaTrack = React.lazy(() => import("./pages/BetaOuvidoriaTrack"));
+const BetaOuvidoriaDashboard = React.lazy(() => import("./pages/BetaOuvidoriaDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -177,6 +180,9 @@ const App = () => (
                 <Route path="/pulse-survey/editar/:id" element={<PulseSurveyManagement />} />
                 <Route path="/pulse-survey/:id" element={<PulseSurveyDetail />} />
                 <Route path="/pulse/:surveyId" element={<PulseSurveyForm />} />
+                <Route path="/ouvidoria-beta/acompanhar" element={<BetaOuvidoriaTrack />} />
+                <Route path="/ouvidoria-beta/painel" element={<BetaOuvidoriaDashboard />} />
+                <Route path="/ouvidoria-beta/:companyId" element={<BetaOuvidoriaForm />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
