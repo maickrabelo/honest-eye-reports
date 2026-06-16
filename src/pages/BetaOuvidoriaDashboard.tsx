@@ -225,7 +225,7 @@ const BetaOuvidoriaDashboard = () => {
           <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Ssmart</h1>
+                <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Smart</h1>
               </div>
               <p className="text-sm text-muted-foreground">
                 Canal 100% anônimo, sem consumo de créditos.

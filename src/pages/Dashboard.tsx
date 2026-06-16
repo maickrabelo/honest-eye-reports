@@ -622,7 +622,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               if (!companyId || !BETA_IDS.includes(companyId)) return null;
               return (
                   <Card
-                    id="company-tool-ouvidoria-ssmart"
+                    id="company-tool-ouvidoria-smart"
                     className="cursor-pointer hover:shadow-lg hover:border-amber-500/60 transition-all border-amber-500/30"
                     onClick={() => navigate('/ouvidoria-beta/painel')}
                   >
@@ -632,7 +632,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">Ouvidoria Ssmart</h3>
+                          <h3 className="font-semibold text-foreground">Ouvidoria Smart</h3>
                         </div>
                         <p className="text-sm text-muted-foreground">Canal anônimo</p>
                       </div>
