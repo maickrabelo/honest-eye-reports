@@ -113,6 +113,7 @@ const App = () => (
           <WhiteLabelProvider>
             <AppContent />
             <MetaPixelRouteTracker />
+            <BackToHomeButton />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
