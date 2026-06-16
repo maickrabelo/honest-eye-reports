@@ -32,7 +32,19 @@ export function usePGRModuleAccess() {
             .select('pgr_module_enabled')
             .eq('id', profile.sst_manager_id)
             .maybeSingle();
-          if (!cancelled) setHasAccess(!!(data as any)?.pgr_module_enabled);
+          let ok = !!(data as any)?.pgr_module_enabled;
+          if (!ok) {
+            const { data: sub } = await supabase
+              .from('subscriptions')
+              .select('subscription_plans(pgr_enabled)')
+              .eq('owner_user_id', user.id)
+              .in('status', ['active', 'trial', 'trialing'])
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            ok = !!(sub as any)?.subscription_plans?.pgr_enabled;
+          }
+          if (!cancelled) setHasAccess(ok);
         } else if (role === 'company' && profile?.company_id) {
           // 1. Via gestora SST atribuída
           const { data: assignments } = await supabase
