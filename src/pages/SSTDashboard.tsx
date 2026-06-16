@@ -28,6 +28,7 @@ import SoniaChat from '@/components/SoniaChat';
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
+import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -161,6 +162,7 @@ const SSTDashboard = () => {
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
+  const { isSmartOnly } = useSmartOnlyPlan();
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
@@ -426,9 +428,14 @@ const SSTDashboard = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {(() => {
-                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
+                const hasBetaCompany = isSmartOnly || companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
+                let base = tools;
+                if (isSmartOnly) {
+                  // Smart plan: only HSE-IT/COPSOQ (Psicossocial), Clima, Pulse, Trainings opcional
+                  base = tools.filter(t => ['tool-hseit', 'tool-climate', 'tool-pulse'].includes(t.id));
+                }
                 const displayedTools = hasBetaCompany
-                  ? [...tools, {
+                  ? [...base, {
                       id: 'tool-ouvidoria-smart',
                       icon: ClipboardList,
                       title: 'Ouvidoria Smart',
@@ -436,7 +443,7 @@ const SSTDashboard = () => {
                       highlights: ['Anônimo'],
                       path: '/ouvidoria-beta/painel',
                     }]
-                  : tools;
+                  : base;
                 return displayedTools;
               })().map((tool, idx) => (
                 <Card
@@ -499,8 +506,8 @@ const SSTDashboard = () => {
               <div className="mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground">Portal de Ouvidoria</h2>
-                    <p className="text-muted-foreground text-sm">Clique para acessar o canal de ouvidoria de cada empresa</p>
+                    <h2 className="text-2xl font-bold text-foreground">{isSmartOnly ? 'Empresas' : 'Portal de Ouvidoria'}</h2>
+                    <p className="text-muted-foreground text-sm">{isSmartOnly ? 'Empresas sob sua gestão' : 'Clique para acessar o canal de ouvidoria de cada empresa'}</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <div className="relative w-full sm:w-72">
@@ -628,23 +635,34 @@ const SSTDashboard = () => {
                       </div>
 
                       <div className="pt-2 border-t border-border space-y-2">
-                        <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`${window.location.origin}/report/${company.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
-                          >
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">{window.location.origin}/report/{company.slug}</span>
-                          </a>
-                          <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                        {(isSmartOnly || smartOuvidoriaIds.has(company.id)) ? (
+                          <>
+                            <p className="text-xs text-muted-foreground font-medium">Ouvidoria Smart</p>
+                            <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate('/ouvidoria-beta/painel'); }}>
+                              Abrir Ouvidoria Smart
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`${window.location.origin}/report/${company.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                              >
+                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                              </a>
+                              <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                          </>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="pt-0">
