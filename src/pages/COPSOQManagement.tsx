@@ -70,12 +70,14 @@ export default function COPSOQManagement() {
       } else if (role === 'sst' && profile?.id) {
         const { data: pd } = await supabase.from('profiles').select('sst_manager_id').eq('id', profile.id).single();
         if (pd?.sst_manager_id) {
-          const { data: assignments } = await supabase.from('company_sst_assignments').select('company_id').eq('sst_manager_id', pd.sst_manager_id);
-          const ids = assignments?.map(a => a.company_id) || [];
-          if (ids.length > 0) {
-            const { data } = await supabase.from('companies').select('id, name, slug').in('id', ids).order('name');
-            companiesData = data || [];
-          }
+          const { data: rows } = await supabase
+            .from('company_sst_assignments')
+            .select('company:companies!inner(id, name, slug)')
+            .eq('sst_manager_id', pd.sst_manager_id);
+          companiesData = ((rows ?? []) as any[])
+            .map(r => r.company)
+            .filter(Boolean)
+            .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
         }
       } else if (role === 'company' && profile?.company_id) {
         const { data } = await supabase.from('companies').select('id, name, slug').eq('id', profile.company_id);

@@ -97,21 +97,14 @@ export default function HSEITManagement() {
           .single();
         
         if (profileData?.sst_manager_id) {
-          const { data: assignments } = await supabase
+          const { data: rows } = await supabase
             .from('company_sst_assignments')
-            .select('company_id')
+            .select('company:companies!inner(id, name, slug)')
             .eq('sst_manager_id', profileData.sst_manager_id);
-          
-          const companyIds = assignments?.map(a => a.company_id) || [];
-          
-          if (companyIds.length > 0) {
-            const { data } = await supabase
-              .from('companies')
-              .select('id, name, slug')
-              .in('id', companyIds)
-              .order('name');
-            companiesData = data || [];
-          }
+          companiesData = ((rows ?? []) as any[])
+            .map(r => r.company)
+            .filter(Boolean)
+            .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
         }
       } else if (role === 'company' && profile?.company_id) {
         const { data } = await supabase

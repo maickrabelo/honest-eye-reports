@@ -79,34 +79,36 @@ export default function BurnoutManagement() {
       setLoading(true);
       
       // Fetch companies based on role
-      let companiesQuery = supabase.from('companies').select('id, name, slug');
-      
+      let companiesData: any[] = [];
+
       if (role === 'sst') {
         const { data: profile } = await supabase
           .from('profiles')
           .select('sst_manager_id')
           .eq('id', user?.id)
           .single();
-          
+
         if (profile?.sst_manager_id) {
-          const { data: assignments } = await supabase
+          const { data: rows } = await supabase
             .from('company_sst_assignments')
-            .select('company_id')
+            .select('company:companies!inner(id, name, slug)')
             .eq('sst_manager_id', profile.sst_manager_id);
-            
-          const companyIds = assignments?.map(a => a.company_id) || [];
-          companiesQuery = companiesQuery.in('id', companyIds);
+          companiesData = ((rows ?? []) as any[])
+            .map(r => r.company)
+            .filter(Boolean)
+            .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
         }
       } else if (role === 'company') {
         const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user?.id).single();
         if (profile?.company_id) {
-          companiesQuery = companiesQuery.eq('id', profile.company_id);
-        } else {
-          companiesQuery = companiesQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+          const { data } = await supabase.from('companies').select('id, name, slug').eq('id', profile.company_id);
+          companiesData = data || [];
         }
+      } else {
+        const { data } = await supabase.from('companies').select('id, name, slug').order('name');
+        companiesData = data || [];
       }
-      
-      const { data: companiesData } = await companiesQuery;
+
       setCompanies(companiesData || []);
       
       // If only one company, auto-select it
