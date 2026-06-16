@@ -88,6 +88,7 @@ const MasterDashboard = () => {
   const [sstLogoPreview, setSstLogoPreview] = useState<string | null>(null);
   const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
   const [testUsersResult, setTestUsersResult] = useState<any>(null);
+  const [assignPlanSST, setAssignPlanSST] = useState<SSTManager | null>(null);
   const { toast } = useToast();
   const { session, role, isLoading: authLoading } = useRealAuth();
   
