@@ -85,13 +85,14 @@ export const AssignManualPlanDialog: React.FC<Props> = ({
       end.setDate(end.getDate() + Math.max(0, Number(trialDays) || 0));
 
       const isTrial = Number(trialDays) > 0;
-      const { error: insertErr } = await supabase.from("subscriptions").insert({
+      const payload: any = {
         owner_user_id: profile.id,
-        owner_email: sstManager.email,
+        owner_email: sstManager.email ?? "",
         plan_id: planId,
         billing_cycle: "annual",
         status: isTrial ? "trial" : "active",
         provider: "manual",
+        amount_cents: 0,
         current_period_start: now.toISOString(),
         current_period_end: end.toISOString(),
         next_charge_date: end.toISOString(),
@@ -100,7 +101,8 @@ export const AssignManualPlanDialog: React.FC<Props> = ({
           trial_days: Number(trialDays) || 0,
           assigned_at: now.toISOString(),
         },
-      });
+      };
+      const { error: insertErr } = await (supabase.from("subscriptions") as any).insert(payload);
       if (insertErr) throw insertErr;
 
       toast({
