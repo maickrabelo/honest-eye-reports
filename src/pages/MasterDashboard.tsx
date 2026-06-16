@@ -260,40 +260,37 @@ const MasterDashboard = () => {
   const handleAddSST = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     try {
-      let logoUrl = null;
+      let logoUrl: string | null = null;
       if (sstLogoFile) {
         logoUrl = await uploadLogo(sstLogoFile);
       }
 
-      const sstName = formData.get('sstName') as string;
-      
-      // Auto-generate slug from name
-      const slug = sstName
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+      const trialDaysRaw = formData.get('sstTrialDays');
+      const trialDays = trialDaysRaw ? parseInt(String(trialDaysRaw), 10) : 0;
+      const planId = (formData.get('sstPlanId') as string) || null;
 
-      const { error } = await supabase.from('sst_managers').insert({
-        name: sstName,
-        email: formData.get('sstEmail') as string,
-        cnpj: formData.get('sstCNPJ') as string,
-        phone: formData.get('sstPhone') as string,
-        address: formData.get('sstAddress') as string,
-        logo_url: logoUrl,
-        slug: slug,
+      const { data, error } = await supabase.functions.invoke('create-sst-manual-account', {
+        body: {
+          sst_name: formData.get('sstName'),
+          email: formData.get('sstEmail'),
+          responsible_name: formData.get('sstResponsible'),
+          cnpj: formData.get('sstCNPJ'),
+          phone: formData.get('sstPhone'),
+          address: formData.get('sstAddress'),
+          logo_url: logoUrl,
+          plan_id: planId || undefined,
+          trial_days: trialDays,
+        },
       });
 
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
 
       toast({
-        title: "Gestora SST adicionada",
-        description: "A empresa gestora SST foi adicionada com sucesso."
+        title: "Gestora SST cadastrada",
+        description: `Conta criada com sucesso. Senha inicial: ${(data as any)?.initial_password ?? 'CNPJ (somente números)'}`,
       });
       setIsAddSSTOpen(false);
       setSstLogoFile(null);
@@ -307,6 +304,7 @@ const MasterDashboard = () => {
       });
     }
   };
+
 
   const handleDeleteCompany = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta empresa?')) return;
