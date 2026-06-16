@@ -203,6 +203,19 @@ export default function HSEITDashboard() {
     });
   };
 
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Excluir a avaliação "${title}"? Todas as respostas serão removidas. Esta ação é irreversível.`)) return;
+    try {
+      const { error } = await supabase.from('hseit_assessments').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Avaliação excluída', description: 'A avaliação foi removida com sucesso.' });
+      setAssessments(prev => prev.filter(a => a.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting assessment:', error);
+      toast({ title: 'Erro ao excluir', description: error.message || 'Tente novamente.', variant: 'destructive' });
+    }
+  };
+
   const filteredAssessments = assessments.filter(assessment => {
     const matchesSearch = assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       assessment.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
