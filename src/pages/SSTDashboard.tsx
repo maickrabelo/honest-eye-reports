@@ -242,6 +242,19 @@ const SSTDashboard = () => {
 
       setCompanies(companiesWithCounts);
 
+      // Check Smart Ouvidoria access for these companies (SST Smart plan)
+      try {
+        const checks = await Promise.all(
+          companiesWithCounts.map(async (c) => {
+            const { data } = await (supabase as any).rpc('company_has_smart_ouvidoria', { _company_id: c.id });
+            return data ? c.id : null;
+          })
+        );
+        setSmartOuvidoriaIds(new Set(checks.filter(Boolean) as string[]));
+      } catch (e) {
+        console.warn('smart ouvidoria check failed', e);
+      }
+
       if (highlightCompanyId) {
         const createdCompany = companiesWithCounts.find((company) => company.id === highlightCompanyId);
         setSearchTerm('');
