@@ -3585,6 +3585,10 @@ export type Database = {
         Args: { _sst_manager_id: string; _user_id: string }
         Returns: boolean
       }
+      user_manages_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
