@@ -225,12 +225,10 @@ const BetaOuvidoriaDashboard = () => {
           <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Beta</h1>
-                <Badge variant="outline" className="border-amber-500 text-amber-600">Beta</Badge>
-                <Badge variant="secondary">Sem IA</Badge>
+                <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Ssmart</h1>
               </div>
               <p className="text-sm text-muted-foreground">
-                Canal experimental 100% anônimo, sem uso de IA e sem consumo de créditos.
+                Canal 100% anônimo, sem consumo de créditos.
               </p>
             </div>
             <div className="flex gap-2">
