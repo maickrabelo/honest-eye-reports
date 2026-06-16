@@ -141,6 +141,10 @@ verify_jwt = false
 [functions.list-crm-external-leads]
 # Requires authentication (admin or sales)
 
+[functions.pulse-survey-close-cycle]
+verify_jwt = false
+
+
 
 
 
