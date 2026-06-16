@@ -46,6 +46,7 @@ export interface PGRReportInput {
     exposure_limit?: number | string | null;
     severity: number;
     probability: number;
+    matrix_size?: number | null;
     risk_level?: string | null;
     existing_epc?: string | null;
     existing_epi?: string | null;
