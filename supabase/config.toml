@@ -144,6 +144,17 @@ verify_jwt = false
 [functions.pulse-survey-close-cycle]
 verify_jwt = false
 
+[functions.submit-beta-report]
+verify_jwt = false
+
+[functions.track-beta-report]
+verify_jwt = false
+
+[functions.reply-beta-report]
+verify_jwt = false
+
+
+
 
 
 

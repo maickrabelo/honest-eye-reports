@@ -1,98 +1,96 @@
-## Pulse Survey — nova ferramenta
 
-Avaliações curtas, periódicas e anônimas (link/QR), com templates editáveis, escala Likert 1‑5 ou emojis (configurável), e envio automático de email-resumo ao gestor ao fim de cada ciclo.
+# Canal de Ouvidoria Beta — Formulário Estático (sem IA)
 
-### 1. Banco de dados (migração)
+Novo canal paralelo ao atual de Denúncias/Ouvidoria, identificado como **Beta**, disponível apenas para a empresa **Demo Ilimitado SOIA** (`demo.ilimitado@soia.app.br`, id `382745b1-d65a-4928-bb1b-95ae513c4e14`) para validação. 100% anônimo, sem IA, sem custo de créditos, sem chat — apenas formulário estruturado + protocolo + acompanhamento.
 
-Novas tabelas:
+## 1. Banco de Dados (migração)
 
-- `pulse_surveys` — configuração da campanha
-  - `id`, `company_id`, `created_by`, `title`, `description`
-  - `frequency` (`weekly` | `biweekly` | `monthly` | `quarterly` | `semiannual`)
-  - `use_emojis` (bool) — alterna entre escala emoji e Likert 1‑5
-  - `status` (`active` | `paused` | `archived`)
-  - `manager_email` (destino do resumo; default = email do gestor)
-  - `next_cycle_start_at`, `next_cycle_end_at`
-  - `created_at`, `updated_at`
-- `pulse_survey_questions` — perguntas da campanha (cópia editável do template)
-  - `id`, `pulse_survey_id`, `text`, `category`, `order_index`, `required`
-- `pulse_survey_cycles` — cada janela periódica
-  - `id`, `pulse_survey_id`, `cycle_number`, `started_at`, `ended_at`, `closed_at`
-  - `total_responses`, `summary_email_sent_at`
-- `pulse_survey_departments` — segmentação (espelho de `hseit_departments`)
-- `pulse_survey_responses` — envio anônimo
-  - `id`, `cycle_id`, `department_name`, `submitted_at`
-- `pulse_survey_answers`
-  - `id`, `response_id`, `question_id`, `score` (1‑5)
+Tabelas novas em `public` (separadas do `reports` atual para não misturar fluxos):
 
-RLS + GRANTs no padrão do projeto:
-- `INSERT` anônimo em `pulse_survey_responses`/`answers` (mesma lógica das outras avaliações públicas).
-- `SELECT` em `pulse_surveys` público para a página de resposta (somente registros `active`).
-- Demais tabelas: somente gestor da empresa / SST atribuída / admin / sales.
+- **`beta_ouvidoria_reports`**
+  - `id uuid pk`
+  - `company_id uuid` (fixo na demo, validado por trigger)
+  - `tracking_code text unique` (formato `BETA-YYYY-NNNN`)
+  - `access_key_hash text` (hash bcrypt/sha256 da chave; chave em claro só é exibida 1x)
+  - `report_type text` (denuncia / reclamacao / sugestao / elogio)
+  - `category text` (assedio, discriminacao, fraude, conflito_interesses, conduta, uso_indevido_bens, quebra_sigilo, outros)
+  - `category_other text` (livre, quando "outros")
+  - `description text not null`
+  - `occurrence_type text` (data_especifica / recorrente / nao_recorda)
+  - `occurrence_date date null`
+  - `location_sector text`
+  - `status text default 'aberto'` (aberto, em_analise, respondido, encerrado)
+  - `created_at timestamptz default now()`
+  - **Sem** colunas de IP, user-agent, geolocalização ou user_id.
 
-### 2. Templates de perguntas
+- **`beta_ouvidoria_attachments`**
+  - `id`, `report_id fk`, `file_path text` (bucket privado), `file_name`, `mime_type`, `size_bytes`, `created_at`.
 
-Arquivo `src/data/pulseSurveyTemplates.ts` com 3 templates iniciais (editáveis ao criar):
-- **Bem-estar** (humor, energia, estresse)
-- **Engajamento** (motivação, propósito, reconhecimento)
-- **Carga de trabalho** (volume, prazos, equilíbrio)
+- **`beta_ouvidoria_updates`** (mensagens entre investigador e denunciante anônimo via protocolo)
+  - `id`, `report_id fk`, `author_type text` (investigator / anonymous), `message text`, `created_at`.
 
-Cada template = 3‑5 perguntas curtas. Gestor pode adicionar/editar/remover antes de ativar.
+**Bucket**: `beta-ouvidoria-attachments` (privado).
 
-### 3. Frontend
+**RLS / GRANT**:
+- `anon`: INSERT em `beta_ouvidoria_reports`, `beta_ouvidoria_attachments`, `beta_ouvidoria_updates` (apenas via edge functions, validando a empresa demo).
+- `authenticated`: SELECT/UPDATE somente para usuários da empresa demo (`user_in_company(auth.uid(), company_id)`) ou admins.
+- Trigger `beta_ouvidoria_only_demo` rejeita qualquer `company_id` ≠ id da Demo Ilimitado (enforce do beta).
+- Trigger `set_beta_tracking_code` gera `BETA-YYYY-NNNN` automaticamente.
 
-Rotas novas:
-- `/pulse-survey` — dashboard (lista de campanhas + KPIs por ciclo)
-- `/pulse-survey/nova` — wizard de criação (empresa → template → perguntas → frequência → emojis on/off → email destino)
-- `/pulse-survey/:id` — detalhe da campanha (histórico de ciclos, médias, gráfico de evolução)
-- `/pulse/:surveyId` — página pública de resposta (anônima, escolhe departamento, responde)
+## 2. Edge Functions (sem IA, sem chat-report)
 
-Componentes:
-- `PulseEmojiQuestion` (😡 😕 😐 🙂 😄 mapeados para 1‑5)
-- `PulseLikertQuestion` (radio 1‑5, "Discordo totalmente" → "Concordo totalmente")
-- `PulseTemplatePicker`, `PulseQuestionEditor` (reutiliza padrão do `QuestionManager`)
-- `PulseCycleCard`, `PulseEvolutionChart`
-- Card no `SSTDashboard`/`Dashboard` da empresa para acessar a ferramenta
-- Busca de empresa no wizard (padrão dos outros módulos)
+- **`submit-beta-report`** (`verify_jwt = false`)
+  - Recebe payload validado por Zod (tipos, tamanhos, sem campos identificadores).
+  - Confirma `company_id` = Demo Ilimitado.
+  - Gera chave aleatória (12 chars alfanum + símbolos), salva hash.
+  - Cria report + attachments (URLs já enviadas via upload anônimo no bucket).
+  - Retorna `{ tracking_code, access_key }` (chave em claro só nesta resposta).
+- **`track-beta-report`** (`verify_jwt = false`)
+  - Recebe `tracking_code` + `access_key`, valida hash, retorna report + updates.
+- **`reply-beta-report`** (`verify_jwt = false`)
+  - Denunciante anônimo responde perguntas adicionais via protocolo + chave.
 
-Acesso controlado por `useCompanyFeatures` (novo flag `pulse_survey_enabled`, default `true`).
+Nenhuma chamada ao Lovable AI, sem consumo de créditos, sem logs de IP.
 
-### 4. Backend / Edge Functions
+## 3. Frontend
 
-- `pulse-survey-close-cycle` — fechamento automático
-  - Roda via `pg_cron` a cada hora
-  - Para cada `pulse_survey_cycles` com `ended_at < now()` e `closed_at IS NULL`:
-    - Calcula médias por pergunta, média geral, nº de respostas, comparação com ciclo anterior
-    - Envia email-resumo (template app-email novo `pulse-survey-summary`) ao `manager_email`
-    - Cria o próximo ciclo de acordo com `frequency`
-    - Marca `closed_at` e `summary_email_sent_at`
+Rotas novas (independentes do `/denuncia` atual):
 
-- Template de email `pulse-survey-summary` (React Email):
-  - Cabeçalho com nome da campanha e período do ciclo
-  - KPIs: nº de respostas, média geral, melhor/pior pergunta
-  - Tabela curta com média por pergunta e delta vs ciclo anterior
-  - CTA "Ver detalhes" → `/pulse-survey/:id`
+- **`/ouvidoria-beta/:companyId`** — formulário público anônimo (`BetaOuvidoriaForm.tsx`)
+  - Seções na ordem do briefing: mensagem de abertura, triagem (tipo + categoria), relato (descrição, data/período, setor), evidências (upload com aviso de metadados), envio.
+  - Validação Zod, limites de tamanho, sem campos de identificação.
+  - Ao enviar: modal `BetaProtocolModal` exibindo protocolo + chave com botões "copiar" e aviso de guardar — chave nunca mais será mostrada.
 
-Pré-requisitos de email já atendidos (Resend + infra existente). Caso o projeto ainda não tenha infra de app-email, rodar `setup_email_infra` + `scaffold_transactional_email` antes.
+- **`/ouvidoria-beta/acompanhar`** — `BetaTrackReport.tsx`
+  - Inputs de protocolo + chave, lista atualizações, permite o anônimo responder.
 
-### 5. Integrações
+- **Dashboard interno da empresa**: nova aba/página `BetaOuvidoriaDashboard.tsx`
+  - Lista relatos da empresa demo, filtros por tipo/categoria/status, detalhe com histórico e campo para investigador responder.
+  - Renderizada no `Dashboard` da empresa Demo Ilimitado apenas (gate por `companyId === DEMO_ILIMITADO_ID`).
 
-- Registrar `pulse-survey-close-cycle` em `supabase/config.toml`
-- Adicionar Pulse Survey nos cards do dashboard (SST e Empresa) com ícone Activity/Heart
-- Memória `mem://features/pulse-survey-module` documentando o módulo
-- Atualizar índice de memória
+- **Gate de visibilidade do módulo beta**:
+  - Constante `BETA_OUVIDORIA_COMPANY_IDS = ['382745b1-...']`.
+  - Hook `useBetaOuvidoriaAccess(companyId)` retorna boolean.
+  - Card "Ouvidoria Beta" aparece em `Dashboard.tsx` somente quando o hook libera; rotas redirecionam para `/` caso contrário.
+  - Card mostra badge `Beta` e tooltip "Canal experimental sem IA".
 
-### Detalhes técnicos
+## 4. Componentes novos
+- `src/components/beta-ouvidoria/BetaIntroCard.tsx` (mensagem de abertura/garantias).
+- `BetaReportTypeSelector.tsx`, `BetaCategorySelector.tsx`.
+- `BetaOccurrenceDateField.tsx` (radio: data específica / recorrente / não recordo).
+- `BetaAttachmentsField.tsx` (com aviso de metadados).
+- `BetaProtocolModal.tsx`.
+- `BetaReportDetail.tsx` (visão investigador) e `BetaAnonymousThread.tsx` (visão anônima).
 
-- Anônimo: nenhum `user_id` em respostas; gating apenas por `pulse_survey_id` + `cycle_id` ativos.
-- Score sempre normalizado 1‑5 (emoji e Likert compartilham o mesmo storage), facilitando gráficos de evolução.
-- Comparação entre ciclos = `media_atual - media_anterior` por pergunta.
-- Cron usa `pg_net.http_post` chamando a edge function com header `apikey` (anon), padrão do projeto.
-- Reaproveita padrões existentes: segmentação por departamento (como HSE-IT), export Power BI futuro (fora deste escopo), white-label nos componentes.
+## 5. Memória do projeto
+- Criar `mem://features/beta-ouvidoria-channel` descrevendo: beta, gate por empresa, sem IA/créditos, fluxo de protocolo + chave hash, tabelas separadas.
+- Adicionar linha no `mem://index.md`.
 
-### Fora deste escopo (pode vir em iterações)
+## 6. Fora de escopo
+- Integração com módulo atual de Reports / chat-report / análise por IA.
+- Notificações por e-mail (anônimo não fornece contato).
+- Liberação para outras empresas — apenas Demo Ilimitado durante o beta.
+- Exportação Power BI deste canal (pode entrar depois).
 
-- Análise de IA por ciclo
-- Export Power BI (Excel/CSV)
-- App mobile / push notifications
-- Comentários abertos por pergunta
+## Resumo técnico
+Tabelas isoladas (`beta_ouvidoria_*`) + bucket privado + 3 edge functions sem IA + rotas `/ouvidoria-beta/...` + dashboard interno restrito por whitelist de `company_id`. Trigger garante que só a Demo Ilimitado consegue criar registros no beta.
