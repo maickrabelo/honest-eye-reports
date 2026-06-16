@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList } from "lucide-react";
+import { Calendar, Check, Loader2, ExternalLink, Copy, FileImage, FileVideo, FileAudio, File, Download, GraduationCap, Brain, Flame, ClipboardList, Activity } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -602,6 +602,21 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </CardContent>
               </Card>
             )}
+            <Card
+              id="company-tool-pulse"
+              className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+              onClick={() => navigate('/pulse-survey')}
+            >
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Pulse Survey</h3>
+                  <p className="text-sm text-muted-foreground">Avaliações periódicas curtas</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
