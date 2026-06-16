@@ -3607,6 +3607,8 @@ export type Database = {
         | "past_due"
         | "canceled"
         | "expired"
+        | "trial"
+        | "trialing"
       survey_question_type:
         | "likert"
         | "single_choice"
@@ -3757,6 +3759,8 @@ export const Constants = {
         "past_due",
         "canceled",
         "expired",
+        "trial",
+        "trialing",
       ],
       survey_question_type: [
         "likert",
