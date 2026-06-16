@@ -44,7 +44,7 @@ const BetaOuvidoriaDashboard = () => {
   const [newStatus, setNewStatus] = useState<string>("aberto");
 
   const companyId = profile?.company_id ?? BETA_OUVIDORIA_COMPANY_IDS[0];
-  const allowed = isBetaOuvidoriaCompany(companyId);
+  const [allowed, setAllowed] = useState<boolean>(isBetaOuvidoriaCompany(companyId));
 
   const publicLink = useMemo(
     () => `${window.location.origin}/ouvidoria-beta/${companyId}`,
@@ -52,8 +52,14 @@ const BetaOuvidoriaDashboard = () => {
   );
 
   useEffect(() => {
-    if (!allowed) { setLoading(false); return; }
     (async () => {
+      let isAllowed = isBetaOuvidoriaCompany(companyId);
+      if (!isAllowed && companyId) {
+        const { data: rpc } = await (supabase as any).rpc('company_has_smart_ouvidoria', { _company_id: companyId });
+        isAllowed = !!rpc;
+      }
+      setAllowed(isAllowed);
+      if (!isAllowed) { setLoading(false); return; }
       const { data } = await supabase
         .from("beta_ouvidoria_reports")
         .select("*")
@@ -62,7 +68,7 @@ const BetaOuvidoriaDashboard = () => {
       setReports((data as any[]) ?? []);
       setLoading(false);
     })();
-  }, [allowed, companyId]);
+  }, [companyId]);
 
   const stats = useMemo(() => {
     const total = reports.length;
