@@ -29,10 +29,22 @@ export function usePGRModuleAccess() {
         if (role === 'sst' && profile?.sst_manager_id) {
           const { data } = await supabase
             .from('sst_managers')
-            .select('pgr_module_enabled')
+            .select('pgr_module_enabled, parent_subscription_id')
             .eq('id', profile.sst_manager_id)
             .maybeSingle();
-          if (!cancelled) setHasAccess(!!(data as any)?.pgr_module_enabled);
+          let ok = !!(data as any)?.pgr_module_enabled;
+          if (!ok) {
+            const subId = (data as any)?.parent_subscription_id;
+            if (subId) {
+              const { data: sub } = await supabase
+                .from('subscriptions')
+                .select('subscription_plans(pgr_enabled)')
+                .eq('id', subId)
+                .maybeSingle();
+              ok = !!(sub as any)?.subscription_plans?.pgr_enabled;
+            }
+          }
+          if (!cancelled) setHasAccess(ok);
         } else if (role === 'company' && profile?.company_id) {
           // 1. Via gestora SST atribuída
           const { data: assignments } = await supabase
