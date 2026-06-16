@@ -94,15 +94,15 @@ export default function BackToHomeButton() {
   if (location.pathname === home) return null;
 
   return (
-    <div className="fixed top-3 left-3 z-50">
+    <div className="fixed top-3 left-3 z-[100]">
       <Button
         size="sm"
         variant="secondary"
         onClick={() => navigate(home)}
-        className="gap-2 shadow-md backdrop-blur-sm bg-background/80 hover:bg-background border border-border"
+        className="gap-2 shadow-lg backdrop-blur-sm bg-white/95 dark:bg-slate-800/95 text-foreground hover:bg-white dark:hover:bg-slate-800 border border-border font-medium"
       >
         <Home className="h-4 w-4" />
-        <span className="hidden sm:inline">Início do dashboard</span>
+        <span>Voltar ao dashboard</span>
       </Button>
     </div>
   );
