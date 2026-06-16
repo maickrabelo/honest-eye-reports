@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Loader2, FlaskConical, Download } from "lucide-react";
 import { toast } from "sonner";
 
+type MatrixSize = 3 | 4 | 5;
+
 interface Risk {
   id: string;
   ghe_id: string | null;
@@ -19,6 +21,7 @@ interface Risk {
   esocial_agent_code: string | null;
   source: string | null;
   exposure_description: string | null;
+  matrix_size: MatrixSize;
   severity: number;
   probability: number;
   risk_level: string;
@@ -46,6 +49,29 @@ const LEVEL_LABELS: Record<string, string> = {
   substantial: 'Substancial', intolerable: 'Intolerável',
 };
 
+export const classifyRisk = (size: MatrixSize, severity: number, probability: number): string => {
+  const v = severity * probability;
+  if (size === 3) {
+    if (v >= 9) return 'intolerable';
+    if (v >= 6) return 'substantial';
+    if (v >= 3) return 'moderate';
+    if (v >= 2) return 'tolerable';
+    return 'trivial';
+  }
+  if (size === 4) {
+    if (v >= 15) return 'intolerable';
+    if (v >= 9) return 'substantial';
+    if (v >= 5) return 'moderate';
+    if (v >= 3) return 'tolerable';
+    return 'trivial';
+  }
+  if (v >= 20) return 'intolerable';
+  if (v >= 15) return 'substantial';
+  if (v >= 8) return 'moderate';
+  if (v >= 4) return 'tolerable';
+  return 'trivial';
+};
+
 const emptyForm = {
   ghe_id: '',
   category: 'fisico',
@@ -53,12 +79,15 @@ const emptyForm = {
   esocial_agent_code: '',
   source: '',
   exposure_description: '',
+  matrix_size: 5 as MatrixSize,
   severity: 1,
   probability: 1,
   existing_epc: '',
   existing_epi: '',
   epi_ca: '',
 };
+
+const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
 
 export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: string; companyId: string }) => {
   const [risks, setRisks] = useState<Risk[]>([]);
@@ -96,6 +125,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
       esocial_agent_code: r.esocial_agent_code || '',
       source: r.source || '',
       exposure_description: r.exposure_description || '',
+      matrix_size: (r.matrix_size || 5) as MatrixSize,
       severity: r.severity,
       probability: r.probability,
       existing_epc: r.existing_epc || '',
@@ -103,6 +133,15 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
       epi_ca: r.epi_ca || '',
     });
     setOpen(true);
+  };
+
+  const setMatrix = (size: MatrixSize) => {
+    setForm(f => ({
+      ...f,
+      matrix_size: size,
+      severity: Math.min(f.severity, size),
+      probability: Math.min(f.probability, size),
+    }));
   };
 
   const save = async () => {
@@ -136,7 +175,6 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
   const importPsychosocial = async () => {
     setImporting(true);
     try {
-      // Pega o assessment HSE-IT mais recente da empresa e cria 1 risco psicossocial por dimensão crítica
       const { data: hseit } = await supabase
         .from('hseit_assessments')
         .select('id, title')
@@ -167,6 +205,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
         category: 'psicossocial',
         agent_name: `Fator psicossocial — ${d}`,
         source: `HSE-IT — ${(hseit as any).title}`,
+        matrix_size: 5,
         severity: 3,
         probability: 3,
         source_module: 'hseit',
@@ -183,13 +222,48 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
 
   const filteredAgents = agents.filter(a => a.category === form.category);
 
+  // Matrizes a exibir: as efetivamente usadas; default 5x5 se nenhum risco
+  const usedSizes = Array.from(new Set(risks.map(r => (r.matrix_size || 5) as MatrixSize))).sort() as MatrixSize[];
+  const matricesToRender: MatrixSize[] = usedSizes.length ? usedSizes : [5];
+
+  const renderMatrix = (size: MatrixSize) => (
+    <div key={size} className="p-4 border rounded-lg bg-card/50">
+      <h4 className="text-sm font-semibold mb-2">Matriz {size}×{size} (Severidade × Probabilidade)</h4>
+      <div
+        className="grid gap-1 text-xs"
+        style={{ gridTemplateColumns: `auto repeat(${size}, minmax(0, 1fr))`, maxWidth: size * 70 + 40 }}
+      >
+        <div></div>
+        {range(size).map(p => <div key={p} className="text-center font-medium">P{p}</div>)}
+        {range(size).slice().reverse().map(s => (
+          <>
+            <div key={`s${s}`} className="font-medium flex items-center pr-1">S{s}</div>
+            {range(size).map(p => {
+              const v = s * p;
+              const level = classifyRisk(size, s, p);
+              const count = risks.filter(r => (r.matrix_size || 5) === size && r.severity === s && r.probability === p).length;
+              return (
+                <div key={`${size}-${s}-${p}`} className={`aspect-square flex items-center justify-center rounded ${LEVEL_STYLES[level]} text-center`}>
+                  <div>
+                    <div className="font-bold">{v}</div>
+                    {count > 0 && <div className="text-[10px]">({count})</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4 gap-2">
           <div>
             <h3 className="text-lg font-semibold flex items-center gap-2"><FlaskConical className="h-5 w-5" /> Inventário de Riscos</h3>
-            <p className="text-sm text-muted-foreground">Identifique e classifique cada risco por categoria.</p>
+            <p className="text-sm text-muted-foreground">Identifique e classifique cada risco por categoria. Cada risco pode usar uma matriz 3×3, 4×4 ou 5×5.</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={importPsychosocial} disabled={importing}>
@@ -200,31 +274,8 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
           </div>
         </div>
 
-        {/* Matriz 5x5 visual */}
-        <div className="mb-6 p-4 border rounded-lg bg-card/50">
-          <h4 className="text-sm font-semibold mb-2">Matriz de Risco 5×5 (Severidade × Probabilidade)</h4>
-          <div className="grid grid-cols-6 gap-1 max-w-md text-xs">
-            <div></div>
-            {[1,2,3,4,5].map(p => <div key={p} className="text-center font-medium">P{p}</div>)}
-            {[5,4,3,2,1].map(s => (
-              <>
-                <div key={`s${s}`} className="font-medium flex items-center">S{s}</div>
-                {[1,2,3,4,5].map(p => {
-                  const v = s * p;
-                  const level = v >= 20 ? 'intolerable' : v >= 15 ? 'substantial' : v >= 8 ? 'moderate' : v >= 4 ? 'tolerable' : 'trivial';
-                  const count = risks.filter(r => r.severity === s && r.probability === p).length;
-                  return (
-                    <div key={`${s}-${p}`} className={`aspect-square flex items-center justify-center rounded ${LEVEL_STYLES[level]} text-center`}>
-                      <div>
-                        <div className="font-bold">{v}</div>
-                        {count > 0 && <div className="text-[10px]">({count})</div>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
-            ))}
-          </div>
+        <div className="mb-6 flex flex-wrap gap-4">
+          {matricesToRender.map(renderMatrix)}
         </div>
 
         {loading ? (
@@ -238,6 +289,7 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
                 <TableHead>Categoria</TableHead>
                 <TableHead>Agente / Risco</TableHead>
                 <TableHead>GHE</TableHead>
+                <TableHead className="text-center">Matriz</TableHead>
                 <TableHead className="text-center">S</TableHead>
                 <TableHead className="text-center">P</TableHead>
                 <TableHead>Nível</TableHead>
@@ -245,23 +297,27 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
               </TableRow>
             </TableHeader>
             <TableBody>
-              {risks.map(r => (
-                <TableRow key={r.id}>
-                  <TableCell><Badge variant="outline">{CATEGORY_LABELS[r.category]}</Badge></TableCell>
-                  <TableCell className="font-medium">
-                    {r.agent_name}
-                    {r.esocial_agent_code && <span className="block text-xs text-muted-foreground">e-Social: {r.esocial_agent_code}</span>}
-                  </TableCell>
-                  <TableCell className="text-sm">{ghes.find(g => g.id === r.ghe_id)?.name || '-'}</TableCell>
-                  <TableCell className="text-center">{r.severity}</TableCell>
-                  <TableCell className="text-center">{r.probability}</TableCell>
-                  <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[r.risk_level]}`}>{LEVEL_LABELS[r.risk_level]}</span></TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {risks.map(r => {
+                const ms = (r.matrix_size || 5) as MatrixSize;
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell><Badge variant="outline">{CATEGORY_LABELS[r.category]}</Badge></TableCell>
+                    <TableCell className="font-medium">
+                      {r.agent_name}
+                      {r.esocial_agent_code && <span className="block text-xs text-muted-foreground">e-Social: {r.esocial_agent_code}</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">{ghes.find(g => g.id === r.ghe_id)?.name || '-'}</TableCell>
+                    <TableCell className="text-center"><Badge variant="secondary">{ms}×{ms}</Badge></TableCell>
+                    <TableCell className="text-center">{r.severity}</TableCell>
+                    <TableCell className="text-center">{r.probability}</TableCell>
+                    <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${LEVEL_STYLES[r.risk_level]}`}>{LEVEL_LABELS[r.risk_level]}</span></TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}
@@ -317,19 +373,36 @@ export const RiskInventory = ({ pgrDocumentId, companyId }: { pgrDocumentId: str
                 <Textarea rows={2} value={form.exposure_description} onChange={e => setForm({ ...form, exposure_description: e.target.value })} placeholder="Tempo, frequência, intensidade..." />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
-                  <Label>Severidade (1-5)</Label>
+                  <Label>Matriz de risco</Label>
+                  <select
+                    className="w-full h-10 rounded-md border border-input bg-background px-3"
+                    value={form.matrix_size}
+                    onChange={e => setMatrix(parseInt(e.target.value) as MatrixSize)}
+                  >
+                    <option value={3}>3×3</option>
+                    <option value={4}>4×4</option>
+                    <option value={5}>5×5</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Severidade (1-{form.matrix_size})</Label>
                   <select className="w-full h-10 rounded-md border border-input bg-background px-3" value={form.severity} onChange={e => setForm({ ...form, severity: parseInt(e.target.value) })}>
-                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                    {range(form.matrix_size).map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Probabilidade (1-5)</Label>
+                  <Label>Probabilidade (1-{form.matrix_size})</Label>
                   <select className="w-full h-10 rounded-md border border-input bg-background px-3" value={form.probability} onChange={e => setForm({ ...form, probability: parseInt(e.target.value) })}>
-                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                    {range(form.matrix_size).map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Nível previsto: <span className={`px-2 py-0.5 rounded font-medium ${LEVEL_STYLES[classifyRisk(form.matrix_size, form.severity, form.probability)]}`}>
+                  {LEVEL_LABELS[classifyRisk(form.matrix_size, form.severity, form.probability)]}
+                </span>
               </div>
 
               <div className="space-y-2"><Label>EPC existentes</Label><Textarea rows={2} value={form.existing_epc} onChange={e => setForm({ ...form, existing_epc: e.target.value })} /></div>
