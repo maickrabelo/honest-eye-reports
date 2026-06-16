@@ -66,6 +66,7 @@ const CompanySelector = React.lazy(() => import("./components/CompanySelector"))
 const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
 const PGRDashboard = React.lazy(() => import("./pages/PGRDashboard"));
 const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
+const PGRHub = React.lazy(() => import("./pages/PGRHub"));
 const AcceptSectorInvitation = React.lazy(() => import("./pages/AcceptSectorInvitation"));
 const SectorViewerDashboard = React.lazy(() => import("./pages/SectorViewerDashboard"));
 const ReportThankYou = React.lazy(() => import("./pages/ReportThankYou"));
@@ -173,6 +174,7 @@ const App = () => (
                 <Route path="/copsoq/results/:id" element={<COPSOQResults />} />
                 <Route path="/sst/treinamentos" element={<SSTTrainings />} />
                 <Route path="/empresa/treinamentos" element={<CompanyTrainings />} />
+                <Route path="/pgr" element={<PGRHub />} />
                 <Route path="/pgr/:companyId" element={<PGRDashboard />} />
                 <Route path="/pgr/:companyId/kanban" element={<PGRKanban />} />
                 <Route path="/pulse-survey" element={<PulseSurveyDashboard />} />

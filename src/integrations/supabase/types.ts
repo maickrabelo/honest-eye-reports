@@ -3581,6 +3581,10 @@ export type Database = {
       }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
+      user_has_pgr_shortcut_plan: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       user_has_smart_plan: { Args: { _user_id: string }; Returns: boolean }
       user_in_company: {
         Args: { _company_id: string; _user_id: string }

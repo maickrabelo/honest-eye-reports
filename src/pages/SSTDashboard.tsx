@@ -29,6 +29,7 @@ import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext'
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
+import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -163,6 +164,7 @@ const SSTDashboard = () => {
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
+  const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
@@ -434,7 +436,7 @@ const SSTDashboard = () => {
                   // Smart plan: only HSE-IT/COPSOQ (Psicossocial), Clima, Pulse, Trainings opcional
                   base = tools.filter(t => ['tool-hseit', 'tool-climate', 'tool-pulse'].includes(t.id));
                 }
-                const displayedTools = hasBetaCompany
+                let displayedTools = hasBetaCompany
                   ? [...base, {
                       id: 'tool-ouvidoria-smart',
                       icon: ClipboardList,
@@ -444,6 +446,16 @@ const SSTDashboard = () => {
                       path: '/ouvidoria-beta/painel',
                     }]
                   : base;
+                if (hasPgrShortcut) {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-pgr',
+                    icon: FileText,
+                    title: 'PGR',
+                    description: 'Programa de Gerenciamento de Riscos (NR-1/NR-17)',
+                    highlights: ['Inventário', 'Plano de ação', 'e-Social'],
+                    path: '/pgr',
+                  }];
+                }
                 return displayedTools;
               })().map((tool, idx) => (
                 <Card
