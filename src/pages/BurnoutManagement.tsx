@@ -21,7 +21,7 @@ import {
 import { DepartmentManager, DepartmentManagerHandle, UnallocatedEmployeesDialog } from "@/components/climate-survey/DepartmentManager";
 import { QRCodePreview } from "@/components/climate-survey/QRCodePreview";
 import { useCompanyEmployeeCount } from "@/hooks/useCompanyEmployeeCount";
-import { ArrowLeft, Save, Flame, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Flame, Sparkles, Search } from "lucide-react";
 
 interface Company {
   id: string;
@@ -45,6 +45,7 @@ export default function BurnoutManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [companySearch, setCompanySearch] = useState("");
   
   // Form state
   const [companyId, setCompanyId] = useState<string>("");
@@ -334,18 +335,31 @@ export default function BurnoutManagement() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="company">Empresa *</Label>
-                  <Select value={companyId} onValueChange={setCompanyId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a empresa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map(company => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar empresa..."
+                        value={companySearch}
+                        onChange={(e) => setCompanySearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <Select value={companyId} onValueChange={setCompanyId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a empresa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companies
+                          .filter(c => c.name.toLowerCase().includes(companySearch.toLowerCase()))
+                          .map(company => (
+                            <SelectItem key={company.id} value={company.id}>
+                              {company.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
