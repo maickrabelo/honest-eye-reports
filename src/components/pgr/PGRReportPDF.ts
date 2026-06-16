@@ -533,9 +533,19 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
   subTitle('2.3 Avaliação');
   paragraph('A avaliação dos riscos é realizada após a antecipação e reconhecimento, considerando o agente, fonte geradora, GHE, função, atividade, medidas de controle existentes e propostas. Apenas os resultados das avaliações são inseridos no Inventário de Riscos (NR-09 item 4.3).');
 
-  subTitle('2.4 Matriz de Risco 5×5');
-  paragraph('A avaliação da classificação de risco é realizada para cada GHE em relação a cada agente, possibilitando conhecer — em função do risco da exposição — qual a consequência para a saúde. A classificação resulta da interação Probabilidade × Severidade conforme a matriz qualitativa abaixo:');
-  riskMatrix();
+  // Matrizes efetivamente utilizadas no inventário (admitidas pela NR-1 / ABNT NBR ISO 31000)
+  const usedMatrixSizes = Array.from(
+    new Set(input.risks.map(r => Number(r.matrix_size) || 5).filter(s => s === 3 || s === 4 || s === 5))
+  ).sort() as number[];
+  const matricesToRender = usedMatrixSizes.length ? usedMatrixSizes : [5];
+
+  subTitle(`2.4 Matriz${matricesToRender.length > 1 ? 'es' : ''} de Risco Utilizada${matricesToRender.length > 1 ? 's' : ''}`);
+  paragraph('A avaliação da classificação de risco é realizada para cada GHE em relação a cada agente, considerando a interação Probabilidade × Severidade. Conforme a NR-1 e a ABNT NBR ISO 31000, é admitido o uso de matrizes qualitativas de diferentes ordens (3×3, 4×4 ou 5×5), desde que devidamente documentadas. As matrizes efetivamente utilizadas neste documento são apresentadas a seguir:');
+  for (const sz of matricesToRender) {
+    subTitle(`Matriz ${sz}×${sz}`);
+    riskMatrix(sz);
+  }
+
 
   // ─── PARTE III ────────────────────────────────────────────
   sectionTitle('PARTE III — Avaliação Quantitativa e Medidas de Controle');
