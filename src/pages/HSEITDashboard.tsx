@@ -139,13 +139,19 @@ export default function HSEITDashboard() {
         if (error) throw error;
         assessmentsData = (data || []) as unknown as HSEITAssessment[];
       } else if (role === 'sst' && assignedCompanyIds.length > 0) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('sst_manager_id')
+          .eq('id', profile!.id)
+          .single();
         const { data, error } = await supabase
           .from('hseit_assessments')
-          .select('*, companies(name, slug)')
-          .in('company_id', assignedCompanyIds)
+          .select('*, companies!inner(name, slug, company_sst_assignments!inner(sst_manager_id))')
+          .eq('companies.company_sst_assignments.sst_manager_id', profileData?.sst_manager_id)
           .order('created_at', { ascending: false });
         if (error) throw error;
         assessmentsData = (data || []) as unknown as HSEITAssessment[];
+
       } else if (role === 'company' && companyAccessIds.length > 0) {
         const { data, error } = await supabase
           .from('hseit_assessments')
