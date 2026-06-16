@@ -69,6 +69,10 @@ const PGRKanban = React.lazy(() => import("./pages/PGRKanban"));
 const AcceptSectorInvitation = React.lazy(() => import("./pages/AcceptSectorInvitation"));
 const SectorViewerDashboard = React.lazy(() => import("./pages/SectorViewerDashboard"));
 const ReportThankYou = React.lazy(() => import("./pages/ReportThankYou"));
+const PulseSurveyDashboard = React.lazy(() => import("./pages/PulseSurveyDashboard"));
+const PulseSurveyManagement = React.lazy(() => import("./pages/PulseSurveyManagement"));
+const PulseSurveyDetail = React.lazy(() => import("./pages/PulseSurveyDetail"));
+const PulseSurveyForm = React.lazy(() => import("./pages/PulseSurveyForm"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -168,6 +172,11 @@ const App = () => (
                 <Route path="/empresa/treinamentos" element={<CompanyTrainings />} />
                 <Route path="/pgr/:companyId" element={<PGRDashboard />} />
                 <Route path="/pgr/:companyId/kanban" element={<PGRKanban />} />
+                <Route path="/pulse-survey" element={<PulseSurveyDashboard />} />
+                <Route path="/pulse-survey/nova" element={<PulseSurveyManagement />} />
+                <Route path="/pulse-survey/editar/:id" element={<PulseSurveyManagement />} />
+                <Route path="/pulse-survey/:id" element={<PulseSurveyDetail />} />
+                <Route path="/pulse/:surveyId" element={<PulseSurveyForm />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
