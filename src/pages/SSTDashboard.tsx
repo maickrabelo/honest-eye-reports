@@ -27,6 +27,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import SoniaChat from '@/components/SoniaChat';
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
+import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -410,7 +411,20 @@ const SSTDashboard = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {tools.map((tool, idx) => (
+              {(() => {
+                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id));
+                const displayedTools = hasBetaCompany
+                  ? [...tools, {
+                      id: 'tool-ouvidoria-beta',
+                      icon: ClipboardList,
+                      title: 'Ouvidoria Beta',
+                      description: 'Canal anônimo sem IA (formulário estático)',
+                      highlights: ['Beta', 'Sem IA', 'Anônimo'],
+                      path: '/ouvidoria-beta/painel',
+                    }]
+                  : tools;
+                return displayedTools;
+              })().map((tool, idx) => (
                 <Card
                   key={tool.id}
                   id={tool.id}
