@@ -15,26 +15,19 @@ const CATEGORIES = [
 ];
 const OCCURRENCE_TYPES = ["data_especifica", "recorrente", "nao_recorda"];
 
-function generateAccessKey(len = 14): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[arr[i] % chars.length];
-  return out.match(/.{1,4}/g)!.join("-");
-}
-
-async function sha256(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 async function generateTrackingCode(supabase: any): Promise<string> {
-  const year = new Date().getFullYear();
-  for (let i = 0; i < 10; i++) {
-    const rand = Math.floor(Math.random() * 90000) + 10000;
-    const code = `BETA-${year}-${rand}`;
+  // Formato: BETA-XXXX999 (4 letras + 3 dígitos) — prefixo evita conflito com ouvidoria tradicional
+  const LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  for (let i = 0; i < 15; i++) {
+    let letters = "";
+    const lArr = new Uint32Array(4);
+    crypto.getRandomValues(lArr);
+    for (let j = 0; j < 4; j++) letters += LETTERS[lArr[j] % LETTERS.length];
+    const nArr = new Uint32Array(3);
+    crypto.getRandomValues(nArr);
+    let numbers = "";
+    for (let j = 0; j < 3; j++) numbers += (nArr[j] % 10).toString();
+    const code = `BETA-${letters}${numbers}`;
     const { data } = await supabase
       .from("beta_ouvidoria_reports")
       .select("id")
@@ -85,15 +78,12 @@ serve(async (req) => {
     }
 
     const tracking_code = await generateTrackingCode(supabase);
-    const access_key = generateAccessKey();
-    const access_key_hash = await sha256(access_key);
 
     const { data: report, error } = await supabase
       .from("beta_ouvidoria_reports")
       .insert({
         company_id,
         tracking_code,
-        access_key_hash,
         report_type,
         category,
         category_other,
@@ -123,7 +113,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, tracking_code, access_key }),
+      JSON.stringify({ success: true, tracking_code }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
