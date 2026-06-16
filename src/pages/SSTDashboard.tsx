@@ -428,9 +428,14 @@ const SSTDashboard = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {(() => {
-                const hasBetaCompany = companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
+                const hasBetaCompany = isSmartOnly || companies.some(c => BETA_OUVIDORIA_COMPANY_IDS.includes(c.id) || smartOuvidoriaIds.has(c.id));
+                let base = tools;
+                if (isSmartOnly) {
+                  // Smart plan: only HSE-IT/COPSOQ (Psicossocial), Clima, Pulse, Trainings opcional
+                  base = tools.filter(t => ['tool-hseit', 'tool-climate', 'tool-pulse'].includes(t.id));
+                }
                 const displayedTools = hasBetaCompany
-                  ? [...tools, {
+                  ? [...base, {
                       id: 'tool-ouvidoria-smart',
                       icon: ClipboardList,
                       title: 'Ouvidoria Smart',
@@ -438,7 +443,7 @@ const SSTDashboard = () => {
                       highlights: ['Anônimo'],
                       path: '/ouvidoria-beta/painel',
                     }]
-                  : tools;
+                  : base;
                 return displayedTools;
               })().map((tool, idx) => (
                 <Card
