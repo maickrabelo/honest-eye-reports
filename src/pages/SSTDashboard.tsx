@@ -635,23 +635,34 @@ const SSTDashboard = () => {
                       </div>
 
                       <div className="pt-2 border-t border-border space-y-2">
-                        <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`${window.location.origin}/report/${company.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
-                          >
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">{window.location.origin}/report/{company.slug}</span>
-                          </a>
-                          <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                        {(isSmartOnly || smartOuvidoriaIds.has(company.id)) ? (
+                          <>
+                            <p className="text-xs text-muted-foreground font-medium">Ouvidoria Smart</p>
+                            <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate('/ouvidoria-beta/painel'); }}>
+                              Abrir Ouvidoria Smart
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`${window.location.origin}/report/${company.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                              >
+                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                              </a>
+                              <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                          </>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="pt-0">
