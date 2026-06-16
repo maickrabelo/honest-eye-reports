@@ -153,6 +153,10 @@ verify_jwt = false
 [functions.reply-beta-report]
 verify_jwt = false
 
+[functions.create-sst-manual-account]
+# Requires admin authentication
+
+
 
 
 

@@ -89,6 +89,8 @@ const MasterDashboard = () => {
   const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
   const [testUsersResult, setTestUsersResult] = useState<any>(null);
   const [assignPlanSST, setAssignPlanSST] = useState<SSTManager | null>(null);
+  const [manualPlans, setManualPlans] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+
   const { toast } = useToast();
   const { session, role, isLoading: authLoading } = useRealAuth();
   
@@ -114,8 +116,16 @@ const MasterDashboard = () => {
     if (authLoading) return;
     if (session && role === 'admin') {
       loadData();
+      supabase
+        .from('subscription_plans')
+        .select('id, name, slug')
+        .eq('visibility', 'manual_only')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .then(({ data }) => setManualPlans((data ?? []) as any));
     }
   }, [authLoading, session, role]);
+
 
   const loadData = async () => {
     setLoading(true);
@@ -260,40 +270,37 @@ const MasterDashboard = () => {
   const handleAddSST = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     try {
-      let logoUrl = null;
+      let logoUrl: string | null = null;
       if (sstLogoFile) {
         logoUrl = await uploadLogo(sstLogoFile);
       }
 
-      const sstName = formData.get('sstName') as string;
-      
-      // Auto-generate slug from name
-      const slug = sstName
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+      const trialDaysRaw = formData.get('sstTrialDays');
+      const trialDays = trialDaysRaw ? parseInt(String(trialDaysRaw), 10) : 0;
+      const planId = (formData.get('sstPlanId') as string) || null;
 
-      const { error } = await supabase.from('sst_managers').insert({
-        name: sstName,
-        email: formData.get('sstEmail') as string,
-        cnpj: formData.get('sstCNPJ') as string,
-        phone: formData.get('sstPhone') as string,
-        address: formData.get('sstAddress') as string,
-        logo_url: logoUrl,
-        slug: slug,
+      const { data, error } = await supabase.functions.invoke('create-sst-manual-account', {
+        body: {
+          sst_name: formData.get('sstName'),
+          email: formData.get('sstEmail'),
+          responsible_name: formData.get('sstResponsible'),
+          cnpj: formData.get('sstCNPJ'),
+          phone: formData.get('sstPhone'),
+          address: formData.get('sstAddress'),
+          logo_url: logoUrl,
+          plan_id: planId || undefined,
+          trial_days: trialDays,
+        },
       });
 
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
 
       toast({
-        title: "Gestora SST adicionada",
-        description: "A empresa gestora SST foi adicionada com sucesso."
+        title: "Gestora SST cadastrada",
+        description: `Conta criada com sucesso. Senha inicial: ${(data as any)?.initial_password ?? 'CNPJ (somente números)'}`,
       });
       setIsAddSSTOpen(false);
       setSstLogoFile(null);
@@ -307,6 +314,7 @@ const MasterDashboard = () => {
       });
     }
   };
+
 
   const handleDeleteCompany = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta empresa?')) return;
@@ -1647,12 +1655,16 @@ const MasterDashboard = () => {
                               <Input id="sstName" name="sstName" placeholder="Nome da empresa" required />
                             </div>
                             <div className="grid gap-2">
-                              <Label htmlFor="sstEmail">Email</Label>
+                              <Label htmlFor="sstResponsible">Nome do Responsável (login)</Label>
+                              <Input id="sstResponsible" name="sstResponsible" placeholder="Nome completo do usuário titular" required />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="sstEmail">Email (acesso)</Label>
                               <Input id="sstEmail" name="sstEmail" type="email" placeholder="contato@gestora.com" required />
                             </div>
                             <div className="grid gap-2">
-                              <Label htmlFor="sstCNPJ">CNPJ</Label>
-                              <Input id="sstCNPJ" name="sstCNPJ" placeholder="00.000.000/0000-00" />
+                              <Label htmlFor="sstCNPJ">CNPJ (será a senha inicial)</Label>
+                              <Input id="sstCNPJ" name="sstCNPJ" placeholder="00.000.000/0000-00" required />
                             </div>
                             <div className="grid gap-2">
                               <Label htmlFor="sstPhone">Telefone</Label>
@@ -1662,6 +1674,30 @@ const MasterDashboard = () => {
                               <Label htmlFor="sstAddress">Endereço</Label>
                               <Input id="sstAddress" name="sstAddress" placeholder="Endereço completo" />
                             </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="grid gap-2">
+                                <Label htmlFor="sstPlanId">Plano (opcional)</Label>
+                                <select
+                                  id="sstPlanId"
+                                  name="sstPlanId"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  defaultValue=""
+                                >
+                                  <option value="">Sem plano (definir depois)</option>
+                                  {manualPlans.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="sstTrialDays">Dias de teste grátis</Label>
+                                <Input id="sstTrialDays" name="sstTrialDays" type="number" min={0} max={365} defaultValue={7} />
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Será criada uma conta de acesso para o responsável. A senha inicial é o CNPJ (somente números) e a troca é exigida no primeiro login.
+                            </p>
+
                           </div>
                           <DialogFooter>
                             <Button type="submit">Adicionar Gestora SST</Button>
