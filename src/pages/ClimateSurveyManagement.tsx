@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Save, ArrowLeft, Copy } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Copy, Search } from "lucide-react";
 import { gptwQuestions, openQuestions, npsQuestion } from "@/data/gptwQuestions";
 import { soiaQuestions, soiaOpenQuestions } from "@/data/soiaQuestions";
 import { QRCodeDownloader } from "@/components/QRCodeDownloader";
@@ -39,6 +39,7 @@ export default function ClimateSurveyManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [companySearch, setCompanySearch] = useState('');
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [surveyModel, setSurveyModel] = useState<SurveyModel>('gptw');
@@ -499,22 +500,35 @@ export default function ClimateSurveyManagement() {
             {/* Company Selection */}
             <div className="space-y-2">
               <Label htmlFor="company">Empresa *</Label>
-              <Select 
-                value={formData.company_id} 
-                onValueChange={(val) => setFormData(prev => ({ ...prev, company_id: val }))}
-                disabled={isEditing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map(company => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar empresa..."
+                    value={companySearch}
+                    onChange={(e) => setCompanySearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select 
+                  value={formData.company_id} 
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, company_id: val }))}
+                  disabled={isEditing}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies
+                      .filter(c => c.name.toLowerCase().includes(companySearch.toLowerCase()))
+                      .map(company => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Survey Model Selection */}

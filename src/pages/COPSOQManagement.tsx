@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles, Users2, Info } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, FileText, Building2, Copy, Sparkles, Users2, Info, Search } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentManager, SurveyDepartment, DepartmentManagerHandle, UnallocatedEmployeesDialog } from '@/components/climate-survey/DepartmentManager';
@@ -27,6 +27,7 @@ export default function COPSOQManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [companySearch, setCompanySearch] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -196,10 +197,21 @@ export default function COPSOQManagement() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Empresa *</Label>
-                  <Select value={selectedCompany} onValueChange={setSelectedCompany} disabled={isEditing}>
-                    <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
-                    <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}><div className="flex items-center gap-2"><Building2 className="h-4 w-4" />{c.name}</div></SelectItem>)}</SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar empresa..."
+                        value={companySearch}
+                        onChange={(e) => setCompanySearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <Select value={selectedCompany} onValueChange={setSelectedCompany} disabled={isEditing}>
+                      <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
+                      <SelectContent>{companies.filter(c => c.name.toLowerCase().includes(companySearch.toLowerCase())).map(c => <SelectItem key={c.id} value={c.id}><div className="flex items-center gap-2"><Building2 className="h-4 w-4" />{c.name}</div></SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2"><Label>Título *</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Avaliação COPSOQ II 2024" /></div>
                 <div className="space-y-2"><Label>Descrição</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o objetivo..." rows={3} /></div>
