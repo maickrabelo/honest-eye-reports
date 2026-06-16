@@ -108,21 +108,18 @@ export default function HSEITDashboard() {
         if (profileData?.sst_manager_id) {
           const { data: assignments } = await supabase
             .from('company_sst_assignments')
-            .select('company_id')
-            .eq('sst_manager_id', profileData.sst_manager_id);
+            .select('company:companies!inner(id, name)')
+            .eq('sst_manager_id', profileData.sst_manager_id)
+            .order('name', { foreignTable: 'companies', ascending: true });
           
-          assignedCompanyIds = assignments?.map(a => a.company_id) || [];
-          
-          if (assignedCompanyIds.length > 0) {
-            const { data: companiesData } = await supabase
-              .from('companies')
-              .select('id, name')
-              .in('id', assignedCompanyIds)
-              .order('name');
-            setCompanies(companiesData || []);
-          }
+          const companiesData = (assignments || [])
+            .map((a: any) => a.company)
+            .filter(Boolean);
+          assignedCompanyIds = companiesData.map((c: any) => c.id);
+          setCompanies(companiesData);
         }
       } else if (role === 'company' && profile?.company_id) {
+
         companyAccessIds = [profile.company_id];
         const { data: companiesData } = await supabase
           .from('companies')
