@@ -27,6 +27,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import SoniaChat from '@/components/SoniaChat';
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
+import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 
 const sstDashboardSteps: TourStep[] = [
   {
