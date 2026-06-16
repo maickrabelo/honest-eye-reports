@@ -1,96 +1,45 @@
 
-# Canal de Ouvidoria Beta — Formulário Estático (sem IA)
+## Objetivo
+Permitir que cada risco no Inventário de Riscos do PGR utilize uma matriz de severidade × probabilidade independente (3×3, 4×4 ou 5×5), com classificação de nível de risco apropriada à matriz escolhida e exportação no PDF respeitando cada matriz utilizada (conforme NR-1 / ABNT NBR ISO 31000, que admitem matrizes de diferentes ordens desde que documentadas).
 
-Novo canal paralelo ao atual de Denúncias/Ouvidoria, identificado como **Beta**, disponível apenas para a empresa **Demo Ilimitado SOIA** (`demo.ilimitado@soia.app.br`, id `382745b1-d65a-4928-bb1b-95ae513c4e14`) para validação. 100% anônimo, sem IA, sem custo de créditos, sem chat — apenas formulário estruturado + protocolo + acompanhamento.
+## Mudanças no banco (`pgr_risks`)
 
-## 1. Banco de Dados (migração)
+1. Adicionar coluna `matrix_size SMALLINT NOT NULL DEFAULT 5` com `CHECK (matrix_size IN (3,4,5))`.
+2. Substituir a coluna gerada `risk_level` por uma calculada via trigger `BEFORE INSERT/UPDATE`, pois a classificação passa a depender da matriz:
 
-Tabelas novas em `public` (separadas do `reports` atual para não misturar fluxos):
+| Matriz | Trivial | Tolerável | Moderado | Substancial | Intolerável |
+|--------|---------|-----------|----------|-------------|-------------|
+| 3×3 (máx 9) | 1 | 2 | 3–4 | 6 | 9 |
+| 4×4 (máx 16) | 1–2 | 3–4 | 5–8 | 9–12 | 15–16 |
+| 5×5 (máx 25) | 1–3 | 4–7 | 8–14 | 15–19 | 20–25 |
 
-- **`beta_ouvidoria_reports`**
-  - `id uuid pk`
-  - `company_id uuid` (fixo na demo, validado por trigger)
-  - `tracking_code text unique` (formato `BETA-YYYY-NNNN`)
-  - `access_key_hash text` (hash bcrypt/sha256 da chave; chave em claro só é exibida 1x)
-  - `report_type text` (denuncia / reclamacao / sugestao / elogio)
-  - `category text` (assedio, discriminacao, fraude, conflito_interesses, conduta, uso_indevido_bens, quebra_sigilo, outros)
-  - `category_other text` (livre, quando "outros")
-  - `description text not null`
-  - `occurrence_type text` (data_especifica / recorrente / nao_recorda)
-  - `occurrence_date date null`
-  - `location_sector text`
-  - `status text default 'aberto'` (aberto, em_analise, respondido, encerrado)
-  - `created_at timestamptz default now()`
-  - **Sem** colunas de IP, user-agent, geolocalização ou user_id.
+Os 5 níveis (`trivial`, `tolerable`, `moderate`, `substantial`, `intolerable`) e suas cores ficam preservados.
 
-- **`beta_ouvidoria_attachments`**
-  - `id`, `report_id fk`, `file_path text` (bucket privado), `file_name`, `mime_type`, `size_bytes`, `created_at`.
+## Frontend — `src/components/pgr/RiskInventory.tsx`
 
-- **`beta_ouvidoria_updates`** (mensagens entre investigador e denunciante anônimo via protocolo)
-  - `id`, `report_id fk`, `author_type text` (investigator / anonymous), `message text`, `created_at`.
+- Adicionar campo "Matriz de risco" no formulário (select 3×3 / 4×4 / 5×5), default 5×5.
+- Os selects de Severidade e Probabilidade passam a ter o range dinâmico (1..N) conforme a matriz escolhida; ao trocar a matriz, valores acima de N são truncados.
+- A grade visual única "Matriz 5×5" passa a renderizar **uma matriz por tamanho efetivamente usado** (3×3, 4×4, 5×5), com contagem de riscos por célula daquela matriz. Matrizes sem riscos ficam ocultas (mantendo a 5×5 visível por padrão se não houver nenhum risco).
+- Tabela do inventário ganha coluna "Matriz" (badge "3×3"/"4×4"/"5×5") logo antes de S/P.
 
-**Bucket**: `beta-ouvidoria-attachments` (privado).
+## Frontend — `src/components/pgr/PGRReportPDF.ts`
 
-**RLS / GRANT**:
-- `anon`: INSERT em `beta_ouvidoria_reports`, `beta_ouvidoria_attachments`, `beta_ouvidoria_updates` (apenas via edge functions, validando a empresa demo).
-- `authenticated`: SELECT/UPDATE somente para usuários da empresa demo (`user_in_company(auth.uid(), company_id)`) ou admins.
-- Trigger `beta_ouvidoria_only_demo` rejeita qualquer `company_id` ≠ id da Demo Ilimitado (enforce do beta).
-- Trigger `set_beta_tracking_code` gera `BETA-YYYY-NNNN` automaticamente.
+- Tabela do inventário por GHE: alterar a coluna "Risco" para exibir `S{n}×P{n} (matriz N×N) — NÍVEL`.
+- Na seção "Matriz de Risco", renderizar uma matriz visual para cada tamanho utilizado no documento, cada uma com sua legenda de faixas, justificando o uso conforme NR-1.
 
-## 2. Edge Functions (sem IA, sem chat-report)
+## Hooks / tipos
 
-- **`submit-beta-report`** (`verify_jwt = false`)
-  - Recebe payload validado por Zod (tipos, tamanhos, sem campos identificadores).
-  - Confirma `company_id` = Demo Ilimitado.
-  - Gera chave aleatória (12 chars alfanum + símbolos), salva hash.
-  - Cria report + attachments (URLs já enviadas via upload anônimo no bucket).
-  - Retorna `{ tracking_code, access_key }` (chave em claro só nesta resposta).
-- **`track-beta-report`** (`verify_jwt = false`)
-  - Recebe `tracking_code` + `access_key`, valida hash, retorna report + updates.
-- **`reply-beta-report`** (`verify_jwt = false`)
-  - Denunciante anônimo responde perguntas adicionais via protocolo + chave.
+- `src/integrations/supabase/types.ts` será regenerado após a migration (não editar manualmente).
+- `src/hooks/usePGRDashboardData.ts` continua usando `risk_level` (sem alteração funcional, apenas inclui `matrix_size` no select para futuras métricas).
 
-Nenhuma chamada ao Lovable AI, sem consumo de créditos, sem logs de IP.
+## Compatibilidade
 
-## 3. Frontend
+- Riscos existentes recebem `matrix_size = 5` (default), mantendo classificação idêntica à atual.
+- Nenhum impacto em planos/permissões; ajuste 100% dentro do módulo PGR.
 
-Rotas novas (independentes do `/denuncia` atual):
+## Arquivos afetados
 
-- **`/ouvidoria-beta/:companyId`** — formulário público anônimo (`BetaOuvidoriaForm.tsx`)
-  - Seções na ordem do briefing: mensagem de abertura, triagem (tipo + categoria), relato (descrição, data/período, setor), evidências (upload com aviso de metadados), envio.
-  - Validação Zod, limites de tamanho, sem campos de identificação.
-  - Ao enviar: modal `BetaProtocolModal` exibindo protocolo + chave com botões "copiar" e aviso de guardar — chave nunca mais será mostrada.
-
-- **`/ouvidoria-beta/acompanhar`** — `BetaTrackReport.tsx`
-  - Inputs de protocolo + chave, lista atualizações, permite o anônimo responder.
-
-- **Dashboard interno da empresa**: nova aba/página `BetaOuvidoriaDashboard.tsx`
-  - Lista relatos da empresa demo, filtros por tipo/categoria/status, detalhe com histórico e campo para investigador responder.
-  - Renderizada no `Dashboard` da empresa Demo Ilimitado apenas (gate por `companyId === DEMO_ILIMITADO_ID`).
-
-- **Gate de visibilidade do módulo beta**:
-  - Constante `BETA_OUVIDORIA_COMPANY_IDS = ['382745b1-...']`.
-  - Hook `useBetaOuvidoriaAccess(companyId)` retorna boolean.
-  - Card "Ouvidoria Beta" aparece em `Dashboard.tsx` somente quando o hook libera; rotas redirecionam para `/` caso contrário.
-  - Card mostra badge `Beta` e tooltip "Canal experimental sem IA".
-
-## 4. Componentes novos
-- `src/components/beta-ouvidoria/BetaIntroCard.tsx` (mensagem de abertura/garantias).
-- `BetaReportTypeSelector.tsx`, `BetaCategorySelector.tsx`.
-- `BetaOccurrenceDateField.tsx` (radio: data específica / recorrente / não recordo).
-- `BetaAttachmentsField.tsx` (com aviso de metadados).
-- `BetaProtocolModal.tsx`.
-- `BetaReportDetail.tsx` (visão investigador) e `BetaAnonymousThread.tsx` (visão anônima).
-
-## 5. Memória do projeto
-- Criar `mem://features/beta-ouvidoria-channel` descrevendo: beta, gate por empresa, sem IA/créditos, fluxo de protocolo + chave hash, tabelas separadas.
-- Adicionar linha no `mem://index.md`.
-
-## 6. Fora de escopo
-- Integração com módulo atual de Reports / chat-report / análise por IA.
-- Notificações por e-mail (anônimo não fornece contato).
-- Liberação para outras empresas — apenas Demo Ilimitado durante o beta.
-- Exportação Power BI deste canal (pode entrar depois).
-
-## Resumo técnico
-Tabelas isoladas (`beta_ouvidoria_*`) + bucket privado + 3 edge functions sem IA + rotas `/ouvidoria-beta/...` + dashboard interno restrito por whitelist de `company_id`. Trigger garante que só a Demo Ilimitado consegue criar registros no beta.
+- Migration nova (add coluna + trigger + drop da coluna gerada)
+- `src/components/pgr/RiskInventory.tsx`
+- `src/components/pgr/PGRReportPDF.ts`
+- `src/hooks/usePGRDashboardData.ts` (apenas select)

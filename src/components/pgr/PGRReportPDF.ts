@@ -46,6 +46,7 @@ export interface PGRReportInput {
     exposure_limit?: number | string | null;
     severity: number;
     probability: number;
+    matrix_size?: number | null;
     risk_level?: string | null;
     existing_epc?: string | null;
     existing_epi?: string | null;
@@ -258,57 +259,91 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
     state.y += 3;
   };
 
-  // ─── Matriz 5x5 ───────────────────────────────────────────
-  const riskMatrix = () => {
-    ensure(80);
-    const cell = 14;
+  // ─── Matriz N×N ───────────────────────────────────────────
+  const classifyLevel = (size: number, score: number): 'trivial' | 'tolerable' | 'moderate' | 'substantial' | 'intolerable' => {
+    if (size === 3) {
+      if (score >= 9) return 'intolerable';
+      if (score >= 6) return 'substantial';
+      if (score >= 3) return 'moderate';
+      if (score >= 2) return 'tolerable';
+      return 'trivial';
+    }
+    if (size === 4) {
+      if (score >= 15) return 'intolerable';
+      if (score >= 9) return 'substantial';
+      if (score >= 5) return 'moderate';
+      if (score >= 3) return 'tolerable';
+      return 'trivial';
+    }
+    if (score >= 20) return 'intolerable';
+    if (score >= 15) return 'substantial';
+    if (score >= 8) return 'moderate';
+    if (score >= 4) return 'tolerable';
+    return 'trivial';
+  };
+
+  const levelColor = (lvl: string): [number, number, number] => {
+    switch (lvl) {
+      case 'trivial': return COLORS.green;
+      case 'tolerable': return COLORS.yellow;
+      case 'moderate': return COLORS.orange;
+      case 'substantial': return COLORS.red;
+      case 'intolerable': return COLORS.darkRed;
+      default: return COLORS.green;
+    }
+  };
+
+  const legendForSize = (size: number): Array<[string, [number, number, number]]> => {
+    if (size === 3) return [
+      ['Trivial (1)', COLORS.green],
+      ['Tolerável (2)', COLORS.yellow],
+      ['Moderado (3–4)', COLORS.orange],
+      ['Substancial (6)', COLORS.red],
+      ['Intolerável (9)', COLORS.darkRed],
+    ];
+    if (size === 4) return [
+      ['Trivial (1–2)', COLORS.green],
+      ['Tolerável (3–4)', COLORS.yellow],
+      ['Moderado (5–8)', COLORS.orange],
+      ['Substancial (9–12)', COLORS.red],
+      ['Intolerável (15–16)', COLORS.darkRed],
+    ];
+    return [
+      ['Trivial (1–3)', COLORS.green],
+      ['Tolerável (4–7)', COLORS.yellow],
+      ['Moderado (8–14)', COLORS.orange],
+      ['Substancial (15–19)', COLORS.red],
+      ['Intolerável (20–25)', COLORS.darkRed],
+    ];
+  };
+
+  const riskMatrix = (size: number = 5) => {
+    const cell = size === 5 ? 14 : size === 4 ? 16 : 20;
     const labelW = 22;
+    ensure(size * cell + 30);
     const x0 = MARGIN + labelW + 6;
     const y0 = state.y + 14;
 
-    // Título lateral "PROBABILIDADE" (eixo Y)
     setText(8, true, COLORS.primary);
-    doc.text('PROBABILIDADE', MARGIN + 3, y0 + (5 * cell) / 2, { angle: 90, align: 'center' });
+    doc.text('PROBABILIDADE', MARGIN + 3, y0 + (size * cell) / 2, { angle: 90, align: 'center' });
 
-    // Header severidade
     setText(8, true, COLORS.text);
     doc.text('SEVERIDADE →', x0, state.y + 5);
-    const sevLabels = ['Leve\n1', 'Menor\n2', 'Moderada\n3', 'Maior\n4', 'Extrema\n5'];
-    sevLabels.forEach((lbl, i) => {
+    for (let i = 0; i < size; i++) {
       const cx = x0 + i * cell + cell / 2;
-      doc.text(lbl.split('\n'), cx, state.y + 10, { align: 'center' });
-    });
+      doc.text(String(i + 1), cx, state.y + 10, { align: 'center' });
+    }
 
-    const probLabels = [
-      ['Muito', 'Provável', 'E'],
-      ['Provável', '', 'D'],
-      ['Possível', '', 'C'],
-      ['Pouco', 'Provável', 'B'],
-      ['Rara', '', 'A'],
-    ];
-
-    // Cores conforme score
-    const colorFor = (score: number): [number, number, number] => {
-      if (score <= 3) return COLORS.green;
-      if (score <= 6) return COLORS.yellow;
-      if (score <= 12) return COLORS.orange;
-      if (score <= 19) return COLORS.red;
-      return COLORS.darkRed;
-    };
-
-    // Probabilidade vai do mais alto (E=5) no topo para A=1 embaixo
-    const probValues = [5, 4, 3, 2, 1];
-    const sevValues = [1, 2, 3, 4, 5];
-
-    for (let r = 0; r < 5; r++) {
-      // label probabilidade
+    // Probabilidade: maior no topo, menor embaixo
+    for (let r = 0; r < size; r++) {
+      const probVal = size - r;
       setText(7.5, true, COLORS.text);
-      const ly = y0 + r * cell + cell / 2 - 2;
-      doc.text(probLabels[r], MARGIN + labelW - 1, ly, { align: 'right' });
-
-      for (let c = 0; c < 5; c++) {
-        const score = probValues[r] * sevValues[c];
-        const col = colorFor(score);
+      const ly = y0 + r * cell + cell / 2 + 1;
+      doc.text(String(probVal), MARGIN + labelW - 1, ly, { align: 'right' });
+      for (let c = 0; c < size; c++) {
+        const sevVal = c + 1;
+        const score = probVal * sevVal;
+        const col = levelColor(classifyLevel(size, score));
         doc.setFillColor(col[0], col[1], col[2]);
         doc.setDrawColor(150, 150, 150);
         doc.setLineWidth(0.2);
@@ -320,19 +355,11 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
       }
     }
 
-    state.y = y0 + 5 * cell + 4;
+    state.y = y0 + size * cell + 4;
 
-    // Legenda
-    const legend: Array<[string, [number, number, number]]> = [
-      ['Trivial (1–3)', COLORS.green],
-      ['Tolerável (4–6)', COLORS.yellow],
-      ['Moderado (8–12)', COLORS.orange],
-      ['Substancial (15–19)', COLORS.red],
-      ['Intolerável (20–25)', COLORS.darkRed],
-    ];
     let lx = MARGIN;
     setText(7.5, false, COLORS.text);
-    for (const [lbl, col] of legend) {
+    for (const [lbl, col] of legendForSize(size)) {
       doc.setFillColor(col[0], col[1], col[2]);
       doc.rect(lx, state.y, 4, 4, 'F');
       doc.text(lbl, lx + 5, state.y + 3.2);
@@ -340,6 +367,7 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
     }
     state.y += 8;
   };
+
 
   // ─── CAPA ─────────────────────────────────────────────────
   state.skipChrome = true;
@@ -505,9 +533,19 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
   subTitle('2.3 Avaliação');
   paragraph('A avaliação dos riscos é realizada após a antecipação e reconhecimento, considerando o agente, fonte geradora, GHE, função, atividade, medidas de controle existentes e propostas. Apenas os resultados das avaliações são inseridos no Inventário de Riscos (NR-09 item 4.3).');
 
-  subTitle('2.4 Matriz de Risco 5×5');
-  paragraph('A avaliação da classificação de risco é realizada para cada GHE em relação a cada agente, possibilitando conhecer — em função do risco da exposição — qual a consequência para a saúde. A classificação resulta da interação Probabilidade × Severidade conforme a matriz qualitativa abaixo:');
-  riskMatrix();
+  // Matrizes efetivamente utilizadas no inventário (admitidas pela NR-1 / ABNT NBR ISO 31000)
+  const usedMatrixSizes = Array.from(
+    new Set(input.risks.map(r => Number(r.matrix_size) || 5).filter(s => s === 3 || s === 4 || s === 5))
+  ).sort() as number[];
+  const matricesToRender = usedMatrixSizes.length ? usedMatrixSizes : [5];
+
+  subTitle(`2.4 Matriz${matricesToRender.length > 1 ? 'es' : ''} de Risco Utilizada${matricesToRender.length > 1 ? 's' : ''}`);
+  paragraph('A avaliação da classificação de risco é realizada para cada GHE em relação a cada agente, considerando a interação Probabilidade × Severidade. Conforme a NR-1 e a ABNT NBR ISO 31000, é admitido o uso de matrizes qualitativas de diferentes ordens (3×3, 4×4 ou 5×5), desde que devidamente documentadas. As matrizes efetivamente utilizadas neste documento são apresentadas a seguir:');
+  for (const sz of matricesToRender) {
+    subTitle(`Matriz ${sz}×${sz}`);
+    riskMatrix(sz);
+  }
+
 
   // ─── PARTE III ────────────────────────────────────────────
   sectionTitle('PARTE III — Avaliação Quantitativa e Medidas de Controle');
@@ -580,7 +618,7 @@ export function generatePGRReportPDF(input: PGRReportInput): jsPDF {
         r.source || '—',
         r.measurement_value != null ? `${r.measurement_value} ${r.measurement_unit || ''}` : '—',
         r.exposure_limit != null ? String(r.exposure_limit) : '—',
-        `S${r.severity}×P${r.probability}\n${(r.risk_level || '').toUpperCase()}`,
+        `S${r.severity}×P${r.probability} (${Number(r.matrix_size) || 5}×${Number(r.matrix_size) || 5})\n${(r.risk_level || '').toUpperCase()}`,
         [r.existing_epc, r.existing_epi ? `EPI: ${r.existing_epi}${r.epi_ca ? ` (CA ${r.epi_ca})` : ''}` : '']
           .filter(Boolean).join('\n') || '—',
       ]);

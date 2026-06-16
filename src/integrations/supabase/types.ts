@@ -1834,12 +1834,13 @@ export type Database = {
           exposure_limit: number | null
           ghe_id: string | null
           id: string
+          matrix_size: number
           measurement_unit: string | null
           measurement_value: number | null
           observations: string | null
           pgr_document_id: string
           probability: number
-          risk_level: string | null
+          risk_level: string
           severity: number
           source: string | null
           source_module: string | null
@@ -1859,12 +1860,13 @@ export type Database = {
           exposure_limit?: number | null
           ghe_id?: string | null
           id?: string
+          matrix_size?: number
           measurement_unit?: string | null
           measurement_value?: number | null
           observations?: string | null
           pgr_document_id: string
           probability?: number
-          risk_level?: string | null
+          risk_level?: string
           severity?: number
           source?: string | null
           source_module?: string | null
@@ -1884,12 +1886,13 @@ export type Database = {
           exposure_limit?: number | null
           ghe_id?: string | null
           id?: string
+          matrix_size?: number
           measurement_unit?: string | null
           measurement_value?: number | null
           observations?: string | null
           pgr_document_id?: string
           probability?: number
-          risk_level?: string | null
+          risk_level?: string
           severity?: number
           source?: string | null
           source_module?: string | null
