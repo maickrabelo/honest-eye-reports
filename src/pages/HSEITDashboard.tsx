@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, AlertTriangle, Eye, Copy, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Loader2, Plus, Search, ClipboardList, BarChart3, Building2, Users, AlertTriangle, Eye, Copy, ExternalLink, ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
