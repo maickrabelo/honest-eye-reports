@@ -79,7 +79,10 @@ export default function PGRHub() {
     return c.name.toLowerCase().includes(t) || (c.cnpj || '').toLowerCase().includes(t);
   });
 
-  const backPath = role === 'company' ? '/dashboard' : '/sst-dashboard';
+  const backPath =
+    role === 'admin' ? '/master-dashboard'
+    : role === 'company' ? '/dashboard'
+    : '/sst-dashboard';
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
