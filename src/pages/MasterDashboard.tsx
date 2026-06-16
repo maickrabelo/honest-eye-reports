@@ -116,8 +116,16 @@ const MasterDashboard = () => {
     if (authLoading) return;
     if (session && role === 'admin') {
       loadData();
+      supabase
+        .from('subscription_plans')
+        .select('id, name, slug')
+        .eq('visibility', 'manual_only')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .then(({ data }) => setManualPlans((data ?? []) as any));
     }
   }, [authLoading, session, role]);
+
 
   const loadData = async () => {
     setLoading(true);
