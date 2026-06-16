@@ -1,0 +1,1 @@
+ALTER TABLE public.beta_ouvidoria_reports ALTER COLUMN access_key_hash DROP NOT NULL;

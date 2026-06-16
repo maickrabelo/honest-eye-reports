@@ -37,7 +37,7 @@ const BetaOuvidoriaForm = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [protocol, setProtocol] = useState<{ tracking_code: string; access_key: string } | null>(null);
+  const [protocol, setProtocol] = useState<{ tracking_code: string } | null>(null);
 
   const [form, setForm] = useState({
     report_type: "denuncia",
@@ -95,7 +95,7 @@ const BetaOuvidoriaForm = () => {
         body: { ...form, company_id: companyId, attachments },
       });
       if (error || !data?.success) throw new Error(data?.error ?? error?.message ?? "Erro");
-      setProtocol({ tracking_code: data.tracking_code, access_key: data.access_key });
+      setProtocol({ tracking_code: data.tracking_code });
     } catch (e: any) {
       toast({ title: "Não foi possível enviar", description: e.message, variant: "destructive" });
     } finally {
@@ -271,9 +271,9 @@ const BetaOuvidoriaForm = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Lock className="h-5 w-5" /> Relato registrado com segurança</DialogTitle>
             <DialogDescription>
-              Guarde este número e a chave em um local seguro. Você precisará dos dois para
+              Guarde este número de protocolo em um local seguro. Você precisará dele para
               acompanhar a resposta da ouvidoria ou responder perguntas adicionais, sempre
-              de forma anônima. A chave não será exibida novamente.
+              de forma anônima.
             </DialogDescription>
           </DialogHeader>
           {protocol && (
@@ -284,15 +284,6 @@ const BetaOuvidoriaForm = () => {
                   <div className="font-mono text-lg">{protocol.tracking_code}</div>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(protocol.tracking_code); toast({ title: "Copiado" }); }}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="border rounded-md p-3 flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-muted-foreground">Chave de acesso</div>
-                  <div className="font-mono text-lg">{protocol.access_key}</div>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(protocol.access_key); toast({ title: "Copiada" }); }}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
