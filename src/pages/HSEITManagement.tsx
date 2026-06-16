@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Save, ArrowLeft, ClipboardList, Building2, Copy, Users2, Info } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, ClipboardList, Building2, Copy, Users2, Info, Search } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -33,6 +33,7 @@ export default function HSEITManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [companySearch, setCompanySearch] = useState('');
   
   // Form state
   const [selectedCompany, setSelectedCompany] = useState<string>('');
@@ -320,21 +321,34 @@ export default function HSEITManagement() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="company">Empresa *</Label>
-                  <Select value={selectedCompany} onValueChange={setSelectedCompany} disabled={isEditing}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a empresa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map(company => (
-                        <SelectItem key={company.id} value={company.id}>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4" />
-                            {company.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar empresa..."
+                        value={companySearch}
+                        onChange={(e) => setCompanySearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <Select value={selectedCompany} onValueChange={setSelectedCompany} disabled={isEditing}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a empresa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companies
+                          .filter(c => c.name.toLowerCase().includes(companySearch.toLowerCase()))
+                          .map(company => (
+                            <SelectItem key={company.id} value={company.id}>
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4" />
+                                {company.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
