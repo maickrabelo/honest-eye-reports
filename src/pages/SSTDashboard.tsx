@@ -30,6 +30,7 @@ import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
 
 const sstDashboardSteps: TourStep[] = [
   {
