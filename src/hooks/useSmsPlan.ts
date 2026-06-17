@@ -23,7 +23,7 @@ export function useSmsPlan() {
           }
           return;
         }
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('subscriptions')
           .select('subscription_plans!inner(slug)')
           .eq('user_id', uid)
