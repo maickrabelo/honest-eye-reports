@@ -549,7 +549,7 @@ const SSTDashboard = () => {
                     key={company.id}
                     className="overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border border-border animate-fade-in"
                     style={{ animationDelay: `${idx * 80}ms` }}
-                    onClick={() => handleCompanyClick(company.slug)}
+                    onClick={() => isSmsPlan ? navigate(`/pgr/${company.id}`) : handleCompanyClick(company.slug)}
                   >
                     <div className="relative">
                       {company.newReports > 0 && (
