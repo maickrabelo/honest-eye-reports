@@ -626,7 +626,9 @@ export const SalesTeamTab = () => {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
+
                 </div>
               </div>
             );
