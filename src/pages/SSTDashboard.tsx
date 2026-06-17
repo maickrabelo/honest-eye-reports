@@ -30,6 +30,7 @@ import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -165,6 +166,7 @@ const SSTDashboard = () => {
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
+  const { isSmsPlan } = useSmsPlan();
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
@@ -518,8 +520,8 @@ const SSTDashboard = () => {
               <div className="mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground">{isSmartOnly ? 'Empresas' : 'Portal de Ouvidoria'}</h2>
-                    <p className="text-muted-foreground text-sm">{isSmartOnly ? 'Empresas sob sua gestão' : 'Clique para acessar o canal de ouvidoria de cada empresa'}</p>
+                    <h2 className="text-2xl font-bold text-foreground">{(isSmartOnly || isSmsPlan) ? 'Empresas' : 'Portal de Ouvidoria'}</h2>
+                    <p className="text-muted-foreground text-sm">{isSmsPlan ? 'Clique para acessar o PGR de cada empresa' : (isSmartOnly ? 'Empresas sob sua gestão' : 'Clique para acessar o canal de ouvidoria de cada empresa')}</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <div className="relative w-full sm:w-72">
@@ -547,7 +549,7 @@ const SSTDashboard = () => {
                     key={company.id}
                     className="overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border border-border animate-fade-in"
                     style={{ animationDelay: `${idx * 80}ms` }}
-                    onClick={() => handleCompanyClick(company.slug)}
+                    onClick={() => isSmsPlan ? navigate(`/pgr/${company.id}`) : handleCompanyClick(company.slug)}
                   >
                     <div className="relative">
                       {company.newReports > 0 && (
@@ -641,44 +643,52 @@ const SSTDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="pb-2 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Total de denúncias:</span>
-                        <span className="font-semibold text-foreground">{company.reportCount}</span>
-                      </div>
+                      {!isSmsPlan && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Total de denúncias:</span>
+                          <span className="font-semibold text-foreground">{company.reportCount}</span>
+                        </div>
+                      )}
 
-                      <div className="pt-2 border-t border-border space-y-2">
-                        {(isSmartOnly || smartOuvidoriaIds.has(company.id)) ? (
-                          <>
-                            <p className="text-xs text-muted-foreground font-medium">Ouvidoria Smart</p>
-                            <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate('/ouvidoria-beta/painel'); }}>
-                              Abrir Ouvidoria Smart
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
-                            <div className="flex items-center gap-2">
-                              <a
-                                href={`${window.location.origin}/report/${company.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
-                              >
-                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{window.location.origin}/report/{company.slug}</span>
-                              </a>
-                              <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
-                                <Copy className="h-3 w-3" />
+                      {!isSmsPlan && (
+                        <div className="pt-2 border-t border-border space-y-2">
+                          {(isSmartOnly || smartOuvidoriaIds.has(company.id)) ? (
+                            <>
+                              <p className="text-xs text-muted-foreground font-medium">Ouvidoria Smart</p>
+                              <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); navigate('/ouvidoria-beta/painel'); }}>
+                                Abrir Ouvidoria Smart
                               </Button>
-                            </div>
-                            <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
-                          </>
-                        )}
-                      </div>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xs text-muted-foreground font-medium">Canal de Denúncias:</p>
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={`${window.location.origin}/report/${company.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                                >
+                                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{window.location.origin}/report/{company.slug}</span>
+                                </a>
+                                <Button variant="ghost" size="sm" onClick={(e) => copyToClipboard(`${window.location.origin}/report/${company.slug}`, e)} className="h-6 px-2">
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <QRCodeDownloader url={`${window.location.origin}/report/${company.slug}`} filename={`qrcode-${company.slug}.png`} size="sm" className="w-full" />
+                            </>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                     <CardFooter className="pt-0">
-                      {company.newReports > 0 ? (
+                      {isSmsPlan ? (
+                        <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          Acessar PGR
+                        </Button>
+                      ) : company.newReports > 0 ? (
                         <div className="w-full py-2 text-sm flex items-center justify-center text-destructive bg-destructive/10 rounded-lg font-medium">
                           <AlertCircle className="h-4 w-4 mr-1.5" />
                           Nova atividade detectada
