@@ -681,18 +681,47 @@ Deno.serve(async (req) => {
 
     if (profileError) logStep("Error updating profile", profileError);
 
-    // 4. Update role to 'sst'
-    const { error: roleError } = await supabaseAdmin
+    // 4. Ensure role is 'sst' — remove any stale roles first, then insert.
+    // Critical: a wrong role here blocks RLS on assessments (HSE-IT, COPSOQ, Burnout, Clima, PGR).
+    const { error: deleteRolesError } = await supabaseAdmin
       .from("user_roles")
-      .update({ role: "sst" })
+      .delete()
       .eq("user_id", userId);
 
-    if (roleError) {
-      logStep("Error updating role, trying insert", roleError);
-      await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "sst" });
+    if (deleteRolesError) {
+      logStep("CRITICAL: Failed to clear previous roles", deleteRolesError);
     }
 
-    logStep("Role updated to sst");
+    const { error: insertRoleError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: userId, role: "sst" });
+
+    if (insertRoleError) {
+      logStep("CRITICAL: Failed to insert sst role", insertRoleError);
+      // Last-resort fallback: try update in case a row already exists
+      const { error: updateRoleError } = await supabaseAdmin
+        .from("user_roles")
+        .update({ role: "sst" })
+        .eq("user_id", userId);
+      if (updateRoleError) {
+        logStep("CRITICAL: Could not set role to sst for user", { userId, updateRoleError });
+        throw new Error(`Falha ao definir papel SST para o usuário: ${updateRoleError.message}`);
+      }
+    }
+
+    // Verify role is correctly set before proceeding
+    const { data: roleCheck } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    const hasSstRole = (roleCheck || []).some((r: any) => r.role === "sst");
+    if (!hasSstRole) {
+      logStep("CRITICAL: role verification failed", { userId, roleCheck });
+      throw new Error("Não foi possível garantir o papel SST para a conta criada");
+    }
+
+    logStep("Role verified as sst", { userId, roles: roleCheck });
 
     // 5. Seed demo company with assessments (fire-and-forget, don't block response)
     const seedPromise = seedDemoData(supabaseAdmin, sstManager.id, sst_name, finalSlug, userId)
