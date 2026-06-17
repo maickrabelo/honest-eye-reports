@@ -1,0 +1,1 @@
+ALTER TABLE public.sales_leads ADD COLUMN IF NOT EXISTS closing_notes text;

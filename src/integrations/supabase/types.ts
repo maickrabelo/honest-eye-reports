@@ -2426,6 +2426,7 @@ export type Database = {
           assisted_companies_count: number | null
           city: string | null
           closing_meeting_date: string | null
+          closing_notes: string | null
           cnpj: string | null
           company_name: string
           contact_name: string | null
@@ -2450,6 +2451,7 @@ export type Database = {
           assisted_companies_count?: number | null
           city?: string | null
           closing_meeting_date?: string | null
+          closing_notes?: string | null
           cnpj?: string | null
           company_name: string
           contact_name?: string | null
@@ -2474,6 +2476,7 @@ export type Database = {
           assisted_companies_count?: number | null
           city?: string | null
           closing_meeting_date?: string | null
+          closing_notes?: string | null
           cnpj?: string | null
           company_name?: string
           contact_name?: string | null
