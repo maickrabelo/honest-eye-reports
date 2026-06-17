@@ -150,23 +150,6 @@ const Auth = () => {
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t">
-            <div className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-4 text-center space-y-3">
-              <div className="flex items-center justify-center gap-2 text-primary">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-sm font-semibold">Ainda não tem conta?</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Crie sua conta com <strong>7 dias grátis</strong> e acesso completo a todos os módulos. Sem cartão de crédito.
-              </p>
-              <Link to="/cadastro-empresa-trial">
-                <Button variant="outline" className="w-full" type="button">
-                  Iniciar teste grátis
-                </Button>
-              </Link>
-            </div>
-          </div>
-
         </CardContent>
       </Card>
 
