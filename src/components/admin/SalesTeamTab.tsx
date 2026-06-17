@@ -766,7 +766,11 @@ export const SalesTeamTab = () => {
         onOpenChange={setClosingDialogOpen}
         onSave={handleSaveClosing}
         existingContactName={closingContactName}
+        initialData={closingInitialData}
+        title={closingMode === 'meeting_done' ? 'Dados da Empresa - Reunião Realizada' : 'Informações de Fechamento'}
+        requireDate={closingMode === 'closed'}
       />
+
 
       {/* Denial Dialog */}
       <SalesDenialDialog
