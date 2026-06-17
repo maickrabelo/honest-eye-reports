@@ -166,6 +166,7 @@ const SSTDashboard = () => {
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
+  const { isSmsPlan } = useSmsPlan();
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
