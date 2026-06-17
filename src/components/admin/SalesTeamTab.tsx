@@ -77,6 +77,9 @@ export const SalesTeamTab = () => {
   const [closingDialogOpen, setClosingDialogOpen] = useState(false);
   const [closingLeadId, setClosingLeadId] = useState<string | null>(null);
   const [closingContactName, setClosingContactName] = useState('');
+  const [closingMode, setClosingMode] = useState<'meeting_done' | 'closed'>('closed');
+  const [closingInitialData, setClosingInitialData] = useState<any>(null);
+
 
   // Denial dialog
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
@@ -232,14 +235,13 @@ export const SalesTeamTab = () => {
       return;
     }
 
-    // If moving to closed (fechamento), open closing dialog
-    if (newStatus === 'closed') {
+    // If moving to meeting_done or closed, open closing dialog
+    if (newStatus === 'closed' || newStatus === 'meeting_done') {
       const lead = leads.find(l => l.id === leadId);
-      setClosingLeadId(leadId);
-      setClosingContactName(lead?.contact_name || '');
-      setClosingDialogOpen(true);
+      openClosingDialog(leadId, newStatus as 'meeting_done' | 'closed', lead);
       return;
     }
+
 
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
     const { error } = await (supabase.from('sales_leads' as any).update({ status: newStatus }).eq('id', leadId) as any);
@@ -271,11 +273,30 @@ export const SalesTeamTab = () => {
     }
   };
 
+  const openClosingDialog = (leadId: string, mode: 'meeting_done' | 'closed', lead?: SalesLead) => {
+    const l = lead || leads.find(x => x.id === leadId);
+    setClosingLeadId(leadId);
+    setClosingMode(mode);
+    setClosingContactName(l?.contact_name || '');
+    setClosingInitialData(l ? {
+      closing_meeting_date: l.closing_meeting_date,
+      cnpj: l.cnpj || '',
+      contact_name: l.contact_name || '',
+      contact_role: l.contact_role || '',
+      assisted_companies_count: l.assisted_companies_count,
+      total_assisted_employees: l.total_assisted_employees,
+      large_companies: l.large_companies || '',
+      large_companies_employees: l.large_companies_employees || '',
+      closing_notes: l.closing_notes || '',
+    } : null);
+    setClosingDialogOpen(true);
+  };
+
   const handleSaveClosing = async (data: any) => {
     if (!closingLeadId) return;
     try {
       const { error } = await (supabase.from('sales_leads' as any).update({
-        status: 'closed',
+        status: closingMode,
         closing_meeting_date: data.closing_meeting_date,
         cnpj: data.cnpj || null,
         contact_name: data.contact_name || null,
@@ -284,15 +305,17 @@ export const SalesTeamTab = () => {
         total_assisted_employees: data.total_assisted_employees,
         large_companies: data.large_companies || null,
         large_companies_employees: data.large_companies_employees || null,
+        closing_notes: data.closing_notes || null,
       }).eq('id', closingLeadId) as any);
       if (error) throw error;
-      toast({ title: 'Informações de fechamento salvas' });
+      toast({ title: 'Informações salvas' });
       setClosingDialogOpen(false);
       fetchLeads();
     } catch (error) {
       toast({ title: 'Erro ao salvar', description: getSafeErrorMessage(error), variant: 'destructive' });
     }
   };
+
 
   const handleContractClosed = async (leadId: string) => {
     const { error } = await (supabase.from('sales_leads' as any).update({ result: 'contract_closed' }).eq('id', leadId) as any);
@@ -468,16 +491,18 @@ export const SalesTeamTab = () => {
           </CardContent>
         </Card>
       ) : view === 'kanban' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="flex gap-4 overflow-x-auto pb-4">
+
           {STATUSES.map(col => {
             const colLeads = filtered.filter(l => l.status === col.value);
             return (
               <div
                 key={col.value}
-                className={`rounded-lg border-2 ${col.color} p-3 min-h-[300px] transition-colors`}
+                className={`rounded-lg border-2 ${col.color} p-3 min-h-[300px] transition-colors w-72 shrink-0`}
                 onDragOver={onDragOver}
                 onDrop={e => onDrop(e, col.value)}
               >
+
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-sm">{col.label}</h3>
                   <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">
@@ -533,22 +558,27 @@ export const SalesTeamTab = () => {
                     );
                   })}
 
-                  {colLeads.map(lead => (
+                  {colLeads.map(lead => {
+                    const clickable = lead.status === 'meeting_done' || lead.status === 'closed';
+                    return (
                     <div
                       key={lead.id}
                       draggable
                       onDragStart={e => onDragStart(e, lead.id)}
-                      className="bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group"
+                      onClick={() => { if (clickable) openClosingDialog(lead.id, lead.status as any, lead); }}
+                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''}`}
                     >
+
                       <div className="flex items-start justify-between gap-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
                         </div>
                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(lead)}><Edit className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={() => handleArchive(lead.id, true)}><Archive className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(lead.id)}><Trash className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
+
                         </div>
                       </div>
                       {lead.contact_name && (
@@ -597,7 +627,9 @@ export const SalesTeamTab = () => {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
+
                 </div>
               </div>
             );
@@ -735,7 +767,11 @@ export const SalesTeamTab = () => {
         onOpenChange={setClosingDialogOpen}
         onSave={handleSaveClosing}
         existingContactName={closingContactName}
+        initialData={closingInitialData}
+        title={closingMode === 'meeting_done' ? 'Dados da Empresa - Reunião Realizada' : 'Informações de Fechamento'}
+        requireDate={closingMode === 'closed'}
       />
+
 
       {/* Denial Dialog */}
       <SalesDenialDialog

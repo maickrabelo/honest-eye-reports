@@ -14,6 +14,7 @@ export type SalesLead = {
   total_assisted_employees: number | null;
   large_companies: string | null;
   large_companies_employees: string | null;
+  closing_notes: string | null;
   result: string | null;
   denial_reason: string | null;
   created_by: string | null;
@@ -25,6 +26,13 @@ export type SalesLead = {
 
 export const STATUSES = [
   { value: 'prospect', label: 'Prospect', color: 'bg-muted border-muted-foreground/20' },
+  { value: 'call_attempt', label: 'Tentativa de Ligação', color: 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-700' },
+  { value: 'call_done', label: 'Ligação Realizada', color: 'bg-cyan-50 border-cyan-300 dark:bg-cyan-950 dark:border-cyan-700' },
+  { value: 'message_1', label: 'Mensagem 1 Enviada', color: 'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700' },
+  { value: 'message_2', label: 'Mensagem 2 Enviada', color: 'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700' },
+  { value: 'message_3', label: 'Mensagem 3 Enviada', color: 'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700' },
+  { value: 'last_call_attempt', label: 'Última Tentativa de Ligação', color: 'bg-orange-50 border-orange-300 dark:bg-orange-950 dark:border-orange-700' },
+  { value: 'email_sent', label: 'E-mail Enviado', color: 'bg-purple-50 border-purple-300 dark:bg-purple-950 dark:border-purple-700' },
   { value: 'meeting_scheduled', label: 'Reunião Agendada', color: 'bg-blue-50 border-blue-300 dark:bg-blue-950 dark:border-blue-700' },
   { value: 'meeting_done', label: 'Reunião Realizada', color: 'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700' },
   { value: 'closed', label: 'Fechamento', color: 'bg-green-50 border-green-300 dark:bg-green-950 dark:border-green-700' },
