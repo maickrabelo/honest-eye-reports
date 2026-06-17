@@ -491,7 +491,31 @@ export const SalesTeamTab = () => {
           </CardContent>
         </Card>
       ) : view === 'kanban' ? (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div
+          className="flex gap-4 overflow-x-auto pb-4 cursor-grab active:cursor-grabbing select-none"
+          onMouseDown={(e) => {
+            const el = e.currentTarget;
+            const target = e.target as HTMLElement;
+            // Don't pan when grabbing a draggable card or interactive element
+            if (target.closest('[draggable="true"], button, a, input, textarea, [role="button"]')) return;
+            const startX = e.pageX - el.offsetLeft;
+            const startScroll = el.scrollLeft;
+            let moved = false;
+            const onMove = (ev: MouseEvent) => {
+              const x = ev.pageX - el.offsetLeft;
+              const dx = x - startX;
+              if (Math.abs(dx) > 3) moved = true;
+              el.scrollLeft = startScroll - dx;
+            };
+            const onUp = () => {
+              window.removeEventListener('mousemove', onMove);
+              window.removeEventListener('mouseup', onUp);
+              if (moved) el.style.pointerEvents = '';
+            };
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+          }}
+        >
 
           {STATUSES.map(col => {
             const colLeads = filtered.filter(l => l.status === col.value);
