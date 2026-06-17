@@ -491,16 +491,18 @@ export const SalesTeamTab = () => {
           </CardContent>
         </Card>
       ) : view === 'kanban' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="flex gap-4 overflow-x-auto pb-4">
+
           {STATUSES.map(col => {
             const colLeads = filtered.filter(l => l.status === col.value);
             return (
               <div
                 key={col.value}
-                className={`rounded-lg border-2 ${col.color} p-3 min-h-[300px] transition-colors`}
+                className={`rounded-lg border-2 ${col.color} p-3 min-h-[300px] transition-colors w-72 shrink-0`}
                 onDragOver={onDragOver}
                 onDrop={e => onDrop(e, col.value)}
               >
+
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-sm">{col.label}</h3>
                   <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">
@@ -556,13 +558,17 @@ export const SalesTeamTab = () => {
                     );
                   })}
 
-                  {colLeads.map(lead => (
+                  {colLeads.map(lead => {
+                    const clickable = lead.status === 'meeting_done' || lead.status === 'closed';
+                    return (
                     <div
                       key={lead.id}
                       draggable
                       onDragStart={e => onDragStart(e, lead.id)}
-                      className="bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group"
+                      onClick={() => { if (clickable) openClosingDialog(lead.id, lead.status as any, lead); }}
+                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''}`}
                     >
+
                       <div className="flex items-start justify-between gap-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
