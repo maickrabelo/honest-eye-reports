@@ -77,6 +77,9 @@ export const SalesTeamTab = () => {
   const [closingDialogOpen, setClosingDialogOpen] = useState(false);
   const [closingLeadId, setClosingLeadId] = useState<string | null>(null);
   const [closingContactName, setClosingContactName] = useState('');
+  const [closingMode, setClosingMode] = useState<'meeting_done' | 'closed'>('closed');
+  const [closingInitialData, setClosingInitialData] = useState<any>(null);
+
 
   // Denial dialog
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
@@ -232,14 +235,13 @@ export const SalesTeamTab = () => {
       return;
     }
 
-    // If moving to closed (fechamento), open closing dialog
-    if (newStatus === 'closed') {
+    // If moving to meeting_done or closed, open closing dialog
+    if (newStatus === 'closed' || newStatus === 'meeting_done') {
       const lead = leads.find(l => l.id === leadId);
-      setClosingLeadId(leadId);
-      setClosingContactName(lead?.contact_name || '');
-      setClosingDialogOpen(true);
+      openClosingDialog(leadId, newStatus as 'meeting_done' | 'closed', lead);
       return;
     }
+
 
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
     const { error } = await (supabase.from('sales_leads' as any).update({ status: newStatus }).eq('id', leadId) as any);
@@ -271,11 +273,30 @@ export const SalesTeamTab = () => {
     }
   };
 
+  const openClosingDialog = (leadId: string, mode: 'meeting_done' | 'closed', lead?: SalesLead) => {
+    const l = lead || leads.find(x => x.id === leadId);
+    setClosingLeadId(leadId);
+    setClosingMode(mode);
+    setClosingContactName(l?.contact_name || '');
+    setClosingInitialData(l ? {
+      closing_meeting_date: l.closing_meeting_date,
+      cnpj: l.cnpj || '',
+      contact_name: l.contact_name || '',
+      contact_role: l.contact_role || '',
+      assisted_companies_count: l.assisted_companies_count,
+      total_assisted_employees: l.total_assisted_employees,
+      large_companies: l.large_companies || '',
+      large_companies_employees: l.large_companies_employees || '',
+      closing_notes: l.closing_notes || '',
+    } : null);
+    setClosingDialogOpen(true);
+  };
+
   const handleSaveClosing = async (data: any) => {
     if (!closingLeadId) return;
     try {
       const { error } = await (supabase.from('sales_leads' as any).update({
-        status: 'closed',
+        status: closingMode,
         closing_meeting_date: data.closing_meeting_date,
         cnpj: data.cnpj || null,
         contact_name: data.contact_name || null,
@@ -284,15 +305,17 @@ export const SalesTeamTab = () => {
         total_assisted_employees: data.total_assisted_employees,
         large_companies: data.large_companies || null,
         large_companies_employees: data.large_companies_employees || null,
+        closing_notes: data.closing_notes || null,
       }).eq('id', closingLeadId) as any);
       if (error) throw error;
-      toast({ title: 'Informações de fechamento salvas' });
+      toast({ title: 'Informações salvas' });
       setClosingDialogOpen(false);
       fetchLeads();
     } catch (error) {
       toast({ title: 'Erro ao salvar', description: getSafeErrorMessage(error), variant: 'destructive' });
     }
   };
+
 
   const handleContractClosed = async (leadId: string) => {
     const { error } = await (supabase.from('sales_leads' as any).update({ result: 'contract_closed' }).eq('id', leadId) as any);
