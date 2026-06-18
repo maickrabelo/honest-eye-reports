@@ -2004,6 +2004,10 @@ const MasterDashboard = () => {
             <TabsContent value="stats" className="space-y-6">
               <StatisticsTab />
             </TabsContent>
+
+            <TabsContent value="webhooks" className="space-y-6">
+              <WebhooksTab />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
