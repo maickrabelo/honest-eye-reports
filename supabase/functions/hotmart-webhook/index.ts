@@ -195,10 +195,13 @@ Deno.serve(async (req) => {
     const buyerEmail: string | undefined = (buyer?.email || '').trim().toLowerCase() || undefined;
     const buyerName: string = buyer?.name || buyerEmail || 'Cliente Hotmart';
     const productId: string | undefined = product?.id ? String(product.id) : (product?.ucode ? String(product.ucode) : undefined);
+    const planId: string | undefined = subscriptionInfo?.plan?.id
+      ? String(subscriptionInfo.plan.id)
+      : (subscriptionInfo?.plan?.name ? String(subscriptionInfo.plan.name) : undefined);
     const transactionId: string | undefined = purchase?.transaction || data?.transaction;
     const subscriberCode: string | undefined = subscriptionInfo?.subscriber?.code || subscriptionInfo?.code;
 
-    console.log('Hotmart event:', eventType, 'product:', productId, 'tx:', transactionId, 'email:', buyerEmail);
+    console.log('Hotmart event:', eventType, 'product:', productId, 'plan:', planId, 'tx:', transactionId, 'email:', buyerEmail);
 
     if (eventType === 'PING' || eventType === 'TEST') {
       return await logAndRespond(200, { ok: true, pong: true, event: eventType });
