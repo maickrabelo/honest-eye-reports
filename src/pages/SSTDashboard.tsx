@@ -448,7 +448,7 @@ const SSTDashboard = () => {
                       path: '/ouvidoria-beta/painel',
                     }]
                   : base;
-                if (hasPgrShortcut) {
+                if (hasPgrShortcut || hasPGRAccess) {
                   displayedTools = [...displayedTools, {
                     id: 'tool-pgr',
                     icon: FileText,
