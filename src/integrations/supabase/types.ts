@@ -3012,6 +3012,8 @@ export type Database = {
           stripe_price_id: string | null
           stripe_product_id: string | null
           tier: string | null
+          trial_days: number | null
+          trial_redirect_url: string | null
           updated_at: string | null
           visibility: string
         }
@@ -3043,6 +3045,8 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           tier?: string | null
+          trial_days?: number | null
+          trial_redirect_url?: string | null
           updated_at?: string | null
           visibility?: string
         }
@@ -3074,6 +3078,8 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           tier?: string | null
+          trial_days?: number | null
+          trial_redirect_url?: string | null
           updated_at?: string | null
           visibility?: string
         }
