@@ -232,19 +232,31 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Map product -> plan
-      const { data: mapping } = await supabase
-        .from('hotmart_product_plans')
-        .select('plan_id, is_active, subscription_plans(*)')
-        .eq('hotmart_product_id', productId)
-        .maybeSingle();
+      // Map plan -> subscription plan. Hotmart envia múltiplos planos dentro do mesmo produto,
+      // então priorizamos o ID do plano (subscription.plan.id) e caímos para o productId só como fallback.
+      const lookupIds = [planId, productId].filter(Boolean) as string[];
+      let mapping: any = null;
+      if (lookupIds.length > 0) {
+        const { data: m } = await supabase
+          .from('hotmart_product_plans')
+          .select('plan_id, is_active, hotmart_product_id, subscription_plans(*)')
+          .in('hotmart_product_id', lookupIds)
+          .eq('is_active', true);
+        // Prefer match by planId (ordem do lookupIds)
+        if (m && m.length > 0) {
+          mapping = m.find((row: any) => row.hotmart_product_id === planId)
+            ?? m.find((row: any) => row.hotmart_product_id === productId)
+            ?? m[0];
+        }
+      }
 
       if (!mapping || !mapping.is_active) {
-        console.warn(`Hotmart product ${productId} not mapped or inactive`);
-        return new Response(JSON.stringify({ ok: true, ignored: 'product not mapped', productId }), {
+        console.warn(`Hotmart plan ${planId} / product ${productId} not mapped or inactive`);
+        return new Response(JSON.stringify({ ok: true, ignored: 'plan not mapped', planId, productId }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
       const plan: any = mapping.subscription_plans;
 
       // Create / find user
