@@ -445,14 +445,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, ignored: eventType }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return await logAndRespond(200, { ok: true, ignored: eventType });
   } catch (e) {
     console.error('hotmart-webhook error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const msg = e instanceof Error ? e.message : 'Unknown';
+    return await logAndRespond(500, { error: msg }, msg);
   }
 });
