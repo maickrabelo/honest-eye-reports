@@ -200,10 +200,12 @@ Deno.serve(async (req) => {
 
     console.log('Hotmart event:', eventType, 'product:', productId, 'tx:', transactionId, 'email:', buyerEmail);
 
+    if (eventType === 'PING' || eventType === 'TEST') {
+      return await logAndRespond(200, { ok: true, pong: true, event: eventType });
+    }
+
     if (!eventType) {
-      return new Response(JSON.stringify({ ok: true, ignored: 'no event' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return await logAndRespond(200, { ok: true, ignored: 'no event' });
     }
 
     // ===== APPROVED =====
