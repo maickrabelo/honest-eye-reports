@@ -194,13 +194,13 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const { data: sub } = await (supabase as any)
             .from('subscriptions')
             .select('subscription_plans!inner(slug)')
-            .eq('user_id', user.id)
-            .eq('status', 'active')
+            .eq('owner_user_id', user.id)
+            .in('status', ['active', 'trial', 'trialing'])
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
           const slug = (sub as any)?.subscription_plans?.slug as string | undefined;
-          if (slug && slug.includes('sms')) {
+          if (slug && slug.toLowerCase().includes('sms')) {
             setBrandLogo(SR_SMS_LOGO_URL);
             setBrandName(SR_SMS_BRAND_NAME);
             setSstSlug(null);

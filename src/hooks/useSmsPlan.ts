@@ -26,14 +26,14 @@ export function useSmsPlan() {
         const { data, error } = await (supabase as any)
           .from('subscriptions')
           .select('subscription_plans!inner(slug)')
-          .eq('user_id', uid)
-          .eq('status', 'active')
+          .eq('owner_user_id', uid)
+          .in('status', ['active', 'trial', 'trialing'])
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
         if (!active) return;
         const slug = (data as any)?.subscription_plans?.slug as string | undefined;
-        setIsSmsPlan(!error && !!slug && slug.includes('sms'));
+        setIsSmsPlan(!error && !!slug && slug.toLowerCase().includes('sms'));
       } catch {
         if (active) setIsSmsPlan(false);
       } finally {
