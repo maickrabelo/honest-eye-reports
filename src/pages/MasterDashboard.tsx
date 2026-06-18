@@ -19,6 +19,7 @@ import StatisticsTab from '@/components/admin/StatisticsTab';
 import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
+import { WebhooksTab } from '@/components/admin/WebhooksTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
