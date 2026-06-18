@@ -115,22 +115,65 @@ const CANCEL_EVENTS = new Set([
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  try {
-    const expectedToken = Deno.env.get('HOTMART_HOTTOK');
-    if (!expectedToken) {
-      console.error('HOTMART_HOTTOK not configured');
-      return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
+
+  const sourceIp = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || null;
+  const reqHeaders: Record<string, string> = {};
+  req.headers.forEach((v, k) => {
+    if (!/authorization|apikey|cookie/i.test(k)) reqHeaders[k] = v;
+  });
+
+  const rawBody = await req.text().catch(() => '');
+  let event: any = null;
+  try { event = rawBody ? JSON.parse(rawBody) : null; } catch { /* ignore */ }
+
+  const logAndRespond = async (
+    statusCode: number,
+    response: Record<string, unknown>,
+    errorMsg: string | null = null,
+  ) => {
+    const eventType = event?.event || event?.data?.event || null;
+    try {
+      await supabase.from('webhook_logs').insert({
+        provider: 'hotmart',
+        event_type: eventType,
+        status_code: statusCode,
+        source_ip: sourceIp,
+        headers: reqHeaders,
+        payload: event ?? { raw: rawBody.slice(0, 4000) },
+        response,
+        error: errorMsg,
       });
+    } catch (e) { console.error('Failed to log webhook:', e); }
+    return new Response(JSON.stringify(response), {
+      status: statusCode,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  };
+
+  try {
+    // Token: prefer DB config, fallback to env secret
+    const { data: cfg } = await supabase
+      .from('webhook_configs')
+      .select('token, enabled')
+      .eq('provider', 'hotmart')
+      .maybeSingle();
+
+    if (cfg && cfg.enabled === false) {
+      return await logAndRespond(503, { error: 'Webhook disabled' }, 'disabled');
     }
 
-    const event = await req.json().catch(() => null);
+    const expectedToken = (cfg?.token && cfg.token.trim()) || Deno.env.get('HOTMART_HOTTOK');
+    if (!expectedToken) {
+      console.error('HOTMART_HOTTOK not configured');
+      return await logAndRespond(500, { error: 'Server misconfigured' }, 'missing token config');
+    }
+
     if (!event) {
-      return new Response(JSON.stringify({ error: 'Invalid body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return await logAndRespond(400, { error: 'Invalid body' }, 'invalid json');
     }
 
     // Hotmart sends hottok either as header or in body
@@ -139,16 +182,8 @@ Deno.serve(async (req) => {
     const receivedToken = headerTok || bodyTok;
     if (receivedToken !== expectedToken) {
       console.warn('Invalid hottok');
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return await logAndRespond(401, { error: 'Unauthorized' }, 'invalid hottok');
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
 
     const eventType = event?.event || event?.data?.event;
     const data = event?.data || event;
@@ -165,10 +200,12 @@ Deno.serve(async (req) => {
 
     console.log('Hotmart event:', eventType, 'product:', productId, 'tx:', transactionId, 'email:', buyerEmail);
 
+    if (eventType === 'PING' || eventType === 'TEST') {
+      return await logAndRespond(200, { ok: true, pong: true, event: eventType });
+    }
+
     if (!eventType) {
-      return new Response(JSON.stringify({ ok: true, ignored: 'no event' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return await logAndRespond(200, { ok: true, ignored: 'no event' });
     }
 
     // ===== APPROVED =====
@@ -408,14 +445,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, ignored: eventType }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return await logAndRespond(200, { ok: true, ignored: eventType });
   } catch (e) {
     console.error('hotmart-webhook error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const msg = e instanceof Error ? e.message : 'Unknown';
+    return await logAndRespond(500, { error: msg }, msg);
   }
 });

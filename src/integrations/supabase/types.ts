@@ -3414,6 +3414,72 @@ export type Database = {
           },
         ]
       }
+      webhook_configs: {
+        Row: {
+          enabled: boolean
+          notes: string | null
+          provider: string
+          token: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          notes?: string | null
+          provider: string
+          token?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          notes?: string | null
+          provider?: string
+          token?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          error: string | null
+          event_type: string | null
+          headers: Json | null
+          id: string
+          payload: Json | null
+          provider: string
+          received_at: string
+          response: Json | null
+          source_ip: string | null
+          status_code: number | null
+        }
+        Insert: {
+          error?: string | null
+          event_type?: string | null
+          headers?: Json | null
+          id?: string
+          payload?: Json | null
+          provider: string
+          received_at?: string
+          response?: Json | null
+          source_ip?: string | null
+          status_code?: number | null
+        }
+        Update: {
+          error?: string | null
+          event_type?: string | null
+          headers?: Json | null
+          id?: string
+          payload?: Json | null
+          provider?: string
+          received_at?: string
+          response?: Json | null
+          source_ip?: string | null
+          status_code?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       companies_public: {
