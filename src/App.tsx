@@ -123,6 +123,7 @@ const App = () => (
                 <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
                 <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/sms/auth" element={<Auth />} />
                 <Route path="/convite/:token" element={<AcceptInvitation />} />
                 <Route path="/convite-setor/:token" element={<AcceptSectorInvitation />} />
                 <Route path="/setor/dashboard" element={<SectorViewerDashboard />} />

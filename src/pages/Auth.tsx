@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,19 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const invitationToken = searchParams.get('invitation');
+  const isSmsBrand =
+    location.pathname.startsWith('/sms') ||
+    searchParams.get('brand') === 'sms' ||
+    (typeof window !== 'undefined' && window.localStorage.getItem('auth_brand') === 'sms');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (location.pathname.startsWith('/sms') || searchParams.get('brand') === 'sms') {
+      window.localStorage.setItem('auth_brand', 'sms');
+    }
+  }, [location.pathname, searchParams]);
 
   // Após login/signup com convite, aceita automaticamente
   useEffect(() => {
@@ -77,9 +90,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${isSmsBrand ? 'bg-gradient-to-br from-green-50 to-emerald-100' : 'bg-gradient-to-br from-green-50 to-blue-50'}`}>
       <a href="/" className="mb-6">
-        <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA" className="h-14 object-contain" />
+        <img
+          src={isSmsBrand ? srSmsLogo.url : '/lovable-uploads/Logo_SOIA.png'}
+          alt={isSmsBrand ? 'Sr. SMS' : 'SOIA'}
+          className={isSmsBrand ? 'h-20 object-contain' : 'h-14 object-contain'}
+        />
       </a>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
