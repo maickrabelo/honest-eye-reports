@@ -234,6 +234,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const isPublicEntryPage = (path: string) => {
     return (
       path === '/auth' ||
+      path === '/sms/auth' ||
+      path === '/sms' ||
       path === '/' ||
       path.startsWith('/sst/') ||
       path.startsWith('/i/') ||
