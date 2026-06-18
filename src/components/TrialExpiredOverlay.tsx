@@ -42,14 +42,39 @@ interface TrialExpiredOverlayProps {
 
 const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: categoryProp }) => {
   const navigate = useNavigate();
-  const { signOut, role } = useRealAuth();
+  const { signOut, role, user } = useRealAuth();
   const category: Category = categoryProp ?? (role === 'sst' ? 'manager' : 'company');
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [cycle, setCycle] = useState<Cycle>('annual');
+  const [trialPlanInfo, setTrialPlanInfo] = useState<{ name: string; redirectUrl: string | null } | null>(null);
+  const [checkingTrialPlan, setCheckingTrialPlan] = useState(true);
+
+  // Detect if user's current plan is a trial-only plan (e.g. Teste SMS) → show simple popup
+  useEffect(() => {
+    (async () => {
+      if (!user?.id) {
+        setCheckingTrialPlan(false);
+        return;
+      }
+      const { data } = await (supabase as any)
+        .from('subscriptions')
+        .select('subscription_plans!inner(name, trial_days, trial_redirect_url)')
+        .eq('owner_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const plan = (data as any)?.subscription_plans;
+      if (plan?.trial_days && plan?.trial_redirect_url) {
+        setTrialPlanInfo({ name: plan.name, redirectUrl: plan.trial_redirect_url });
+      }
+      setCheckingTrialPlan(false);
+    })();
+  }, [user?.id]);
 
   useEffect(() => {
+    if (trialPlanInfo) return; // Skip loading plan grid if we'll show simple popup
     (async () => {
       const { data } = await supabase
         .from('subscription_plans')
@@ -64,7 +89,8 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
       setPlans(formatted as Plan[]);
       setLoading(false);
     })();
-  }, [category]);
+  }, [category, trialPlanInfo]);
+
 
   const getPrice = (plan: Plan): number | null => {
     if (plan.is_custom_quote) return null;
@@ -91,7 +117,45 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
     navigate(`/contratar?plano=${plan.slug}&ciclo=${cycle}`);
   };
 
+  // Simple popup for trial-only plans (e.g. Teste SMS)
+  if (!checkingTrialPlan && trialPlanInfo) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm p-4">
+        <Card className="w-full max-w-md border-border shadow-2xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <ShieldOff className="h-8 w-8 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl font-bold">
+              Seu teste de 7 dias terminou
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-center">
+            <p className="text-muted-foreground">
+              Continue usando nosso software clicando no botão abaixo.
+            </p>
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => window.open(trialPlanInfo.redirectUrl!, '_blank')}
+            >
+              Quero continuar usando!
+            </Button>
+            <button
+              onClick={signOut}
+              className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mx-auto"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair da conta
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
+
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-background/95 backdrop-blur-sm">
       <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4">
         <div className="w-full max-w-7xl">

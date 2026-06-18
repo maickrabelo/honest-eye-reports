@@ -425,6 +425,13 @@ Deno.serve(async (req) => {
         ((purchase?.price?.value ?? purchase?.full_price?.value ?? 0) as number) * 100,
       ) || (plan.price_monthly_cents ?? plan.base_price_cents ?? 0);
 
+      // Trial-mode plans (e.g. Teste SMS): provisiona como trial com expiração automática
+      const trialDays = (plan as any).trial_days as number | null | undefined;
+      const isTrialPlan = typeof trialDays === 'number' && trialDays > 0;
+      const trialEndsAt = isTrialPlan
+        ? new Date(Date.now() + trialDays! * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
       const { data: newSub, error: subErr } = await supabase
         .from('subscriptions')
         .insert({
@@ -432,16 +439,18 @@ Deno.serve(async (req) => {
           owner_email: buyerEmail,
           plan_id: plan.id,
           billing_cycle: billingCycle,
-          status: 'active',
+          status: isTrialPlan ? 'trial' : 'active',
           amount_cents: amountCents,
           provider: 'hotmart',
           hotmart_transaction_id: transactionId,
           hotmart_subscriber_code: subscriberCode ?? null,
           current_period_start: new Date().toISOString(),
+          current_period_end: trialEndsAt,
           metadata: {
             buyer: { name: buyerName, email: buyerEmail },
             product: { id: productId, name: product?.name },
             raw_event: eventType,
+            trial_days: isTrialPlan ? trialDays : undefined,
           },
         })
         .select('id')
@@ -449,6 +458,8 @@ Deno.serve(async (req) => {
 
       if (subErr) throw subErr;
       const subId = newSub!.id;
+
+      const entityStatus = isTrialPlan ? 'trial' : 'active';
 
       // Provision company or sst_manager
       if (plan.category === 'company') {
@@ -459,7 +470,8 @@ Deno.serve(async (req) => {
             name: buyerName,
             email: buyerEmail,
             slug: `${slugBase}-${Date.now().toString(36)}`,
-            subscription_status: 'active',
+            subscription_status: entityStatus,
+            trial_ends_at: trialEndsAt,
             employee_count: 0,
             parent_subscription_id: subId,
             max_employees: plan.max_employees,
@@ -490,7 +502,8 @@ Deno.serve(async (req) => {
             name: buyerName,
             email: buyerEmail,
             max_companies: plan.max_companies || 10,
-            subscription_status: 'active',
+            subscription_status: entityStatus,
+            trial_ends_at: trialEndsAt,
             pgr_module_enabled: plan.pgr_enabled === true,
           })
           .select('id')
@@ -499,6 +512,7 @@ Deno.serve(async (req) => {
           await supabase.from('profiles').update({ sst_manager_id: mgr.id }).eq('id', userId!);
         }
       }
+
 
       const emailResult = await sendCredentialsEmail(
         supabase,
