@@ -189,7 +189,30 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
         }
 
-        // 2. Check logged-in user
+        // 2. Check if logged-in user is on a Sr. SMS plan (takes precedence over SST manager logo)
+        if (user) {
+          const { data: sub } = await (supabase as any)
+            .from('subscriptions')
+            .select('subscription_plans!inner(slug)')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const slug = (sub as any)?.subscription_plans?.slug as string | undefined;
+          if (slug && slug.includes('sms')) {
+            setBrandLogo(SR_SMS_LOGO_URL);
+            setBrandName(SR_SMS_BRAND_NAME);
+            setSstSlug(null);
+            setSstManagerId(null);
+            setBrandColor('green');
+            applyColorTheme('green');
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // 3. Check logged-in user
         if (user && profile) {
           // SST user -> get their own SST manager
           if (role === 'sst' && profile.sst_manager_id) {
@@ -239,29 +262,6 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 return;
               }
             }
-          }
-        }
-
-        // No SST white-label — check if logged-in user is on a Sr. SMS plan
-        if (user) {
-          const { data: sub } = await (supabase as any)
-            .from('subscriptions')
-            .select('subscription_plans!inner(slug)')
-            .eq('user_id', user.id)
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          const slug = (sub as any)?.subscription_plans?.slug as string | undefined;
-          if (slug && slug.includes('sms')) {
-            setBrandLogo(SR_SMS_LOGO_URL);
-            setBrandName(SR_SMS_BRAND_NAME);
-            setSstSlug(null);
-            setSstManagerId(null);
-            setBrandColor('green');
-            applyColorTheme('green');
-            setIsLoading(false);
-            return;
           }
         }
 
