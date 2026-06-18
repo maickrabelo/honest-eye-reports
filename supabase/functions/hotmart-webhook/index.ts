@@ -96,6 +96,77 @@ async function sendCredentialsEmail(
   }
 }
 
+async function sendBlockedPurchaseEmail(
+  supabase: any,
+  toEmail: string,
+  planName: string,
+  planSlug: string | null | undefined,
+  transactionId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY_1') ?? Deno.env.get('RESEND_API_KEY');
+  if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
+    await logEmailAttempt(supabase, toEmail, 'skipped', null, 'Email keys missing', { context: 'blocked_purchase' });
+    return { ok: false, error: 'Email keys missing' };
+  }
+
+  const isSmsPlan = !!planSlug && planSlug.toLowerCase().includes('sms');
+  const loginUrl = isSmsPlan ? 'https://soia.app.br/sms/auth' : 'https://soia.app.br/auth';
+  const brandLabel = isSmsPlan ? 'Sr. SMS' : 'SOIA';
+  const fromHeader = isSmsPlan
+    ? 'Sr. SMS <noreply@soia.app.br>'
+    : 'SOIA <noreply@soia.app.br>';
+  const supportEmail = 'contato@soia.app.br';
+  const supportWhats = 'https://wa.me/5511910333355';
+
+  try {
+    const response = await fetch(`${GATEWAY_URL}/emails`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'X-Connection-Api-Key': RESEND_API_KEY,
+      },
+      body: JSON.stringify({
+        from: fromHeader,
+        to: [toEmail],
+        subject: `Sua compra do plano ${planName} precisa de atenção`,
+        html: `
+          <h2>Recebemos sua compra!</h2>
+          <p>Identificamos que o e-mail <strong>${toEmail}</strong> já possui uma conta ativa na plataforma ${brandLabel}.</p>
+          <p>Para evitar duplicidade de cadastros e cobranças sobrepostas, <strong>não ativamos automaticamente</strong> o plano <strong>${planName}</strong> nesta conta.</p>
+          <h3>O que fazer agora:</h3>
+          <ol>
+            <li>Entre em contato com o nosso suporte informando o número da transação Hotmart: <strong>${transactionId}</strong>.</li>
+            <li>Nossa equipe vai avaliar se você quer migrar o plano atual, adicionar a nova licença na conta existente, ou cancelar a compra.</li>
+          </ol>
+          <p><strong>Suporte:</strong></p>
+          <ul>
+            <li>WhatsApp: <a href="${supportWhats}">${supportWhats}</a></li>
+            <li>E-mail: <a href="mailto:${supportEmail}">${supportEmail}</a></li>
+          </ul>
+          <p>Você pode acessar sua conta existente em: <a href="${loginUrl}">${loginUrl}</a></p>
+          <p style="color:#666;font-size:12px;">Se não reconhece esta compra, responda este e-mail imediatamente.</p>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '<no body>');
+      const msg = `Resend gateway ${response.status}: ${body}`;
+      await logEmailAttempt(supabase, toEmail, 'failed', null, msg, { context: 'blocked_purchase', http_status: response.status });
+      return { ok: false, error: msg };
+    }
+    const result = await response.json().catch(() => ({}));
+    await logEmailAttempt(supabase, toEmail, 'sent', null, null, { context: 'blocked_purchase', provider_id: (result as any)?.id ?? null });
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await logEmailAttempt(supabase, toEmail, 'failed', null, msg, { context: 'blocked_purchase' });
+    return { ok: false, error: msg };
+  }
+}
+
 async function findAuthUserByEmail(supabase: any, email: string) {
   const normalized = email.trim().toLowerCase();
   let page = 1;
@@ -268,33 +339,74 @@ Deno.serve(async (req) => {
 
       const plan: any = mapping.subscription_plans;
 
-      // Create / find user
+      // ===== Bloqueio: e-mail já cadastrado na SOIA =====
+      // Para evitar duplicação de contas/assinaturas, qualquer comprador cujo e-mail
+      // já tenha cadastro no auth, ou já apareça em companies/sst_managers, é bloqueado
+      // e direcionado para o suporte resolver manualmente (upgrade, troca de e-mail, etc.).
+      const existingAuthUser = await findAuthUserByEmail(supabase, buyerEmail);
+      const { data: existingCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .ilike('email', buyerEmail)
+        .maybeSingle();
+      const { data: existingManager } = await supabase
+        .from('sst_managers')
+        .select('id')
+        .ilike('email', buyerEmail)
+        .maybeSingle();
+
+      if (existingAuthUser || existingCompany || existingManager) {
+        console.warn('Hotmart purchase blocked: account already exists for', buyerEmail);
+        const emailResult = await sendBlockedPurchaseEmail(
+          supabase,
+          buyerEmail,
+          plan.name,
+          plan.slug,
+          transactionId,
+        );
+        return await logAndRespond(200, {
+          ok: true,
+          blocked: 'account_exists',
+          reason: 'Email already registered in SOIA. Manual review required to avoid duplicates.',
+          email_sent: emailResult.ok,
+          transaction_id: transactionId,
+          buyer_email: buyerEmail,
+          plan_slug: plan.slug,
+        }, 'blocked:account_exists');
+      }
+
+      // Create user (no existing account at this point)
       const password = crypto.randomUUID().slice(0, 12);
       let userId: string | null = null;
       let isNewUser = false;
-      const existingUser = await findAuthUserByEmail(supabase, buyerEmail);
-      if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-          email: buyerEmail,
-          password,
-          email_confirm: true,
-          user_metadata: { full_name: buyerName },
-        });
-        if (createErr) {
-          if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
-            const found = await findAuthUserByEmail(supabase, buyerEmail);
-            if (!found) throw createErr;
-            userId = found.id;
-          } else {
-            throw createErr;
-          }
-        } else {
-          userId = created.user!.id;
-          isNewUser = true;
+      const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+        email: buyerEmail,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: buyerName },
+      });
+      if (createErr) {
+        // Race condition: alguém criou a conta entre o check e o insert -> bloquear também
+        if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
+          console.warn('Race: account created between check and insert, blocking', buyerEmail);
+          const emailResult = await sendBlockedPurchaseEmail(
+            supabase,
+            buyerEmail,
+            plan.name,
+            plan.slug,
+            transactionId,
+          );
+          return await logAndRespond(200, {
+            ok: true,
+            blocked: 'account_exists_race',
+            email_sent: emailResult.ok,
+            transaction_id: transactionId,
+          }, 'blocked:account_exists_race');
         }
+        throw createErr;
       }
+      userId = created.user!.id;
+      isNewUser = true;
 
       await supabase.from('profiles').upsert({
         id: userId!,
