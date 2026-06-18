@@ -339,33 +339,74 @@ Deno.serve(async (req) => {
 
       const plan: any = mapping.subscription_plans;
 
-      // Create / find user
+      // ===== Bloqueio: e-mail já cadastrado na SOIA =====
+      // Para evitar duplicação de contas/assinaturas, qualquer comprador cujo e-mail
+      // já tenha cadastro no auth, ou já apareça em companies/sst_managers, é bloqueado
+      // e direcionado para o suporte resolver manualmente (upgrade, troca de e-mail, etc.).
+      const existingAuthUser = await findAuthUserByEmail(supabase, buyerEmail);
+      const { data: existingCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .ilike('email', buyerEmail)
+        .maybeSingle();
+      const { data: existingManager } = await supabase
+        .from('sst_managers')
+        .select('id')
+        .ilike('email', buyerEmail)
+        .maybeSingle();
+
+      if (existingAuthUser || existingCompany || existingManager) {
+        console.warn('Hotmart purchase blocked: account already exists for', buyerEmail);
+        const emailResult = await sendBlockedPurchaseEmail(
+          supabase,
+          buyerEmail,
+          plan.name,
+          plan.slug,
+          transactionId,
+        );
+        return await logAndRespond(200, {
+          ok: true,
+          blocked: 'account_exists',
+          reason: 'Email already registered in SOIA. Manual review required to avoid duplicates.',
+          email_sent: emailResult.ok,
+          transaction_id: transactionId,
+          buyer_email: buyerEmail,
+          plan_slug: plan.slug,
+        }, 'blocked:account_exists');
+      }
+
+      // Create user (no existing account at this point)
       const password = crypto.randomUUID().slice(0, 12);
       let userId: string | null = null;
       let isNewUser = false;
-      const existingUser = await findAuthUserByEmail(supabase, buyerEmail);
-      if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-          email: buyerEmail,
-          password,
-          email_confirm: true,
-          user_metadata: { full_name: buyerName },
-        });
-        if (createErr) {
-          if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
-            const found = await findAuthUserByEmail(supabase, buyerEmail);
-            if (!found) throw createErr;
-            userId = found.id;
-          } else {
-            throw createErr;
-          }
-        } else {
-          userId = created.user!.id;
-          isNewUser = true;
+      const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+        email: buyerEmail,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: buyerName },
+      });
+      if (createErr) {
+        // Race condition: alguém criou a conta entre o check e o insert -> bloquear também
+        if ((createErr as any)?.code === 'email_exists' || (createErr as any)?.status === 422) {
+          console.warn('Race: account created between check and insert, blocking', buyerEmail);
+          const emailResult = await sendBlockedPurchaseEmail(
+            supabase,
+            buyerEmail,
+            plan.name,
+            plan.slug,
+            transactionId,
+          );
+          return await logAndRespond(200, {
+            ok: true,
+            blocked: 'account_exists_race',
+            email_sent: emailResult.ok,
+            transaction_id: transactionId,
+          }, 'blocked:account_exists_race');
         }
+        throw createErr;
       }
+      userId = created.user!.id;
+      isNewUser = true;
 
       await supabase.from('profiles').upsert({
         id: userId!,
