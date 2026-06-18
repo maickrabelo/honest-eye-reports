@@ -171,3 +171,5 @@ verify_jwt = false
 
 
 
+[functions.test-hotmart-webhook]
+# Requires admin authentication
