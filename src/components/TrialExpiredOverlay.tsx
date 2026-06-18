@@ -42,14 +42,39 @@ interface TrialExpiredOverlayProps {
 
 const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: categoryProp }) => {
   const navigate = useNavigate();
-  const { signOut, role } = useRealAuth();
+  const { signOut, role, user } = useRealAuth();
   const category: Category = categoryProp ?? (role === 'sst' ? 'manager' : 'company');
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [cycle, setCycle] = useState<Cycle>('annual');
+  const [trialPlanInfo, setTrialPlanInfo] = useState<{ name: string; redirectUrl: string | null } | null>(null);
+  const [checkingTrialPlan, setCheckingTrialPlan] = useState(true);
+
+  // Detect if user's current plan is a trial-only plan (e.g. Teste SMS) → show simple popup
+  useEffect(() => {
+    (async () => {
+      if (!user?.id) {
+        setCheckingTrialPlan(false);
+        return;
+      }
+      const { data } = await (supabase as any)
+        .from('subscriptions')
+        .select('subscription_plans!inner(name, trial_days, trial_redirect_url)')
+        .eq('owner_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const plan = (data as any)?.subscription_plans;
+      if (plan?.trial_days && plan?.trial_redirect_url) {
+        setTrialPlanInfo({ name: plan.name, redirectUrl: plan.trial_redirect_url });
+      }
+      setCheckingTrialPlan(false);
+    })();
+  }, [user?.id]);
 
   useEffect(() => {
+    if (trialPlanInfo) return; // Skip loading plan grid if we'll show simple popup
     (async () => {
       const { data } = await supabase
         .from('subscription_plans')
@@ -64,7 +89,8 @@ const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: cat
       setPlans(formatted as Plan[]);
       setLoading(false);
     })();
-  }, [category]);
+  }, [category, trialPlanInfo]);
+
 
   const getPrice = (plan: Plan): number | null => {
     if (plan.is_custom_quote) return null;
