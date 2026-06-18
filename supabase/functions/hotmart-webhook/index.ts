@@ -36,6 +36,7 @@ async function sendCredentialsEmail(
   planName: string,
   isExistingUser: boolean,
   subscriptionId: string | null,
+  planSlug?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY_1') ?? Deno.env.get('RESEND_API_KEY');
@@ -45,8 +46,15 @@ async function sendCredentialsEmail(
     return { ok: false, error: msg };
   }
 
+  const isSmsPlan = !!planSlug && planSlug.toLowerCase().includes('sms');
+  const loginUrl = isSmsPlan ? 'https://soia.app.br/sms/auth' : 'https://soia.app.br/auth';
+  const brandLabel = isSmsPlan ? 'Sr. SMS' : 'SOIA';
+  const fromHeader = isSmsPlan
+    ? 'Sr. SMS <noreply@soia.app.br>'
+    : 'SOIA <noreply@soia.app.br>';
+
   const passwordBlock = isExistingUser
-    ? `<p>Este e-mail já possui cadastro na SOIA. Use sua senha atual; se não lembrar, utilize <strong>"Esqueci minha senha"</strong> na tela de login.</p>`
+    ? `<p>Este e-mail já possui cadastro. Use sua senha atual; se não lembrar, utilize <strong>"Esqueci minha senha"</strong> na tela de login.</p>`
     : `<p><strong>Senha provisória:</strong> ${password}</p><p>No primeiro acesso será solicitada a troca da senha.</p>`;
 
   try {
@@ -58,15 +66,16 @@ async function sendCredentialsEmail(
         'X-Connection-Api-Key': RESEND_API_KEY,
       },
       body: JSON.stringify({
-        from: 'SOIA <noreply@soia.app.br>',
+        from: fromHeader,
         to: [toEmail],
-        subject: `Bem-vindo à SOIA — Plano ${planName} ativado`,
+        subject: `Bem-vindo ao ${brandLabel} — Plano ${planName} ativado`,
         html: `
           <h2>Compra confirmada!</h2>
-          <p>Seu plano <strong>${planName}</strong> está ativo na SOIA.</p>
+          <p>Seu plano <strong>${planName}</strong> está ativo.</p>
           <p><strong>Email:</strong> ${toEmail}</p>
           ${passwordBlock}
-          <p><a href="https://soia.app.br/auth">Acessar a plataforma</a></p>
+          <p><a href="${loginUrl}">Acessar a plataforma (${brandLabel})</a></p>
+          <p style="color:#666;font-size:12px;">Se o botão não funcionar, copie e cole este endereço no navegador: ${loginUrl}</p>
         `,
       }),
     });
@@ -386,6 +395,7 @@ Deno.serve(async (req) => {
         plan.name,
         !isNewUser,
         subId,
+        plan.slug,
       );
 
       if (!emailResult.ok && isNewUser) {
