@@ -30,7 +30,7 @@ const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] 
 
 const Navbar = () => {
   const { user, role, signOut, profile } = useRealAuth();
-  const { brandLogo, isWhiteLabel, brandColor, setBrandColorDB } = useWhiteLabel();
+  const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
   const isLoggedIn = !!user;
@@ -55,7 +55,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-3">
-              {isWhiteLabel && brandLogo ? (
+              {isLoggedIn && isBrandLoading ? (
+                <div className="h-10 w-28 rounded-md bg-muted animate-pulse" aria-label="Carregando marca" />
+              ) : isWhiteLabel && brandLogo ? (
                 <img 
                   src={brandLogo} 
                   alt="Logo" 
