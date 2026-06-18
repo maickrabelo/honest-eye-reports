@@ -71,7 +71,10 @@ const ensureCompanyAccess = async (
       { onConflict: "id" },
     );
 
-  await supabase.from("user_roles").delete().eq("user_id", companyUserId).neq("role", "company");
+  // Ensure the user has the 'company' role for this company.
+  // IMPORTANT: do NOT delete other roles (e.g. 'sst', 'admin'). A gestora SST may
+  // reuse the same email for her own company; removing the 'sst' role here would
+  // break her ability to manage assessments via SST policies.
   const { data: existingCompanyRoles } = await supabase
     .from("user_roles")
     .select("id")
