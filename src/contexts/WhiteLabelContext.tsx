@@ -2,6 +2,10 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
+import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
+
+const SR_SMS_LOGO_URL = srSmsLogo.url;
+const SR_SMS_BRAND_NAME = 'Sr. SMS';
 
 export type BrandColorTheme = 'navy' | 'green' | 'orange' | 'purple';
 
@@ -235,6 +239,29 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 return;
               }
             }
+          }
+        }
+
+        // No SST white-label — check if logged-in user is on a Sr. SMS plan
+        if (user) {
+          const { data: sub } = await (supabase as any)
+            .from('subscriptions')
+            .select('subscription_plans!inner(slug)')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const slug = (sub as any)?.subscription_plans?.slug as string | undefined;
+          if (slug && slug.includes('sms')) {
+            setBrandLogo(SR_SMS_LOGO_URL);
+            setBrandName(SR_SMS_BRAND_NAME);
+            setSstSlug(null);
+            setSstManagerId(null);
+            setBrandColor('green');
+            applyColorTheme('green');
+            setIsLoading(false);
+            return;
           }
         }
 
