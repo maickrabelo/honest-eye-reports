@@ -3569,23 +3569,29 @@ export type Database = {
       sst_managers_public: {
         Row: {
           brand_color: string | null
+          email: string | null
           id: string | null
           logo_url: string | null
           name: string | null
+          phone: string | null
           slug: string | null
         }
         Insert: {
           brand_color?: string | null
+          email?: string | null
           id?: string | null
           logo_url?: string | null
           name?: string | null
+          phone?: string | null
           slug?: string | null
         }
         Update: {
           brand_color?: string | null
+          email?: string | null
           id?: string | null
           logo_url?: string | null
           name?: string | null
+          phone?: string | null
           slug?: string | null
         }
         Relationships: []

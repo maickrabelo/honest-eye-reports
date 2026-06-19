@@ -93,7 +93,7 @@ const SSTTrialSignup = () => {
   if (isSuccess) {
     return (
       <div className="flex flex-col min-h-screen">
-        <Navbar />
+        <Navbar smsBrand />
         <main className="flex-grow flex items-center justify-center bg-gradient-to-br from-muted to-background px-4 py-12">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
@@ -120,14 +120,14 @@ const SSTTrialSignup = () => {
             </CardContent>
           </Card>
         </main>
-        <Footer />
+        <Footer variant="sms" />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <Navbar smsBrand />
       <main className="flex-grow bg-gradient-to-br from-muted to-background px-4 py-12">
         <div className="container mx-auto max-w-2xl">
           <Button
@@ -240,7 +240,7 @@ const SSTTrialSignup = () => {
           </Card>
         </div>
       </main>
-      <Footer />
+      <Footer variant="sms" />
     </div>
   );
 };

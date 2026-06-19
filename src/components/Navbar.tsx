@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles, Repeat, Briefcase, Building2 } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
@@ -28,13 +27,22 @@ const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] 
   { value: 'purple', label: 'Roxo', color: '#7c3aed' },
 ];
 
-const Navbar = () => {
+const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
+
+interface NavbarProps {
+  smsBrand?: boolean;
+}
+
+const Navbar = ({ smsBrand = false }: NavbarProps) => {
   const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
   const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
   const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
   const isLoggedIn = !!user;
+  const location = useLocation();
+
+  const isSmsRoute = smsBrand || location.pathname.startsWith('/sms') || location.pathname === '/teste-gratis-sst';
 
   const handleResetTour = () => {
     if (role === 'sst') {
@@ -69,7 +77,13 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to={isLoggedIn ? getDashboardPath() : '/'} className="flex items-center gap-3">
-              {isLoggedIn && isBrandLoading ? (
+              {isSmsRoute ? (
+                <img 
+                  src={SMS_LOGO_URL} 
+                  alt="Sr. SMS" 
+                  className="h-8 object-contain"
+                />
+              ) : isLoggedIn && isBrandLoading ? (
                 <div className="h-10 w-28 rounded-md bg-muted animate-pulse" aria-label="Carregando marca" />
               ) : isWhiteLabel && brandLogo ? (
                 <img 

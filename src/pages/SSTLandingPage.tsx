@@ -10,6 +10,8 @@ interface SSTManagerInfo {
   name: string;
   logo_url: string | null;
   slug: string;
+  email: string | null;
+  phone: string | null;
 }
 
 const SSTLandingPage = () => {
@@ -31,7 +33,7 @@ const SSTLandingPage = () => {
       try {
         const { data, error } = await supabase
           .from('sst_managers_public' as any)
-          .select('name, logo_url, slug')
+          .select('name, logo_url, slug, email, phone')
           .eq('slug', sstSlug)
           .maybeSingle();
 
@@ -237,8 +239,8 @@ const SSTLandingPage = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contato</h3>
               <ul className="space-y-4 text-sm">
-                <li className="text-white/60">contato@soia.com.br</li>
-                <li className="text-white/60">+55 11 9 9940-6560</li>
+                <li className="text-white/60">{sstManager?.email || 'contato@soia.com.br'}</li>
+                <li className="text-white/60">{sstManager?.phone || '+55 11 9 9940-6560'}</li>
               </ul>
             </div>
           </div>

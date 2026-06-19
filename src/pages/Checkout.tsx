@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText, Mail, Phone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { fbqTrack } from '@/lib/metaPixel';
+
+const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
 
 type Cycle = 'monthly' | 'quarterly' | 'annual';
 type BillingType = 'PIX' | 'BOLETO' | 'CREDIT_CARD';
@@ -190,6 +192,8 @@ const Checkout = () => {
     );
   }
 
+  const isSmsPlan = plan?.slug?.includes('sms') ?? false;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -198,7 +202,11 @@ const Checkout = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
-          <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA" className="h-8" />
+          <img 
+            src={isSmsPlan ? SMS_LOGO_URL : '/lovable-uploads/Logo_SOIA.png'} 
+            alt={isSmsPlan ? 'Sr. SMS' : 'SOIA'} 
+            className="h-8" 
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -400,6 +408,24 @@ const Checkout = () => {
             </CardContent>
           </Card>
         </div>
+
+        {isSmsPlan && (
+          <footer className="mt-16 pt-8 border-t border-border">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>sr.smsapp@gmail.com</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <span>+55 27 99844-3852</span>
+              </div>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              &copy; {new Date().getFullYear()} Sr. SMS. Todos os direitos reservados.
+            </p>
+          </footer>
+        )}
       </div>
     </div>
   );

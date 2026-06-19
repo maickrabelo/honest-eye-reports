@@ -3,8 +3,15 @@ import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
-const Footer = () => {
+interface FooterProps {
+  variant?: 'soia' | 'sms';
+}
+
+const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
+
+const Footer = ({ variant = 'soia' }: FooterProps) => {
   const { brandLogo, isWhiteLabel } = useWhiteLabel();
+  const isSms = variant === 'sms';
 
   return (
     <footer className="bg-audit-dark text-white">
@@ -12,7 +19,13 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            {isWhiteLabel && brandLogo ? (
+            {isSms ? (
+              <img 
+                src={SMS_LOGO_URL} 
+                alt="Sr. SMS" 
+                className="h-10 brightness-0 invert mb-4"
+              />
+            ) : isWhiteLabel && brandLogo ? (
               <img 
                 src={brandLogo} 
                 alt="Logo" 
@@ -26,7 +39,9 @@ const Footer = () => {
               />
             )}
             <p className="text-white/60 text-sm mb-6">
-              Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.
+              {isSms
+                ? 'Sistema NR-01 completo para gestão de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão SST.'
+                : 'Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.'}
             </p>
             <div className="flex gap-4">
               <a 
@@ -110,20 +125,24 @@ const Footer = () => {
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">contato@soia.com.br</span>
+                <span className="text-white/60">{isSms ? 'sr.smsapp@gmail.com' : 'contato@soia.com.br'}</span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">+55 11 9 9940-6560</span>
+                <span className="text-white/60">{isSms ? '+55 27 99844-3852' : '+55 11 9 9940-6560'}</span>
               </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">São Paulo, SP - Brasil</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">Uberaba, MG - Brasil</span>
-              </li>
+              {!isSms && (
+                <>
+                  <li className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
+                    <span className="text-white/60">São Paulo, SP - Brasil</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
+                    <span className="text-white/60">Uberaba, MG - Brasil</span>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>
@@ -133,12 +152,14 @@ const Footer = () => {
       <div className="border-t border-white/10">
         <div className="audit-container py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
-            <p>&copy; {new Date().getFullYear()} SOIA - Sistema NR-01 para Riscos Psicossociais. Todos os direitos reservados.</p>
-            <p>Desenvolvido com 💚 para empresas que cuidam das pessoas.</p>
+            <p>&copy; {new Date().getFullYear()} {isSms ? 'Sr. SMS' : 'SOIA - Sistema NR-01 para Riscos Psicossociais'}. Todos os direitos reservados.</p>
+            {!isSms && <p>Desenvolvido com 💚 para empresas que cuidam das pessoas.</p>}
           </div>
-          <div className="mt-4 pt-4 border-t border-white/5 text-center text-xs text-white/40">
-            <p>SOIA TECNOLOGIA E DESENVOLVIMENTO DE SISTEMAS LTDA — CNPJ 66.895.503/0001-80</p>
-          </div>
+          {!isSms && (
+            <div className="mt-4 pt-4 border-t border-white/5 text-center text-xs text-white/40">
+              <p>SOIA TECNOLOGIA E DESENVOLVIMENTO DE SISTEMAS LTDA — CNPJ 66.895.503/0001-80</p>
+            </div>
+          )}
         </div>
       </div>
     </footer>
