@@ -45,13 +45,44 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Trial companies
+    // Identify SMS plan IDs (trial accounts on SMS plans must NOT appear in CRM)
+    const { data: smsPlans } = await admin
+      .from("subscription_plans")
+      .select("id")
+      .ilike("slug", "%sms%");
+    const smsPlanIds = new Set((smsPlans || []).map((p: any) => p.id));
+
+    // Subscriptions on SMS plans → collect owner_user_ids to exclude SST managers
+    const { data: smsSubs } = await admin
+      .from("subscriptions")
+      .select("id, owner_user_id, plan_id")
+      .in("plan_id", Array.from(smsPlanIds));
+    const smsSubIds = new Set((smsSubs || []).map((s: any) => s.id));
+    const smsOwnerUserIds = new Set(
+      (smsSubs || []).map((s: any) => s.owner_user_id).filter(Boolean),
+    );
+
+    // SST manager IDs to exclude (owners of SMS subscriptions, via profiles.sst_manager_id)
+    let smsSstManagerIds = new Set<string>();
+    if (smsOwnerUserIds.size > 0) {
+      const { data: smsProfiles } = await admin
+        .from("profiles")
+        .select("id, sst_manager_id")
+        .in("id", Array.from(smsOwnerUserIds));
+      smsSstManagerIds = new Set(
+        (smsProfiles || [])
+          .map((p: any) => p.sst_manager_id)
+          .filter(Boolean),
+      );
+    }
+
+    // Trial companies (exclude those whose parent_subscription is an SMS plan)
     const { data: trialCompanies } = await admin
       .from("companies")
-      .select("id, name, email, phone, address, trial_ends_at, created_at")
+      .select("id, name, email, phone, address, trial_ends_at, created_at, parent_subscription_id")
       .not("trial_ends_at", "is", null);
 
-    // Trial SST managers
+    // Trial SST managers (exclude those owning SMS-plan subscriptions)
     const { data: trialSST } = await admin
       .from("sst_managers")
       .select("id, name, email, phone, address, trial_ends_at, created_at")
@@ -70,6 +101,7 @@ Deno.serve(async (req) => {
     const items: any[] = [];
 
     (trialCompanies || []).forEach((c: any) => {
+      if (c.parent_subscription_id && smsSubIds.has(c.parent_subscription_id)) return;
       items.push({
         external_id: `company:${c.id}`,
         source: "trial_empresa",
@@ -85,6 +117,7 @@ Deno.serve(async (req) => {
     });
 
     (trialSST || []).forEach((s: any) => {
+      if (smsSstManagerIds.has(s.id)) return;
       items.push({
         external_id: `sst:${s.id}`,
         source: "trial_gestora",
