@@ -183,7 +183,7 @@ export default function Financeiro() {
                     <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
                       {sub.status === 'active' ? 'Ativa' : sub.status}
                     </Badge>
-                    <Button onClick={() => navigate('/contratar')} className="gap-2">
+                    <Button onClick={handleUpgradeClick} className="gap-2">
                       <ArrowUpRight className="h-4 w-4" />
                       Fazer upgrade
                     </Button>
