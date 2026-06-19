@@ -28,6 +28,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: UserRole;
+  availableRoles: UserRole[];
+  switchRole: (newRole: UserRole) => void;
   isLoading: boolean;
   isTrialExpired: boolean;
   trialEndsAt: string | null;
@@ -37,6 +39,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
 }
+
+const ROLE_OVERRIDE_KEY = 'active_role_override';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
