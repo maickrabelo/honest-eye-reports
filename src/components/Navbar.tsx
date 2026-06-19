@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles, Repeat, Briefcase, Building2 } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
 import CompanySwitcher from '@/components/CompanySwitcher';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
@@ -37,12 +38,16 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
   const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
   const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
   const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
+  const { isSmsPlan } = useSmsPlan();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
   const isLoggedIn = !!user;
   const location = useLocation();
 
-  const isSmsRoute = smsBrand || location.pathname.startsWith('/sms') || location.pathname === '/teste-gratis-sst';
+  const isSmsRoute = smsBrand
+    || location.pathname.startsWith('/sms')
+    || location.pathname === '/teste-gratis-sst'
+    || (isLoggedIn && isSmsPlan);
 
   const handleResetTour = () => {
     if (role === 'sst') {
