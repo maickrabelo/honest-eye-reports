@@ -394,10 +394,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const signOut = async () => {
     try {
+      try { window.localStorage.removeItem(ROLE_OVERRIDE_KEY); } catch {}
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setRole(null);
+      setAvailableRoles([]);
       setProfile(null);
       setCompanies([]);
       setActiveCompanyId(null);
