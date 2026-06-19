@@ -127,7 +127,7 @@ const SSTTrialSignup = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <Navbar smsBrand />
       <main className="flex-grow bg-gradient-to-br from-muted to-background px-4 py-12">
         <div className="container mx-auto max-w-2xl">
           <Button
