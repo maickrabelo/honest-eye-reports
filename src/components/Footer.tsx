@@ -19,7 +19,13 @@ const Footer = ({ variant = 'soia' }: FooterProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            {isWhiteLabel && brandLogo ? (
+            {isSms ? (
+              <img 
+                src={SMS_LOGO_URL} 
+                alt="Sr. SMS" 
+                className="h-10 brightness-0 invert mb-4"
+              />
+            ) : isWhiteLabel && brandLogo ? (
               <img 
                 src={brandLogo} 
                 alt="Logo" 
@@ -33,7 +39,9 @@ const Footer = ({ variant = 'soia' }: FooterProps) => {
               />
             )}
             <p className="text-white/60 text-sm mb-6">
-              Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.
+              {isSms
+                ? 'Sistema NR-01 completo para gestão de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão SST.'
+                : 'Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.'}
             </p>
             <div className="flex gap-4">
               <a 
