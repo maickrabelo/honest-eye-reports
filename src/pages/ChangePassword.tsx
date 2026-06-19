@@ -8,6 +8,7 @@ import { Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { needsHotmartProfileCompletion } from '@/lib/profileCompletion';
 
 const ChangePassword: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
