@@ -28,6 +28,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: UserRole;
+  availableRoles: UserRole[];
+  switchRole: (newRole: UserRole) => void;
   isLoading: boolean;
   isTrialExpired: boolean;
   trialEndsAt: string | null;
@@ -38,6 +40,8 @@ interface AuthContextType {
   refreshRole: () => Promise<void>;
 }
 
+const ROLE_OVERRIDE_KEY = 'active_role_override';
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -45,6 +49,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<UserRole>(null);
+  const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
@@ -57,7 +62,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const hasRedirectedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<{ role: UserRole; all: UserRole[] }> => {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -65,15 +70,20 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('user_id', userId);
 
       if (error) throw error;
-      if (!data || data.length === 0) return null;
-      
-      // If user has multiple roles, prioritize non-pending roles
+      if (!data || data.length === 0) return { role: null, all: [] };
+
       const roles = data.map((r: any) => r.role as UserRole);
-      const meaningfulRole = roles.find(r => r !== 'pending');
-      return meaningfulRole || roles[0];
+      const meaningful = roles.filter(r => r !== 'pending');
+      const all = (meaningful.length > 0 ? meaningful : roles);
+
+      // Honor override if available
+      const override = (typeof window !== 'undefined' ? window.localStorage.getItem(ROLE_OVERRIDE_KEY) : null) as UserRole | null;
+      let active: UserRole = all[0] ?? null;
+      if (override && all.includes(override)) active = override;
+      return { role: active, all };
     } catch (error) {
       console.error('Error fetching user role:', error);
-      return null;
+      return { role: null, all: [] };
     }
   };
 
@@ -184,27 +194,40 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const loadFullUserData = async (userId: string) => {
-    const [userRole, userProfile] = await Promise.all([
+    const [roleResult, userProfile] = await Promise.all([
       fetchUserRole(userId),
       fetchProfile(userId),
     ]);
-    
+    const userRole = roleResult.role;
+    const userAvailableRoles = roleResult.all;
+
     // Skip fetching companies for roles that don't need them
     const skipCompanies = userRole === 'affiliate' || userRole === 'partner' || userRole === 'admin' || userRole === 'pending';
     const userCompanies = skipCompanies ? [] : await fetchUserCompanies(userId);
-    
-    return { userRole, userProfile, userCompanies };
+
+    return { userRole, userAvailableRoles, userProfile, userCompanies };
   };
 
   const refreshRole = async () => {
     if (user) {
-      const { userRole, userProfile, userCompanies } = await loadFullUserData(user.id);
+      const { userRole, userAvailableRoles, userProfile, userCompanies } = await loadFullUserData(user.id);
       setRole(userRole);
+      setAvailableRoles(userAvailableRoles);
       setProfile(userProfile);
       setCompanies(userCompanies);
       setActiveCompanyId(userProfile?.company_id ?? null);
       await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
+  };
+
+  const switchRole = (newRole: UserRole) => {
+    if (!newRole || !availableRoles.includes(newRole)) return;
+    try { window.localStorage.setItem(ROLE_OVERRIDE_KEY, String(newRole)); } catch {}
+    setRole(newRole);
+    hasRedirectedRef.current = true;
+    if (newRole === 'sst') navigate('/sst-dashboard');
+    else if (newRole === 'company') navigate('/dashboard');
+    else if (newRole === 'admin') navigate('/master-dashboard');
   };
 
   const navigateByRole = (userRole: UserRole, userProfile: Profile | null, userCompanies: UserCompany[]) => {
@@ -300,9 +323,10 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             if (!isMounted) return;
-            const { userRole, userProfile, userCompanies } = await loadFullUserData(session.user.id);
+            const { userRole, userAvailableRoles, userProfile, userCompanies } = await loadFullUserData(session.user.id);
             if (!isMounted) return;
             setRole(userRole);
+            setAvailableRoles(userAvailableRoles);
             setProfile(userProfile);
             setCompanies(userCompanies);
             setActiveCompanyId(userProfile?.company_id ?? null);
@@ -336,9 +360,10 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         currentUserIdRef.current = session?.user?.id ?? null;
 
         if (session?.user) {
-          const { userRole, userProfile, userCompanies } = await loadFullUserData(session.user.id);
+          const { userRole, userAvailableRoles, userProfile, userCompanies } = await loadFullUserData(session.user.id);
           if (!isMounted) return;
           setRole(userRole);
+          setAvailableRoles(userAvailableRoles);
           setProfile(userProfile);
           setCompanies(userCompanies);
           setActiveCompanyId(userProfile?.company_id ?? null);
@@ -369,10 +394,12 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const signOut = async () => {
     try {
+      try { window.localStorage.removeItem(ROLE_OVERRIDE_KEY); } catch {}
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setRole(null);
+      setAvailableRoles([]);
       setProfile(null);
       setCompanies([]);
       setActiveCompanyId(null);
@@ -395,7 +422,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <AuthContext.Provider value={{ 
-      user, session, profile, role, isLoading, isTrialExpired, trialEndsAt, 
+      user, session, profile, role, availableRoles, switchRole,
+      isLoading, isTrialExpired, trialEndsAt, 
       companies, activeCompanyId, switchCompany,
       signOut, refreshRole 
     }}>

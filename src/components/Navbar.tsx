@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles } from "lucide-react";
+import { Bell, Shield, ClipboardList, BookOpen, HelpCircle, Palette, Check, Sparkles, Repeat, Briefcase, Building2 } from "lucide-react";
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useWhiteLabel, BrandColorTheme } from '@/contexts/WhiteLabelContext';
 import CompanySwitcher from '@/components/CompanySwitcher';
@@ -29,7 +29,8 @@ const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] 
 ];
 
 const Navbar = () => {
-  const { user, role, signOut, profile } = useRealAuth();
+  const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
+  const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
   const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
@@ -82,6 +83,21 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
               <>
+              {hasDualRole && (role === 'sst' || role === 'company') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => switchRole(role === 'sst' ? 'company' : 'sst')}
+                  className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  title={role === 'sst' ? 'Mudar para visão de Empresa' : 'Mudar para visão de Gestora SST'}
+                >
+                  {role === 'sst' ? <Building2 className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
+                  <span className="hidden sm:inline">
+                    {role === 'sst' ? 'Ver como Empresa' : 'Ver como Gestora SST'}
+                  </span>
+                  <Repeat className="h-3.5 w-3.5 opacity-60" />
+                </Button>
+              )}
               {role === 'sst' && (
                 <div className="flex items-center gap-1">
                   <Popover>
