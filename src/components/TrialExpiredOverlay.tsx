@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
+
+const SMS_UPGRADE_URL = 'https://prgnovoplano.manus.space';
 
 type Cycle = 'monthly' | 'quarterly' | 'annual';
 type Category = 'company' | 'manager';
