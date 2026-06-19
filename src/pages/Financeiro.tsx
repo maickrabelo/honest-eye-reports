@@ -101,6 +101,15 @@ export default function Financeiro() {
   const payments: any[] = data?.payments || [];
   const lastPaid = data?.lastPaid;
   const daysUntilNext: number | null = data?.daysUntilNext;
+  const isSmsPlan = !!plan?.slug?.toLowerCase().includes('sms');
+
+  const handleUpgradeClick = () => {
+    if (isSmsPlan) {
+      setSmsDialogOpen(true);
+    } else {
+      navigate('/contratar');
+    }
+  };
 
   // Tempo de assinatura vigente
   const subStart = sub?.current_period_start || sub?.created_at;
