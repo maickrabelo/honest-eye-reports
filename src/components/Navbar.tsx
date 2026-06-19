@@ -77,7 +77,13 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to={isLoggedIn ? getDashboardPath() : '/'} className="flex items-center gap-3">
-              {isLoggedIn && isBrandLoading ? (
+              {isSmsRoute ? (
+                <img 
+                  src={SMS_LOGO_URL} 
+                  alt="Sr. SMS" 
+                  className="h-8 object-contain"
+                />
+              ) : isLoggedIn && isBrandLoading ? (
                 <div className="h-10 w-28 rounded-md bg-muted animate-pulse" aria-label="Carregando marca" />
               ) : isWhiteLabel && brandLogo ? (
                 <img 
