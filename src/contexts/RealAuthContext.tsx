@@ -409,6 +409,26 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const signOut = async () => {
     try {
+      // Check if user has an SMS plan to redirect correctly after logout
+      let isSmsPlan = false;
+      try {
+        const currentUser = user ?? (await supabase.auth.getUser()).data.user;
+        if (currentUser) {
+          const { data } = await (supabase as any)
+            .from('subscriptions')
+            .select('subscription_plans!inner(slug)')
+            .eq('owner_user_id', currentUser.id)
+            .in('status', ['active', 'trial', 'trialing'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const slug = (data as any)?.subscription_plans?.slug as string | undefined;
+          isSmsPlan = !!slug && slug.toLowerCase().includes('sms');
+        }
+      } catch {
+        // ignore query errors and fallback to normal auth
+      }
+
       try { window.localStorage.removeItem(ROLE_OVERRIDE_KEY); } catch {}
       await supabase.auth.signOut();
       setUser(null);
@@ -421,7 +441,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsTrialExpired(false);
       setTrialEndsAt(null);
       hasRedirectedRef.current = false;
-      navigate('/auth');
+      navigate(isSmsPlan ? '/sms/auth' : '/auth');
       toast({
         title: "Logout realizado",
         description: "Você saiu da sua conta com sucesso.",
