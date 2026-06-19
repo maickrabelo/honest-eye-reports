@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText, Mail, Phone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { fbqTrack } from '@/lib/metaPixel';
+
+const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
 
 type Cycle = 'monthly' | 'quarterly' | 'annual';
 type BillingType = 'PIX' | 'BOLETO' | 'CREDIT_CARD';
