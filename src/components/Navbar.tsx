@@ -68,7 +68,7 @@ const Navbar = () => {
       <div className="audit-container">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to={isLoggedIn ? getDashboardPath() : '/'} className="flex items-center gap-3">
               {isLoggedIn && isBrandLoading ? (
                 <div className="h-10 w-28 rounded-md bg-muted animate-pulse" aria-label="Carregando marca" />
               ) : isWhiteLabel && brandLogo ? (
