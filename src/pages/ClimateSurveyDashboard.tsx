@@ -113,7 +113,8 @@ interface FullResponse {
 const COLORS = ['#ef4444', '#f59e0b', '#22c55e'];
 
 export default function ClimateSurveyDashboard() {
-  const { role, profile, isLoading: authLoading } = useRealAuth();
+  const { role, profile, user, isLoading: authLoading } = useRealAuth();
+  const isDemoIlimitado = user?.email === 'demo.ilimitado@soia.app.br';
   const navigate = useNavigate();
   const { toast } = useToast();
   const { shouldShowTour, completeTour } = useOnboarding('climate-dashboard');
@@ -907,10 +908,12 @@ export default function ClimateSurveyDashboard() {
             </Card>
 
             {/* AI Insights Card */}
-            <AIInsightsCard 
-              surveyId={selectedSurvey} 
-              openResponses={getMockOpenResponses()}
-            />
+            {!isDemoIlimitado && (
+              <AIInsightsCard 
+                surveyId={selectedSurvey} 
+                openResponses={getMockOpenResponses()}
+              />
+            )}
 
             {/* Export Buttons */}
             <div className="flex justify-end mt-6 gap-3 flex-wrap">
