@@ -233,10 +233,22 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     else if (newRole === 'sales') navigate('/sales-dashboard');
   };
 
-  const navigateByRole = (userRole: UserRole, userProfile: Profile | null, userCompanies: UserCompany[]) => {
+  const navigateByRole = async (userRole: UserRole, userProfile: Profile | null, userCompanies: UserCompany[]) => {
     if (userProfile?.must_change_password) {
       navigate('/change-password');
-    } else if (userRole === 'pending') {
+      return;
+    }
+    // Hotmart users that haven't filled CPF/CNPJ/Phone/Address yet
+    if (userProfile && (userRole === 'company' || userRole === 'sst')) {
+      try {
+        const { needsHotmartProfileCompletion } = await import('@/lib/profileCompletion');
+        if (await needsHotmartProfileCompletion(userProfile.id)) {
+          navigate('/completar-cadastro');
+          return;
+        }
+      } catch {}
+    }
+    if (userRole === 'pending') {
       navigate('/');
     } else if (userRole === 'company' && userCompanies.length > 1) {
       navigate('/select-company');
