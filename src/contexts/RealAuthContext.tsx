@@ -323,9 +323,10 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             if (!isMounted) return;
-            const { userRole, userProfile, userCompanies } = await loadFullUserData(session.user.id);
+            const { userRole, userAvailableRoles, userProfile, userCompanies } = await loadFullUserData(session.user.id);
             if (!isMounted) return;
             setRole(userRole);
+            setAvailableRoles(userAvailableRoles);
             setProfile(userProfile);
             setCompanies(userCompanies);
             setActiveCompanyId(userProfile?.company_id ?? null);
