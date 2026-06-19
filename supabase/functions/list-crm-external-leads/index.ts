@@ -101,6 +101,7 @@ Deno.serve(async (req) => {
     const items: any[] = [];
 
     (trialCompanies || []).forEach((c: any) => {
+      if (c.parent_subscription_id && smsSubIds.has(c.parent_subscription_id)) return;
       items.push({
         external_id: `company:${c.id}`,
         source: "trial_empresa",
@@ -116,6 +117,7 @@ Deno.serve(async (req) => {
     });
 
     (trialSST || []).forEach((s: any) => {
+      if (smsSstManagerIds.has(s.id)) return;
       items.push({
         external_id: `sst:${s.id}`,
         source: "trial_gestora",
