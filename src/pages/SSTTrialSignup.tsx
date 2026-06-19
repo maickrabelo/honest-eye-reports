@@ -240,7 +240,7 @@ const SSTTrialSignup = () => {
           </Card>
         </div>
       </main>
-      <Footer />
+      <Footer variant="sms" />
     </div>
   );
 };
