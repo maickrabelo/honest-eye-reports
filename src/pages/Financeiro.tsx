@@ -329,6 +329,30 @@ export default function Financeiro() {
           </>
         )}
       </main>
+
+      <AlertDialog open={smsDialogOpen} onOpenChange={setSmsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Upgrade do plano Sr. SMS</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para fazer upgrade do seu plano Sr. SMS, você será direcionado para a
+              nossa página de vendas. Lá um consultor irá ajudá-lo a escolher a melhor
+              opção para o seu negócio.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                window.open(SMS_UPGRADE_URL, '_blank', 'noopener,noreferrer');
+                setSmsDialogOpen(false);
+              }}
+            >
+              Continuar para vendas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
