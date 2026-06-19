@@ -46,6 +46,7 @@ interface TrialExpiredOverlayProps {
 const TrialExpiredOverlay: React.FC<TrialExpiredOverlayProps> = ({ category: categoryProp }) => {
   const navigate = useNavigate();
   const { signOut, role, user } = useRealAuth();
+  const { isSmsPlan, isLoading: smsLoading } = useSmsPlan();
   const category: Category = categoryProp ?? (role === 'sst' ? 'manager' : 'company');
 
   const [plans, setPlans] = useState<Plan[]>([]);
