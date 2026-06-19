@@ -21,6 +21,18 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+const SMS_UPGRADE_URL = 'https://pgr.manus.space/';
 
 const formatBRL = (cents: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents || 0) / 100);
