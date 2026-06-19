@@ -50,12 +50,25 @@ const Navbar = () => {
     toast.success('Esquema de cores atualizado!');
   };
 
+  const getDashboardPath = () => {
+    if (!role) return '/';
+    switch (role) {
+      case 'admin': return '/master-dashboard';
+      case 'sst': return '/sst-dashboard';
+      case 'company': return '/dashboard';
+      case 'partner': return '/partner-dashboard';
+      case 'affiliate': return '/afiliado/dashboard';
+      case 'sales': return '/sales-dashboard';
+      default: return '/';
+    }
+  };
+
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="audit-container">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to={isLoggedIn ? getDashboardPath() : '/'} className="flex items-center gap-3">
               {isLoggedIn && isBrandLoading ? (
                 <div className="h-10 w-28 rounded-md bg-muted animate-pulse" aria-label="Carregando marca" />
               ) : isWhiteLabel && brandLogo ? (

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { sendAccessLog } from '@/hooks/useAccessLogger';
 
-type UserRole = 'admin' | 'company' | 'sst' | 'pending' | 'partner' | 'affiliate' | null;
+type UserRole = 'admin' | 'company' | 'sst' | 'pending' | 'partner' | 'affiliate' | 'sales' | null;
 
 interface Profile {
   id: string;
@@ -228,6 +228,9 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (newRole === 'sst') navigate('/sst-dashboard');
     else if (newRole === 'company') navigate('/dashboard');
     else if (newRole === 'admin') navigate('/master-dashboard');
+    else if (newRole === 'partner') navigate('/parceiro/dashboard');
+    else if (newRole === 'affiliate') navigate('/afiliado/dashboard');
+    else if (newRole === 'sales') navigate('/sales-dashboard');
   };
 
   const navigateByRole = (userRole: UserRole, userProfile: Profile | null, userCompanies: UserCompany[]) => {
