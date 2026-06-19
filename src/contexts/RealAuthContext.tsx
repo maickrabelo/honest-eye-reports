@@ -422,7 +422,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <AuthContext.Provider value={{ 
-      user, session, profile, role, isLoading, isTrialExpired, trialEndsAt, 
+      user, session, profile, role, availableRoles, switchRole,
+      isLoading, isTrialExpired, trialEndsAt, 
       companies, activeCompanyId, switchCompany,
       signOut, refreshRole 
     }}>
