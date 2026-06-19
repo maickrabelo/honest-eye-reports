@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
 
 interface FooterProps {
   variant?: 'soia' | 'sms';
@@ -9,9 +10,12 @@ interface FooterProps {
 
 const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
 
-const Footer = ({ variant = 'soia' }: FooterProps) => {
+const Footer = ({ variant }: FooterProps) => {
   const { brandLogo, isWhiteLabel } = useWhiteLabel();
-  const isSms = variant === 'sms';
+  const { isSmsPlan } = useSmsPlan();
+  const location = useLocation();
+  const isSmsRoute = location.pathname.startsWith('/sms') || location.pathname === '/teste-gratis-sst';
+  const isSms = variant === 'sms' || isSmsRoute || isSmsPlan;
 
   return (
     <footer className="bg-audit-dark text-white">
