@@ -408,6 +408,24 @@ const Checkout = () => {
             </CardContent>
           </Card>
         </div>
+
+        {isSmsPlan && (
+          <footer className="mt-16 pt-8 border-t border-border">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>sr.smsapp@gmail.com</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <span>+55 27 99844-3852</span>
+              </div>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              &copy; {new Date().getFullYear()} Sr. SMS. Todos os direitos reservados.
+            </p>
+          </footer>
+        )}
       </div>
     </div>
   );
