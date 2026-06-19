@@ -10,6 +10,8 @@ interface SSTManagerInfo {
   name: string;
   logo_url: string | null;
   slug: string;
+  email: string | null;
+  phone: string | null;
 }
 
 const SSTLandingPage = () => {
