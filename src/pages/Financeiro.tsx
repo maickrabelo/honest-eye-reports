@@ -70,6 +70,7 @@ export default function Financeiro() {
   const { user, isLoading: authLoading } = useRealAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [smsDialogOpen, setSmsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
