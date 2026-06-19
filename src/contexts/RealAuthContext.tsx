@@ -62,7 +62,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const hasRedirectedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<{ role: UserRole; all: UserRole[] }> => {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -70,15 +70,20 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('user_id', userId);
 
       if (error) throw error;
-      if (!data || data.length === 0) return null;
-      
-      // If user has multiple roles, prioritize non-pending roles
+      if (!data || data.length === 0) return { role: null, all: [] };
+
       const roles = data.map((r: any) => r.role as UserRole);
-      const meaningfulRole = roles.find(r => r !== 'pending');
-      return meaningfulRole || roles[0];
+      const meaningful = roles.filter(r => r !== 'pending');
+      const all = (meaningful.length > 0 ? meaningful : roles);
+
+      // Honor override if available
+      const override = (typeof window !== 'undefined' ? window.localStorage.getItem(ROLE_OVERRIDE_KEY) : null) as UserRole | null;
+      let active: UserRole = all[0] ?? null;
+      if (override && all.includes(override)) active = override;
+      return { role: active, all };
     } catch (error) {
       console.error('Error fetching user role:', error);
-      return null;
+      return { role: null, all: [] };
     }
   };
 
