@@ -21,6 +21,18 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+const SMS_UPGRADE_URL = 'https://pgr.manus.space/';
 
 const formatBRL = (cents: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents || 0) / 100);
@@ -58,6 +70,7 @@ export default function Financeiro() {
   const { user, isLoading: authLoading } = useRealAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [smsDialogOpen, setSmsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -88,6 +101,15 @@ export default function Financeiro() {
   const payments: any[] = data?.payments || [];
   const lastPaid = data?.lastPaid;
   const daysUntilNext: number | null = data?.daysUntilNext;
+  const isSmsPlan = !!plan?.slug?.toLowerCase().includes('sms');
+
+  const handleUpgradeClick = () => {
+    if (isSmsPlan) {
+      setSmsDialogOpen(true);
+    } else {
+      navigate('/contratar');
+    }
+  };
 
   // Tempo de assinatura vigente
   const subStart = sub?.current_period_start || sub?.created_at;
@@ -161,7 +183,7 @@ export default function Financeiro() {
                     <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
                       {sub.status === 'active' ? 'Ativa' : sub.status}
                     </Badge>
-                    <Button onClick={() => navigate('/contratar')} className="gap-2">
+                    <Button onClick={handleUpgradeClick} className="gap-2">
                       <ArrowUpRight className="h-4 w-4" />
                       Fazer upgrade
                     </Button>
@@ -307,6 +329,30 @@ export default function Financeiro() {
           </>
         )}
       </main>
+
+      <AlertDialog open={smsDialogOpen} onOpenChange={setSmsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Upgrade do plano Sr. SMS</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para fazer upgrade do seu plano Sr. SMS, você será direcionado para a
+              nossa página de vendas. Lá um consultor irá ajudá-lo a escolher a melhor
+              opção para o seu negócio.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                window.open(SMS_UPGRADE_URL, '_blank', 'noopener,noreferrer');
+                setSmsDialogOpen(false);
+              }}
+            >
+              Continuar para vendas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
