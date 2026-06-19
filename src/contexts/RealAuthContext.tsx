@@ -360,9 +360,10 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         currentUserIdRef.current = session?.user?.id ?? null;
 
         if (session?.user) {
-          const { userRole, userProfile, userCompanies } = await loadFullUserData(session.user.id);
+          const { userRole, userAvailableRoles, userProfile, userCompanies } = await loadFullUserData(session.user.id);
           if (!isMounted) return;
           setRole(userRole);
+          setAvailableRoles(userAvailableRoles);
           setProfile(userProfile);
           setCompanies(userCompanies);
           setActiveCompanyId(userProfile?.company_id ?? null);
