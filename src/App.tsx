@@ -49,6 +49,7 @@ const BurnoutManagement = React.lazy(() => import("./pages/BurnoutManagement"));
 const BurnoutForm = React.lazy(() => import("./pages/BurnoutForm"));
 const BurnoutResults = React.lazy(() => import("./pages/BurnoutResults"));
 const ChangePassword = React.lazy(() => import("./pages/ChangePassword"));
+const CompleteProfile = React.lazy(() => import("./pages/CompleteProfile"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const SSTLandingPage = React.lazy(() => import("./pages/SSTLandingPage"));
 const SSTPortal = React.lazy(() => import("./pages/SSTPortal"));
@@ -128,6 +129,7 @@ const App = () => (
                 <Route path="/convite-setor/:token" element={<AcceptSectorInvitation />} />
                 <Route path="/setor/dashboard" element={<SectorViewerDashboard />} />
                 <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/completar-cadastro" element={<CompleteProfile />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
                 <Route path="/select-company" element={<CompanySelector />} />

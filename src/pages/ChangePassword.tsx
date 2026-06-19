@@ -8,6 +8,7 @@ import { Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { needsHotmartProfileCompletion } from '@/lib/profileCompletion';
 
 const ChangePassword: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
@@ -23,12 +24,18 @@ const ChangePassword: React.FC = () => {
     }
     // If profile loaded and must_change_password is false, redirect based on role
     if (!isLoading && profile && !(profile as any).must_change_password) {
-      if (role === 'admin') navigate('/master-dashboard');
-      else if (role === 'sst') navigate('/sst-dashboard');
-      else if (role === 'partner') navigate('/parceiro/dashboard');
-      else if (role === 'affiliate') navigate('/afiliado/dashboard');
-      else if ((role as string) === 'sales') navigate('/sales-dashboard');
-      else navigate('/dashboard');
+      (async () => {
+        if (await needsHotmartProfileCompletion(user!.id)) {
+          navigate('/completar-cadastro');
+          return;
+        }
+        if (role === 'admin') navigate('/master-dashboard');
+        else if (role === 'sst') navigate('/sst-dashboard');
+        else if (role === 'partner') navigate('/parceiro/dashboard');
+        else if (role === 'affiliate') navigate('/afiliado/dashboard');
+        else if ((role as string) === 'sales') navigate('/sales-dashboard');
+        else navigate('/dashboard');
+      })();
     }
   }, [isLoading, user, profile, navigate]);
 
@@ -79,7 +86,12 @@ const ChangePassword: React.FC = () => {
       // Refresh profile data and redirect
       await refreshRole();
 
+      const needsCompletion = await needsHotmartProfileCompletion(user!.id);
       setTimeout(() => {
+        if (needsCompletion) {
+          navigate('/completar-cadastro');
+          return;
+        }
         if (role === 'admin') navigate('/master-dashboard');
         else if (role === 'sst') navigate('/sst-dashboard');
         else if (role === 'partner') navigate('/parceiro/dashboard');
