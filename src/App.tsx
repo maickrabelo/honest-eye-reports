@@ -129,6 +129,7 @@ const App = () => (
                 <Route path="/convite-setor/:token" element={<AcceptSectorInvitation />} />
                 <Route path="/setor/dashboard" element={<SectorViewerDashboard />} />
                 <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/completar-cadastro" element={<CompleteProfile />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
                 <Route path="/select-company" element={<CompanySelector />} />
