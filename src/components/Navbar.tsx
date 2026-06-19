@@ -29,7 +29,8 @@ const COLOR_OPTIONS: { value: BrandColorTheme; label: string; color: string }[] 
 ];
 
 const Navbar = () => {
-  const { user, role, signOut, profile } = useRealAuth();
+  const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
+  const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
   const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
