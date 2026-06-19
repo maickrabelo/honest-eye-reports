@@ -24,13 +24,14 @@ const Auth = () => {
   const invitationToken = searchParams.get('invitation');
   const isSmsBrand =
     location.pathname.startsWith('/sms') ||
-    searchParams.get('brand') === 'sms' ||
-    (typeof window !== 'undefined' && window.localStorage.getItem('auth_brand') === 'sms');
+    searchParams.get('brand') === 'sms';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (location.pathname.startsWith('/sms') || searchParams.get('brand') === 'sms') {
       window.localStorage.setItem('auth_brand', 'sms');
+    } else {
+      window.localStorage.removeItem('auth_brand');
     }
   }, [location.pathname, searchParams]);
 
