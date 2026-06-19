@@ -194,27 +194,40 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const loadFullUserData = async (userId: string) => {
-    const [userRole, userProfile] = await Promise.all([
+    const [roleResult, userProfile] = await Promise.all([
       fetchUserRole(userId),
       fetchProfile(userId),
     ]);
-    
+    const userRole = roleResult.role;
+    const userAvailableRoles = roleResult.all;
+
     // Skip fetching companies for roles that don't need them
     const skipCompanies = userRole === 'affiliate' || userRole === 'partner' || userRole === 'admin' || userRole === 'pending';
     const userCompanies = skipCompanies ? [] : await fetchUserCompanies(userId);
-    
-    return { userRole, userProfile, userCompanies };
+
+    return { userRole, userAvailableRoles, userProfile, userCompanies };
   };
 
   const refreshRole = async () => {
     if (user) {
-      const { userRole, userProfile, userCompanies } = await loadFullUserData(user.id);
+      const { userRole, userAvailableRoles, userProfile, userCompanies } = await loadFullUserData(user.id);
       setRole(userRole);
+      setAvailableRoles(userAvailableRoles);
       setProfile(userProfile);
       setCompanies(userCompanies);
       setActiveCompanyId(userProfile?.company_id ?? null);
       await checkTrialStatus(userProfile?.company_id ?? null, userProfile?.sst_manager_id ?? null);
     }
+  };
+
+  const switchRole = (newRole: UserRole) => {
+    if (!newRole || !availableRoles.includes(newRole)) return;
+    try { window.localStorage.setItem(ROLE_OVERRIDE_KEY, String(newRole)); } catch {}
+    setRole(newRole);
+    hasRedirectedRef.current = true;
+    if (newRole === 'sst') navigate('/sst-dashboard');
+    else if (newRole === 'company') navigate('/dashboard');
+    else if (newRole === 'admin') navigate('/master-dashboard');
   };
 
   const navigateByRole = (userRole: UserRole, userProfile: Profile | null, userCompanies: UserCompany[]) => {
