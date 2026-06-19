@@ -3,8 +3,15 @@ import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
-const Footer = () => {
+interface FooterProps {
+  variant?: 'soia' | 'sms';
+}
+
+const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
+
+const Footer = ({ variant = 'soia' }: FooterProps) => {
   const { brandLogo, isWhiteLabel } = useWhiteLabel();
+  const isSms = variant === 'sms';
 
   return (
     <footer className="bg-audit-dark text-white">
