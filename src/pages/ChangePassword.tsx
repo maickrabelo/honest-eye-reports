@@ -86,7 +86,12 @@ const ChangePassword: React.FC = () => {
       // Refresh profile data and redirect
       await refreshRole();
 
+      const needsCompletion = await needsHotmartProfileCompletion(user!.id);
       setTimeout(() => {
+        if (needsCompletion) {
+          navigate('/completar-cadastro');
+          return;
+        }
         if (role === 'admin') navigate('/master-dashboard');
         else if (role === 'sst') navigate('/sst-dashboard');
         else if (role === 'partner') navigate('/parceiro/dashboard');
