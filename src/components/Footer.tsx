@@ -125,20 +125,24 @@ const Footer = ({ variant = 'soia' }: FooterProps) => {
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">contato@soia.com.br</span>
+                <span className="text-white/60">{isSms ? 'sr.smsapp@gmail.com' : 'contato@soia.com.br'}</span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">+55 11 9 9940-6560</span>
+                <span className="text-white/60">{isSms ? '+55 27 99844-3852' : '+55 11 9 9940-6560'}</span>
               </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">São Paulo, SP - Brasil</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
-                <span className="text-white/60">Uberaba, MG - Brasil</span>
-              </li>
+              {!isSms && (
+                <>
+                  <li className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
+                    <span className="text-white/60">São Paulo, SP - Brasil</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-audit-secondary flex-shrink-0 mt-0.5" />
+                    <span className="text-white/60">Uberaba, MG - Brasil</span>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>
@@ -148,12 +152,14 @@ const Footer = ({ variant = 'soia' }: FooterProps) => {
       <div className="border-t border-white/10">
         <div className="audit-container py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
-            <p>&copy; {new Date().getFullYear()} SOIA - Sistema NR-01 para Riscos Psicossociais. Todos os direitos reservados.</p>
-            <p>Desenvolvido com 💚 para empresas que cuidam das pessoas.</p>
+            <p>&copy; {new Date().getFullYear()} {isSms ? 'Sr. SMS' : 'SOIA - Sistema NR-01 para Riscos Psicossociais'}. Todos os direitos reservados.</p>
+            {!isSms && <p>Desenvolvido com 💚 para empresas que cuidam das pessoas.</p>}
           </div>
-          <div className="mt-4 pt-4 border-t border-white/5 text-center text-xs text-white/40">
-            <p>SOIA TECNOLOGIA E DESENVOLVIMENTO DE SISTEMAS LTDA — CNPJ 66.895.503/0001-80</p>
-          </div>
+          {!isSms && (
+            <div className="mt-4 pt-4 border-t border-white/5 text-center text-xs text-white/40">
+              <p>SOIA TECNOLOGIA E DESENVOLVIMENTO DE SISTEMAS LTDA — CNPJ 66.895.503/0001-80</p>
+            </div>
+          )}
         </div>
       </div>
     </footer>
