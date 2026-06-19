@@ -908,10 +908,12 @@ export default function ClimateSurveyDashboard() {
             </Card>
 
             {/* AI Insights Card */}
-            <AIInsightsCard 
-              surveyId={selectedSurvey} 
-              openResponses={getMockOpenResponses()}
-            />
+            {!isDemoIlimitado && (
+              <AIInsightsCard 
+                surveyId={selectedSurvey} 
+                openResponses={getMockOpenResponses()}
+              />
+            )}
 
             {/* Export Buttons */}
             <div className="flex justify-end mt-6 gap-3 flex-wrap">
