@@ -192,6 +192,8 @@ const Checkout = () => {
     );
   }
 
+  const isSmsPlan = plan?.slug?.includes('sms') ?? false;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -200,7 +202,11 @@ const Checkout = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
-          <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA" className="h-8" />
+          <img 
+            src={isSmsPlan ? SMS_LOGO_URL : '/lovable-uploads/Logo_SOIA.png'} 
+            alt={isSmsPlan ? 'Sr. SMS' : 'SOIA'} 
+            className="h-8" 
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
