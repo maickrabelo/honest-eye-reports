@@ -138,6 +138,15 @@ export const AssignManualPlanDialog: React.FC<Props> = ({
       const { error: insertErr } = await (supabase.from("subscriptions") as any).insert(payload);
       if (insertErr) throw insertErr;
 
+      // Sincroniza limites da gestora SST com o plano atribuído
+      const { error: updateMgrErr } = await (supabase.from("sst_managers") as any)
+        .update({
+          max_companies: selected.max_companies,
+          max_employees: selected.max_employees,
+        })
+        .eq("id", sstManager.id);
+      if (updateMgrErr) throw updateMgrErr;
+
       toast({
         title: "Plano atribuído",
         description: isTrial
