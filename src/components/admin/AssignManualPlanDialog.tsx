@@ -135,6 +135,13 @@ export const AssignManualPlanDialog: React.FC<Props> = ({
           assigned_at: now.toISOString(),
         },
       };
+      // Cancela assinaturas ativas/trial anteriores para evitar acúmulo
+      const { error: cancelErr } = await (supabase.from("subscriptions") as any)
+        .update({ status: "canceled" })
+        .eq("owner_user_id", profile.id)
+        .in("status", ["active", "trial", "trialing"]);
+      if (cancelErr) throw cancelErr;
+
       const { error: insertErr } = await (supabase.from("subscriptions") as any).insert(payload);
       if (insertErr) throw insertErr;
 
