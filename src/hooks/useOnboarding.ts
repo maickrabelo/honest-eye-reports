@@ -59,22 +59,17 @@ export function useOnboarding(pageId: string) {
         if (isSstOwner) {
           const { data, error } = await supabase
             .from('sst_managers')
-            .select('onboarding_completed_pages, subscription_status')
+            .select('onboarding_completed_pages')
             .eq('id', profile.sst_manager_id!)
             .single();
           if (error) throw error;
-          if (data?.subscription_status !== 'trial') {
-            setShouldShowTour(false);
-            setIsReady(true);
-            return;
-          }
           const completedPages = (data?.onboarding_completed_pages as string[]) || [];
           if (completedPages.length > 0) {
             setLocalCompleted([...new Set([...localCompleted, ...completedPages])]);
           }
           setShouldShowTour(!completedPages.includes(pageId));
         } else if (isCompanyOwner) {
-          // Para empresa: controle apenas via localStorage (independente de status de assinatura)
+          // Para empresa: controle apenas via localStorage
           setShouldShowTour(true);
         }
       } catch (err) {
