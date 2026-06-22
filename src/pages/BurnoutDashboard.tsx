@@ -177,9 +177,12 @@ export default function BurnoutDashboard() {
                 <h1 className="text-3xl md:text-4xl font-bold text-white">Avaliação de Burnout</h1>
                 <p className="text-white/70 mt-1">Gerencie as avaliações de risco de Síndrome de Burnout</p>
               </div>
-              <Button id="burnout-new-btn" onClick={() => navigate('/burnout/new')} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
-                <Plus className="h-4 w-4" /> Nova Avaliação
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <PrintQuestionnaireButton variant="burnout" buttonClassName="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm" />
+                <Button id="burnout-new-btn" onClick={() => navigate('/burnout/new')} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+                  <Plus className="h-4 w-4" /> Nova Avaliação
+                </Button>
+              </div>
             </div>
 
             {/* Stats */}
