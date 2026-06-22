@@ -149,9 +149,12 @@ export default function HSEITDashboardContent() {
           <h2 className="text-2xl font-bold text-foreground">Avaliações HSE-IT</h2>
           <p className="text-muted-foreground text-sm">Health and Safety Executive Indicator Tool</p>
         </div>
-        <Button id="hseit-new-btn" onClick={() => navigate('/hseit/new')} className="gap-2">
-          <Plus className="h-4 w-4" /> Nova Avaliação
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <PrintQuestionnaireButton variant="hseit" />
+          <Button id="hseit-new-btn" onClick={() => navigate('/hseit/new')} className="gap-2">
+            <Plus className="h-4 w-4" /> Nova Avaliação
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
