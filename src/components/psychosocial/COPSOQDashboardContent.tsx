@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
+import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
 
 interface COPSOQAssessment {
   id: string;
