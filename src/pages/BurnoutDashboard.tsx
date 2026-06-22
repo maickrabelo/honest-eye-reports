@@ -18,6 +18,7 @@ import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
+import PrintQuestionnaireButton from "@/components/PrintQuestionnaireButton";
 import { Loader2 } from "lucide-react";
 
 const burnoutSteps: TourStep[] = [
