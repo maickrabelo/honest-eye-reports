@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
 
 const hseitSteps: TourStep[] = [
   {
@@ -255,10 +256,13 @@ export default function HSEITDashboard() {
             </p>
           </div>
           
-          <Button id="hseit-new-btn" onClick={() => navigate('/hseit/new')} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Avaliação
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <PrintQuestionnaireButton variant="hseit" />
+            <Button id="hseit-new-btn" onClick={() => navigate('/hseit/new')} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Avaliação
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

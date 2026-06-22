@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from './PeriodFilter';
+import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
 
 interface COPSOQAssessment {
   id: string;
@@ -150,9 +151,12 @@ export default function COPSOQDashboardContent() {
           <h2 className="text-2xl font-bold text-foreground">Avaliações COPSOQ II</h2>
           <p className="text-muted-foreground text-sm">Copenhagen Psychosocial Questionnaire — Versão Curta</p>
         </div>
-        <Button onClick={() => navigate('/copsoq/new')} className="gap-2">
-          <Plus className="h-4 w-4" /> Nova Avaliação
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <PrintQuestionnaireButton variant="copsoq" />
+          <Button onClick={() => navigate('/copsoq/new')} className="gap-2">
+            <Plus className="h-4 w-4" /> Nova Avaliação
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

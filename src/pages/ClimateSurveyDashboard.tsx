@@ -55,6 +55,7 @@ import OnboardingTour, { TourStep } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import SoniaChat from "@/components/SoniaChat";
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
+import PrintQuestionnaireButton from "@/components/PrintQuestionnaireButton";
 
 const climateSteps: TourStep[] = [
   {
@@ -494,6 +495,7 @@ export default function ClimateSurveyDashboard() {
                     size="default"
                   />
                 )}
+                <PrintQuestionnaireButton variant="climate" buttonClassName="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm" />
                 {['admin', 'sst', 'company'].includes(role || '') && (
                   <Button id="climate-new-btn" onClick={handleCreateSurvey} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
                     <Plus className="h-4 w-4" /> Nova Pesquisa
