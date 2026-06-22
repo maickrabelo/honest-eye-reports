@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import PrintQuestionnaireButton from '@/components/PrintQuestionnaireButton';
 
 const hseitSteps: TourStep[] = [
   {
