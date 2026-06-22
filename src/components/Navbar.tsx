@@ -266,21 +266,25 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
               </>
             ) : (
               <div className="flex items-center gap-4">
-                <a href="/#sistema-nr01" className="hidden md:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  Soluções
-                </a>
-                <a href="/#beneficios" className="hidden md:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  Benefícios
-                </a>
-                <a href="/#faq" className="hidden lg:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  FAQ
-                </a>
-                <a href="/#contato" className="hidden sm:inline-flex">
-                  <Button variant="ghost">
-                    Contato
-                  </Button>
-                </a>
-                <Link to="/auth">
+                {!isSmsRoute && (
+                  <>
+                    <a href="/#sistema-nr01" className="hidden md:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      Soluções
+                    </a>
+                    <a href="/#beneficios" className="hidden md:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      Benefícios
+                    </a>
+                    <a href="/#faq" className="hidden lg:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      FAQ
+                    </a>
+                    <a href="/#contato" className="hidden sm:inline-flex">
+                      <Button variant="ghost">
+                        Contato
+                      </Button>
+                    </a>
+                  </>
+                )}
+                <Link to={isSmsRoute ? '/sms/auth' : '/auth'}>
                   <Button className="bg-audit-primary hover:bg-audit-primary/90">
                     Área do Cliente
                   </Button>
