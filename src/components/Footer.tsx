@@ -47,81 +47,87 @@ const Footer = ({ variant }: FooterProps) => {
                 ? 'Sistema NR-01 completo para gestão de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão SST.'
                 : 'Sistema NR-01 completo para levantamento de riscos psicossociais, canal de denúncias, pesquisa de clima e gestão de compliance.'}
             </p>
-            <div className="flex gap-4">
-              <a 
-                href="https://linkedin.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                aria-label="LinkedIn do SOIA"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                aria-label="Instagram do SOIA"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-            </div>
+            {!isSms && (
+              <div className="flex gap-4">
+                <a 
+                  href="https://linkedin.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                  aria-label="LinkedIn do SOIA"
+                >
+                  <Linkedin className="h-5 w-5" />
+                </a>
+                <a 
+                  href="https://instagram.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                  aria-label="Instagram do SOIA"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+              </div>
+            )}
           </div>
 
-          {/* Solutions */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Sistema NR-01</h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
-                  Levantamento de Riscos Psicossociais
-                </a>
-              </li>
-              <li>
-                <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
-                  Canal de Denúncias
-                </a>
-              </li>
-              <li>
-                <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
-                  Pesquisa de Clima Organizacional
-                </a>
-              </li>
-              <li>
-                <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
-                  Gestão de Riscos Psicossociais
-                </a>
-              </li>
-            </ul>
-          </div>
+          {!isSms && (
+            <>
+              {/* Solutions */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Sistema NR-01</h3>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
+                      Levantamento de Riscos Psicossociais
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
+                      Canal de Denúncias
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
+                      Pesquisa de Clima Organizacional
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/#sistema-nr01" className="text-white/60 hover:text-white transition-colors">
+                      Gestão de Riscos Psicossociais
+                    </a>
+                  </li>
+                </ul>
+              </div>
 
-          {/* Company */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Empresa</h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a href="/#beneficios" className="text-white/60 hover:text-white transition-colors">
-                  Benefícios
-                </a>
-              </li>
-              <li>
-                <a href="/#como-funciona" className="text-white/60 hover:text-white transition-colors">
-                  Como Funciona
-                </a>
-              </li>
-              <li>
-                <a href="/#faq" className="text-white/60 hover:text-white transition-colors">
-                  Perguntas Frequentes
-                </a>
-              </li>
-              <li>
-                <Link to="/auth" className="text-white/60 hover:text-white transition-colors">
-                  Área do Cliente
-                </Link>
-              </li>
-            </ul>
-          </div>
+              {/* Company */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Empresa</h3>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a href="/#beneficios" className="text-white/60 hover:text-white transition-colors">
+                      Benefícios
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/#como-funciona" className="text-white/60 hover:text-white transition-colors">
+                      Como Funciona
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/#faq" className="text-white/60 hover:text-white transition-colors">
+                      Perguntas Frequentes
+                    </a>
+                  </li>
+                  <li>
+                    <Link to="/auth" className="text-white/60 hover:text-white transition-colors">
+                      Área do Cliente
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </>
+          )}
 
           {/* Contact */}
           <div>
