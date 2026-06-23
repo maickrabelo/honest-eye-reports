@@ -432,6 +432,7 @@ export const SalesTeamTab = () => {
             <ToggleGroupItem value="history" aria-label="Histórico"><Inbox className="h-4 w-4" /></ToggleGroupItem>
             <ToggleGroupItem value="archived" aria-label="Arquivados"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
+          <Button variant="outline" onClick={() => setBulkImportOpen(true)} size="sm"><Upload className="h-4 w-4 mr-1" />Importar em Lote</Button>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
       </div>
