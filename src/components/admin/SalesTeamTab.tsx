@@ -21,6 +21,7 @@ import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes
 import { SalesClosingDialog } from '@/components/sales/SalesClosingDialog';
 import { SalesDenialDialog } from '@/components/sales/SalesDenialDialog';
 import { SalesHistoryList } from '@/components/sales/SalesHistoryList';
+import { BulkImportLeadsDialog } from '@/components/sales/BulkImportLeadsDialog';
 
 type ExternalLead = {
   external_id: string;
