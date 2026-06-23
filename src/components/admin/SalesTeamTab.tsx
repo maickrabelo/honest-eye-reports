@@ -806,6 +806,11 @@ export const SalesTeamTab = () => {
         onOpenChange={setDenialDialogOpen}
         onConfirm={handleConfirmDenial}
       />
+      <BulkImportLeadsDialog
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        onImported={fetchLeads}
+      />
     </div>
   );
 };
