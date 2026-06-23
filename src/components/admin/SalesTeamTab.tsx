@@ -55,6 +55,7 @@ export const SalesTeamTab = () => {
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]);
   const [dismissedExternal, setDismissedExternal] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem('crm_dismissed_external') || '[]')); } catch { return new Set(); }
