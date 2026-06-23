@@ -14,13 +14,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
 import { SalesClosingDialog } from '@/components/sales/SalesClosingDialog';
 import { SalesDenialDialog } from '@/components/sales/SalesDenialDialog';
 import { SalesHistoryList } from '@/components/sales/SalesHistoryList';
+import { BulkImportLeadsDialog } from '@/components/sales/BulkImportLeadsDialog';
 
 type ExternalLead = {
   external_id: string;
@@ -54,6 +55,7 @@ export const SalesTeamTab = () => {
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [externalLeads, setExternalLeads] = useState<ExternalLead[]>([]);
   const [dismissedExternal, setDismissedExternal] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem('crm_dismissed_external') || '[]')); } catch { return new Set(); }
@@ -430,6 +432,7 @@ export const SalesTeamTab = () => {
             <ToggleGroupItem value="history" aria-label="Histórico"><Inbox className="h-4 w-4" /></ToggleGroupItem>
             <ToggleGroupItem value="archived" aria-label="Arquivados"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
+          <Button variant="outline" onClick={() => setBulkImportOpen(true)} size="sm"><Upload className="h-4 w-4 mr-1" />Importar em Lote</Button>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
       </div>
@@ -802,6 +805,11 @@ export const SalesTeamTab = () => {
         open={denialDialogOpen}
         onOpenChange={setDenialDialogOpen}
         onConfirm={handleConfirmDenial}
+      />
+      <BulkImportLeadsDialog
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        onImported={fetchLeads}
       />
     </div>
   );
