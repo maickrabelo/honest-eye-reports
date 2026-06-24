@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
@@ -417,6 +417,32 @@ export const SalesTeamTab = () => {
     try { return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm"); } catch { return null; }
   };
 
+  const exportContactsCSV = () => {
+    if (leads.length === 0) {
+      toast({ title: 'Nenhum lead para exportar', variant: 'destructive' });
+      return;
+    }
+    const headers = ['Empresa', 'Responsável', 'Telefone', 'Cidade', 'E-mail / Observações', 'Status', 'Resultado', 'Criado em'];
+    const rows = leads.map(lead => [
+      lead.company_name,
+      lead.contact_name || '',
+      lead.phone || '',
+      lead.city || '',
+      lead.notes || '',
+      STATUS_LABEL[lead.status] || lead.status,
+      lead.result || '',
+      lead.created_at ? new Date(lead.created_at).toLocaleString('pt-BR') : '',
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `crm_contatos_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -433,6 +459,7 @@ export const SalesTeamTab = () => {
             <ToggleGroupItem value="archived" aria-label="Arquivados"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
           <Button variant="outline" onClick={() => setBulkImportOpen(true)} size="sm"><Upload className="h-4 w-4 mr-1" />Importar em Lote</Button>
+          <Button variant="outline" onClick={exportContactsCSV} size="sm" disabled={leads.length === 0}><Download className="h-4 w-4 mr-1" />Exportar CSV</Button>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
       </div>
