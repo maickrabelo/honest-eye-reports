@@ -9,6 +9,8 @@ import { Loader2, UserCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
+import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 
 const formatCpfCnpj = (v: string) => {
   const d = v.replace(/\D/g, '').slice(0, 14);
@@ -37,6 +39,7 @@ const CompleteProfile: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isSmsPlan } = useSmsPlan();
 
   const [loading, setLoading] = useState(true);
   const [target, setTarget] = useState<{ kind: 'company' | 'sst'; id: string } | null>(null);
@@ -151,7 +154,11 @@ const CompleteProfile: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <a href="/" className="mb-6">
-        <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA" className="h-14 object-contain" />
+        <img
+          src={isSmsPlan ? srSmsLogo.url : '/lovable-uploads/Logo_SOIA.png'}
+          alt={isSmsPlan ? 'Sr. SMS' : 'SOIA'}
+          className={isSmsPlan ? 'h-20 object-contain' : 'h-14 object-contain'}
+        />
       </a>
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center space-y-2">
