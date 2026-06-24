@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { needsHotmartProfileCompletion } from '@/lib/profileCompletion';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
+import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 
 const ChangePassword: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
