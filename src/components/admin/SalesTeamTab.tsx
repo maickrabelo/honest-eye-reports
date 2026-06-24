@@ -417,6 +417,32 @@ export const SalesTeamTab = () => {
     try { return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm"); } catch { return null; }
   };
 
+  const exportContactsCSV = () => {
+    if (leads.length === 0) {
+      toast({ title: 'Nenhum lead para exportar', variant: 'destructive' });
+      return;
+    }
+    const headers = ['Empresa', 'Responsável', 'Telefone', 'Cidade', 'E-mail / Observações', 'Status', 'Resultado', 'Criado em'];
+    const rows = leads.map(lead => [
+      lead.company_name,
+      lead.contact_name || '',
+      lead.phone || '',
+      lead.city || '',
+      lead.notes || '',
+      STATUS_LABEL[lead.status] || lead.status,
+      lead.result || '',
+      lead.created_at ? new Date(lead.created_at).toLocaleString('pt-BR') : '',
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `crm_contatos_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
