@@ -9,6 +9,8 @@ import { Loader2, UserCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useSmsPlan } from '@/hooks/useSmsPlan';
+import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
 
 const formatCpfCnpj = (v: string) => {
   const d = v.replace(/\D/g, '').slice(0, 14);
