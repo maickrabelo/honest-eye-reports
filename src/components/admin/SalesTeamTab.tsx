@@ -422,10 +422,9 @@ export const SalesTeamTab = () => {
       toast({ title: 'Nenhum lead para exportar', variant: 'destructive' });
       return;
     }
-    const headers = ['Empresa', 'Responsável', 'Telefone', 'Cidade', 'E-mail / Observações', 'Status', 'Resultado', 'Criado em'];
+    const headers = ['Nome', 'Telefone', 'Cidade', 'E-mail / Observações', 'Status', 'Resultado', 'Criado em'];
     const rows = leads.map(lead => [
-      lead.company_name,
-      lead.contact_name || '',
+      [lead.contact_name, lead.company_name].filter(Boolean).join(' - '),
       lead.phone || '',
       lead.city || '',
       lead.notes || '',
