@@ -9,6 +9,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { RefreshCw, Building2, Briefcase, ShoppingCart, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type TrialSource = "all" | "soia" | "hotmart";
+
 type TrialRow = {
   id: string;
   name: string;
@@ -16,6 +18,8 @@ type TrialRow = {
   trial_ends_at: string | null;
   created_at: string;
   subscription_status: string | null;
+  plan_slug?: string | null;
+  provider?: string | null;
 };
 
 const fmt = (d: string | null) =>
