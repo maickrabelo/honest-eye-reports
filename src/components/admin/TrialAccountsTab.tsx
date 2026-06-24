@@ -45,6 +45,14 @@ const StatusBadge = ({ row }: { row: TrialRow }) => {
   return <Badge className="bg-emerald-600 hover:bg-emerald-700">Ativo ({dl}d)</Badge>;
 };
 
+const SourceBadge = ({ row }: { row: TrialRow }) => {
+  const isHotmart = !!row.plan_slug?.toLowerCase().includes("sms") || row.provider === "hotmart";
+  if (isHotmart) {
+    return <Badge variant="outline" className="border-orange-500 text-orange-600"><ShoppingCart className="h-3 w-3 mr-1" /> Hotmart</Badge>;
+  }
+  return <Badge variant="outline" className="border-blue-500 text-blue-600"><Zap className="h-3 w-3 mr-1" /> SOIA</Badge>;
+};
+
 const TrialTable = ({ rows, loading, type }: { rows: TrialRow[]; loading: boolean; type: "company" | "sst" }) => {
   if (loading) return <Skeleton className="h-64 w-full" />;
   if (!rows.length) return <p className="text-muted-foreground text-sm py-8 text-center">Nenhuma conta em período de teste.</p>;
