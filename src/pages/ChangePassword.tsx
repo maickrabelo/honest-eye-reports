@@ -16,6 +16,7 @@ const ChangePassword: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isSmsPlan } = useSmsPlan();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
