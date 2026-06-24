@@ -39,6 +39,7 @@ const CompleteProfile: React.FC = () => {
   const { user, profile, role, isLoading, refreshRole } = useRealAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isSmsPlan } = useSmsPlan();
 
   const [loading, setLoading] = useState(true);
   const [target, setTarget] = useState<{ kind: 'company' | 'sst'; id: string } | null>(null);
