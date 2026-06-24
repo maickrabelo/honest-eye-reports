@@ -63,6 +63,7 @@ const TrialTable = ({ rows, loading, type }: { rows: TrialRow[]; loading: boolea
         <TableRow>
           <TableHead>{type === "company" ? "Empresa" : "Gestora SST"}</TableHead>
           <TableHead>Email</TableHead>
+          <TableHead>Fonte</TableHead>
           <TableHead>Início do teste</TableHead>
           <TableHead>Término</TableHead>
           <TableHead>Status</TableHead>
@@ -73,6 +74,7 @@ const TrialTable = ({ rows, loading, type }: { rows: TrialRow[]; loading: boolea
           <TableRow key={r.id} className={isExpired(r.trial_ends_at) ? "bg-destructive/5" : ""}>
             <TableCell className="font-medium">{r.name}</TableCell>
             <TableCell>{r.email || "—"}</TableCell>
+            <TableCell><SourceBadge row={r} /></TableCell>
             <TableCell>{fmt(r.created_at)}</TableCell>
             <TableCell>{fmt(r.trial_ends_at)}</TableCell>
             <TableCell><StatusBadge row={r} /></TableCell>
