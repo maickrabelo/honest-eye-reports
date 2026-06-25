@@ -173,3 +173,6 @@ verify_jwt = false
 
 [functions.test-hotmart-webhook]
 # Requires admin authentication
+
+[functions.resend-matheus-invite]
+verify_jwt = false
