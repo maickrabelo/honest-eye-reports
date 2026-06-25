@@ -69,7 +69,6 @@ const Auth = () => {
       });
 
       if (error) {
-        setShowCnpjNotice(true);
         throw error;
       }
 
