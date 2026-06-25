@@ -93,6 +93,9 @@ verify_jwt = false
 [functions.accept-invitation]
 verify_jwt = false
 
+[functions.signup-from-invitation]
+verify_jwt = false
+
 [functions.list-account-collaborators]
 verify_jwt = false
 
