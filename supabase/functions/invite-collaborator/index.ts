@@ -184,32 +184,36 @@ Deno.serve(async (req) => {
       .maybeSingle();
     const inviterName = inviterProfile?.full_name || callerEmail || "Um colega";
 
-    // Enviar e-mail via Resend
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    // Enviar e-mail via Resend (gateway Lovable, mesmo remetente verificado usado no hotmart-webhook)
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
     const acceptUrl = `https://soia.app.br/convite/${inviteToken}`;
 
-    if (RESEND_API_KEY) {
+    if (LOVABLE_API_KEY && RESEND_API_KEY) {
       try {
         const html = emailTemplate({ inviterName, accountName, acceptUrl });
-        const resp = await fetch("https://api.resend.com/emails", {
+        const resp = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": RESEND_API_KEY,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "SOIA <onboarding@resend.dev>",
+            from: "SOIA <noreply@soia.app.br>",
             to: [email],
             subject: `${inviterName} convidou você para ${accountName} no SOIA`,
             html,
           }),
         });
         if (!resp.ok) {
-          console.error("resend failed", await resp.text());
+          console.error("resend gateway failed", resp.status, await resp.text().catch(() => "<no body>"));
         }
       } catch (e) {
         console.error("email error", e);
       }
+    } else {
+      console.warn("Email keys missing, skipping invite email send");
     }
 
     return new Response(
