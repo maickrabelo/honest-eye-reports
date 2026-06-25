@@ -16,7 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [showCnpjNotice, setShowCnpjNotice] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
