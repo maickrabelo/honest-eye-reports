@@ -16,7 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [showCnpjNotice, setShowCnpjNotice] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -69,7 +69,6 @@ const Auth = () => {
       });
 
       if (error) {
-        setShowCnpjNotice(true);
         throw error;
       }
 
@@ -113,14 +112,6 @@ const Auth = () => {
           )}
         </CardHeader>
         <CardContent>
-          {showCnpjNotice && (
-            <div className="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 flex items-start gap-2 text-sm text-amber-900">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>
-                <strong>Aviso para empresas:</strong> Devido a uma atualização do sistema, sua senha foi alterada para o número do seu CNPJ. Insira o número sem pontos e traços e, em seguida, defina uma nova senha.
-              </span>
-            </div>
-          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="login-email">Email</Label>
