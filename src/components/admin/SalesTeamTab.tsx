@@ -424,21 +424,35 @@ export const SalesTeamTab = () => {
     try { return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm"); } catch { return null; }
   };
 
+  const COLUMN_DEFS: { key: string; label: string; get: (l: SalesLead) => string }[] = [
+    { key: 'contact', label: 'Nome (Responsável - Empresa)', get: l => [l.contact_name, l.company_name].filter(Boolean).join(' - ') },
+    { key: 'company', label: 'Empresa', get: l => l.company_name || '' },
+    { key: 'contact_name', label: 'Responsável', get: l => l.contact_name || '' },
+    { key: 'phone', label: 'Telefone', get: l => l.phone || '' },
+    { key: 'city', label: 'Cidade', get: l => l.city || '' },
+    { key: 'notes', label: 'E-mail / Observações', get: l => l.notes || '' },
+    { key: 'status', label: 'Status', get: l => STATUS_LABEL[l.status] || l.status },
+    { key: 'result', label: 'Resultado', get: l => l.result || '' },
+    { key: 'created_at', label: 'Criado em', get: l => l.created_at ? new Date(l.created_at).toLocaleString('pt-BR') : '' },
+    { key: 'meeting_date', label: 'Data Reunião', get: l => l.meeting_date ? new Date(l.meeting_date).toLocaleString('pt-BR') : '' },
+    { key: 'cnpj', label: 'CNPJ', get: l => l.cnpj || '' },
+    { key: 'contact_role', label: 'Cargo', get: l => l.contact_role || '' },
+  ];
+
   const exportContactsCSV = () => {
-    if (leads.length === 0) {
-      toast({ title: 'Nenhum lead para exportar', variant: 'destructive' });
+    const base = exportScope === 'all' ? leads : activeLeads;
+    const selectedLeads = base.filter(l => exportStatuses.has(l.status));
+    if (selectedLeads.length === 0) {
+      toast({ title: 'Nenhum lead nos filtros selecionados', variant: 'destructive' });
       return;
     }
-    const headers = ['Nome', 'Telefone', 'Cidade', 'E-mail / Observações', 'Status', 'Resultado', 'Criado em'];
-    const rows = leads.map(lead => [
-      [lead.contact_name, lead.company_name].filter(Boolean).join(' - '),
-      lead.phone || '',
-      lead.city || '',
-      lead.notes || '',
-      STATUS_LABEL[lead.status] || lead.status,
-      lead.result || '',
-      lead.created_at ? new Date(lead.created_at).toLocaleString('pt-BR') : '',
-    ]);
+    const cols = COLUMN_DEFS.filter(c => exportColumns.has(c.key));
+    if (cols.length === 0) {
+      toast({ title: 'Selecione ao menos uma coluna', variant: 'destructive' });
+      return;
+    }
+    const headers = cols.map(c => c.label);
+    const rows = selectedLeads.map(lead => cols.map(c => c.get(lead)));
     const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -447,6 +461,8 @@ export const SalesTeamTab = () => {
     a.download = `crm_contatos_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+    toast({ title: `Exportados ${selectedLeads.length} leads` });
   };
 
   return (
