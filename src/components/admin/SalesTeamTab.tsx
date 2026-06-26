@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
 import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
@@ -86,6 +87,12 @@ export const SalesTeamTab = () => {
   // Denial dialog
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
   const [denialLeadId, setDenialLeadId] = useState<string | null>(null);
+
+  // Export CSV dialog
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportStatuses, setExportStatuses] = useState<Set<string>>(new Set(STATUSES.map(s => s.value)));
+  const [exportColumns, setExportColumns] = useState<Set<string>>(new Set(['contact', 'phone', 'city', 'notes', 'status', 'result', 'created_at']));
+  const [exportScope, setExportScope] = useState<'active' | 'all'>('active');
 
   const { toast } = useToast();
 
@@ -417,21 +424,35 @@ export const SalesTeamTab = () => {
     try { return format(new Date(dateStr), "dd/MM/yyyy 'às' HH:mm"); } catch { return null; }
   };
 
+  const COLUMN_DEFS: { key: string; label: string; get: (l: SalesLead) => string }[] = [
+    { key: 'contact', label: 'Nome (Responsável - Empresa)', get: l => [l.contact_name, l.company_name].filter(Boolean).join(' - ') },
+    { key: 'company', label: 'Empresa', get: l => l.company_name || '' },
+    { key: 'contact_name', label: 'Responsável', get: l => l.contact_name || '' },
+    { key: 'phone', label: 'Telefone', get: l => l.phone || '' },
+    { key: 'city', label: 'Cidade', get: l => l.city || '' },
+    { key: 'notes', label: 'E-mail / Observações', get: l => l.notes || '' },
+    { key: 'status', label: 'Status', get: l => STATUS_LABEL[l.status] || l.status },
+    { key: 'result', label: 'Resultado', get: l => l.result || '' },
+    { key: 'created_at', label: 'Criado em', get: l => l.created_at ? new Date(l.created_at).toLocaleString('pt-BR') : '' },
+    { key: 'meeting_date', label: 'Data Reunião', get: l => l.meeting_date ? new Date(l.meeting_date).toLocaleString('pt-BR') : '' },
+    { key: 'cnpj', label: 'CNPJ', get: l => l.cnpj || '' },
+    { key: 'contact_role', label: 'Cargo', get: l => l.contact_role || '' },
+  ];
+
   const exportContactsCSV = () => {
-    if (leads.length === 0) {
-      toast({ title: 'Nenhum lead para exportar', variant: 'destructive' });
+    const base = exportScope === 'all' ? leads : activeLeads;
+    const selectedLeads = base.filter(l => exportStatuses.has(l.status));
+    if (selectedLeads.length === 0) {
+      toast({ title: 'Nenhum lead nos filtros selecionados', variant: 'destructive' });
       return;
     }
-    const headers = ['Nome', 'Telefone', 'Cidade', 'E-mail / Observações', 'Status', 'Resultado', 'Criado em'];
-    const rows = leads.map(lead => [
-      [lead.contact_name, lead.company_name].filter(Boolean).join(' - '),
-      lead.phone || '',
-      lead.city || '',
-      lead.notes || '',
-      STATUS_LABEL[lead.status] || lead.status,
-      lead.result || '',
-      lead.created_at ? new Date(lead.created_at).toLocaleString('pt-BR') : '',
-    ]);
+    const cols = COLUMN_DEFS.filter(c => exportColumns.has(c.key));
+    if (cols.length === 0) {
+      toast({ title: 'Selecione ao menos uma coluna', variant: 'destructive' });
+      return;
+    }
+    const headers = cols.map(c => c.label);
+    const rows = selectedLeads.map(lead => cols.map(c => c.get(lead)));
     const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -440,6 +461,8 @@ export const SalesTeamTab = () => {
     a.download = `crm_contatos_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+    toast({ title: `Exportados ${selectedLeads.length} leads` });
   };
 
   return (
@@ -458,7 +481,7 @@ export const SalesTeamTab = () => {
             <ToggleGroupItem value="archived" aria-label="Arquivados"><Archive className="h-4 w-4" /></ToggleGroupItem>
           </ToggleGroup>
           <Button variant="outline" onClick={() => setBulkImportOpen(true)} size="sm"><Upload className="h-4 w-4 mr-1" />Importar em Lote</Button>
-          <Button variant="outline" onClick={exportContactsCSV} size="sm" disabled={leads.length === 0}><Download className="h-4 w-4 mr-1" />Exportar CSV</Button>
+          <Button variant="outline" onClick={() => setExportDialogOpen(true)} size="sm" disabled={leads.length === 0}><Download className="h-4 w-4 mr-1" />Exportar CSV</Button>
           <Button onClick={openNew} size="sm"><Plus className="h-4 w-4 mr-1" />Novo Lead</Button>
         </div>
       </div>
@@ -837,6 +860,81 @@ export const SalesTeamTab = () => {
         onOpenChange={setBulkImportOpen}
         onImported={fetchLeads}
       />
+
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Exportar CSV</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div>
+              <Label className="text-sm font-semibold">Escopo</Label>
+              <ToggleGroup type="single" value={exportScope} onValueChange={v => v && setExportScope(v as any)} className="justify-start mt-2">
+                <ToggleGroupItem value="active" size="sm">Apenas ativos</ToggleGroupItem>
+                <ToggleGroupItem value="all" size="sm">Todos (incluindo histórico/arquivados)</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-semibold">Status (colunas do kanban)</Label>
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportStatuses(new Set(STATUSES.map(s => s.value)))}>Todos</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportStatuses(new Set())}>Nenhum</Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {STATUSES.map(s => (
+                  <label key={s.value} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted">
+                    <Checkbox
+                      checked={exportStatuses.has(s.value)}
+                      onCheckedChange={(checked) => {
+                        setExportStatuses(prev => {
+                          const next = new Set(prev);
+                          if (checked) next.add(s.value); else next.delete(s.value);
+                          return next;
+                        });
+                      }}
+                    />
+                    <span>{s.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-semibold">Campos a exportar</Label>
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportColumns(new Set(COLUMN_DEFS.map(c => c.key)))}>Todos</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportColumns(new Set())}>Nenhum</Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {COLUMN_DEFS.map(c => (
+                  <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted">
+                    <Checkbox
+                      checked={exportColumns.has(c.key)}
+                      onCheckedChange={(checked) => {
+                        setExportColumns(prev => {
+                          const next = new Set(prev);
+                          if (checked) next.add(c.key); else next.delete(c.key);
+                          return next;
+                        });
+                      }}
+                    />
+                    <span>{c.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={exportContactsCSV}><Download className="h-4 w-4 mr-1" />Exportar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
