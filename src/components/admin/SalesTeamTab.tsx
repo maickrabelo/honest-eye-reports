@@ -425,7 +425,7 @@ export const SalesTeamTab = () => {
   };
 
   const COLUMN_DEFS: { key: string; label: string; get: (l: SalesLead) => string }[] = [
-    { key: 'contact', label: 'Nome (Responsável - Empresa)', get: l => [l.contact_name, l.company_name].filter(Boolean).join(' - ') },
+    { key: 'contact', label: 'Nome', get: l => [l.contact_name, l.company_name].filter(Boolean).join(' - ') },
     { key: 'company', label: 'Empresa', get: l => l.company_name || '' },
     { key: 'contact_name', label: 'Responsável', get: l => l.contact_name || '' },
     { key: 'phone', label: 'Telefone', get: l => l.phone || '' },
