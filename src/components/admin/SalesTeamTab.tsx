@@ -860,6 +860,81 @@ export const SalesTeamTab = () => {
         onOpenChange={setBulkImportOpen}
         onImported={fetchLeads}
       />
+
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Exportar CSV</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div>
+              <Label className="text-sm font-semibold">Escopo</Label>
+              <ToggleGroup type="single" value={exportScope} onValueChange={v => v && setExportScope(v as any)} className="justify-start mt-2">
+                <ToggleGroupItem value="active" size="sm">Apenas ativos</ToggleGroupItem>
+                <ToggleGroupItem value="all" size="sm">Todos (incluindo histórico/arquivados)</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-semibold">Status (colunas do kanban)</Label>
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportStatuses(new Set(STATUSES.map(s => s.value)))}>Todos</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportStatuses(new Set())}>Nenhum</Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {STATUSES.map(s => (
+                  <label key={s.value} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted">
+                    <Checkbox
+                      checked={exportStatuses.has(s.value)}
+                      onCheckedChange={(checked) => {
+                        setExportStatuses(prev => {
+                          const next = new Set(prev);
+                          if (checked) next.add(s.value); else next.delete(s.value);
+                          return next;
+                        });
+                      }}
+                    />
+                    <span>{s.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-semibold">Campos a exportar</Label>
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportColumns(new Set(COLUMN_DEFS.map(c => c.key)))}>Todos</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setExportColumns(new Set())}>Nenhum</Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {COLUMN_DEFS.map(c => (
+                  <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted">
+                    <Checkbox
+                      checked={exportColumns.has(c.key)}
+                      onCheckedChange={(checked) => {
+                        setExportColumns(prev => {
+                          const next = new Set(prev);
+                          if (checked) next.add(c.key); else next.delete(c.key);
+                          return next;
+                        });
+                      }}
+                    />
+                    <span>{c.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={exportContactsCSV}><Download className="h-4 w-4 mr-1" />Exportar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
