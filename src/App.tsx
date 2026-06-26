@@ -14,6 +14,7 @@ import BackToHomeButton from "./components/BackToHomeButton";
 // Eagerly load critical/frequently accessed pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PreviewTrialExpiredSMS from "./pages/PreviewTrialExpiredSMS";
 
 // Lazy load all other pages
 const NotFound = React.lazy(() => import("./pages/NotFound"));
@@ -125,6 +126,7 @@ const App = () => (
                 <Route path="/teste-gratis-empresa" element={<CompanyTrialSignup />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/sms/auth" element={<Auth />} />
+                <Route path="/preview/trial-expired-sms" element={<PreviewTrialExpiredSMS />} />
                 <Route path="/convite/:token" element={<AcceptInvitation />} />
                 <Route path="/convite-setor/:token" element={<AcceptSectorInvitation />} />
                 <Route path="/setor/dashboard" element={<SectorViewerDashboard />} />
