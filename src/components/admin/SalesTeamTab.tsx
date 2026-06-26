@@ -88,6 +88,12 @@ export const SalesTeamTab = () => {
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
   const [denialLeadId, setDenialLeadId] = useState<string | null>(null);
 
+  // Export CSV dialog
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportStatuses, setExportStatuses] = useState<Set<string>>(new Set(STATUSES.map(s => s.value)));
+  const [exportColumns, setExportColumns] = useState<Set<string>>(new Set(['contact', 'phone', 'city', 'notes', 'status', 'result', 'created_at']));
+  const [exportScope, setExportScope] = useState<'active' | 'all'>('active');
+
   const { toast } = useToast();
 
   const fetchLeads = useCallback(async () => {
