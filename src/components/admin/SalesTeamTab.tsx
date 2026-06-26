@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
 import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SalesLead, STATUSES, STATUS_LABEL } from '@/components/sales/salesTypes';
