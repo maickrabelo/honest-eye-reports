@@ -14,6 +14,7 @@ import BackToHomeButton from "./components/BackToHomeButton";
 // Eagerly load critical/frequently accessed pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PreviewTrialExpiredSMS from "./pages/PreviewTrialExpiredSMS";
 
 // Lazy load all other pages
 const NotFound = React.lazy(() => import("./pages/NotFound"));
