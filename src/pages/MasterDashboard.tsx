@@ -21,6 +21,7 @@ import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
+import { ExportUserDataDialog } from '@/components/admin/ExportUserDataDialog';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -1229,6 +1230,10 @@ const MasterDashboard = () => {
             </div>
           </div>
           
+          <div className="mb-4 flex justify-end">
+            <ExportUserDataDialog />
+          </div>
+
           <Tabs defaultValue="companies" value={activeTab} onValueChange={setActiveTab} className="mb-8">
             <div className="flex justify-between items-center mb-4">
               <TabsList>
