@@ -44,7 +44,7 @@ export default function HSEITManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
-  const [wordingVariant, setWordingVariant] = useState<'standard' | 'positive'>('standard');
+  const [wordingVariant, setWordingVariant] = useState<'standard' | 'positive' | 'positive_v2'>('standard');
   const [multiSectorEnabled, setMultiSectorEnabled] = useState(false);
   const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
   const [pendingRemaining, setPendingRemaining] = useState(0);
@@ -134,7 +134,7 @@ export default function HSEITManagement() {
         setEndDate(assessment.end_date ? assessment.end_date.split('T')[0] : '');
         setIsActive(assessment.is_active);
         setCollectionMode((assessment as any).collection_mode || 'form');
-        setWordingVariant(((assessment as any).wording_variant === 'positive' ? 'positive' : 'standard'));
+        setWordingVariant((['positive', 'positive_v2'].includes((assessment as any).wording_variant) ? (assessment as any).wording_variant : 'standard'));
         setMultiSectorEnabled(!!(assessment as any).multi_sector_enabled);
         
         // Fetch departments
@@ -425,22 +425,28 @@ export default function HSEITManagement() {
                 </div>
 
                 {/* Wording Variant */}
-                <div className="flex items-center justify-between pt-2 pb-2 px-4 rounded-lg bg-accent/5 border border-accent/20">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-accent" />
-                      Avaliação Positiva
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {wordingVariant === 'positive'
-                        ? 'Redação alternativa, mais acolhedora, evitando palavras "gourmet" e inversão de polaridade. Não altera categorias nem cálculo de risco.'
-                        : 'Redação padrão do HSE-IT (tradução fiel do instrumento original).'}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={wordingVariant === 'positive'}
-                    onCheckedChange={(checked) => setWordingVariant(checked ? 'positive' : 'standard')}
-                  />
+                <div className="space-y-2 pt-2 pb-3 px-4 rounded-lg bg-accent/5 border border-accent/20">
+                  <Label className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    Redação do questionário
+                  </Label>
+                  <Select value={wordingVariant} onValueChange={(v) => setWordingVariant(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Padrão HSE-IT (tradução fiel do instrumento original)</SelectItem>
+                      <SelectItem value="positive">Positiva (redação acolhedora)</SelectItem>
+                      <SelectItem value="positive_v2">Positiva 2.0 (curadoria revisada)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {wordingVariant === 'positive_v2'
+                      ? 'Redação revisada: combina versão positiva, original traduzida e ajustes próprios alinhados ao inglês. Não altera categorias nem cálculo de risco.'
+                      : wordingVariant === 'positive'
+                      ? 'Redação alternativa, mais acolhedora. Não altera categorias nem cálculo de risco.'
+                      : 'Redação padrão do HSE-IT (tradução fiel do instrumento original).'}
+                  </p>
                 </div>
 
                 {/* Multi-sector mode */}
