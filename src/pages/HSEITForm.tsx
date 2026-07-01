@@ -101,7 +101,12 @@ export default function HSEITForm() {
   const totalPages = Math.ceil(HSEIT_QUESTIONS_SORTED.length / questionsPerPage);
 
   // Apply wording variant (apenas troca o texto exibido — não afeta cálculos)
-  const wordingVariant: HSEITWordingVariant = assessment?.wording_variant === 'positive' ? 'positive' : 'standard';
+  const wordingVariant: HSEITWordingVariant =
+    assessment?.wording_variant === 'positive_v2'
+      ? 'positive_v2'
+      : assessment?.wording_variant === 'positive'
+        ? 'positive'
+        : 'standard';
   const displayQuestions = useMemo(
     () => HSEIT_QUESTIONS_SORTED.map(q => ({ ...q, text: getQuestionText(q, wordingVariant) })),
     [wordingVariant]
