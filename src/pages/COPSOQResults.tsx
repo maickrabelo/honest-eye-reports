@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2, ClipboardList } from 'lucide-react';
 import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
+import { COPSOQReportEditor } from '@/components/copsoq/COPSOQReportEditor';
 import { toast } from '@/hooks/use-toast';
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -38,6 +39,8 @@ export default function COPSOQResults() {
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
+
 
   useEffect(() => {
     if (!authLoading) {
@@ -170,8 +173,39 @@ export default function COPSOQResults() {
                 Compartilhar setor
               </Button>
             )}
+            <Button onClick={() => setIsReportEditorOpen(true)}>
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Preparar Relatório PDF
+            </Button>
           </div>
         </div>
+
+        <COPSOQReportEditor
+          open={isReportEditorOpen}
+          onOpenChange={setIsReportEditorOpen}
+          assessment={{
+            id: assessment.id,
+            title: assessment.title,
+            description: assessment.description,
+            companyName: assessment.companies?.name || '',
+            createdAt: assessment.createdAt,
+          }}
+          responsesCount={filteredResponses.length}
+          categoryAverages={ALL_CATEGORIES.map(cat => ({
+            category: cat,
+            average: categoryAverages[cat] || 0,
+            label: COPSOQ_CATEGORY_LABELS[cat],
+          }))}
+          overallAverage={overallAverage}
+          departments={departments}
+          questionAverages={questionAverages.map(q => ({
+            number: q.number,
+            text: q.text,
+            category: q.category,
+            average: q.average,
+          }))}
+        />
+
 
         {assessment.companies?.id && (
           <ShareSectorDialog
