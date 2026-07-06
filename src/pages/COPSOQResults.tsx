@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, AlertTriangle, TrendingUp, BarChart3, FileText, Share2, ClipboardList } from 'lucide-react';
 import ShareSectorDialog from '@/components/sector-sharing/ShareSectorDialog';
+import { COPSOQReportEditor } from '@/components/copsoq/COPSOQReportEditor';
 import { toast } from '@/hooks/use-toast';
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
