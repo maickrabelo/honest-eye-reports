@@ -173,8 +173,39 @@ export default function COPSOQResults() {
                 Compartilhar setor
               </Button>
             )}
+            <Button onClick={() => setIsReportEditorOpen(true)}>
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Preparar Relatório PDF
+            </Button>
           </div>
         </div>
+
+        <COPSOQReportEditor
+          open={isReportEditorOpen}
+          onOpenChange={setIsReportEditorOpen}
+          assessment={{
+            id: assessment.id,
+            title: assessment.title,
+            description: assessment.description,
+            companyName: assessment.companies?.name || '',
+            createdAt: assessment.createdAt,
+          }}
+          responsesCount={filteredResponses.length}
+          categoryAverages={ALL_CATEGORIES.map(cat => ({
+            category: cat,
+            average: categoryAverages[cat] || 0,
+            label: COPSOQ_CATEGORY_LABELS[cat],
+          }))}
+          overallAverage={overallAverage}
+          departments={departments}
+          questionAverages={questionAverages.map(q => ({
+            number: q.number,
+            text: q.text,
+            category: q.category,
+            average: q.average,
+          }))}
+        />
+
 
         {assessment.companies?.id && (
           <ShareSectorDialog
