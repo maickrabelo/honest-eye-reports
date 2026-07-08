@@ -694,20 +694,29 @@ export const SalesTeamTab = () => {
 
                   {colLeads.map(lead => {
                     const clickable = lead.status === 'meeting_done' || lead.status === 'closed';
+                    const isSelected = selectedIds.has(lead.id);
                     return (
                     <div
                       key={lead.id}
                       draggable
                       onDragStart={e => onDragStart(e, lead.id)}
                       onClick={() => { if (clickable) openClosingDialog(lead.id, lead.status as any, lead); }}
-                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''}`}
+                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''} ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}
                     >
 
                       <div className="flex items-start justify-between gap-1">
                         <div className="flex items-center gap-1.5 min-w-0">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(lead.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0"
+                            aria-label="Selecionar lead"
+                          />
                           <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
                         </div>
+
                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
