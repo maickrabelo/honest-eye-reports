@@ -522,6 +522,28 @@ export const SalesTeamTab = () => {
         </div>
       </div>
 
+      {view === 'kanban' && selectedIds.size > 0 && (
+        <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-lg border bg-background/95 backdrop-blur px-4 py-2 shadow">
+          <Badge variant="secondary" className="text-sm">{selectedIds.size} selecionado(s)</Badge>
+          <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+            <MoveRight className="h-4 w-4 text-muted-foreground" />
+            <Select value={bulkTarget} onValueChange={setBulkTarget}>
+              <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Mover para..." /></SelectTrigger>
+              <SelectContent>
+                {STATUSES.filter(s => !BULK_BLOCKED.has(s.value)).map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={bulkMove} disabled={!bulkTarget || bulkMoving}>
+              {bulkMoving ? 'Movendo...' : 'Mover'}
+            </Button>
+          </div>
+          <Button size="sm" variant="ghost" onClick={clearSelection}><X className="h-4 w-4 mr-1" />Limpar</Button>
+        </div>
+      )}
+
+
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
           <div className="w-full max-w-xs space-y-3">
