@@ -89,6 +89,41 @@ export const SalesTeamTab = () => {
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
   const [denialLeadId, setDenialLeadId] = useState<string | null>(null);
 
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTarget, setBulkTarget] = useState<string>('');
+  const [bulkMoving, setBulkMoving] = useState(false);
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const BULK_BLOCKED = new Set(['meeting_scheduled', 'meeting_done', 'closed']);
+  const bulkMove = async () => {
+    if (!bulkTarget || selectedIds.size === 0) return;
+    if (BULK_BLOCKED.has(bulkTarget)) {
+      toast({ title: 'Status indisponível em lote', description: 'Reunião Agendada, Reunião Realizada e Fechamento exigem dados individuais.', variant: 'destructive' });
+      return;
+    }
+    setBulkMoving(true);
+    const ids = Array.from(selectedIds);
+    setLeads(prev => prev.map(l => ids.includes(l.id) ? { ...l, status: bulkTarget } : l));
+    const { error } = await (supabase.from('sales_leads' as any).update({ status: bulkTarget }).in('id', ids) as any);
+    setBulkMoving(false);
+    if (error) {
+      toast({ title: 'Erro ao mover leads', description: getSafeErrorMessage(error), variant: 'destructive' });
+      fetchLeads();
+    } else {
+      toast({ title: `${ids.length} lead(s) movido(s)` });
+      clearSelection();
+      setBulkTarget('');
+      fetchLeads();
+    }
+  };
+
   // Export CSV dialog
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportStatuses, setExportStatuses] = useState<Set<string>>(new Set(STATUSES.map(s => s.value)));
