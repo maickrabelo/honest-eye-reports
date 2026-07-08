@@ -14,7 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download, X, MoveRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -87,6 +88,41 @@ export const SalesTeamTab = () => {
   // Denial dialog
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
   const [denialLeadId, setDenialLeadId] = useState<string | null>(null);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTarget, setBulkTarget] = useState<string>('');
+  const [bulkMoving, setBulkMoving] = useState(false);
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const BULK_BLOCKED = new Set(['meeting_scheduled', 'meeting_done', 'closed']);
+  const bulkMove = async () => {
+    if (!bulkTarget || selectedIds.size === 0) return;
+    if (BULK_BLOCKED.has(bulkTarget)) {
+      toast({ title: 'Status indisponível em lote', description: 'Reunião Agendada, Reunião Realizada e Fechamento exigem dados individuais.', variant: 'destructive' });
+      return;
+    }
+    setBulkMoving(true);
+    const ids = Array.from(selectedIds);
+    setLeads(prev => prev.map(l => ids.includes(l.id) ? { ...l, status: bulkTarget } : l));
+    const { error } = await (supabase.from('sales_leads' as any).update({ status: bulkTarget }).in('id', ids) as any);
+    setBulkMoving(false);
+    if (error) {
+      toast({ title: 'Erro ao mover leads', description: getSafeErrorMessage(error), variant: 'destructive' });
+      fetchLeads();
+    } else {
+      toast({ title: `${ids.length} lead(s) movido(s)` });
+      clearSelection();
+      setBulkTarget('');
+      fetchLeads();
+    }
+  };
 
   // Export CSV dialog
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -486,6 +522,28 @@ export const SalesTeamTab = () => {
         </div>
       </div>
 
+      {view === 'kanban' && selectedIds.size > 0 && (
+        <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-lg border bg-background/95 backdrop-blur px-4 py-2 shadow">
+          <Badge variant="secondary" className="text-sm">{selectedIds.size} selecionado(s)</Badge>
+          <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+            <MoveRight className="h-4 w-4 text-muted-foreground" />
+            <Select value={bulkTarget} onValueChange={setBulkTarget}>
+              <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Mover para..." /></SelectTrigger>
+              <SelectContent>
+                {STATUSES.filter(s => !BULK_BLOCKED.has(s.value)).map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={bulkMove} disabled={!bulkTarget || bulkMoving}>
+              {bulkMoving ? 'Movendo...' : 'Mover'}
+            </Button>
+          </div>
+          <Button size="sm" variant="ghost" onClick={clearSelection}><X className="h-4 w-4 mr-1" />Limpar</Button>
+        </div>
+      )}
+
+
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
           <div className="w-full max-w-xs space-y-3">
@@ -636,20 +694,29 @@ export const SalesTeamTab = () => {
 
                   {colLeads.map(lead => {
                     const clickable = lead.status === 'meeting_done' || lead.status === 'closed';
+                    const isSelected = selectedIds.has(lead.id);
                     return (
                     <div
                       key={lead.id}
                       draggable
                       onDragStart={e => onDragStart(e, lead.id)}
                       onClick={() => { if (clickable) openClosingDialog(lead.id, lead.status as any, lead); }}
-                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''}`}
+                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''} ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}
                     >
 
                       <div className="flex items-start justify-between gap-1">
                         <div className="flex items-center gap-1.5 min-w-0">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(lead.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0"
+                            aria-label="Selecionar lead"
+                          />
                           <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
                         </div>
+
                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
