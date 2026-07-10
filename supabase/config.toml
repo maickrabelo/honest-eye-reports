@@ -182,3 +182,6 @@ verify_jwt = false
 
 [functions.export-sms-trial-data]
 verify_jwt = false
+
+[functions.send-sst-welcome]
+verify_jwt = false
