@@ -98,6 +98,34 @@ const ensureCompanyAccess = async (
   return companyUserId;
 };
 
+const sendWelcomeEmail = async (
+  to: string,
+  companyName: string,
+  tempPassword: string,
+  sstName: string | null,
+) => {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(`${supabaseUrl}/functions/v1/send-company-welcome`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ to, companyName, tempPassword, sstName }),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      console.error("[CREATE-SST-COMPANY] send-company-welcome failed", res.status, text);
+    } else {
+      console.log("[CREATE-SST-COMPANY] welcome email sent", to);
+    }
+  } catch (err) {
+    console.error("[CREATE-SST-COMPANY] welcome email error", err);
+  }
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
