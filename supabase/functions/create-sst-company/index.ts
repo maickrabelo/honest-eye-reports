@@ -327,6 +327,7 @@ Deno.serve(async (req) => {
         { id: existingCompany.id, name, email, cnpj },
         cnpjDigits,
       );
+          await sendWelcomeEmail(email, name, cnpjDigits, (manager as any).name ?? null);
         }
 
       return json({ success: true, company_id: existingCompany.id, recovered_orphan: true });
