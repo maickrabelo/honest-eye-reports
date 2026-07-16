@@ -141,6 +141,7 @@ const App = () => (
                 <Route path="/report-form" element={<ReportForm />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/profile" element={<CompanyProfile />} />
+                <Route path="/perfil-sst" element={<SSTManagerProfile />} />
                 <Route path="/financeiro" element={<Financeiro />} />
                 <Route path="/sst-dashboard" element={<SSTDashboard />} />
                 <Route path="/sst-portal" element={<SSTPortal />} />
