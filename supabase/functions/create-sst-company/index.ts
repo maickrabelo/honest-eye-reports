@@ -398,6 +398,7 @@ Deno.serve(async (req) => {
         { id: newCompanyId, name, email, cnpj },
         initialPassword,
       );
+          await sendWelcomeEmail(email, name, initialPassword, (manager as any).name ?? null);
         }
     } catch (userCreationErr: any) {
       console.error("[CREATE-SST-COMPANY] User creation failed (company still created)", userCreationErr);
