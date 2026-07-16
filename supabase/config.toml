@@ -185,3 +185,6 @@ verify_jwt = false
 
 [functions.send-sst-welcome]
 verify_jwt = false
+
+[functions.send-company-welcome]
+verify_jwt = false

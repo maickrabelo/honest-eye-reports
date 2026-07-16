@@ -98,6 +98,34 @@ const ensureCompanyAccess = async (
   return companyUserId;
 };
 
+const sendWelcomeEmail = async (
+  to: string,
+  companyName: string,
+  tempPassword: string,
+  sstName: string | null,
+) => {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(`${supabaseUrl}/functions/v1/send-company-welcome`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ to, companyName, tempPassword, sstName }),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      console.error("[CREATE-SST-COMPANY] send-company-welcome failed", res.status, text);
+    } else {
+      console.log("[CREATE-SST-COMPANY] welcome email sent", to);
+    }
+  } catch (err) {
+    console.error("[CREATE-SST-COMPANY] welcome email error", err);
+  }
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -160,7 +188,7 @@ Deno.serve(async (req) => {
 
     const { data: manager, error: managerErr } = await supabase
       .from("sst_managers")
-      .select("id, max_companies, extra_company_slots")
+      .select("id, name, max_companies, extra_company_slots")
       .eq("id", sstManagerId)
       .single();
     if (managerErr || !manager) return json({ error: "Gestora SST não encontrada." }, 404);
@@ -245,6 +273,7 @@ Deno.serve(async (req) => {
           { id: existingCompany.id, name, email, cnpj },
           cnpjDigits,
         );
+          await sendWelcomeEmail(email, name, cnpjDigits, (manager as any).name ?? null);
         }
 
         return json({ success: true, company_id: existingCompany.id, already_linked: true });
@@ -298,6 +327,7 @@ Deno.serve(async (req) => {
         { id: existingCompany.id, name, email, cnpj },
         cnpjDigits,
       );
+          await sendWelcomeEmail(email, name, cnpjDigits, (manager as any).name ?? null);
         }
 
       return json({ success: true, company_id: existingCompany.id, recovered_orphan: true });
@@ -368,6 +398,7 @@ Deno.serve(async (req) => {
         { id: newCompanyId, name, email, cnpj },
         initialPassword,
       );
+          await sendWelcomeEmail(email, name, initialPassword, (manager as any).name ?? null);
         }
     } catch (userCreationErr: any) {
       console.error("[CREATE-SST-COMPANY] User creation failed (company still created)", userCreationErr);
