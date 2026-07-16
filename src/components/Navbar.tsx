@@ -250,7 +250,7 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
-                      <Link to="/profile">Perfil</Link>
+                      <Link to={role === 'sst' ? '/perfil-sst' : '/profile'}>Perfil</Link>
                     </DropdownMenuItem>
                     {(role === 'company' || role === 'sst') && (
                       <DropdownMenuItem asChild>
