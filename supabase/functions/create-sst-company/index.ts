@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
 
     const { data: manager, error: managerErr } = await supabase
       .from("sst_managers")
-      .select("id, max_companies, extra_company_slots")
+      .select("id, name, max_companies, extra_company_slots")
       .eq("id", sstManagerId)
       .single();
     if (managerErr || !manager) return json({ error: "Gestora SST não encontrada." }, 404);
