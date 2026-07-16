@@ -1,0 +1,1 @@
+UPDATE public.sst_managers SET logo_url = 'https://ovednzilplbewpzpvxnf.supabase.co/storage/v1/object/public/company-logos/sst-managers/b493c525-48bf-45d2-848a-72bc0eaffb15/logo.png', updated_at = now() WHERE id = 'b493c525-48bf-45d2-848a-72bc0eaffb15';
