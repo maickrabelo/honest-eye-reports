@@ -81,6 +81,7 @@ const PulseSurveyForm = React.lazy(() => import("./pages/PulseSurveyForm"));
 const BetaOuvidoriaForm = React.lazy(() => import("./pages/BetaOuvidoriaForm"));
 const BetaOuvidoriaTrack = React.lazy(() => import("./pages/BetaOuvidoriaTrack"));
 const BetaOuvidoriaDashboard = React.lazy(() => import("./pages/BetaOuvidoriaDashboard"));
+const Ouvidoria = React.lazy(() => import("./pages/Ouvidoria"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -121,6 +122,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/ouvidoria" element={<Ouvidoria />} />
                 <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
                 <Route path="/teste-gratis" element={<TrialSignup />} />
                 <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
