@@ -9,6 +9,7 @@ import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2 } 
 import { HSEITActionPlanEditor, ActionItem } from "./HSEITActionPlanEditor";
 import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
 import { generatePGRReport } from "./HSEITPGRReportPDF";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   HSEITCategory, 
   HSEIT_CATEGORY_LABELS, 
