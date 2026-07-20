@@ -480,7 +480,7 @@ export default function HSEITResults() {
             average,
             label: HSEIT_CATEGORY_LABELS[category as HSEITCategory]
           }))}
-          departments={departments}
+          departments={selectedDepartment === 'all' ? departments : [selectedDepartment]}
           questionAverages={questionAverages.map(q => ({
             questionNumber: q.number,
             text: q.text,

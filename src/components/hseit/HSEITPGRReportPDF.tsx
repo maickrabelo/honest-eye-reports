@@ -14,7 +14,7 @@ import { ActionItem } from './HSEITActionPlanEditor';
 import { ScheduleItem } from './HSEITScheduleEditor';
 
 interface Answer { questionNumber: number; value: number; }
-interface Response { id: string; department: string | null; completedAt: string | null; answers: Answer[]; }
+interface Response { id: string; department: string | null; departments?: string[]; completedAt: string | null; answers: Answer[]; }
 
 interface CategoryAverage {
   category: HSEITCategory;
@@ -668,7 +668,12 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       pdf.text(`GHE: ${dept}`, m + 4, y + 8);
       y += 18;
 
-      const deptResponses = data.responses.filter(r => r.department === dept);
+      const deptResponses = data.responses.filter(r => {
+        if (Array.isArray(r.departments) && r.departments.length > 0) {
+          return r.departments.includes(dept);
+        }
+        return r.department === dept;
+      });
       const deptAnswers = deptResponses.flatMap(r => r.answers);
       
       drawText(`Número de respondentes: ${deptResponses.length}`);

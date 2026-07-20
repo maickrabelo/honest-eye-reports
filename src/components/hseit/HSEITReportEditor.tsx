@@ -9,6 +9,7 @@ import { FileText, ClipboardList, Calendar, Download, Loader2, Eye, Building2 } 
 import { HSEITActionPlanEditor, ActionItem } from "./HSEITActionPlanEditor";
 import { HSEITScheduleEditor, ScheduleItem } from "./HSEITScheduleEditor";
 import { generatePGRReport } from "./HSEITPGRReportPDF";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   HSEITCategory, 
   HSEIT_CATEGORY_LABELS, 
@@ -34,6 +35,7 @@ interface Answer {
 interface Response {
   id: string;
   department: string | null;
+  departments?: string[];
   completedAt: string | null;
   answers: Answer[];
 }
@@ -203,6 +205,41 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      const responseIds = responses.map((response) => response.id);
+      let enrichedResponses = responses;
+
+      // Recarrega as respostas no momento da emissão do PDF para evitar relatórios
+      // zerados quando a tela foi aberta antes do carregamento completo/paginado.
+      if (responseIds.length > 0) {
+        const allAnswers: { response_id: string; question_number: number; answer_value: number }[] = [];
+        const chunkSize = 25;
+
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: answersData, error: answersError } = await supabase
+            .from('hseit_answers')
+            .select('response_id, question_number, answer_value')
+            .in('response_id', chunk)
+            .range(0, 9999);
+
+          if (answersError) throw answersError;
+          if (answersData) allAnswers.push(...answersData);
+        }
+
+        enrichedResponses = responses.map((response) => ({
+          ...response,
+          answers: allAnswers
+            .filter((answer) => answer.response_id === response.id)
+            .map((answer) => ({ questionNumber: answer.question_number, value: answer.answer_value })),
+        }));
+      }
+
+      const enrichedAnswers = enrichedResponses.flatMap((response) => response.answers);
+      const refreshedCategoryAverages = categoryAverages.map((categoryAverage) => ({
+        ...categoryAverage,
+        average: calculateCategoryAverage(enrichedAnswers, categoryAverage.category),
+      }));
+
       await generatePGRReport({
         assessment: {
           id: assessment.id,
@@ -216,10 +253,10 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
           address: companyAddress || undefined,
           cnae: companyCnae || undefined,
           riskGrade: companyRiskGrade || undefined,
-          employeeCount: responses.length,
+          employeeCount: enrichedResponses.length,
         },
-        responses,
-        categoryAverages,
+        responses: enrichedResponses,
+        categoryAverages: refreshedCategoryAverages,
         departments,
         questionAverages,
         actionItems,
