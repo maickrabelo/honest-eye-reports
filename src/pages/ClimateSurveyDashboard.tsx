@@ -251,13 +251,17 @@ export default function ClimateSurveyDashboard() {
       let answersData: any[] = [];
       
       if (responseIds.length > 0) {
-        const { data: answers, error: answersError } = await supabase
-          .from('survey_answers')
-          .select('*')
-          .in('response_id', responseIds);
-
-        if (answersError) throw answersError;
-        answersData = answers || [];
+        const chunkSize = 25;
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: answers, error: answersError } = await supabase
+            .from('survey_answers')
+            .select('*')
+            .in('response_id', chunk)
+            .range(0, 9999);
+          if (answersError) throw answersError;
+          if (answers) answersData.push(...answers);
+        }
       }
 
       // Create maps for quick lookup

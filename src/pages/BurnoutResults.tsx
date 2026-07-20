@@ -163,13 +163,19 @@ export default function BurnoutResults() {
       // Fetch all answers
       if (responsesData && responsesData.length > 0) {
         const responseIds = responsesData.map(r => r.id);
-        const { data: answersData, error: answersError } = await supabase
-          .from('burnout_answers')
-          .select('response_id, question_number, answer_value')
-          .in('response_id', responseIds);
-          
-        if (answersError) throw answersError;
-        setAnswers(answersData || []);
+        const allAns: any[] = [];
+        const chunkSize = 25;
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: answersData, error: answersError } = await supabase
+            .from('burnout_answers')
+            .select('response_id, question_number, answer_value')
+            .in('response_id', chunk)
+            .range(0, 9999);
+          if (answersError) throw answersError;
+          if (answersData) allAns.push(...answersData);
+        }
+        setAnswers(allAns);
       }
     } catch (error) {
       console.error('Error fetching data:', error);

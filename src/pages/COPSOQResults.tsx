@@ -63,8 +63,13 @@ export default function COPSOQResults() {
       const responseIds = (rd as any[])?.map((r: any) => r.id) || [];
       let allAnswers: any[] = [];
       if (responseIds.length > 0) {
-        const { data: ans } = await supabase.from('copsoq_answers' as any).select('response_id, question_number, answer_value').in('response_id', responseIds);
-        allAnswers = (ans as any[]) || [];
+        const chunkSize = 25;
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: ans, error: ansErr } = await supabase.from('copsoq_answers' as any).select('response_id, question_number, answer_value').in('response_id', chunk).range(0, 9999);
+          if (ansErr) throw ansErr;
+          if (ans) allAnswers.push(...(ans as any[]));
+        }
       }
       const mapped: Response[] = ((rd as any[]) || []).map((r: any) => {
         const deptList: string[] = Array.isArray(r.departments) && r.departments.length > 0 ? r.departments : (r.department ? [r.department] : []);
