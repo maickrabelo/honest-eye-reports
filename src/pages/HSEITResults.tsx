@@ -188,12 +188,19 @@ export default function HSEITResults() {
       let allAnswers: { response_id: string; question_number: number; answer_value: number }[] = [];
 
       if (responseIds.length > 0) {
-        const { data: answersData } = await supabase
-          .from('hseit_answers')
-          .select('response_id, question_number, answer_value')
-          .in('response_id', responseIds);
-
-        allAnswers = answersData || [];
+        // Fetch in chunks to bypass PostgREST 1000-row default limit
+        // (84 responses x 35 questions = 2940 answers, well above default cap)
+        const chunkSize = 25;
+        for (let i = 0; i < responseIds.length; i += chunkSize) {
+          const chunk = responseIds.slice(i, i + chunkSize);
+          const { data: answersData, error: ansErr } = await supabase
+            .from('hseit_answers')
+            .select('response_id, question_number, answer_value')
+            .in('response_id', chunk)
+            .range(0, 9999);
+          if (ansErr) throw ansErr;
+          if (answersData) allAnswers.push(...answersData);
+        }
       }
 
       // Map responses with their answers
