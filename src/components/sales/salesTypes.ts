@@ -32,6 +32,7 @@ export const STATUSES = [
   { value: 'message_2', label: 'Mensagem 2 Enviada', color: 'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700' },
   { value: 'message_3', label: 'Mensagem 3 Enviada', color: 'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700' },
   { value: 'last_call_attempt', label: 'Última Tentativa de Ligação', color: 'bg-orange-50 border-orange-300 dark:bg-orange-950 dark:border-orange-700' },
+  { value: 'mobile_message', label: 'Mensagem no Celular', color: 'bg-teal-50 border-teal-300 dark:bg-teal-950 dark:border-teal-700' },
   { value: 'email_sent', label: 'E-mail Enviado', color: 'bg-purple-50 border-purple-300 dark:bg-purple-950 dark:border-purple-700' },
   { value: 'meeting_scheduled', label: 'Reunião Agendada', color: 'bg-blue-50 border-blue-300 dark:bg-blue-950 dark:border-blue-700' },
   { value: 'meeting_done', label: 'Reunião Realizada', color: 'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700' },
