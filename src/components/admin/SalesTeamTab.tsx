@@ -732,6 +732,14 @@ export const SalesTeamTab = () => {
                           />
                           <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
+                        </div>
+
+                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
+
+                        </div>
                       </div>
                       {(priorEntryCounts.get(lead.id) ?? 0) > 0 && (
                         <div className="mt-1.5">
@@ -741,14 +749,6 @@ export const SalesTeamTab = () => {
                           </Badge>
                         </div>
                       )}
-
-                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
-
-                        </div>
-                      </div>
                       {lead.contact_name && (
                         <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
                           <User className="h-3 w-3" />{lead.contact_name}
