@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -173,6 +173,23 @@ export const SalesTeamTab = () => {
   const historyLeads = leads.filter(l => !!l.result && !l.archived);
   // Archived leads
   const archivedLeads = leads.filter(l => !!l.archived);
+
+  // Count prior CRM entries per lead (same company_name normalized), by created_at order
+  const priorEntryCounts = useMemo(() => {
+    const groups = new Map<string, SalesLead[]>();
+    for (const l of leads) {
+      const key = (l.company_name || '').trim().toLowerCase();
+      if (!key) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(l);
+    }
+    const map = new Map<string, number>();
+    for (const arr of groups.values()) {
+      arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      arr.forEach((l, i) => map.set(l.id, i));
+    }
+    return map;
+  }, [leads]);
 
   const filtered = activeLeads.filter(l =>
     l.company_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -724,6 +741,14 @@ export const SalesTeamTab = () => {
 
                         </div>
                       </div>
+                      {(priorEntryCounts.get(lead.id) ?? 0) > 0 && (
+                        <div className="mt-1.5">
+                          <Badge variant="outline" className="text-[10px] h-5 border-amber-500/50 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
+                            <AlertTriangle className="h-2.5 w-2.5 mr-1" />
+                            {priorEntryCounts.get(lead.id)}ª tentativa de contato
+                          </Badge>
+                        </div>
+                      )}
                       {lead.contact_name && (
                         <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
                           <User className="h-3 w-3" />{lead.contact_name}
