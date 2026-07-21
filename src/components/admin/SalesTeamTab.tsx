@@ -174,6 +174,23 @@ export const SalesTeamTab = () => {
   // Archived leads
   const archivedLeads = leads.filter(l => !!l.archived);
 
+  // Count prior CRM entries per lead (same company_name normalized), by created_at order
+  const priorEntryCounts = useMemo(() => {
+    const groups = new Map<string, SalesLead[]>();
+    for (const l of leads) {
+      const key = (l.company_name || '').trim().toLowerCase();
+      if (!key) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(l);
+    }
+    const map = new Map<string, number>();
+    for (const arr of groups.values()) {
+      arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      arr.forEach((l, i) => map.set(l.id, i));
+    }
+    return map;
+  }, [leads]);
+
   const filtered = activeLeads.filter(l =>
     l.company_name.toLowerCase().includes(search.toLowerCase()) ||
     (l.contact_name && l.contact_name.toLowerCase().includes(search.toLowerCase()))
