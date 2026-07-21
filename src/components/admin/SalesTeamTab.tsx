@@ -732,7 +732,15 @@ export const SalesTeamTab = () => {
                           />
                           <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
+                      </div>
+                      {(priorEntryCounts.get(lead.id) ?? 0) > 0 && (
+                        <div className="mt-1.5">
+                          <Badge variant="outline" className="text-[10px] h-5 border-amber-500/50 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
+                            <AlertTriangle className="h-2.5 w-2.5 mr-1" />
+                            {priorEntryCounts.get(lead.id)}ª tentativa de contato
+                          </Badge>
                         </div>
+                      )}
 
                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
