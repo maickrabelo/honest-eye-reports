@@ -654,11 +654,32 @@ export const SalesTeamTab = () => {
                 onDrop={e => onDrop(e, col.value)}
               >
 
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 gap-2">
                   <h3 className="font-semibold text-sm">{col.label}</h3>
-                  <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">
-                    {colLeads.length + (col.value === 'prospect' ? filteredExternal.length : 0)}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    {colLeads.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[10px]"
+                        title={colLeads.every(l => selectedIds.has(l.id)) ? 'Desmarcar todos' : 'Selecionar todos'}
+                        onClick={() => {
+                          const allSelected = colLeads.every(l => selectedIds.has(l.id));
+                          setSelectedIds(prev => {
+                            const next = new Set(prev);
+                            if (allSelected) colLeads.forEach(l => next.delete(l.id));
+                            else colLeads.forEach(l => next.add(l.id));
+                            return next;
+                          });
+                        }}
+                      >
+                        {colLeads.every(l => selectedIds.has(l.id)) ? 'Desmarcar' : 'Sel. todos'}
+                      </Button>
+                    )}
+                    <span className="text-xs font-medium bg-background rounded-full px-2 py-0.5 border">
+                      {colLeads.length + (col.value === 'prospect' ? filteredExternal.length : 0)}
+                    </span>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   {col.value === 'prospect' && filteredExternal.map(ext => {
