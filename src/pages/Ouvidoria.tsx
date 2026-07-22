@@ -26,7 +26,7 @@ import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
-import logoSoia from '@/assets/Logo_SOIA.png';
+const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
 const Ouvidoria = () => {
   const { toast } = useToast();
