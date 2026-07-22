@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import soniaAvatar from '@/assets/sonia-avatar.png';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,6 +28,111 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
+
+type ChatMsg = { from: 'sonia' | 'user'; text: string };
+const CHAT_SCRIPT: ChatMsg[] = [
+  { from: 'sonia', text: 'Olá 💛 Sou a SOnIA, sua ouvidora virtual. Aqui você é 100% anônimo — nem a empresa, nem eu sabemos quem você é. Quer relatar algo?' },
+  { from: 'user', text: 'Sim… meu gestor tem feito comentários constrangedores nas reuniões.' },
+  { from: 'sonia', text: 'Sinto muito que esteja passando por isso. Você está seguro(a) aqui. Esses comentários acontecem com que frequência?' },
+  { from: 'user', text: 'Praticamente toda semana. Outras colegas também ouviram.' },
+  { from: 'sonia', text: 'Entendi. Isso configura um padrão importante para a apuração. Você se sente confortável em descrever um exemplo recente?' },
+  { from: 'user', text: 'Semana passada ele fez uma piada de cunho sexual na frente do time.' },
+  { from: 'sonia', text: '✅ Relato classificado: Assédio moral/sexual · Gravidade ALTA · Padrão recorrente com testemunhas. Estou notificando a comissão agora. Guarde seu protocolo: #OV-2026-8471.' },
+];
+
+function ChatSimulation() {
+  const [visible, setVisible] = useState<ChatMsg[]>([]);
+  const [typing, setTyping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let i = 0;
+    let cancelled = false;
+    const run = () => {
+      if (cancelled) return;
+      if (i >= CHAT_SCRIPT.length) {
+        setTimeout(() => { if (!cancelled) { setVisible([]); i = 0; run(); } }, 5000);
+        return;
+      }
+      setTyping(true);
+      setTimeout(() => {
+        if (cancelled) return;
+        setTyping(false);
+        setVisible(v => [...v, CHAT_SCRIPT[i]]);
+        i++;
+        setTimeout(run, 1400);
+      }, 1200);
+    };
+    run();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [visible, typing]);
+
+  return (
+    <div className="relative max-w-2xl mx-auto">
+      <div className="absolute -inset-2 bg-gradient-to-br from-audit-secondary/40 to-audit-primary/40 rounded-3xl blur-2xl opacity-60" />
+      <div className="relative bg-card rounded-2xl border-2 border-audit-secondary/30 shadow-2xl overflow-hidden">
+        {/* header */}
+        <div className="bg-audit-primary p-4 flex items-center gap-3">
+          <div className="relative">
+            <img src={soniaAvatar} alt="SOnIA" className="w-11 h-11 rounded-full border-2 border-audit-secondary" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-audit-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-white text-sm">SOnIA — Ouvidoria</div>
+            <div className="text-[11px] text-audit-secondary flex items-center gap-1.5">
+              <Lock className="h-3 w-3" /> Conversa criptografada · 100% anônima
+            </div>
+          </div>
+          <Badge className="bg-audit-secondary text-audit-primary border-0 font-bold text-[10px]">AO VIVO</Badge>
+        </div>
+        {/* messages */}
+        <div ref={scrollRef} className="bg-muted/30 p-4 h-[420px] overflow-y-auto space-y-3">
+          {visible.map((m, idx) => (
+            <div key={idx} className={`flex gap-2 animate-fade-in ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {m.from === 'sonia' && (
+                <img src={soniaAvatar} alt="" className="w-7 h-7 rounded-full flex-shrink-0 mt-1" />
+              )}
+              <div
+                className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  m.from === 'user'
+                    ? 'bg-audit-primary text-white rounded-br-sm'
+                    : 'bg-card border border-border text-foreground rounded-bl-sm shadow-sm'
+                }`}
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+          {typing && (
+            <div className="flex gap-2 justify-start animate-fade-in">
+              <img src={soniaAvatar} alt="" className="w-7 h-7 rounded-full flex-shrink-0 mt-1" />
+              <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 rounded-full bg-audit-secondary animate-bounce" />
+                  <span className="w-2 h-2 rounded-full bg-audit-secondary animate-bounce" style={{ animationDelay: '0.15s' }} />
+                  <span className="w-2 h-2 rounded-full bg-audit-secondary animate-bounce" style={{ animationDelay: '0.3s' }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* fake input */}
+        <div className="p-3 bg-card border-t border-border flex items-center gap-2">
+          <div className="flex-1 h-10 rounded-full bg-muted/60 flex items-center px-4 text-xs text-muted-foreground">
+            Digite sua mensagem com segurança...
+          </div>
+          <div className="w-10 h-10 rounded-full bg-audit-secondary flex items-center justify-center">
+            <ArrowRight className="h-4 w-4 text-white" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const Ouvidoria = () => {
   const { toast } = useToast();
@@ -346,8 +452,54 @@ const Ouvidoria = () => {
           </div>
         </section>
 
+        {/* SIMULAÇÃO CHAT SOnIA */}
+        <section className="py-20 px-4 bg-audit-primary relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-audit-secondary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="container mx-auto max-w-6xl relative z-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="text-white">
+                <Badge className="mb-4 bg-audit-secondary text-audit-primary border-0 uppercase text-[10px] tracking-widest font-bold">
+                  Veja funcionando ao vivo
+                </Badge>
+                <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                  Assim é uma denúncia com a <span className="text-audit-secondary">SOnIA</span>
+                </h2>
+                <p className="text-lg text-white/80 mb-6 leading-relaxed">
+                  Enquanto formulários frios afastam o denunciante, a SOnIA <strong className="text-white">acolhe, faz as perguntas certas e estrutura o relato</strong> — tudo em segundos, sem revelar identidade.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Conversa empática que aumenta o número de denúncias reais',
+                    'Classificação automática por tipo e gravidade',
+                    'Protocolo anônimo para retorno do denunciante',
+                    'Comissão notificada em tempo real nos casos críticos',
+                  ].map((t) => (
+                    <li key={t} className="flex items-start gap-3 text-white/90">
+                      <CheckCircle2 className="h-5 w-5 text-audit-secondary mt-0.5 flex-shrink-0" />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={scrollToForm}
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 group shadow-lg shadow-audit-secondary/40"
+                >
+                  Quero a SOnIA na minha empresa
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+              <div>
+                <ChatSimulation />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* BENEFÍCIOS */}
         <section className="py-20 px-4">
+
           <div className="container mx-auto max-w-6xl">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
