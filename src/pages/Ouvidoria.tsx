@@ -452,8 +452,54 @@ const Ouvidoria = () => {
           </div>
         </section>
 
+        {/* SIMULAÇÃO CHAT SOnIA */}
+        <section className="py-20 px-4 bg-audit-primary relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-audit-secondary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="container mx-auto max-w-6xl relative z-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="text-white">
+                <Badge className="mb-4 bg-audit-secondary text-audit-primary border-0 uppercase text-[10px] tracking-widest font-bold">
+                  Veja funcionando ao vivo
+                </Badge>
+                <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                  Assim é uma denúncia com a <span className="text-audit-secondary">SOnIA</span>
+                </h2>
+                <p className="text-lg text-white/80 mb-6 leading-relaxed">
+                  Enquanto formulários frios afastam o denunciante, a SOnIA <strong className="text-white">acolhe, faz as perguntas certas e estrutura o relato</strong> — tudo em segundos, sem revelar identidade.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Conversa empática que aumenta o número de denúncias reais',
+                    'Classificação automática por tipo e gravidade',
+                    'Protocolo anônimo para retorno do denunciante',
+                    'Comissão notificada em tempo real nos casos críticos',
+                  ].map((t) => (
+                    <li key={t} className="flex items-start gap-3 text-white/90">
+                      <CheckCircle2 className="h-5 w-5 text-audit-secondary mt-0.5 flex-shrink-0" />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={scrollToForm}
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 group shadow-lg shadow-audit-secondary/40"
+                >
+                  Quero a SOnIA na minha empresa
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+              <div>
+                <ChatSimulation />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* BENEFÍCIOS */}
         <section className="py-20 px-4">
+
           <div className="container mx-auto max-w-6xl">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
