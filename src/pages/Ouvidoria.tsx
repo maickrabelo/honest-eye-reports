@@ -498,7 +498,7 @@ const Ouvidoria = () => {
         </section>
 
         {/* BENEFÍCIOS */}
-        <section className="py-20 px-4">
+        <section className="py-20 px-4 bg-gradient-to-b from-muted/40 via-audit-secondary/5 to-muted/60 border-y border-audit-secondary/10">
 
           <div className="container mx-auto max-w-6xl">
             <div className="grid md:grid-cols-2 gap-12 items-center">
