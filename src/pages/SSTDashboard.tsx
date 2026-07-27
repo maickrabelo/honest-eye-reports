@@ -31,6 +31,7 @@ import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
+import { useHasCLASAAccess } from '@/hooks/useHasCLASAAccess';
 
 const sstDashboardSteps: TourStep[] = [
   {
