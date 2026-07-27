@@ -458,6 +458,16 @@ const SSTDashboard = () => {
                     path: '/pgr',
                   }];
                 }
+                if (hasCLASAAccess) {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-clasa',
+                    icon: GraduationCap,
+                    title: 'Aprendizes CLASA',
+                    description: 'Diagnóstico de clima, bem-estar e riscos psicossociais (NR-01)',
+                    highlights: ['29 questões', '9 eixos', 'Relatório PDF'],
+                    path: '/clasa-dashboard',
+                  }];
+                }
                 return displayedTools;
               })().map((tool, idx) => (
                 <Card
