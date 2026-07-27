@@ -577,6 +577,177 @@ export type Database = {
         }
         Relationships: []
       }
+      clasa_answers: {
+        Row: {
+          answer_value: number
+          created_at: string
+          id: string
+          question_number: number
+          response_id: string
+        }
+        Insert: {
+          answer_value: number
+          created_at?: string
+          id?: string
+          question_number: number
+          response_id: string
+        }
+        Update: {
+          answer_value?: number
+          created_at?: string
+          id?: string
+          question_number?: number
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clasa_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "clasa_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clasa_assessments: {
+        Row: {
+          collection_mode: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          start_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          collection_mode?: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          start_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          collection_mode?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          start_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clasa_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clasa_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clasa_departments: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          employee_count: number
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clasa_departments_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "clasa_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clasa_responses: {
+        Row: {
+          assessment_id: string
+          completed_at: string | null
+          created_at: string
+          demographics: Json | null
+          department: string | null
+          id: string
+          open_feedback: string | null
+          respondent_token: string
+          risk_level: string | null
+          total_score: number | null
+        }
+        Insert: {
+          assessment_id: string
+          completed_at?: string | null
+          created_at?: string
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          open_feedback?: string | null
+          respondent_token: string
+          risk_level?: string | null
+          total_score?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          completed_at?: string | null
+          created_at?: string
+          demographics?: Json | null
+          department?: string | null
+          id?: string
+          open_feedback?: string | null
+          respondent_token?: string
+          risk_level?: string | null
+          total_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clasa_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "clasa_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       climate_surveys: {
         Row: {
           company_id: string
