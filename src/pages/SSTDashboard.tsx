@@ -31,6 +31,7 @@ import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
+import { useHasCLASAAccess } from '@/hooks/useHasCLASAAccess';
 
 const sstDashboardSteps: TourStep[] = [
   {
@@ -167,6 +168,7 @@ const SSTDashboard = () => {
   const { isSmartOnly } = useSmartOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();
+  const { hasAccess: hasCLASAAccess } = useHasCLASAAccess();
 
   const fetchCompanies = async (highlightCompanyId?: string) => {
     try {
@@ -456,6 +458,16 @@ const SSTDashboard = () => {
                     description: 'Programa de Gerenciamento de Riscos (NR-1/NR-17)',
                     highlights: ['Inventário', 'Plano de ação', 'e-Social'],
                     path: '/pgr',
+                  }];
+                }
+                if (hasCLASAAccess) {
+                  displayedTools = [...displayedTools, {
+                    id: 'tool-clasa',
+                    icon: GraduationCap,
+                    title: 'Aprendizes CLASA',
+                    description: 'Diagnóstico de clima, bem-estar e riscos psicossociais (NR-01)',
+                    highlights: ['29 questões', '9 eixos', 'Relatório PDF'],
+                    path: '/clasa-dashboard',
                   }];
                 }
                 return displayedTools;

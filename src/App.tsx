@@ -50,6 +50,10 @@ const BurnoutDashboard = React.lazy(() => import("./pages/BurnoutDashboard"));
 const BurnoutManagement = React.lazy(() => import("./pages/BurnoutManagement"));
 const BurnoutForm = React.lazy(() => import("./pages/BurnoutForm"));
 const BurnoutResults = React.lazy(() => import("./pages/BurnoutResults"));
+const CLASADashboard = React.lazy(() => import("./pages/CLASADashboard"));
+const CLASAManagement = React.lazy(() => import("./pages/CLASAManagement"));
+const CLASAForm = React.lazy(() => import("./pages/CLASAForm"));
+const CLASAResults = React.lazy(() => import("./pages/CLASAResults"));
 const ChangePassword = React.lazy(() => import("./pages/ChangePassword"));
 const CompleteProfile = React.lazy(() => import("./pages/CompleteProfile"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
@@ -176,6 +180,11 @@ const App = () => (
                 <Route path="/burnout/:id" element={<BurnoutManagement />} />
                 <Route path="/burnout/:companySlug/:assessmentId" element={<BurnoutForm />} />
                 <Route path="/burnout/results/:id" element={<BurnoutResults />} />
+                <Route path="/clasa-dashboard" element={<CLASADashboard />} />
+                <Route path="/clasa/new" element={<CLASAManagement />} />
+                <Route path="/clasa/results/:id" element={<CLASAResults />} />
+                <Route path="/clasa/:id" element={<CLASAManagement />} />
+                <Route path="/clasa/:companySlug/:assessmentId" element={<CLASAForm />} />
                 <Route path="/relatoriodemo" element={<RelatorioDemo />} />
                 <Route path="/sales-dashboard" element={<SalesDashboard />} />
                 <Route path="/psychosocial-dashboard" element={<PsychosocialDashboard />} />
