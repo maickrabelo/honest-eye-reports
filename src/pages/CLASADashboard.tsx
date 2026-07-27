@@ -1,0 +1,290 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useRealAuth } from "@/contexts/RealAuthContext";
+import { useHasCLASAAccess } from "@/hooks/useHasCLASAAccess";
+import { useToast } from "@/hooks/use-toast";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Plus, Search, ExternalLink, Copy, BarChart3, GraduationCap, Building2,
+  Users, FileText, Edit, ArrowLeft, Trash2, Loader2,
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface CLASAAssessment {
+  id: string;
+  title: string;
+  company_id: string;
+  company_name: string;
+  company_slug: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean;
+  response_count: number;
+}
+
+interface Company { id: string; name: string; slug: string | null; }
+
+export default function CLASADashboard() {
+  const navigate = useNavigate();
+  const { user, role, isLoading: authLoading } = useRealAuth();
+  const { hasAccess, isLoading: accessLoading } = useHasCLASAAccess();
+  const { toast } = useToast();
+
+  const [assessments, setAssessments] = useState<CLASAAssessment[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<string>("all");
+
+  useEffect(() => {
+    if (authLoading || accessLoading) return;
+    if (!user) { navigate('/auth'); return; }
+    if (!hasAccess) { navigate('/'); return; }
+    fetchData();
+  }, [user, hasAccess, authLoading, accessLoading]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      let companiesData: Company[] = [];
+
+      if (role === 'company') {
+        const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user?.id).single();
+        if (profile?.company_id) {
+          const { data } = await supabase.from('companies').select('id, name, slug').eq('id', profile.company_id);
+          companiesData = data || [];
+        }
+      } else if (role === 'sst') {
+        const { data: profile } = await supabase.from('profiles').select('sst_manager_id').eq('id', user?.id).single();
+        if (profile?.sst_manager_id) {
+          const { data: rows } = await supabase
+            .from('company_sst_assignments')
+            .select('company:companies!inner(id, name, slug)')
+            .eq('sst_manager_id', profile.sst_manager_id);
+          companiesData = ((rows ?? []) as any[]).map(r => r.company).filter(Boolean);
+        }
+      } else {
+        const { data } = await supabase.from('companies').select('id, name, slug').order('name');
+        companiesData = data || [];
+      }
+      companiesData.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+      setCompanies(companiesData);
+
+      let query = supabase
+        .from('clasa_assessments')
+        .select('id, title, company_id, start_date, end_date, is_active, companies (name, slug)')
+        .order('created_at', { ascending: false });
+      if (role !== 'admin') {
+        query = query.in('company_id', companiesData.map(c => c.id).length ? companiesData.map(c => c.id) : ['00000000-0000-0000-0000-000000000000']);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const withCounts = await Promise.all((data || []).map(async (a: any) => {
+        const { count } = await supabase
+          .from('clasa_responses')
+          .select('id', { count: 'exact', head: true })
+          .eq('assessment_id', a.id)
+          .not('completed_at', 'is', null);
+        return {
+          id: a.id,
+          title: a.title,
+          company_id: a.company_id,
+          company_name: a.companies?.name || 'Empresa',
+          company_slug: a.companies?.slug ?? null,
+          start_date: a.start_date,
+          end_date: a.end_date,
+          is_active: a.is_active,
+          response_count: count || 0,
+        };
+      }));
+      setAssessments(withCounts);
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Erro ao carregar', description: 'Não foi possível carregar as avaliações.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Link copiado!', description: 'O link foi copiado para a área de transferência.' });
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Excluir a avaliação "${title}"? Todas as respostas serão removidas.`)) return;
+    const { error } = await supabase.from('clasa_assessments').delete().eq('id', id);
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Avaliação excluída' });
+    setAssessments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const filtered = assessments.filter(a => {
+    const s = searchTerm.toLowerCase();
+    const matches = a.title.toLowerCase().includes(s) || a.company_name.toLowerCase().includes(s);
+    return matches && (selectedCompany === 'all' || a.company_id === selectedCompany);
+  });
+
+  const activeCount = assessments.filter(a => a.is_active).length;
+  const totalResponses = assessments.reduce((sum, a) => sum + a.response_count, 0);
+  const backPath = role === 'company' ? '/dashboard' : '/sst-dashboard';
+
+  if (authLoading || accessLoading || loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+      <main className="flex-1">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary via-accent to-secondary py-10 md:py-14">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-10 left-10 w-72 h-72 bg-secondary rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary rounded-full blur-3xl" />
+          </div>
+          <div className="container mx-auto px-4 relative z-10">
+            <Button variant="ghost" size="sm" onClick={() => navigate(backPath)} className="mb-4 gap-2 text-white/70 hover:text-white hover:bg-white/10">
+              <ArrowLeft className="h-4 w-4" /> Voltar ao Dashboard
+            </Button>
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 animate-fade-in">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-4">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Exclusivo Futuramed</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Diagnóstico Aprendizes CLASA</h1>
+                <p className="text-white/70 mt-1">Clima, bem-estar e riscos psicossociais (NR-01) para jovens aprendizes</p>
+              </div>
+              <Button onClick={() => navigate('/clasa/new')} className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+                <Plus className="h-4 w-4" /> Nova Avaliação
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              {[
+                { value: assessments.length, label: 'Total Avaliações', icon: FileText },
+                { value: activeCount, label: 'Ativas', icon: GraduationCap },
+                { value: companies.length, label: 'Empresas', icon: Building2 },
+                { value: totalResponses, label: 'Respostas', icon: Users },
+              ].map((stat, idx) => (
+                <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/10 rounded-lg"><stat.icon className="h-5 w-5 text-white/80" /></div>
+                    <div>
+                      <p className="text-2xl font-bold text-white">{stat.value}</p>
+                      <p className="text-xs text-white/60">{stat.label}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto px-4 py-8">
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Buscar por título ou empresa..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                </div>
+                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                  <SelectTrigger className="w-full md:w-[250px]"><SelectValue placeholder="Filtrar por empresa" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as empresas</SelectItem>
+                    {companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-0">
+              {filtered.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="inline-flex p-5 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl mb-4">
+                    <GraduationCap className="h-10 w-10 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Nenhuma avaliação encontrada</h3>
+                  <p className="text-muted-foreground mb-4">Crie a primeira avaliação de aprendizes CLASA.</p>
+                  <Button onClick={() => navigate('/clasa/new')} className="gap-2"><Plus className="h-4 w-4" /> Nova Avaliação</Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Empresa</TableHead>
+                      <TableHead>Período</TableHead>
+                      <TableHead className="text-center">Respostas</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(a => {
+                      const formUrl = a.company_slug ? `${window.location.origin}/clasa/${a.company_slug}/${a.id}` : null;
+                      return (
+                        <TableRow key={a.id}>
+                          <TableCell className="font-medium">{a.title}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" />{a.company_name}</div>
+                          </TableCell>
+                          <TableCell>
+                            {a.start_date && a.end_date ? (
+                              <span className="text-sm">{format(new Date(a.start_date), 'dd/MM/yy', { locale: ptBR })} - {format(new Date(a.end_date), 'dd/MM/yy', { locale: ptBR })}</span>
+                            ) : <span className="text-muted-foreground text-sm">Não definido</span>}
+                          </TableCell>
+                          <TableCell className="text-center"><Badge variant="secondary">{a.response_count}</Badge></TableCell>
+                          <TableCell><Badge variant={a.is_active ? 'default' : 'outline'}>{a.is_active ? 'Ativo' : 'Inativo'}</Badge></TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              {formUrl && (
+                                <>
+                                  <Button variant="ghost" size="icon" onClick={() => copyToClipboard(formUrl)} title="Copiar link"><Copy className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => window.open(formUrl, '_blank')} title="Abrir formulário"><ExternalLink className="h-4 w-4" /></Button>
+                                </>
+                              )}
+                              <Button variant="ghost" size="icon" onClick={() => navigate(`/clasa/results/${a.id}`)} title="Ver resultados"><BarChart3 className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => navigate(`/clasa/${a.id}`)} title="Editar"><Edit className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id, a.title)} title="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
