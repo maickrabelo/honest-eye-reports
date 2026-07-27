@@ -180,6 +180,11 @@ const App = () => (
                 <Route path="/burnout/:id" element={<BurnoutManagement />} />
                 <Route path="/burnout/:companySlug/:assessmentId" element={<BurnoutForm />} />
                 <Route path="/burnout/results/:id" element={<BurnoutResults />} />
+                <Route path="/clasa-dashboard" element={<CLASADashboard />} />
+                <Route path="/clasa/new" element={<CLASAManagement />} />
+                <Route path="/clasa/results/:id" element={<CLASAResults />} />
+                <Route path="/clasa/:id" element={<CLASAManagement />} />
+                <Route path="/clasa/:companySlug/:assessmentId" element={<CLASAForm />} />
                 <Route path="/relatoriodemo" element={<RelatorioDemo />} />
                 <Route path="/sales-dashboard" element={<SalesDashboard />} />
                 <Route path="/psychosocial-dashboard" element={<PsychosocialDashboard />} />
