@@ -48,28 +48,41 @@ function ChatSimulation() {
   useEffect(() => {
     let i = 0;
     let cancelled = false;
+    const timers: number[] = [];
+    const later = (fn: () => void, ms: number) => {
+      timers.push(window.setTimeout(fn, ms));
+    };
     const run = () => {
       if (cancelled) return;
+      if (document.hidden) {
+        later(run, 1000);
+        return;
+      }
       if (i >= CHAT_SCRIPT.length) {
-        setTimeout(() => { if (!cancelled) { setVisible([]); i = 0; run(); } }, 5000);
+        later(() => { if (!cancelled) { setVisible([]); i = 0; run(); } }, 5000);
         return;
       }
       setTyping(true);
-      setTimeout(() => {
+      later(() => {
         if (cancelled) return;
         setTyping(false);
         setVisible(v => [...v, CHAT_SCRIPT[i]]);
         i++;
-        setTimeout(run, 1400);
+        later(run, 1400);
       }, 1200);
     };
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      timers.forEach(t => window.clearTimeout(t));
+    };
   }, []);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [visible, typing]);
+
 
   return (
     <div className="relative max-w-2xl mx-auto">
