@@ -318,6 +318,37 @@ const Ouvidoria = () => {
                 <div className="relative">
                   <div className="absolute -inset-1 bg-gradient-to-br from-audit-secondary to-audit-primary rounded-3xl blur opacity-30" />
                   <div className="relative bg-card rounded-2xl shadow-2xl border-2 border-audit-secondary/30 p-6 md:p-8">
+                    {submitted ? (
+                    <div className="text-center py-6">
+                      <div className="w-16 h-16 rounded-full bg-audit-secondary/15 flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle2 className="h-9 w-9 text-audit-secondary" />
+                      </div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-audit-primary leading-tight mb-2">
+                        Solicitação enviada com sucesso!
+                      </h2>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Nosso especialista vai te chamar no WhatsApp em minutos. Se preferir, fale agora mesmo com a gente.
+                      </p>
+                      <Button
+                        asChild
+                        size="lg"
+                        className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold h-14 text-base shadow-lg shadow-audit-secondary/30"
+                      >
+                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                          Falar agora no WhatsApp
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </a>
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => setSubmitted(false)}
+                        className="mt-4 text-xs text-muted-foreground underline underline-offset-4"
+                      >
+                        Enviar outra solicitação
+                      </button>
+                    </div>
+                    ) : (
+                    <>
                     <div className="text-center mb-6">
                       <Badge className="mb-3 bg-audit-secondary text-white border-0 uppercase text-[10px] tracking-widest font-bold">
                         Demonstração Gratuita
@@ -329,6 +360,8 @@ const Ouvidoria = () => {
                         Preenchendo abaixo, nosso especialista te chama no WhatsApp em minutos.
                       </p>
                     </div>
+
+
 
                     <form onSubmit={handleSubmit} className="space-y-3">
                       <div>
