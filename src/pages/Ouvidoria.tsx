@@ -137,6 +137,8 @@ function ChatSimulation() {
 const Ouvidoria = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
   const [form, setForm] = useState({
     name: '', email: '', phone: '', company_name: '', employee_count: '', message: '',
   });
