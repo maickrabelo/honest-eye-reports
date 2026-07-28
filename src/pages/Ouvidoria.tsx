@@ -65,8 +65,14 @@ function ChatSimulation() {
       setTyping(true);
       later(() => {
         if (cancelled) return;
+        const nextMessage = CHAT_SCRIPT[i];
+        if (!nextMessage) {
+          setTyping(false);
+          later(run, 1000);
+          return;
+        }
         setTyping(false);
-        setVisible(v => [...v, CHAT_SCRIPT[i]]);
+        setVisible(v => [...v, nextMessage]);
         i++;
         later(run, 1400);
       }, 1200);
