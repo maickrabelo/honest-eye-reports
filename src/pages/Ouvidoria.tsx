@@ -156,6 +156,10 @@ const Ouvidoria = () => {
     setForm(p => ({ ...p, [name]: value }));
   };
 
+  const whatsappUrl = `https://wa.me/5511999406560?text=${encodeURIComponent(
+    'Olá! Gostaria de agendar uma demonstração do canal de Ouvidoria da SOIA.'
+  )}`;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone) {
@@ -174,19 +178,17 @@ const Ouvidoria = () => {
         source: 'ouvidoria_landing',
       });
       if (error) throw error;
-      fbqTrack('Lead', { content_name: 'Ouvidoria — Solicitar Demonstração' });
-      toast({ title: 'Solicitação enviada!', description: 'Você será redirecionado para o WhatsApp.' });
+      try { fbqTrack('Lead', { content_name: 'Ouvidoria — Solicitar Demonstração' }); } catch { /* noop */ }
+      toast({ title: 'Solicitação enviada!', description: 'Nosso especialista entrará em contato.' });
       setForm({ name: '', email: '', phone: '', company_name: '', employee_count: '', message: '' });
-      window.open(
-        `https://wa.me/5511999406560?text=${encodeURIComponent('Olá! Gostaria de agendar uma demonstração do canal de Ouvidoria da SOIA.')}`,
-        '_blank'
-      );
+      setSubmitted(true);
     } catch (err: any) {
       toast({ title: 'Erro ao enviar', description: err.message || 'Tente novamente.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
+
 
   const differentials = [
     {
