@@ -48,32 +48,45 @@ function ChatSimulation() {
   useEffect(() => {
     let i = 0;
     let cancelled = false;
+    const timers: number[] = [];
+    const later = (fn: () => void, ms: number) => {
+      timers.push(window.setTimeout(fn, ms));
+    };
     const run = () => {
       if (cancelled) return;
+      if (document.hidden) {
+        later(run, 1000);
+        return;
+      }
       if (i >= CHAT_SCRIPT.length) {
-        setTimeout(() => { if (!cancelled) { setVisible([]); i = 0; run(); } }, 5000);
+        later(() => { if (!cancelled) { setVisible([]); i = 0; run(); } }, 5000);
         return;
       }
       setTyping(true);
-      setTimeout(() => {
+      later(() => {
         if (cancelled) return;
         setTyping(false);
         setVisible(v => [...v, CHAT_SCRIPT[i]]);
         i++;
-        setTimeout(run, 1400);
+        later(run, 1400);
       }, 1200);
     };
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      timers.forEach(t => window.clearTimeout(t));
+    };
   }, []);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [visible, typing]);
+
 
   return (
     <div className="relative max-w-2xl mx-auto">
-      <div className="absolute -inset-2 bg-gradient-to-br from-audit-secondary/40 to-audit-primary/40 rounded-3xl blur-2xl opacity-60" />
+      <div className="absolute -inset-2 bg-gradient-to-br from-audit-secondary/40 to-audit-primary/40 rounded-3xl blur-xl opacity-50" />
       <div className="relative bg-card rounded-2xl border-2 border-audit-secondary/30 shadow-2xl overflow-hidden">
         {/* header */}
         <div className="bg-audit-primary p-4 flex items-center gap-3">
@@ -261,8 +274,8 @@ const Ouvidoria = () => {
       <main>
         {/* HERO com FORMULÁRIO em destaque */}
         <section className="relative overflow-hidden bg-background">
-          <div className="absolute top-0 right-0 w-[60%] h-[80%] bg-gradient-to-bl from-audit-secondary/10 via-audit-secondary/5 to-transparent blur-3xl pointer-events-none" />
-          <div className="absolute -top-20 -left-20 w-96 h-96 bg-audit-primary/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[60%] h-[80%] bg-gradient-to-bl from-audit-secondary/10 via-audit-secondary/5 to-transparent blur-xl pointer-events-none" />
+          <div className="absolute -top-20 -left-20 w-96 h-96 bg-audit-primary/5 rounded-full blur-xl pointer-events-none" />
 
           <div className="audit-container relative z-10 py-10 md:py-16">
             <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-center">
@@ -495,8 +508,8 @@ const Ouvidoria = () => {
 
         {/* SIMULAÇÃO CHAT SOnIA */}
         <section className="py-20 px-4 bg-audit-primary relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-audit-secondary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-audit-secondary/10 rounded-full blur-xl pointer-events-none" />
           <div className="container mx-auto max-w-6xl relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="text-white">
@@ -577,8 +590,8 @@ const Ouvidoria = () => {
 
         {/* CTA FINAL — reforço */}
         <section className="py-20 md:py-28 bg-audit-primary relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-audit-secondary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-audit-secondary/10 rounded-full blur-xl pointer-events-none" />
           <div className="audit-container relative z-10 text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-audit-secondary/20 border border-audit-secondary/40 text-audit-secondary text-xs font-bold uppercase tracking-wider mb-6">
               <AlertTriangle className="h-4 w-4" />
