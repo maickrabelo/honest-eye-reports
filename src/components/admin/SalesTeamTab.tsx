@@ -55,6 +55,9 @@ export const SalesTeamTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<SalesLead | null>(null);
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
+  const [notesLead, setNotesLead] = useState<SalesLead | null>(null);
+  const [notesText, setNotesText] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
