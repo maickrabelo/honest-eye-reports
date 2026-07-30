@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download, X, MoveRight } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download, X, MoveRight, StickyNote, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
