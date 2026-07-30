@@ -755,13 +755,32 @@ export const SalesTeamTab = () => {
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
                         </div>
 
-                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
-
+                        <div className="flex gap-0.5 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-6 w-6 ${lead.notes ? 'text-primary' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}
+                            title="Observações"
+                            onClick={(e) => { e.stopPropagation(); openNotes(lead); }}
+                          >
+                            <StickyNote className="h-3 w-3" />
+                          </Button>
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
+                          </div>
                         </div>
                       </div>
+                      {lead.notes && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); openNotes(lead); }}
+                          className="mt-1.5 w-full text-left text-[11px] leading-snug text-muted-foreground bg-muted/50 rounded p-1.5 whitespace-pre-wrap line-clamp-3 hover:bg-muted"
+                        >
+                          {lead.notes}
+                        </button>
+                      )}
                       {(priorEntryCounts.get(lead.id) ?? 0) > 0 && (
                         <div className="mt-1.5">
                           <Badge variant="outline" className="text-[10px] h-5 border-amber-500/50 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
