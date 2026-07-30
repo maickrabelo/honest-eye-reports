@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { getSafeErrorMessage } from '@/lib/errorUtils';
 import { cn } from '@/lib/utils';
-import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download, X, MoveRight } from 'lucide-react';
+import { Plus, Search, Edit, Trash, LayoutGrid, List, Phone, MapPin, User, GripVertical, CalendarIcon, Clock, Archive, ArchiveRestore, CheckCircle, XCircle, Mail, Sparkles, AlertTriangle, Inbox, Upload, Download, X, MoveRight, StickyNote, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +55,9 @@ export const SalesTeamTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<SalesLead | null>(null);
   const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
+  const [notesLead, setNotesLead] = useState<SalesLead | null>(null);
+  const [notesText, setNotesText] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -235,6 +238,33 @@ export const SalesTeamTab = () => {
       notes: lead.notes || '',
     });
     setDialogOpen(true);
+  };
+
+  const openNotes = (lead: SalesLead) => {
+    setNotesLead(lead);
+    setNotesText(lead.notes || '');
+  };
+
+  const saveNotes = async () => {
+    if (!notesLead) return;
+    setSavingNotes(true);
+    try {
+      const value = notesText.trim() || null;
+      const { error } = await supabase.from('sales_leads').update({ notes: value }).eq('id', notesLead.id);
+      if (error) throw error;
+      setLeads(prev => prev.map(l => (l.id === notesLead.id ? { ...l, notes: value } : l)));
+      toast({ title: 'Observações salvas' });
+      setNotesLead(null);
+    } catch (e) {
+      toast({ title: 'Erro ao salvar observações', description: getSafeErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const appendTimestamp = () => {
+    const stamp = format(new Date(), 'dd/MM/yyyy HH:mm');
+    setNotesText(prev => (prev.trim() ? `${prev.trim()}\n\n[${stamp}] ` : `[${stamp}] `));
   };
 
   const handleSave = async () => {
@@ -755,13 +785,32 @@ export const SalesTeamTab = () => {
                           <span className="font-medium text-sm truncate">{lead.company_name}</span>
                         </div>
 
-                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
-
+                        <div className="flex gap-0.5 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-6 w-6 ${lead.notes ? 'text-primary' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}
+                            title="Observações"
+                            onClick={(e) => { e.stopPropagation(); openNotes(lead); }}
+                          >
+                            <StickyNote className="h-3 w-3" />
+                          </Button>
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); openEdit(lead); }}><Edit className="h-3 w-3" /></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" title="Arquivar" onClick={(e) => { e.stopPropagation(); handleArchive(lead.id, true); }}><Archive className="h-3 w-3" /></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}><Trash className="h-3 w-3" /></Button>
+                          </div>
                         </div>
                       </div>
+                      {lead.notes && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); openNotes(lead); }}
+                          className="mt-1.5 w-full text-left text-[11px] leading-snug text-muted-foreground bg-muted/50 rounded p-1.5 whitespace-pre-wrap line-clamp-3 hover:bg-muted"
+                        >
+                          {lead.notes}
+                        </button>
+                      )}
                       {(priorEntryCounts.get(lead.id) ?? 0) > 0 && (
                         <div className="mt-1.5">
                           <Badge variant="outline" className="text-[10px] h-5 border-amber-500/50 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
@@ -973,6 +1022,35 @@ export const SalesTeamTab = () => {
         onOpenChange={setBulkImportOpen}
         onImported={fetchLeads}
       />
+
+      {/* Notes Dialog — disponível em qualquer etapa do kanban */}
+      <Dialog open={!!notesLead} onOpenChange={(o) => { if (!o) setNotesLead(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Observações — {notesLead?.company_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Anotações do contato</Label>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={appendTimestamp}>
+                <Clock className="h-3 w-3 mr-1" />Data/hora
+              </Button>
+            </div>
+            <Textarea
+              value={notesText}
+              onChange={e => setNotesText(e.target.value)}
+              rows={8}
+              placeholder="Registre o que foi conversado, próximos passos, objeções..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotesLead(null)}>Cancelar</Button>
+            <Button onClick={saveNotes} disabled={savingNotes}>
+              {savingNotes ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar observações'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
