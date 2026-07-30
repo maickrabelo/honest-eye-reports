@@ -240,6 +240,33 @@ export const SalesTeamTab = () => {
     setDialogOpen(true);
   };
 
+  const openNotes = (lead: SalesLead) => {
+    setNotesLead(lead);
+    setNotesText(lead.notes || '');
+  };
+
+  const saveNotes = async () => {
+    if (!notesLead) return;
+    setSavingNotes(true);
+    try {
+      const value = notesText.trim() || null;
+      const { error } = await supabase.from('sales_leads').update({ notes: value }).eq('id', notesLead.id);
+      if (error) throw error;
+      setLeads(prev => prev.map(l => (l.id === notesLead.id ? { ...l, notes: value } : l)));
+      toast({ title: 'Observações salvas' });
+      setNotesLead(null);
+    } catch (e) {
+      toast({ title: 'Erro ao salvar observações', description: getSafeErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const appendTimestamp = () => {
+    const stamp = format(new Date(), 'dd/MM/yyyy HH:mm');
+    setNotesText(prev => (prev.trim() ? `${prev.trim()}\n\n[${stamp}] ` : `[${stamp}] `));
+  };
+
   const handleSave = async () => {
     if (!form.company_name.trim()) {
       toast({ title: 'Nome da empresa é obrigatório', variant: 'destructive' });
