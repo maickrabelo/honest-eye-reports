@@ -1023,6 +1023,35 @@ export const SalesTeamTab = () => {
         onImported={fetchLeads}
       />
 
+      {/* Notes Dialog — disponível em qualquer etapa do kanban */}
+      <Dialog open={!!notesLead} onOpenChange={(o) => { if (!o) setNotesLead(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Observações — {notesLead?.company_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Anotações do contato</Label>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={appendTimestamp}>
+                <Clock className="h-3 w-3 mr-1" />Data/hora
+              </Button>
+            </div>
+            <Textarea
+              value={notesText}
+              onChange={e => setNotesText(e.target.value)}
+              rows={8}
+              placeholder="Registre o que foi conversado, próximos passos, objeções..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotesLead(null)}>Cancelar</Button>
+            <Button onClick={saveNotes} disabled={savingNotes}>
+              {savingNotes ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar observações'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
