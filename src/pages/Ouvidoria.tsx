@@ -172,6 +172,21 @@ const Ouvidoria = () => {
     document.getElementById('form-captura')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const goToCheckout = (slug: string, planName: string, priceBRL: number) => {
+    try {
+      fbqTrack('InitiateCheckout', {
+        content_name: planName,
+        content_category: 'ouvidoria',
+        currency: 'BRL',
+        value: priceBRL,
+      });
+    } catch (err) {
+      console.warn('fbqTrack falhou:', err);
+    }
+    window.location.href = `/checkout?plano=${slug}&ciclo=monthly`;
+  };
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(p => ({ ...p, [name]: value }));
