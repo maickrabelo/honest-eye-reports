@@ -594,6 +594,117 @@ const Ouvidoria = () => {
           </div>
         </section>
 
+        {/* PLANOS — exclusivos desta página */}
+        <section className="py-20 px-4 bg-background border-b border-border">
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-12">
+              <Badge className="mb-4 bg-audit-secondary/15 text-audit-secondary border-audit-secondary/30 uppercase text-[10px] tracking-widest font-bold">
+                Planos exclusivos
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold text-audit-primary mb-3">
+                Escolha seu canal de ouvidoria
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Contratação 100% online. Ativação imediata após o pagamento.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Ouvidoria (com IA) */}
+              <div className="relative rounded-2xl border-2 border-audit-secondary bg-card p-7 shadow-xl shadow-audit-secondary/10 flex flex-col">
+                <Badge className="absolute -top-3 left-6 bg-audit-secondary text-white font-bold text-[10px] uppercase tracking-wider">
+                  Mais completo
+                </Badge>
+                <div className="flex items-center gap-2 mb-1">
+                  <Bot className="h-5 w-5 text-audit-secondary" />
+                  <h3 className="text-xl font-bold text-audit-primary">Ouvidoria</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Canal com a SOnIA: conversa acolhedora, triagem e classificação automáticas.
+                </p>
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-audit-primary">R$ 99</span>
+                    <span className="text-muted-foreground text-sm">/mês</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">até 50 colaboradores</p>
+                </div>
+                <ul className="space-y-2.5 mb-7 flex-1">
+                  {[
+                    'Canal de denúncias com IA (SOnIA)',
+                    'Triagem e classificação automática',
+                    'Anonimato garantido (LGPD)',
+                    'Protocolo e acompanhamento do relato',
+                    'Painel de gestão das denúncias',
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                      <CheckCircle2 className="h-4 w-4 text-audit-secondary mt-0.5 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={() => goToCheckout('ouvidoria', 'Ouvidoria', 99)}
+                  className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold py-6 group"
+                >
+                  Assinar Ouvidoria
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+
+              {/* Ouvidoria Smart (sem IA) */}
+              <div className="relative rounded-2xl border-2 border-border bg-card p-7 shadow-lg flex flex-col">
+                <Badge className="absolute -top-3 left-6 bg-audit-primary text-white font-bold text-[10px] uppercase tracking-wider">
+                  Melhor custo
+                </Badge>
+                <div className="flex items-center gap-2 mb-1">
+                  <ClipboardList className="h-5 w-5 text-audit-primary" />
+                  <h3 className="text-xl font-bold text-audit-primary">Ouvidoria Smart</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Formulário anônimo com protocolo e chave de acesso. Simples, direto e sem IA.
+                </p>
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-audit-primary">R$ 39,90</span>
+                    <span className="text-muted-foreground text-sm">/mês</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">até 50 colaboradores</p>
+                </div>
+                <ul className="space-y-2.5 mb-7 flex-1">
+                  {[
+                    'Canal de denúncias por formulário anônimo',
+                    'Protocolo + chave de acesso para acompanhar',
+                    'Anonimato garantido (LGPD)',
+                    'Painel de gestão das denúncias',
+                    'Sem inteligência artificial',
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                      <CheckCircle2 className="h-4 w-4 text-audit-primary mt-0.5 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => goToCheckout('ouvidoria-smart', 'Ouvidoria Smart', 39.9)}
+                  className="w-full border-2 border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-bold py-6 group"
+                >
+                  Assinar Ouvidoria Smart
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              Pagamento no cartão, PIX ou boleto · Cancele quando quiser
+            </p>
+          </div>
+        </section>
+
+
         {/* CTA FINAL — reforço */}
         <section className="py-20 md:py-28 bg-audit-primary relative overflow-hidden">
           <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-xl pointer-events-none" />
