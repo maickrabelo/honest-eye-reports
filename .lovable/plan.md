@@ -1,39 +1,45 @@
 ## Objetivo
 
-Criar dois planos vendidos **somente** na landing `/ouvidoria`, com checkout funcionando e as demais ferramentas bloqueadas.
+Ajustar a landing `/ouvidoria` para vender os planos de ouvidoria de forma mais direta, mantendo o formulário de contato como opção secundária no final da página e adicionando uma seção direcionada a empresas de SST/Assessorias.
 
-| Plano | Slug | Preço | Limite | IA | Canal |
-|---|---|---|---|---|---|
-| Ouvidoria | `ouvidoria` | R$ 99,00/mês | 1 empresa, 50 colaboradores | Sim | Ouvidoria tradicional (SOnIA) |
-| Ouvidoria Smart | `ouvidoria-smart` | R$ 39,90/mês | 1 empresa, 50 colaboradores | Não | Ouvidoria Smart (formulário + protocolo) |
+## 1. Hero: foco em contratar um plano
 
-Somente cobrança **mensal** (sem trimestral/anual), pois os preços informados são mensais.
+- Trocar o CTA principal do hero de "Solicitar demonstração gratuita" para "Escolher meu plano" / "Ativar minha ouvidoria agora".
+- O botão principal deve rolar até a seção de planos (`#planos-ouvidoria`), não até o formulário.
+- Manter o formulário atual no hero? **Não**: remover o card de captura do hero para não dividir a atenção; a conversão principal passa a ser o checkout.
+- No copy do hero, reforçar que a contratação é online, imediata e sem burocracia.
 
-## 1. Banco de dados
+## 2. Manter o formulário, mas no final da página
 
-- Inserir os 2 planos em `subscription_plans`: `category = 'company'`, `visibility = 'ouvidoria_only'` (novo valor, então não aparecem em `PricingSection`), `is_active = true`, `max_companies = 1`, `max_employees = 50`, `max_cnpjs = 1`, `price_monthly_cents` 9900 / 3990, demais preços nulos, `pgr_enabled = false`, `ouvidoria_enabled = true`, `ai_enabled = true` (Ouvidoria) / `false` (Smart), `features` com os bullets de cada um.
-- Atualizar `company_has_smart_ouvidoria` para reconhecer também o slug `ouvidoria-smart` (hoje só `sst-smart`), na ramificação que usa `companies.parent_subscription_id`. Assim a empresa do plano Smart libera o canal beta e o `get_company_features` continua desligando a ouvidoria tradicional dela.
+- Mover a seção do formulário de captura para próximo ao final da página (antes do footer ou logo após a seção SST).
+- Manter o mesmo formulário, campos e envio para `demo_leads` com `source: 'ouvidoria_landing'`.
+- Título adaptado: deixar claro que é para quem quer falar com um especialista ou receber uma demonstração.
+- O CTA final da página também pode apontar para o formulário, mas com menor destaque que os planos.
 
-## 2. Provisionamento pós-pagamento
+## 3. Nova seção: "É empresa de SST ou Assessoria?"
 
-Em `supabase/functions/asaas-webhook/index.ts`, após criar a empresa: se o slug do plano for `ouvidoria` ou `ouvidoria-smart`, inserir linha em `company_feature_access` com `psicossocial_enabled`, `burnout_enabled`, `clima_enabled`, `treinamentos_enabled` = false e `ouvidoria_enabled` = true. Isso faz o `Dashboard` da empresa exibir apenas o canal de denúncias (o `useCompanyFeatures` já respeita esses flags), e o Smart cai automaticamente no canal sem IA.
+- Inserir uma seção entre os planos e o formulário final, voltada para empresas de Saúde e Segurança do Trabalho e assessorias.
+- Copy sugerido:
+  - Título: "É empresa de SST ou Assessoria?"
+  - Subtítulo: "Fale com a gente e conheça nossos planos especiais para oferecer o canal de ouvidoria aos seus clientes."
+- CTA leva ao formulário de captura (âncora `#form-captura`).
+- Visual em destaque, mas sem competir com os cards de planos.
 
-## 3. Landing `/ouvidoria`
+## 4. Ordem final sugerida da página
 
-Adicionar uma seção de planos (antes do formulário final) em `src/pages/Ouvidoria.tsx`:
-- Dois cards destacados no mesmo padrão visual da página (Ouvidoria em destaque "Mais completo", Smart como "Melhor custo").
-- Comparativo curto: IA conversacional + triagem automática vs. formulário anônimo com protocolo e chave de acesso.
-- Botão de cada card levando para `/checkout?plano=ouvidoria&ciclo=monthly` e `/checkout?plano=ouvidoria-smart&ciclo=monthly`, com `fbqTrack('InitiateCheckout')` (protegido por try/catch, como já feito na página).
-- Nenhuma alteração na `PricingSection` da home: como a visibilidade é `ouvidoria_only`, os planos não aparecem lá. Vou confirmar se a `PricingSection` filtra por `visibility = 'public'`; se ela buscar todos os planos ativos, adiciono o filtro explícito.
-
-## 4. Checkout
-
-`src/pages/Checkout.tsx` já carrega qualquer plano por slug, mostra só os ciclos com preço (ficará apenas Mensal) e envia para `asaas-create-subscription`. Ajustes previstos:
-- Garantir que o resumo funcione bem com apenas 1 ciclo disponível (esconder o seletor de ciclo quando houver uma única opção).
-- Confirmar em `asaas-create-subscription` que o valor mensal é lido de `price_monthly_cents` sem depender de ciclo anual.
+1. Top bar + faixa de urgência (mantidos)
+2. Hero com CTA para planos
+3. Diferenciais
+4. Simulação do chat SOnIA
+5. Benefícios
+6. Planos exclusivos (Ouvidoria / Ouvidoria Smart) — principal CTA de conversão
+7. Seção SST/Assessoria — direciona para o formulário
+8. Formulário de captura
+9. Footer mínimo
 
 ## Detalhes técnicos
 
-- Migração SQL para os inserts de plano + `CREATE OR REPLACE FUNCTION public.company_has_smart_ouvidoria` (mantendo `security definer` e `search_path`).
-- `company_feature_access` já existe com RLS; a inserção é feita pelo webhook com service role.
-- Nada muda para gestoras SST nem para planos SMS/Hotmart existentes.
+- Arquivo alterado: `src/pages/Ouvidoria.tsx`.
+- Nenhuma mudança em banco de dados, checkout (`/contratar`) ou planos — apenas reorganização de conteúdo e CTAs.
+- Reutilizar os handlers existentes: `goToCheckout`, `scrollToForm`, `handleSubmit`.
+- Garantir que o `id="form-captura"` continue funcionando como âncora.
