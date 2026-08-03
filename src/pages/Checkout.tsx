@@ -94,8 +94,20 @@ const Checkout = () => {
         window.location.href = `https://wa.me/5511999406560?text=${encodeURIComponent(msg)}`;
         return;
       }
+      // Garante um ciclo com preço definido (planos mensais-only, ex.: Ouvidoria)
+      const priceFor = (c: Cycle) =>
+        c === 'annual'
+          ? formatted.price_annual_cents
+          : c === 'quarterly'
+            ? formatted.price_quarterly_cents
+            : formatted.price_monthly_cents;
+      if (!priceFor(initialCycle)) {
+        const fallback = (['annual', 'quarterly', 'monthly'] as Cycle[]).find((c) => priceFor(c));
+        if (fallback) setCycle(fallback);
+      }
       setPlan(formatted);
       setLoading(false);
+
     })();
   }, [planSlug, navigate]);
 
