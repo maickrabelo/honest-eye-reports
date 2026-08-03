@@ -94,8 +94,20 @@ const Checkout = () => {
         window.location.href = `https://wa.me/5511999406560?text=${encodeURIComponent(msg)}`;
         return;
       }
+      // Garante um ciclo com preço definido (planos mensais-only, ex.: Ouvidoria)
+      const priceFor = (c: Cycle) =>
+        c === 'annual'
+          ? formatted.price_annual_cents
+          : c === 'quarterly'
+            ? formatted.price_quarterly_cents
+            : formatted.price_monthly_cents;
+      if (!priceFor(initialCycle)) {
+        const fallback = (['annual', 'quarterly', 'monthly'] as Cycle[]).find((c) => priceFor(c));
+        if (fallback) setCycle(fallback);
+      }
       setPlan(formatted);
       setLoading(false);
+
     })();
   }, [planSlug, navigate]);
 
@@ -219,34 +231,37 @@ const Checkout = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Ciclo de pagamento</Label>
-                <RadioGroup value={cycle} onValueChange={(v) => setCycle(v as Cycle)}>
-                  {(['annual', 'quarterly', 'monthly'] as Cycle[]).map((c) => {
-                    const price =
-                      c === 'annual'
-                        ? plan.price_annual_cents
-                        : c === 'quarterly'
-                          ? plan.price_quarterly_cents
-                          : plan.price_monthly_cents;
-                    if (!price) return null;
-                    const label =
-                      c === 'annual' ? 'Anual (12x)' : c === 'quarterly' ? 'Trimestral (3x)' : 'Mensal';
-                    return (
-                      <label
-                        key={c}
-                        className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-muted/40"
-                      >
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value={c} />
-                          <span className="text-sm">{label}</span>
-                        </div>
-                        <span className="text-sm font-semibold text-primary">{formatBRL(price)}</span>
-                      </label>
-                    );
-                  })}
-                </RadioGroup>
-              </div>
+              {[plan.price_annual_cents, plan.price_quarterly_cents, plan.price_monthly_cents].filter(Boolean).length > 1 && (
+                <div className="space-y-2">
+                  <Label>Ciclo de pagamento</Label>
+                  <RadioGroup value={cycle} onValueChange={(v) => setCycle(v as Cycle)}>
+                    {(['annual', 'quarterly', 'monthly'] as Cycle[]).map((c) => {
+                      const price =
+                        c === 'annual'
+                          ? plan.price_annual_cents
+                          : c === 'quarterly'
+                            ? plan.price_quarterly_cents
+                            : plan.price_monthly_cents;
+                      if (!price) return null;
+                      const label =
+                        c === 'annual' ? 'Anual (12x)' : c === 'quarterly' ? 'Trimestral (3x)' : 'Mensal';
+                      return (
+                        <label
+                          key={c}
+                          className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-muted/40"
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value={c} />
+                            <span className="text-sm">{label}</span>
+                          </div>
+                          <span className="text-sm font-semibold text-primary">{formatBRL(price)}</span>
+                        </label>
+                      );
+                    })}
+                  </RadioGroup>
+                </div>
+              )}
+
 
               <div className="border-t pt-4 space-y-3">
                 {monthsPerCycle > 1 && billingType === 'CREDIT_CARD' ? (
