@@ -22,6 +22,8 @@ import {
   Loader2,
   AlertTriangle,
   Zap,
+  HardHat,
+  Users,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
@@ -172,6 +174,10 @@ const Ouvidoria = () => {
     document.getElementById('form-captura')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const scrollToPlans = () => {
+    document.getElementById('planos-ouvidoria')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const goToCheckout = (slug: string, planName: string, priceBRL: number) => {
     try {
       fbqTrack('InitiateCheckout', {
@@ -293,190 +299,64 @@ const Ouvidoria = () => {
       </div>
 
       <main>
-        {/* HERO com FORMULÁRIO em destaque */}
+        {/* HERO — foco em contratar plano */}
         <section className="relative overflow-hidden bg-background">
           <div className="absolute top-0 right-0 w-[60%] h-[80%] bg-gradient-to-bl from-audit-secondary/10 via-audit-secondary/5 to-transparent blur-xl pointer-events-none" />
           <div className="absolute -top-20 -left-20 w-96 h-96 bg-audit-primary/5 rounded-full blur-xl pointer-events-none" />
 
-          <div className="audit-container relative z-10 py-10 md:py-16">
-            <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-center">
-              {/* LEFT — copy 3 cols */}
-              <div className="lg:col-span-3 animate-fade-in">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-audit-primary text-white text-xs font-bold uppercase tracking-wider mb-6">
-                  <Sparkles className="h-4 w-4 text-audit-secondary" />
-                  <span>Canal de Ouvidoria com I.A.</span>
-                </div>
-
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-audit-primary leading-[1.05] mb-6 tracking-tight">
-                  Blinde sua empresa contra{' '}
-                  <span className="text-audit-secondary">assédio, denúncias e processos trabalhistas</span>
-                </h1>
-
-                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Canal 100% anônimo com <strong className="text-audit-primary">SOnIA</strong>, a primeira
-                  IA de acolhimento do Brasil. Denúncias estruturadas, classificadas e prontas para
-                  a comissão agir em minutos.
-                </p>
-
-                {/* Highlight quick differentials */}
-                <div className="grid sm:grid-cols-2 gap-3 mb-8">
-                  {[
-                    { icon: Bot, txt: 'IA de acolhimento exclusiva' },
-                    { icon: Lock, txt: '100% anônimo + LGPD' },
-                    { icon: Zap, txt: 'Ativação em minutos' },
-                    { icon: ShieldCheck, txt: 'Conforme NR-01 + Lei 14.457' },
-                  ].map(({ icon: Icon, txt }) => (
-                    <div key={txt} className="flex items-center gap-2 text-sm font-semibold text-audit-primary">
-                      <div className="w-8 h-8 rounded-lg bg-audit-secondary/15 flex items-center justify-center flex-shrink-0">
-                        <Icon className="h-4 w-4 text-audit-secondary" />
-                      </div>
-                      {txt}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="hidden lg:block">
-                  <Button
-                    size="lg"
-                    onClick={scrollToForm}
-                    className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 text-base group shadow-lg shadow-audit-secondary/30"
-                  >
-                    Solicitar demonstração gratuita
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
+          <div className="audit-container relative z-10 py-14 md:py-24">
+            <div className="max-w-4xl animate-fade-in">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-audit-primary text-white text-xs font-bold uppercase tracking-wider mb-6">
+                <Sparkles className="h-4 w-4 text-audit-secondary" />
+                <span>Canal de Ouvidoria com I.A.</span>
               </div>
 
-              {/* RIGHT — FORM em destaque, 2 cols */}
-              <div id="form-captura" className="lg:col-span-2 animate-fade-in scroll-mt-24" style={{ animationDelay: '0.15s' }}>
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-br from-audit-secondary to-audit-primary rounded-3xl blur opacity-30" />
-                  <div className="relative bg-card rounded-2xl shadow-2xl border-2 border-audit-secondary/30 p-6 md:p-8">
-                    {submitted ? (
-                    <div className="text-center py-6">
-                      <div className="w-16 h-16 rounded-full bg-audit-secondary/15 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="h-9 w-9 text-audit-secondary" />
-                      </div>
-                      <h2 className="text-2xl md:text-3xl font-bold text-audit-primary leading-tight mb-2">
-                        Solicitação enviada com sucesso!
-                      </h2>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Nosso especialista vai te chamar no WhatsApp em minutos. Se preferir, fale agora mesmo com a gente.
-                      </p>
-                      <Button
-                        asChild
-                        size="lg"
-                        className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold h-14 text-base shadow-lg shadow-audit-secondary/30"
-                      >
-                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                          Falar agora no WhatsApp
-                          <ArrowRight className="ml-2 h-5 w-5" />
-                        </a>
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => setSubmitted(false)}
-                        className="mt-4 text-xs text-muted-foreground underline underline-offset-4"
-                      >
-                        Enviar outra solicitação
-                      </button>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-audit-primary leading-[1.05] mb-6 tracking-tight">
+                Ative seu canal de ouvidoria em minutos e{' '}
+                <span className="text-audit-secondary">proteja sua empresa</span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl leading-relaxed">
+                Contratação 100% online, sem burocracia. Escolha entre o canal com{' '}
+                <strong className="text-audit-primary">SOnIA</strong> (IA de acolhimento) ou o{' '}
+                <strong className="text-audit-primary">formulário anônimo Smart</strong>. Ambos em
+                conformidade com NR-01 e LGPD.
+              </p>
+
+              {/* Highlight quick differentials */}
+              <div className="grid sm:grid-cols-2 gap-3 mb-10 max-w-2xl">
+                {[
+                  { icon: Bot, txt: 'IA de acolhimento exclusiva' },
+                  { icon: Lock, txt: '100% anônimo + LGPD' },
+                  { icon: Zap, txt: 'Ativação em minutos' },
+                  { icon: ShieldCheck, txt: 'Conforme NR-01 + Lei 14.457' },
+                ].map(({ icon: Icon, txt }) => (
+                  <div key={txt} className="flex items-center gap-2 text-sm font-semibold text-audit-primary">
+                    <div className="w-8 h-8 rounded-lg bg-audit-secondary/15 flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-4 w-4 text-audit-secondary" />
                     </div>
-                    ) : (
-                    <>
-                    <div className="text-center mb-6">
-                      <Badge className="mb-3 bg-audit-secondary text-white border-0 uppercase text-[10px] tracking-widest font-bold">
-                        Demonstração Gratuita
-                      </Badge>
-                      <h2 className="text-2xl md:text-3xl font-bold text-audit-primary leading-tight">
-                        Veja a ouvidoria funcionando na sua empresa
-                      </h2>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Preenchendo abaixo, nosso especialista te chama no WhatsApp em minutos.
-                      </p>
-                    </div>
-
-
-
-                    <form onSubmit={handleSubmit} className="space-y-3">
-                      <div>
-                        <Label htmlFor="name" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
-                          Nome *
-                        </Label>
-                        <Input
-                          id="name" name="name" required value={form.name} onChange={handleChange}
-                          placeholder="Seu nome completo"
-                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="email" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
-                          E-mail corporativo *
-                        </Label>
-                        <Input
-                          id="email" name="email" type="email" required value={form.email} onChange={handleChange}
-                          placeholder="seu@empresa.com.br"
-                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
-                          WhatsApp *
-                        </Label>
-                        <Input
-                          id="phone" name="phone" required value={form.phone} onChange={handleChange}
-                          placeholder="(11) 99999-9999"
-                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="company_name" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
-                            Empresa
-                          </Label>
-                          <Input
-                            id="company_name" name="company_name" value={form.company_name} onChange={handleChange}
-                            className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="employee_count" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
-                            Nº colaboradores
-                          </Label>
-                          <Input
-                            id="employee_count" name="employee_count" value={form.employee_count} onChange={handleChange}
-                            placeholder="Ex: 50"
-                            className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
-                          />
-                        </div>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        size="lg"
-                        disabled={loading}
-                        className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold h-14 text-base group shadow-lg shadow-audit-secondary/30 mt-2"
-                      >
-                        {loading ? (
-                          <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Enviando...</>
-                        ) : (
-                          <>
-                            Quero ativar minha ouvidoria
-                            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                          </>
-                        )}
-                      </Button>
-
-                      <div className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
-                        <ShieldCheck className="h-4 w-4 text-audit-secondary" />
-                        <span>Seus dados protegidos · LGPD · Sem spam</span>
-                      </div>
-                    </form>
-                    </>
-                    )}
-
-
+                    {txt}
                   </div>
-                </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <Button
+                  size="lg"
+                  onClick={scrollToPlans}
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 text-base group shadow-lg shadow-audit-secondary/30"
+                >
+                  Escolher meu plano
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={scrollToForm}
+                  className="border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-bold px-8 py-6 text-base"
+                >
+                  Falar com um especialista
+                </Button>
               </div>
             </div>
           </div>
@@ -517,10 +397,10 @@ const Ouvidoria = () => {
             <div className="text-center mt-12">
               <Button
                 size="lg"
-                onClick={scrollToForm}
+                onClick={scrollToPlans}
                 className="bg-audit-primary hover:bg-audit-primary/90 text-white font-bold px-10 py-6 text-base group shadow-lg"
               >
-                Quero conhecer a SOnIA agora
+                Ver planos e ativar agora
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
@@ -558,7 +438,7 @@ const Ouvidoria = () => {
                 </ul>
                 <Button
                   size="lg"
-                  onClick={scrollToForm}
+                  onClick={scrollToPlans}
                   className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 group shadow-lg shadow-audit-secondary/40"
                 >
                   Quero a SOnIA na minha empresa
@@ -590,10 +470,10 @@ const Ouvidoria = () => {
                 </p>
                 <Button
                   size="lg"
-                  onClick={scrollToForm}
+                  onClick={scrollToPlans}
                   className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 text-base group shadow-lg"
                 >
-                  Solicitar demonstração
+                  Ver planos exclusivos
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
@@ -610,7 +490,7 @@ const Ouvidoria = () => {
         </section>
 
         {/* PLANOS — exclusivos desta página */}
-        <section className="py-20 px-4 bg-background border-b border-border">
+        <section id="planos-ouvidoria" className="py-20 px-4 bg-background border-b border-border scroll-mt-24">
           <div className="container mx-auto max-w-5xl">
             <div className="text-center mb-12">
               <Badge className="mb-4 bg-audit-secondary/15 text-audit-secondary border-audit-secondary/30 uppercase text-[10px] tracking-widest font-bold">
@@ -719,35 +599,199 @@ const Ouvidoria = () => {
           </div>
         </section>
 
-
-        {/* CTA FINAL — reforço */}
-        <section className="py-20 md:py-28 bg-audit-primary relative overflow-hidden">
+        {/* SST / ASSESSORIA — direciona para formulário */}
+        <section className="py-20 px-4 bg-audit-primary relative overflow-hidden">
           <div className="absolute top-0 left-0 w-96 h-96 bg-audit-secondary/20 rounded-full blur-xl pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-audit-secondary/10 rounded-full blur-xl pointer-events-none" />
-          <div className="audit-container relative z-10 text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-audit-secondary/20 border border-audit-secondary/40 text-audit-secondary text-xs font-bold uppercase tracking-wider mb-6">
-              <AlertTriangle className="h-4 w-4" />
-              Última chamada
+          <div className="container mx-auto max-w-5xl relative z-10">
+            <div className="grid lg:grid-cols-5 gap-10 items-center">
+              <div className="lg:col-span-3 text-white">
+                <Badge className="mb-4 bg-audit-secondary text-audit-primary border-0 uppercase text-[10px] tracking-widest font-bold">
+                  Para empresas de SST e assessorias
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+                  É empresa de SST ou Assessoria?
+                </h2>
+                <p className="text-lg text-white/80 mb-6 leading-relaxed">
+                  Fale com a gente e conheça nossos planos especiais para oferecer o canal de
+                  ouvidoria aos seus clientes. Seja parceiro SOIA e amplie sua carteira com uma
+                  solução pronta, segura e em conformidade com a NR-01.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Condições comerciais exclusivas para parceiros',
+                    'Canal white-label para seus clientes',
+                    'Treinamento e material de apoio',
+                    'Comissões recorrentes por cliente ativo',
+                  ].map((t) => (
+                    <li key={t} className="flex items-start gap-3 text-white/90">
+                      <CheckCircle2 className="h-5 w-5 text-audit-secondary mt-0.5 flex-shrink-0" />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={scrollToForm}
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-8 py-6 group shadow-lg shadow-audit-secondary/40"
+                >
+                  Quero ser parceiro SOIA
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+              <div className="lg:col-span-2 flex justify-center">
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-audit-secondary/30 rounded-full blur-2xl" />
+                  <div className="relative w-48 h-48 rounded-full bg-audit-secondary/20 border-4 border-audit-secondary/40 flex items-center justify-center">
+                    <div className="text-center">
+                      <HardHat className="h-16 w-16 text-audit-secondary mx-auto mb-2" />
+                      <Users className="h-10 w-10 text-white mx-auto" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Não espere a primeira denúncia virar <span className="text-audit-secondary">processo</span>
-            </h2>
-            <p className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto">
-              Ative sua ouvidoria com IA em minutos. Preencha o formulário e nosso especialista
-              te chama no WhatsApp agora.
-            </p>
-            <Button
-              size="lg"
-              onClick={scrollToForm}
-              className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold px-10 py-7 text-lg group shadow-2xl shadow-audit-secondary/40"
-            >
-              Quero minha demonstração gratuita
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/60">
-              <div className="inline-flex items-center gap-2">✓ Sem cartão de crédito</div>
-              <div className="inline-flex items-center gap-2">✓ Ativação em minutos</div>
-              <div className="inline-flex items-center gap-2">✓ 100% LGPD</div>
+          </div>
+        </section>
+
+        {/* FORMULÁRIO DE CAPTURA — no final da página */}
+        <section id="form-captura" className="py-20 px-4 bg-gradient-to-b from-muted/40 to-background scroll-mt-24">
+          <div className="container mx-auto max-w-3xl">
+            <div className="text-center mb-10">
+              <Badge className="mb-4 bg-audit-primary text-white border-0 uppercase text-[10px] tracking-widest font-bold">
+                Fale com um especialista
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold text-audit-primary mb-3">
+                Prefere uma demonstração antes de decidir?
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Preencha seus dados e nosso time entra em contato para tirar dúvidas e mostrar a plataforma.
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-br from-audit-secondary to-audit-primary rounded-3xl blur opacity-30" />
+              <div className="relative bg-card rounded-2xl shadow-2xl border-2 border-audit-secondary/30 p-6 md:p-8">
+                {submitted ? (
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 rounded-full bg-audit-secondary/15 flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2 className="h-9 w-9 text-audit-secondary" />
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold text-audit-primary leading-tight mb-2">
+                      Solicitação enviada com sucesso!
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Nosso especialista vai te chamar no WhatsApp em minutos. Se preferir, fale agora mesmo com a gente.
+                    </p>
+                    <Button
+                      asChild
+                      size="lg"
+                      className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold h-14 text-base shadow-lg shadow-audit-secondary/30"
+                    >
+                      <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                        Falar agora no WhatsApp
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </a>
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setSubmitted(false)}
+                      className="mt-4 text-xs text-muted-foreground underline underline-offset-4"
+                    >
+                      Enviar outra solicitação
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
+                          Nome *
+                        </Label>
+                        <Input
+                          id="name" name="name" required value={form.name} onChange={handleChange}
+                          placeholder="Seu nome completo"
+                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="email" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
+                          E-mail corporativo *
+                        </Label>
+                        <Input
+                          id="email" name="email" type="email" required value={form.email} onChange={handleChange}
+                          placeholder="seu@empresa.com.br"
+                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
+                          WhatsApp *
+                        </Label>
+                        <Input
+                          id="phone" name="phone" required value={form.phone} onChange={handleChange}
+                          placeholder="(11) 99999-9999"
+                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="company_name" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
+                          Empresa
+                        </Label>
+                        <Input
+                          id="company_name" name="company_name" value={form.company_name} onChange={handleChange}
+                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="employee_count" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
+                          Nº colaboradores
+                        </Label>
+                        <Input
+                          id="employee_count" name="employee_count" value={form.employee_count} onChange={handleChange}
+                          placeholder="Ex: 50"
+                          className="mt-1 h-11 bg-muted/40 border-border focus:border-audit-secondary"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="message" className="text-xs uppercase tracking-wider text-audit-primary font-bold">
+                          Mensagem
+                        </Label>
+                        <Textarea
+                          id="message" name="message" value={form.message} onChange={handleChange}
+                          placeholder="Conte um pouco sobre sua necessidade..."
+                          className="mt-1 min-h-[44px] bg-muted/40 border-border focus:border-audit-secondary resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={loading}
+                      className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold h-14 text-base group shadow-lg shadow-audit-secondary/30 mt-2"
+                    >
+                      {loading ? (
+                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Enviando...</>
+                      ) : (
+                        <>
+                          Quero falar com um especialista
+                          <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
+                      <ShieldCheck className="h-4 w-4 text-audit-secondary" />
+                      <span>Seus dados protegidos · LGPD · Sem spam</span>
+                    </div>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         </section>
