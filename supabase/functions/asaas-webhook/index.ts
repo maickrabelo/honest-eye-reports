@@ -228,6 +228,9 @@ Deno.serve(async (req) => {
       const role = plan.category === 'manager' ? 'sst' : 'company';
       await supabase.from('user_roles').upsert({ user_id: userId!, role }, { onConflict: 'user_id,role' });
 
+      // Planos exclusivos da landing /ouvidoria: só o canal de denúncias fica liberado
+      const isOuvidoriaOnlyPlan = plan.slug === 'ouvidoria' || plan.slug === 'ouvidoria-smart';
+
       // Create company(s) for company plans, or sst_manager for manager plans
       if (plan.category === 'company') {
         const cnpjs: string[] = (meta.cnpjs && meta.cnpjs.length > 0) ? meta.cnpjs : [cpfCnpj];
@@ -251,9 +254,24 @@ Deno.serve(async (req) => {
 
           if (company) {
             await supabase.from('profiles').update({ company_id: company.id }).eq('id', userId!);
+
+            if (isOuvidoriaOnlyPlan) {
+              const { error: featErr } = await supabase
+                .from('company_feature_access')
+                .upsert({
+                  company_id: company.id,
+                  ouvidoria_enabled: true,
+                  psicossocial_enabled: false,
+                  burnout_enabled: false,
+                  clima_enabled: false,
+                  treinamentos_enabled: false,
+                }, { onConflict: 'company_id' });
+              if (featErr) console.error('Failed to set ouvidoria-only features:', featErr);
+            }
           }
         }
       } else if (plan.category === 'manager') {
+
         const { data: mgr } = await supabase
           .from('sst_managers')
           .insert({
