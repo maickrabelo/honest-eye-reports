@@ -183,7 +183,7 @@ const Ouvidoria = () => {
     } catch (err) {
       console.warn('fbqTrack falhou:', err);
     }
-    window.location.href = `/checkout?plano=${slug}&ciclo=monthly`;
+    window.location.href = `/contratar?plano=${slug}&ciclo=monthly`;
   };
 
 
