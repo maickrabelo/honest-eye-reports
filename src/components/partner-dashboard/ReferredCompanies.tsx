@@ -64,12 +64,21 @@ const ReferredCompanies = ({ partnerId }: ReferredCompaniesProps) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Empresas Indicadas</h2>
-        <p className="text-muted-foreground">
-          Empresas que se cadastraram através do seu link de indicação
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Empresas Indicadas</h2>
+          <p className="text-muted-foreground">
+            Empresas que se cadastraram através do seu link de indicação
+          </p>
+        </div>
+        {hasSSTAccess && (
+          <Button onClick={() => (window.location.href = "/sst-dashboard")}>
+            <ShieldCheck className="h-4 w-4 mr-2" />
+            Gerenciar como Gestora SST
+          </Button>
+        )}
       </div>
+
 
       <Card>
         <CardContent className="p-0">
