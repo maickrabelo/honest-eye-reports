@@ -86,6 +86,7 @@ const BetaOuvidoriaForm = React.lazy(() => import("./pages/BetaOuvidoriaForm"));
 const BetaOuvidoriaTrack = React.lazy(() => import("./pages/BetaOuvidoriaTrack"));
 const BetaOuvidoriaDashboard = React.lazy(() => import("./pages/BetaOuvidoriaDashboard"));
 const Ouvidoria = React.lazy(() => import("./pages/Ouvidoria"));
+const PDParceiros = React.lazy(() => import("./pages/PDParceiros"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,6 +128,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/ouvidoria" element={<Ouvidoria />} />
+                <Route path="/pdparceiros" element={<PDParceiros />} />
                 <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />
                 <Route path="/teste-gratis" element={<TrialSignup />} />
                 <Route path="/teste-gratis-sst" element={<SSTTrialSignup />} />
