@@ -222,6 +222,94 @@ const handler = async (req: Request): Promise<Response> => {
       // Continue anyway, profile creation is not critical
     }
 
+    // PARTNER ONLY: provision an SST manager account so the licensed partner can
+    // manage the companies they referred (Programa de Parceiros Licenciados).
+    let sstManagerId: string | null = null;
+    if (type === "partner" && partnerData.manages_clients !== false) {
+      try {
+        sstManagerId = partnerData.sst_manager_id || null;
+
+        if (!sstManagerId) {
+          const baseSlug = (partnerData.nome_fantasia || partnerData.razao_social || "parceiro")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")
+            .slice(0, 40);
+          const slug = `${baseSlug}-${partner_id.slice(0, 6)}`;
+
+          const { data: managerRow, error: managerError } = await supabase
+            .from("sst_managers")
+            .insert({
+              name: partnerData.nome_fantasia || partnerData.razao_social,
+              email: partnerData.email,
+              phone: partnerData.phone,
+              address: partnerData.endereco_completo,
+              cnpj: partnerData.cnpj,
+              slug,
+              max_companies: 30,
+              subscription_status: "active",
+            })
+            .select("id")
+            .single();
+
+          if (managerError) throw managerError;
+          sstManagerId = managerRow.id;
+
+          await supabase
+            .from("licensed_partners")
+            .update({ sst_manager_id: sstManagerId })
+            .eq("id", partner_id);
+        }
+
+        // Link the user profile to the SST manager and grant the sst role
+        await supabase
+          .from("profiles")
+          .update({ sst_manager_id: sstManagerId })
+          .eq("id", newUserId);
+
+        const { data: existingSstRole } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", newUserId)
+          .eq("role", "sst")
+          .maybeSingle();
+
+        if (!existingSstRole) {
+          await supabase.from("user_roles").insert({ user_id: newUserId, role: "sst" });
+        }
+
+        // Attach companies already referred by this partner to the manager
+        const { data: referredCompanies } = await supabase
+          .from("companies")
+          .select("id")
+          .eq("referred_by_partner_id", partner_id);
+
+        for (const company of referredCompanies || []) {
+          const { data: existingAssignment } = await supabase
+            .from("company_sst_assignments")
+            .select("id")
+            .eq("company_id", company.id)
+            .eq("sst_manager_id", sstManagerId)
+            .maybeSingle();
+
+          if (!existingAssignment) {
+            await supabase
+              .from("company_sst_assignments")
+              .insert({ company_id: company.id, sst_manager_id: sstManagerId });
+          }
+        }
+
+        console.log(`Partner ${partner_id} provisioned as SST manager ${sstManagerId}`);
+      } catch (sstError) {
+        console.error("Error provisioning SST manager for partner:", sstError);
+        // Non-blocking: partner approval remains valid
+      }
+    }
+
+
+
     // Send approval email with credentials
     const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-partner-email`, {
       method: "POST",

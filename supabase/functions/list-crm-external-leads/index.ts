@@ -133,10 +133,15 @@ Deno.serve(async (req) => {
     });
 
     (demoLeads || []).forEach((d: any) => {
+      const isPdParceiros = d.source === "pdparceiros";
       items.push({
         external_id: `demo:${d.id}`,
-        source: "demo_form",
-        source_label: d.source ? `Form: ${d.source}` : "Formulário Demo",
+        source: isPdParceiros ? "pdparceiros" : "demo_form",
+        source_label: isPdParceiros
+          ? "PDPARCEIROS"
+          : d.source
+            ? `Form: ${d.source}`
+            : "Formulário Demo",
         company_name: d.company_name || d.name,
         contact_name: d.name,
         email: d.email,

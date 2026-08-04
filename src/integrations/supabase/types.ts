@@ -1489,11 +1489,13 @@ export type Database = {
           endereco_completo: string
           first_access_completed: boolean | null
           id: string
+          manages_clients: boolean
           nome_fantasia: string
           phone: string | null
           razao_social: string
           referral_code: string
           rejection_reason: string | null
+          sst_manager_id: string | null
           status: string
           terms_accepted: boolean | null
           terms_accepted_at: string | null
@@ -1513,11 +1515,13 @@ export type Database = {
           endereco_completo: string
           first_access_completed?: boolean | null
           id?: string
+          manages_clients?: boolean
           nome_fantasia: string
           phone?: string | null
           razao_social: string
           referral_code?: string
           rejection_reason?: string | null
+          sst_manager_id?: string | null
           status?: string
           terms_accepted?: boolean | null
           terms_accepted_at?: string | null
@@ -1537,18 +1541,35 @@ export type Database = {
           endereco_completo?: string
           first_access_completed?: boolean | null
           id?: string
+          manages_clients?: boolean
           nome_fantasia?: string
           phone?: string | null
           razao_social?: string
           referral_code?: string
           rejection_reason?: string | null
+          sst_manager_id?: string | null
           status?: string
           terms_accepted?: boolean | null
           terms_accepted_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "licensed_partners_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_partners_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partner_prospects: {
         Row: {

@@ -9,7 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2, Loader2 } from "lucide-react";
+import { Building2, Loader2, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Company {
@@ -27,10 +28,22 @@ interface ReferredCompaniesProps {
 const ReferredCompanies = ({ partnerId }: ReferredCompaniesProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSSTAccess, setHasSSTAccess] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
+    checkSSTAccess();
   }, [partnerId]);
+
+  const checkSSTAccess = async () => {
+    const { data } = await supabase
+      .from("licensed_partners")
+      .select("sst_manager_id, manages_clients")
+      .eq("id", partnerId)
+      .maybeSingle();
+    setHasSSTAccess(Boolean((data as any)?.sst_manager_id && (data as any)?.manages_clients !== false));
+  };
+
 
   const fetchCompanies = async () => {
     try {
@@ -64,12 +77,21 @@ const ReferredCompanies = ({ partnerId }: ReferredCompaniesProps) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Empresas Indicadas</h2>
-        <p className="text-muted-foreground">
-          Empresas que se cadastraram através do seu link de indicação
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Empresas Indicadas</h2>
+          <p className="text-muted-foreground">
+            Empresas que se cadastraram através do seu link de indicação
+          </p>
+        </div>
+        {hasSSTAccess && (
+          <Button onClick={() => (window.location.href = "/sst-dashboard")}>
+            <ShieldCheck className="h-4 w-4 mr-2" />
+            Gerenciar como Gestora SST
+          </Button>
+        )}
       </div>
+
 
       <Card>
         <CardContent className="p-0">
