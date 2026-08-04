@@ -26,11 +26,19 @@ import {
   Users,
   MessageSquare,
   Rocket,
+  Lock,
+  FileSearch,
+  BellRing,
+  ScrollText,
+  AlertTriangle,
+  QrCode,
+  UserCheck,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
+import OuvidoriaChatSimulation from '@/components/ouvidoria/OuvidoriaChatSimulation';
 
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
@@ -67,11 +75,11 @@ function CommissionSimulator() {
   }, [companies, employees]);
 
   return (
-    <Card className="border-2 border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl">
+    <Card className="border-2 border-audit-secondary/40 bg-card shadow-2xl">
       <CardContent className="p-6 md:p-8 space-y-8">
         <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Calculator className="h-6 w-6 text-primary" />
+          <div className="h-11 w-11 rounded-xl bg-audit-secondary/15 flex items-center justify-center">
+            <Calculator className="h-6 w-6 text-audit-secondary" />
           </div>
           <div>
             <h3 className="text-xl font-bold">Simulador de comissões</h3>
@@ -85,7 +93,7 @@ function CommissionSimulator() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="font-semibold">Quantidade de empresas</Label>
-              <span className="text-lg font-bold text-primary">{companies}</span>
+              <span className="text-lg font-bold text-audit-secondary">{companies}</span>
             </div>
             <Slider
               value={[companies]}
@@ -107,7 +115,7 @@ function CommissionSimulator() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="font-semibold">Colaboradores por empresa</Label>
-              <span className="text-lg font-bold text-primary">{employees}</span>
+              <span className="text-lg font-bold text-audit-secondary">{employees}</span>
             </div>
             <Slider
               value={[employees]}
@@ -142,8 +150,8 @@ function CommissionSimulator() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-primary text-primary-foreground p-6 text-center shadow-lg">
-          <p className="text-sm font-medium opacity-90">Sua comissão de 30% sobre a anuidade</p>
+        <div className="rounded-2xl bg-audit-primary text-primary-foreground p-6 text-center shadow-lg">
+          <p className="text-sm font-medium text-audit-secondary">Sua comissão de 30% sobre a anuidade</p>
           <p className="text-4xl md:text-5xl font-extrabold mt-2">{brl(result.annualCommission)}</p>
           <p className="text-sm mt-2 opacity-90">
             equivalente a <strong>{brl(result.monthlyCommission)}</strong> por mês — recorrente, enquanto os clientes
@@ -282,6 +290,47 @@ const PDParceiros = () => {
     { icon: Users, title: 'Sem custo de estrutura', desc: 'Nada de servidor, suporte técnico ou desenvolvimento. A SOIA cuida da tecnologia.' },
   ];
 
+  /** Como a ouvidoria funciona na prática — argumento de venda do parceiro */
+  const howItWorks = [
+    {
+      icon: QrCode,
+      title: '1. Canal divulgado na empresa',
+      desc: 'Link e QR Code exclusivos da empresa em murais, crachás e intranet. O colaborador acessa pelo celular, sem app e sem login.',
+    },
+    {
+      icon: Bot,
+      title: '2. A SOnIA acolhe o relato',
+      desc: 'A IA conduz a conversa com empatia, faz as perguntas certas e coleta datas, locais, frequência e testemunhas.',
+    },
+    {
+      icon: FileSearch,
+      title: '3. Classificação automática',
+      desc: 'O relato é categorizado (assédio, discriminação, segurança, fraude…) e recebe nível de gravidade e protocolo anônimo.',
+    },
+    {
+      icon: BellRing,
+      title: '4. Notificação da comissão',
+      desc: 'Você e/ou o comitê da empresa recebem o alerta na hora, com o relato já estruturado para a apuração.',
+    },
+    {
+      icon: UserCheck,
+      title: '5. Tratativa e retorno',
+      desc: 'A apuração acontece dentro da plataforma, com histórico de andamentos. O denunciante acompanha pelo protocolo, sem se identificar.',
+    },
+    {
+      icon: ScrollText,
+      title: '6. Relatórios de compliance',
+      desc: 'Indicadores, evidências e relatórios prontos para auditoria, para a CIPA e para alimentar o PGR/riscos psicossociais.',
+    },
+  ];
+
+  const painPoints = [
+    'A Lei 14.457/22 obriga o canal de denúncias em empresas com CIPA.',
+    'A NR-01 exige o gerenciamento dos riscos psicossociais — assédio incluso.',
+    'Sem canal seguro, o relato vira processo trabalhista direto.',
+    'E-mail e caixinha de sugestões não garantem anonimato nem rastreabilidade.',
+  ];
+
   const steps = [
     { n: '1', title: 'Cadastro', desc: 'Você preenche o formulário e nosso time de parcerias faz uma reunião de alinhamento.' },
     { n: '2', title: 'Aprovação e contrato', desc: 'Assinatura digital do contrato de parceiro licenciado.' },
@@ -299,6 +348,14 @@ const PDParceiros = () => {
       a: 'Sim. Como parceiro licenciado você recebe uma conta de Gestora SST e as empresas indicadas por você ficam vinculadas a esse painel.',
     },
     {
+      q: 'O denunciante é realmente anônimo?',
+      a: 'Sim. Não há login, não guardamos IP identificável e o acompanhamento é feito por um protocolo. Nem a empresa nem o parceiro conseguem identificar quem relatou.',
+    },
+    {
+      q: 'Preciso ser especialista em compliance para operar?',
+      a: 'Não. A SOnIA já entrega o relato classificado, com gravidade e recomendações. Você conduz a tratativa com apoio dos nossos materiais.',
+    },
+    {
       q: 'Posso cobrar meus próprios valores do cliente?',
       a: 'Sim. Além da comissão da SOIA, você pode cobrar taxa de implementação e mensalidade de gestão de denúncias diretamente do cliente.',
     },
@@ -310,82 +367,184 @@ const PDParceiros = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* HERO */}
-      <section className="relative bg-gradient-to-b from-primary/10 via-background to-background border-b">
-        <div className="max-w-6xl mx-auto px-4 py-14 md:py-20">
-          <div className="flex justify-center mb-8">
-            <img src={logoSoia} alt="SOIA" className="h-10 w-auto object-contain" />
+      {/* HERO — escuro */}
+      <section className="relative overflow-hidden bg-audit-primary">
+        <div className="absolute inset-0 opacity-[0.18] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--audit-secondary))_0%,transparent_45%),radial-gradient(circle_at_85%_10%,hsl(var(--audit-secondary))_0%,transparent_40%)]" />
+        <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24">
+          <div className="flex justify-center mb-10">
+            <img src={logoSoia} alt="SOIA" className="h-10 w-auto object-contain brightness-0 invert" />
           </div>
 
           <div className="text-center max-w-3xl mx-auto space-y-6">
-            <Badge className="bg-primary/15 text-primary border border-primary/30 hover:bg-primary/15">
+            <Badge className="bg-audit-secondary/15 text-audit-secondary border border-audit-secondary/40 hover:bg-audit-secondary/15">
               <Sparkles className="h-3.5 w-3.5 mr-1" /> Programa de Parceiros Licenciados SOIA
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-extrabold leading-tight">
+            <h1 className="text-3xl md:text-5xl font-extrabold leading-tight text-primary-foreground">
               Leve o Canal de Ouvidoria com IA para seus clientes e ganhe{' '}
-              <span className="text-primary">até 30% de comissão recorrente</span>
+              <span className="text-audit-secondary">até 30% de comissão recorrente</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-primary-foreground/75">
               Um serviço que toda empresa precisa por lei — e que agrega valor imediato à sua Gestora de SST, Advocacia
               ou Contabilidade. Você indica, implanta, gerencia e recebe todo mês.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <Button size="lg" className="text-base h-14 px-8 shadow-lg" onClick={() => scrollTo('simulador')}>
+              <Button
+                size="lg"
+                className="text-base h-14 px-8 shadow-xl bg-audit-secondary text-audit-primary hover:bg-audit-secondary/90 font-bold"
+                onClick={() => scrollTo('simulador')}
+              >
                 <Calculator className="h-5 w-5 mr-2" /> Simular minha comissão
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="text-base h-14 px-8 border-2"
+                className="text-base h-14 px-8 border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 onClick={() => scrollTo('cadastro')}
               >
                 Quero ser parceiro <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 pt-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-4 pt-4 text-sm text-primary-foreground/70">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-primary" /> Adesão gratuita
+                <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Adesão gratuita
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-primary" /> Sem teto de indicações
+                <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Sem teto de indicações
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-primary" /> Conta de Gestora SST inclusa
+                <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Conta de Gestora SST inclusa
               </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3 FONTES DE RECEITA */}
-      <section className="py-16 bg-muted/30 border-b">
-        <div className="max-w-6xl mx-auto px-4">
+      {/* POR QUE VENDE — claro */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-muted/50 to-background border-b">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-2xl md:text-4xl font-bold">3 fontes de receita com um único produto</h2>
+            <Badge variant="outline" className="mb-4 border-audit-secondary/40 text-audit-secondary">
+              <AlertTriangle className="h-3.5 w-3.5 mr-1" /> Obrigação legal, não “nice to have”
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold">
+              Seus clientes já precisam desse canal — hoje
+            </h2>
             <p className="text-muted-foreground mt-3">
-              O parceiro licenciado SOIA não ganha só comissão: ele cria uma nova linha de serviço na sua operação.
+              Você não precisa criar demanda. Você só precisa ser quem entrega a solução.
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {revenues.map((r) => (
-              <Card key={r.title} className="border-2 hover:border-primary/40 transition-colors h-full">
-                <CardContent className="p-6 space-y-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <r.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <Badge variant="secondary" className="text-[11px]">{r.highlight}</Badge>
-                  <h3 className="text-lg font-bold">{r.title}</h3>
-                  <p className="text-sm text-muted-foreground">{r.desc}</p>
-                </CardContent>
-              </Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {painPoints.map((p) => (
+              <div key={p} className="flex gap-3 rounded-xl border bg-card p-5 shadow-sm">
+                <ShieldCheck className="h-5 w-5 text-audit-secondary shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground/90">{p}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SIMULADOR */}
-      <section id="simulador" className="py-16 border-b bg-background">
-        <div className="max-w-4xl mx-auto px-4">
+      {/* SIMULAÇÃO DO CHAT — escuro */}
+      <section className="relative overflow-hidden py-16 md:py-20 px-4 bg-audit-primary">
+        <div className="absolute inset-0 opacity-[0.14] bg-[radial-gradient(circle_at_80%_30%,hsl(var(--audit-secondary))_0%,transparent_45%)]" />
+        <div className="relative max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <Badge className="bg-audit-secondary/15 text-audit-secondary border border-audit-secondary/40 hover:bg-audit-secondary/15 mb-4">
+              <Bot className="h-3.5 w-3.5 mr-1" /> Veja a ferramenta em ação
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground">
+              É isso que o colaborador do seu cliente vê
+            </h2>
+            <p className="text-primary-foreground/70 mt-3">
+              Sem app, sem login, sem medo. A SOnIA acolhe, investiga com sensibilidade e entrega o relato pronto para
+              apuração.
+            </p>
+          </div>
+          <OuvidoriaChatSimulation />
+          <div className="text-center mt-10">
+            <Button
+              size="lg"
+              className="h-14 px-8 text-base font-bold bg-audit-secondary text-audit-primary hover:bg-audit-secondary/90 shadow-xl"
+              onClick={() => scrollTo('cadastro')}
+            >
+              Quero oferecer isso aos meus clientes <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* COMO FUNCIONA A OUVIDORIA — claro */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/40 to-background border-b">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold">Como funciona a Ouvidoria SOIA na prática</h2>
+            <p className="text-muted-foreground mt-3">
+              Do QR Code no mural ao relatório de auditoria — todo o ciclo dentro de uma única plataforma.
+            </p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {howItWorks.map((h) => (
+              <div
+                key={h.title}
+                className="rounded-2xl border bg-card p-6 space-y-3 shadow-sm hover:shadow-lg hover:border-audit-secondary/40 transition-all"
+              >
+                <div className="h-12 w-12 rounded-xl bg-audit-secondary/12 flex items-center justify-center">
+                  <h.icon className="h-6 w-6 text-audit-secondary" />
+                </div>
+                <h3 className="font-bold">{h.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{h.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Lock className="h-4 w-4 text-audit-secondary" /> Anonimato garantido
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-audit-secondary" /> LGPD e Lei 14.457/22
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ScrollText className="h-4 w-4 text-audit-secondary" /> Evidências para auditoria
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* 3 FONTES DE RECEITA — escuro */}
+      <section className="relative overflow-hidden py-16 md:py-20 px-4 bg-audit-primary">
+        <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_15%_70%,hsl(var(--audit-secondary))_0%,transparent_45%)]" />
+        <div className="relative max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground">
+              3 fontes de receita com um único produto
+            </h2>
+            <p className="text-primary-foreground/70 mt-3">
+              O parceiro licenciado SOIA não ganha só comissão: ele cria uma nova linha de serviço na sua operação.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {revenues.map((r) => (
+              <div
+                key={r.title}
+                className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] backdrop-blur-sm p-6 space-y-3 h-full"
+              >
+                <div className="h-12 w-12 rounded-xl bg-audit-secondary/20 flex items-center justify-center">
+                  <r.icon className="h-6 w-6 text-audit-secondary" />
+                </div>
+                <Badge className="bg-audit-secondary text-audit-primary border-0 text-[11px] font-bold hover:bg-audit-secondary">
+                  {r.highlight}
+                </Badge>
+                <h3 className="text-lg font-bold text-primary-foreground">{r.title}</h3>
+                <p className="text-sm text-primary-foreground/70 leading-relaxed">{r.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SIMULADOR — claro */}
+      <section id="simulador" className="py-16 md:py-20 px-4 bg-gradient-to-b from-muted/50 to-background border-b scroll-mt-16">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-8">
             <h2 className="text-2xl md:text-4xl font-bold">Quanto a sua carteira pode gerar?</h2>
             <p className="text-muted-foreground mt-3">
@@ -401,100 +560,119 @@ const PDParceiros = () => {
         </div>
       </section>
 
-      {/* PARA QUEM É */}
-      <section className="py-16 bg-muted/30 border-b">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">Feito para quem já atende empresas</h2>
+      {/* PARA QUEM É — escuro */}
+      <section className="relative overflow-hidden py-16 md:py-20 px-4 bg-audit-primary">
+        <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_85%_75%,hsl(var(--audit-secondary))_0%,transparent_45%)]" />
+        <div className="relative max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-4xl font-bold text-center mb-12 text-primary-foreground">
+            Feito para quem já atende empresas
+          </h2>
           <div className="grid gap-6 md:grid-cols-3">
             {audience.map((a) => (
-              <Card key={a.title} className="h-full">
-                <CardContent className="p-6 space-y-3">
-                  <a.icon className="h-8 w-8 text-primary" />
-                  <h3 className="font-bold text-lg">{a.title}</h3>
-                  <p className="text-sm text-muted-foreground">{a.desc}</p>
-                </CardContent>
-              </Card>
+              <div
+                key={a.title}
+                className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] backdrop-blur-sm p-6 space-y-3 h-full"
+              >
+                <a.icon className="h-8 w-8 text-audit-secondary" />
+                <h3 className="font-bold text-lg text-primary-foreground">{a.title}</h3>
+                <p className="text-sm text-primary-foreground/70 leading-relaxed">{a.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* DIFERENCIAIS */}
-      <section className="py-16 border-b bg-background">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">
-            Por que a Ouvidoria SOIA vende com facilidade
-          </h2>
+      {/* DIFERENCIAIS — claro */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/40 to-background border-b">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold">Por que a Ouvidoria SOIA vende com facilidade</h2>
+            <p className="text-muted-foreground mt-3">
+              Tecnologia pronta, conformidade documentada e um painel feito para quem gerencia várias empresas.
+            </p>
+          </div>
           <div className="grid gap-5 md:grid-cols-3">
             {differentials.map((d) => (
-              <div key={d.title} className="rounded-xl border bg-card p-5 space-y-2">
-                <d.icon className="h-6 w-6 text-primary" />
+              <div
+                key={d.title}
+                className="rounded-2xl border bg-card p-6 space-y-2 shadow-sm hover:shadow-lg hover:border-audit-secondary/40 transition-all"
+              >
+                <d.icon className="h-6 w-6 text-audit-secondary" />
                 <h3 className="font-semibold">{d.title}</h3>
-                <p className="text-sm text-muted-foreground">{d.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{d.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
-      <section className="py-16 bg-muted/30 border-b">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">Como funciona em 4 passos</h2>
+      {/* COMO ENTRAR — escuro */}
+      <section className="relative overflow-hidden py-16 md:py-20 px-4 bg-audit-primary">
+        <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_25%_25%,hsl(var(--audit-secondary))_0%,transparent_45%)]" />
+        <div className="relative max-w-5xl mx-auto">
+          <h2 className="text-2xl md:text-4xl font-bold text-center mb-12 text-primary-foreground">
+            Como entrar no programa em 4 passos
+          </h2>
           <div className="grid gap-6 md:grid-cols-4">
             {steps.map((s) => (
-              <div key={s.n} className="rounded-xl bg-card border p-5 space-y-2">
-                <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center">
+              <div
+                key={s.n}
+                className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] backdrop-blur-sm p-5 space-y-2"
+              >
+                <div className="h-10 w-10 rounded-full bg-audit-secondary text-audit-primary font-bold flex items-center justify-center">
                   {s.n}
                 </div>
-                <h3 className="font-semibold">{s.title}</h3>
-                <p className="text-sm text-muted-foreground">{s.desc}</p>
+                <h3 className="font-semibold text-primary-foreground">{s.title}</h3>
+                <p className="text-sm text-primary-foreground/70 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 border-b bg-background">
-        <div className="max-w-3xl mx-auto px-4">
+      {/* FAQ — claro */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-muted/50 to-background border-b">
+        <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">Perguntas frequentes</h2>
           <div className="space-y-4">
             {faq.map((f) => (
-              <div key={f.q} className="rounded-xl border bg-card p-5">
+              <div key={f.q} className="rounded-xl border bg-card p-5 shadow-sm">
                 <h3 className="font-semibold flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" /> {f.q}
+                  <CheckCircle2 className="h-5 w-5 text-audit-secondary shrink-0 mt-0.5" /> {f.q}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-2 pl-7">{f.a}</p>
+                <p className="text-sm text-muted-foreground mt-2 pl-7 leading-relaxed">{f.a}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FORMULÁRIO */}
+      {/* FORMULÁRIO — escuro */}
       <section
         id="cadastro"
-        className="py-16 bg-gradient-to-b from-primary/10 via-background to-background"
+        className="relative overflow-hidden py-16 md:py-20 px-4 bg-audit-primary scroll-mt-16"
       >
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="absolute inset-0 opacity-[0.14] bg-[radial-gradient(circle_at_50%_0%,hsl(var(--audit-secondary))_0%,transparent_50%)]" />
+        <div className="relative max-w-3xl mx-auto">
           <div className="text-center mb-8">
-            <Badge className="bg-primary/15 text-primary border border-primary/30 hover:bg-primary/15 mb-4">
+            <Badge className="bg-audit-secondary/15 text-audit-secondary border border-audit-secondary/40 hover:bg-audit-secondary/15 mb-4">
               <Handshake className="h-3.5 w-3.5 mr-1" /> Vagas limitadas por região
             </Badge>
-            <h2 className="text-2xl md:text-4xl font-bold">Quero ser Parceiro Licenciado SOIA</h2>
-            <p className="text-muted-foreground mt-3">
+            <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground">
+              Quero ser Parceiro Licenciado SOIA
+            </h2>
+            <p className="text-primary-foreground/70 mt-3">
               Preencha os dados abaixo. Nosso time de parcerias entra em contato para apresentar o programa e liberar sua
               conta de Gestora SST.
             </p>
           </div>
 
-          <Card className="border-2 border-primary/30 shadow-xl">
+          <Card className="border-2 border-audit-secondary/40 shadow-2xl">
             <CardContent className="p-6 md:p-8">
               {submitted ? (
                 <div className="text-center space-y-5 py-6">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <Rocket className="h-8 w-8 text-primary" />
+                  <div className="h-16 w-16 rounded-full bg-audit-secondary/15 flex items-center justify-center mx-auto">
+                    <Rocket className="h-8 w-8 text-audit-secondary" />
                   </div>
                   <h3 className="text-2xl font-bold">Cadastro recebido!</h3>
                   <p className="text-muted-foreground">
@@ -587,7 +765,7 @@ const PDParceiros = () => {
         </div>
       </section>
 
-      <footer className="py-8 border-t bg-muted/30">
+      <footer className="py-8 border-t bg-muted/40">
         <div className="max-w-6xl mx-auto px-4 text-center space-y-2">
           <img src={logoSoia} alt="SOIA" className="h-8 w-auto object-contain mx-auto opacity-80" />
           <p className="text-xs text-muted-foreground">
