@@ -28,10 +28,22 @@ interface ReferredCompaniesProps {
 const ReferredCompanies = ({ partnerId }: ReferredCompaniesProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSSTAccess, setHasSSTAccess] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
+    checkSSTAccess();
   }, [partnerId]);
+
+  const checkSSTAccess = async () => {
+    const { data } = await supabase
+      .from("licensed_partners")
+      .select("sst_manager_id, manages_clients")
+      .eq("id", partnerId)
+      .maybeSingle();
+    setHasSSTAccess(Boolean((data as any)?.sst_manager_id && (data as any)?.manages_clients !== false));
+  };
+
 
   const fetchCompanies = async () => {
     try {
