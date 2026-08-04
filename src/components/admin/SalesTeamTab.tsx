@@ -737,7 +737,12 @@ export const SalesTeamTab = () => {
                           </Button>
                         </div>
                         <div className="flex flex-wrap gap-1 mt-1.5">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{ext.source_label}</Badge>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] px-1.5 py-0 ${ext.source_label === 'PDPARCEIROS' ? 'border-none bg-fuchsia-600 text-white font-semibold' : ''}`}
+                          >
+                            {ext.source_label}
+                          </Badge>
                           {days !== null && (
                             <Badge className={`text-[10px] px-1.5 py-0 border-none ${trialColor}`}>
                               {days < 0 ? `Trial expirado há ${Math.abs(days)}d` : days === 0 ? 'Expira hoje' : `${days}d para expirar`}
