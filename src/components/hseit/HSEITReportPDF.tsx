@@ -22,8 +22,10 @@ interface Answer {
 interface Response {
   id: string;
   department: string | null;
+  departments?: string[];
   answers: Answer[];
 }
+
 
 interface HSEITReportPDFProps {
   assessment: {
