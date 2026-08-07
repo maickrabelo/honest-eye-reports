@@ -679,6 +679,12 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       drawText(`Número de respondentes: ${deptResponses.length}`);
       y += 5;
 
+      if (deptResponses.length === 0) {
+        drawText('Setor cadastrado na avaliação sem respostas registradas no período. Recomenda-se reforçar a comunicação e reabrir a coleta para este GHE.');
+        continue;
+      }
+
+
       // Risk specification table for this department
       pdf.setFillColor(0, 51, 102);
       pdf.rect(m, y, pw - 2 * m, 10, 'F');
