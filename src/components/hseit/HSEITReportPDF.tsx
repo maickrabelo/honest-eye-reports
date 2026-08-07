@@ -22,8 +22,10 @@ interface Answer {
 interface Response {
   id: string;
   department: string | null;
+  departments?: string[];
   answers: Answer[];
 }
+
 
 interface HSEITReportPDFProps {
   assessment: {
@@ -313,10 +315,27 @@ export function HSEITReportPDF({
         departments.forEach(dept => {
           addNewPageIfNeeded(60);
           
-          const deptResponses = responses.filter(r => r.department === dept);
+          const deptResponses = responses.filter(r =>
+            Array.isArray(r.departments) && r.departments.length > 0
+              ? r.departments.includes(dept)
+              : r.department === dept
+          );
           const deptAnswers = deptResponses.flatMap(r => r.answers);
           
           addSubHeader(`${dept} (${deptResponses.length} respostas)`);
+
+          if (deptResponses.length === 0) {
+            pdf.setFontSize(9);
+            pdf.setFont('helvetica', 'italic');
+            pdf.setTextColor(100, 100, 100);
+            pdf.text('Setor cadastrado sem respostas registradas.', margin + 3, yPos);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(0, 0, 0);
+            yPos += 12;
+            return;
+          }
+          
+
           
           // Calcular médias por categoria para o setor
           categories.forEach(category => {

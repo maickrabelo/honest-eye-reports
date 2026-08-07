@@ -221,9 +221,19 @@ export default function HSEITResults() {
 
       setResponses(mappedResponses);
 
-      // Extract unique departments (across all sector memberships)
-      const depts = [...new Set(mappedResponses.flatMap(r => r.departments))];
+      // Declared sectors (from assessment setup) + sectors found in responses,
+      // so a registered sector with no answers still appears in results/report
+      const { data: deptRows } = await supabase
+        .from('hseit_departments')
+        .select('name, order_index')
+        .eq('assessment_id', id)
+        .order('order_index');
+
+      const declared = (deptRows || []).map((d: any) => d.name).filter(Boolean);
+      const fromResponses = mappedResponses.flatMap(r => r.departments);
+      const depts = [...new Set([...declared, ...fromResponses])];
       setDepartments(depts);
+
 
     } catch (error) {
       console.error('Error fetching data:', error);
