@@ -112,10 +112,14 @@ export default function CLASAForm() {
       setSubmitting(true);
       const scores = calculateCLASAScores(answers);
       const respondentToken = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      // ID gerado no cliente: respondentes anônimos não têm permissão de leitura,
+      // então o insert não pode usar RETURNING (.select()).
+      const responseId = crypto.randomUUID();
 
-      const { data: response, error: respError } = await supabase
+      const { error: respError } = await supabase
         .from('clasa_responses')
         .insert({
+          id: responseId,
           assessment_id: assessmentId,
           department: selectedDepartment || null,
           respondent_token: respondentToken,
@@ -124,13 +128,11 @@ export default function CLASAForm() {
           total_score: scores.totalScore,
           risk_level: scores.globalLevel,
           completed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+        });
       if (respError) throw respError;
 
       const rows = Object.entries(answers).map(([n, v]) => ({
-        response_id: response.id,
+        response_id: responseId,
         question_number: parseInt(n),
         answer_value: v,
       }));
