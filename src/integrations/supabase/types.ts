@@ -3790,6 +3790,10 @@ export type Database = {
       }
     }
     Functions: {
+      clasa_response_is_open: {
+        Args: { _response_id: string }
+        Returns: boolean
+      }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       company_has_no_sst: { Args: { _company_id: string }; Returns: boolean }
       company_has_smart_ouvidoria: {
