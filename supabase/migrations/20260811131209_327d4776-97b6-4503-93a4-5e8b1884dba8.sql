@@ -1,0 +1,1 @@
+DELETE FROM public.clasa_answers WHERE response_id = '4dabb4da-c87c-4a50-96c9-3532d5d6c779'; DELETE FROM public.clasa_responses WHERE id = '4dabb4da-c87c-4a50-96c9-3532d5d6c779';
