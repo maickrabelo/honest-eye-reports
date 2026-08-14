@@ -41,4 +41,4 @@ Disallow: /profile
 Disallow: /sst-dashboard
 Disallow: /master-dashboard
 
-Sitemap: https://honest-eye-reports.lovable.app/sitemap.xml
+Sitemap: https://soia.app.br/sitemap.xml

@@ -10,7 +10,7 @@ interface SEOStructuredDataProps {
 }
 
 const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({ faqs = [] }) => {
-  const siteUrl = 'https://honest-eye-reports.lovable.app';
+  const siteUrl = 'https://soia.app.br';
 
   const organizationSchema = {
     '@context': 'https://schema.org',
