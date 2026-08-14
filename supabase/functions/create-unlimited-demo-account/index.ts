@@ -721,7 +721,7 @@ Deno.serve(async (req) => {
                   <p style="color: #555;">Sua conta está com acesso permanente. Já criamos uma <strong>Empresa Demo</strong> com avaliações preenchidas para você explorar os dashboards.</p>
                 </div>
                 <div style="text-align: center; margin-top: 30px;">
-                  <a href="${req.headers.get("origin") || "https://honest-eye-reports.lovable.app"}/auth"
+                  <a href="${req.headers.get("origin") || "https://soia.app.br"}/auth"
                      style="background: #0F5132; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                     Acessar a Plataforma
                   </a>
