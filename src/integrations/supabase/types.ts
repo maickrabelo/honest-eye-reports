@@ -899,6 +899,45 @@ export type Database = {
           },
         ]
       }
+      company_audit_logs: {
+        Row: {
+          action: string
+          company_id: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          company_id: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       company_feature_access: {
         Row: {
           burnout_enabled: boolean
@@ -3853,6 +3892,10 @@ export type Database = {
           _department_name: string
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_company_primary_admin: {
+        Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
       is_sst_module_owner: {
