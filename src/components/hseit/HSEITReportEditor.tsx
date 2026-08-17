@@ -17,7 +17,8 @@ import {
   getHealthImpact, 
   HEALTH_IMPACT_LABELS,
   HEALTH_IMPACT_COLORS,
-  calculateCategoryAverage
+  calculateCategoryAverage,
+  type HSEITWordingVariant
 } from "@/data/hseitQuestions";
 import { toast } from "sonner";
 
@@ -56,6 +57,7 @@ interface HSEITReportEditorProps {
   questionAverages: { questionNumber: number; text: string; category: string; average: number }[];
   sstLogoUrl?: string | null;
   sstName?: string | null;
+  wordingVariant?: HSEITWordingVariant | null;
 }
 
 // Default recommendations based on health impact
@@ -237,7 +239,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
       const enrichedAnswers = enrichedResponses.flatMap((response) => response.answers);
       const refreshedCategoryAverages = categoryAverages.map((categoryAverage) => ({
         ...categoryAverage,
-        average: calculateCategoryAverage(enrichedAnswers, categoryAverage.category),
+        average: calculateCategoryAverage(enrichedAnswers, categoryAverage.category, wordingVariant),
       }));
 
       await generatePGRReport({
@@ -267,6 +269,7 @@ ${intermediateCategories.length > 0 ? `${intermediateCategories.length} categori
         sstCpf: sstCpf || undefined,
         sstRegistration: sstRegistration || undefined,
         methodology: 'hseit',
+        wordingVariant,
       });
       toast.success('Relatório PGR gerado com sucesso!');
       onOpenChange(false);
