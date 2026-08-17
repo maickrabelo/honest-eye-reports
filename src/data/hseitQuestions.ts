@@ -2,23 +2,42 @@
 // Questionário de Avaliação de Riscos Psicossociais
 // 35 questões divididas em 7 categorias
 
-export type HSEITWordingVariant = 'standard' | 'positive' | 'positive_v2';
+export type HSEITWordingVariant = 'standard' | 'positive' | 'positive_v2' | 'positive_v3';
 
 export interface HSEITQuestion {
   number: number;
   text: string;
   textPositive: string; // Redação alternativa "Avaliação Positiva" (apenas wording — não altera cálculo)
   textPositiveV2: string; // Redação "Positiva 2.0" — curadoria mista (positiva + original traduzida + ajustes próprios alinhados ao inglês)
+  textPositiveV3?: string; // Redação "Positiva 3.0" — curadoria 2026 (mantém as 35 questões)
   category: HSEITCategory;
   isInverted: boolean; // Se true, 5 = Ruim, então calcular 6 - valor
 }
 
 // Retorna o texto da questão respeitando a variante de redação configurada
 export function getQuestionText(q: HSEITQuestion, variant?: HSEITWordingVariant | null): string {
+  if (variant === 'positive_v3' && q.textPositiveV3) return q.textPositiveV3;
+  if (variant === 'positive_v3' && q.textPositiveV2) return q.textPositiveV2;
   if (variant === 'positive_v2' && q.textPositiveV2) return q.textPositiveV2;
   if (variant === 'positive' && q.textPositive) return q.textPositive;
   return q.text;
 }
+
+// Na redação 3.0 algumas questões passam a ser formuladas de forma positiva
+// (mais = melhor), invertendo a polaridade original do instrumento.
+const V3_POLARITY_OVERRIDES: Record<number, boolean> = {
+  16: false, // "Consigo realizar as pausas necessárias..."
+  21: false, // "Sinto-me à vontade para expressar opiniões e discordâncias..."
+};
+
+// Retorna se a questão deve ser invertida no cálculo, respeitando a variante
+export function getIsInverted(q: HSEITQuestion, variant?: HSEITWordingVariant | null): boolean {
+  if (variant === 'positive_v3' && q.number in V3_POLARITY_OVERRIDES) {
+    return V3_POLARITY_OVERRIDES[q.number];
+  }
+  return q.isInverted;
+}
+
 
 export type HSEITCategory = 
   | 'demands'        // Demandas
