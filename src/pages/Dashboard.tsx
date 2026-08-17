@@ -47,6 +47,10 @@ import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
+import CompanyAuditLogCard from '@/components/company/CompanyAuditLogCard';
+import { useIsCompanyPrimaryAdmin } from '@/hooks/useIsCompanyPrimaryAdmin';
+import { logCompanyAudit } from '@/lib/companyAudit';
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -156,6 +160,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
 
   useEffect(() => {
     if (companyId) {
+      logCompanyAudit({ companyId, action: 'dashboard_view' });
       loadDashboardData();
       // count available trainings for this company
       (async () => {
@@ -373,6 +378,26 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         if (statusError) {
           console.error('Error updating status:', statusError);
           throw statusError;
+        }
+      }
+
+      if (companyId) {
+        if (hasStatusChange) {
+          logCompanyAudit({
+            companyId,
+            action: 'report_status_change',
+            entityType: 'report',
+            entityId: selectedReport.tracking_code || selectedReport.id,
+            details: { from: selectedReport.status, to: selectedStatus },
+          });
+        }
+        if (hasNotes) {
+          logCompanyAudit({
+            companyId,
+            action: 'report_note_added',
+            entityType: 'report',
+            entityId: selectedReport.tracking_code || selectedReport.id,
+          });
         }
       }
 
@@ -863,6 +888,13 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </CardContent>
       </Card>
       </>
+      )}
+
+      {companyId && (
+        <div className="mt-8 space-y-6">
+          <TeamManagementCard accountType="company" accountId={companyId} />
+          {isPrimaryAdmin && <CompanyAuditLogCard companyId={companyId} />}
+        </div>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
