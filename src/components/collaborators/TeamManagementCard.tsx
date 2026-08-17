@@ -6,6 +6,7 @@ import { Loader2, UserPlus, Trash2, Mail, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import InviteCollaboratorDialog from "./InviteCollaboratorDialog";
+import { logCompanyAudit } from "@/lib/companyAudit";
 
 interface Collaborator {
   user_id: string;
@@ -68,6 +69,9 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
     }
+    if (accountType === "company") {
+      logCompanyAudit({ companyId: accountId, action: "invitation_revoked", entityType: "invitation", entityId: id });
+    }
     toast({ title: "Convite revogado" });
     load();
   };
@@ -93,6 +97,9 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
+    }
+    if (accountType === "company") {
+      logCompanyAudit({ companyId: accountId, action: "collaborator_removed", entityType: "user", entityId: userId });
     }
     toast({ title: "Colaborador removido" });
     load();
