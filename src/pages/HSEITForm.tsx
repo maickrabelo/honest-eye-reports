@@ -102,7 +102,9 @@ export default function HSEITForm() {
 
   // Apply wording variant (apenas troca o texto exibido — não afeta cálculos)
   const wordingVariant: HSEITWordingVariant =
-    assessment?.wording_variant === 'positive_v2'
+    assessment?.wording_variant === 'positive_v3'
+      ? 'positive_v3'
+      : assessment?.wording_variant === 'positive_v2'
       ? 'positive_v2'
       : assessment?.wording_variant === 'positive'
         ? 'positive'

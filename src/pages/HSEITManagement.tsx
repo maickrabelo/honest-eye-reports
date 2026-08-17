@@ -44,7 +44,7 @@ export default function HSEITManagement() {
   const [isActive, setIsActive] = useState(true);
   const [departments, setDepartments] = useState<SurveyDepartment[]>([]);
   const [collectionMode, setCollectionMode] = useState<string>('form');
-  const [wordingVariant, setWordingVariant] = useState<'standard' | 'positive' | 'positive_v2'>('standard');
+  const [wordingVariant, setWordingVariant] = useState<'standard' | 'positive' | 'positive_v2' | 'positive_v3'>('standard');
   const [multiSectorEnabled, setMultiSectorEnabled] = useState(false);
   const [showUnallocatedDialog, setShowUnallocatedDialog] = useState(false);
   const [pendingRemaining, setPendingRemaining] = useState(0);
@@ -134,7 +134,7 @@ export default function HSEITManagement() {
         setEndDate(assessment.end_date ? assessment.end_date.split('T')[0] : '');
         setIsActive(assessment.is_active);
         setCollectionMode((assessment as any).collection_mode || 'form');
-        setWordingVariant((['positive', 'positive_v2'].includes((assessment as any).wording_variant) ? (assessment as any).wording_variant : 'standard'));
+        setWordingVariant((['positive', 'positive_v2', 'positive_v3'].includes((assessment as any).wording_variant) ? (assessment as any).wording_variant : 'standard'));
         setMultiSectorEnabled(!!(assessment as any).multi_sector_enabled);
         
         // Fetch departments
@@ -438,10 +438,13 @@ export default function HSEITManagement() {
                       <SelectItem value="standard">Padrão HSE-IT (tradução fiel do instrumento original)</SelectItem>
                       <SelectItem value="positive">Positiva (redação acolhedora)</SelectItem>
                       <SelectItem value="positive_v2">Positiva 2.0 (curadoria revisada)</SelectItem>
+                      <SelectItem value="positive_v3">Positiva 3.0 (curadoria 2026)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    {wordingVariant === 'positive_v2'
+                    {wordingVariant === 'positive_v3'
+                      ? 'Redação 3.0: linguagem mais clara e afirmativa, mantendo as 35 questões e as 7 categorias. Não altera o cálculo de risco.'
+                      : wordingVariant === 'positive_v2'
                       ? 'Redação revisada: combina versão positiva, original traduzida e ajustes próprios alinhados ao inglês. Não altera categorias nem cálculo de risco.'
                       : wordingVariant === 'positive'
                       ? 'Redação alternativa, mais acolhedora. Não altera categorias nem cálculo de risco.'
