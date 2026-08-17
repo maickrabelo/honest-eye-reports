@@ -198,7 +198,8 @@ export function normalizeScore(value: number, isInverted: boolean): number {
 // Calcular média de uma categoria
 export function calculateCategoryAverage(
   answers: { questionNumber: number; value: number }[],
-  category: HSEITCategory
+  category: HSEITCategory,
+  variant?: HSEITWordingVariant | null
 ): number {
   const categoryQuestions = getQuestionsByCategory(category);
   const questionNumbers = categoryQuestions.map(q => q.number);
@@ -210,7 +211,7 @@ export function calculateCategoryAverage(
   const total = categoryAnswers.reduce((sum, answer) => {
     const question = categoryQuestions.find(q => q.number === answer.questionNumber);
     if (!question) return sum;
-    return sum + normalizeScore(answer.value, question.isInverted);
+    return sum + normalizeScore(answer.value, getIsInverted(question, variant));
   }, 0);
   
   return total / categoryAnswers.length;
@@ -218,14 +219,15 @@ export function calculateCategoryAverage(
 
 // Calcular média geral
 export function calculateOverallAverage(
-  answers: { questionNumber: number; value: number }[]
+  answers: { questionNumber: number; value: number }[],
+  variant?: HSEITWordingVariant | null
 ): number {
   if (answers.length === 0) return 0;
   
   const total = answers.reduce((sum, answer) => {
     const question = HSEIT_QUESTIONS.find(q => q.number === answer.questionNumber);
     if (!question) return sum;
-    return sum + normalizeScore(answer.value, question.isInverted);
+    return sum + normalizeScore(answer.value, getIsInverted(question, variant));
   }, 0);
   
   return total / answers.length;
