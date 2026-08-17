@@ -214,7 +214,12 @@ const TeamManagementCard: React.FC<Props> = ({ accountType, accountId, accountNa
         onOpenChange={setInviteOpen}
         accountType={accountType}
         accountId={accountId}
-        onInvited={load}
+        onInvited={() => {
+          if (accountType === "company") {
+            logCompanyAudit({ companyId: accountId, action: "collaborator_invited" });
+          }
+          load();
+        }}
       />
     </>
   );
