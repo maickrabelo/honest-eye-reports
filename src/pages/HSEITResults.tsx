@@ -36,6 +36,9 @@ import {
   HSEIT_CATEGORY_LABELS,
   HSEITCategory,
   calculateCategoryAverage,
+  getIsInverted,
+  getQuestionText,
+  type HSEITWordingVariant,
   calculateOverallAverage,
   getRiskLevel,
   getHealthImpact,
@@ -105,6 +108,7 @@ export default function HSEITResults() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [wordingVariant, setWordingVariant] = useState<HSEITWordingVariant>('standard');
   const [responses, setResponses] = useState<Response[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
@@ -136,7 +140,7 @@ export default function HSEITResults() {
       // Fetch assessment
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('hseit_assessments')
-        .select('id, title, description, created_at, multi_sector_enabled, companies(id, name)')
+        .select('id, title, description, created_at, multi_sector_enabled, wording_variant, companies(id, name)')
         .eq('id', id)
         .single();
 
@@ -151,6 +155,10 @@ export default function HSEITResults() {
         companies: assessmentData.companies as unknown as { id: string; name: string }
       };
       setAssessment(mappedAssessment);
+      const rawVariant = (assessmentData as any).wording_variant;
+      setWordingVariant(
+        ['positive', 'positive_v2', 'positive_v3'].includes(rawVariant) ? rawVariant : 'standard'
+      );
 
       // Fetch SST manager logo for this company
       if (mappedAssessment.companies?.id) {
@@ -270,16 +278,16 @@ export default function HSEITResults() {
     const averages: Record<string, number> = {};
 
     categories.forEach(category => {
-      averages[category] = calculateCategoryAverage(aggregatedAnswers, category);
+      averages[category] = calculateCategoryAverage(aggregatedAnswers, category, wordingVariant);
     });
 
     return averages;
-  }, [aggregatedAnswers]);
+  }, [aggregatedAnswers, wordingVariant]);
 
   // Overall average
   const overallAverage = useMemo(() => {
-    return calculateOverallAverage(aggregatedAnswers);
-  }, [aggregatedAnswers]);
+    return calculateOverallAverage(aggregatedAnswers, wordingVariant);
+  }, [aggregatedAnswers, wordingVariant]);
 
   // Radar chart data
   const radarData = useMemo(() => {
@@ -347,12 +355,12 @@ export default function HSEITResults() {
       const values = questionGroups[q.number] || [];
       const rawAvg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
       const normalizedAvg = values.length > 0 
-        ? values.reduce((sum, v) => sum + normalizeScore(v, q.isInverted), 0) / values.length 
+        ? values.reduce((sum, v) => sum + normalizeScore(v, getIsInverted(q, wordingVariant)), 0) / values.length 
         : 0;
 
       return {
         number: q.number,
-        text: q.text,
+        text: getQuestionText(q, wordingVariant),
         category: HSEIT_CATEGORY_LABELS[q.category],
         average: normalizedAvg,
         riskLevel: getRiskLevel(normalizedAvg),
@@ -499,6 +507,7 @@ export default function HSEITResults() {
           }))}
           sstLogoUrl={sstLogoUrl}
           sstName={sstName}
+          wordingVariant={wordingVariant}
         />
 
         {assessment.multiSectorEnabled && (
@@ -713,10 +722,10 @@ export default function HSEITResults() {
               const categories: HSEITCategory[] = ['demands', 'control', 'managerSupport', 'peerSupport', 'relationships', 'role', 'change'];
               const deptCategoryAverages: Record<string, number> = {};
               categories.forEach(cat => {
-                deptCategoryAverages[cat] = calculateCategoryAverage(deptAnswers, cat);
+                deptCategoryAverages[cat] = calculateCategoryAverage(deptAnswers, cat, wordingVariant);
               });
 
-              const deptOverallAvg = calculateOverallAverage(deptAnswers);
+              const deptOverallAvg = calculateOverallAverage(deptAnswers, wordingVariant);
 
               const deptRadarData = Object.entries(deptCategoryAverages).map(([cat, value]) => ({
                 category: HSEIT_CATEGORY_LABELS[cat as HSEITCategory],

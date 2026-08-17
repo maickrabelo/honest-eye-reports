@@ -8,7 +8,8 @@ import {
   calculateCategoryAverage,
   normalizeScore,
   getRiskLevel,
-  RISK_LEVEL_LABELS
+  RISK_LEVEL_LABELS,
+  type HSEITWordingVariant
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
 import { ScheduleItem } from './HSEITScheduleEditor';
@@ -49,6 +50,7 @@ interface PGRReportData {
   sstCpf?: string;
   sstRegistration?: string;
   methodology: 'hseit' | 'copsoq';
+  wordingVariant?: HSEITWordingVariant | null;
 }
 
 const CATEGORIES: HSEITCategory[] = ['demands', 'control', 'managerSupport', 'peerSupport', 'relationships', 'role', 'change'];
@@ -699,7 +701,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
       CATEGORIES.forEach((cat, idx) => {
         checkPage(12);
-        const catAvg = calculateCategoryAverage(deptAnswers, cat);
+        const catAvg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
         const impact = getHealthImpact(catAvg);
         const [cr, cg, cb] = getRiskColor(catAvg);
         
@@ -746,7 +748,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       // Build department category averages array
       const deptCatAvgs: { category: HSEITCategory; average: number; label: string }[] = CATEGORIES.map(cat => ({
         category: cat,
-        average: calculateCategoryAverage(deptAnswers, cat),
+        average: calculateCategoryAverage(deptAnswers, cat, data.wordingVariant),
         label: HSEIT_CATEGORY_LABELS[cat]
       }));
 
@@ -845,7 +847,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       const deptAnswers = deptResponses.flatMap(r => r.answers);
       
       const criticalCats = CATEGORIES.filter(cat => {
-        const avg = calculateCategoryAverage(deptAnswers, cat);
+        const avg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
         return getHealthImpact(avg) === 'risk';
       });
 
@@ -853,7 +855,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         drawText('Nenhuma dimensão em nível de risco identificada neste setor. Manter monitoramento periódico.', 5);
       } else {
         criticalCats.forEach(cat => {
-          const avg = calculateCategoryAverage(deptAnswers, cat);
+          const avg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
           const agentInfo = RISK_AGENTS[cat];
           drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} (média: ${avg.toFixed(2)})`, 5);
           drawText(`  Riscos: ${agentInfo.risks.join(', ')}`, 10);
