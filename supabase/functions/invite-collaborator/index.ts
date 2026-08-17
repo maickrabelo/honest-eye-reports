@@ -100,30 +100,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Autorização: caller pertence à conta?
-    if (account_type === "sst") {
-      const { data: ok } = await admin.rpc("user_in_sst_manager", {
-        _user_id: callerId,
-        _sst_manager_id: account_id,
-      });
+    // Autorização: caller pertence à conta (ou é admin da plataforma)?
+    const { data: isAdmin } = await admin.rpc("has_role", {
+      _user_id: callerId,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      const rpcName = account_type === "sst" ? "user_in_sst_manager" : "user_in_company";
+      const rpcArgs = account_type === "sst"
+        ? { _user_id: callerId, _sst_manager_id: account_id }
+        : { _user_id: callerId, _company_id: account_id };
+      const { data: ok, error: permErr } = await admin.rpc(rpcName, rpcArgs as any);
+      if (permErr) console.error("perm check error", permErr);
       if (!ok) {
-        return new Response(JSON.stringify({ error: "Sem permissão." }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      const { data: ok } = await admin.rpc("user_in_company", {
-        _user_id: callerId,
-        _company_id: account_id,
-      });
-      if (!ok) {
-        return new Response(JSON.stringify({ error: "Sem permissão." }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        console.error("permission denied", { callerId, account_type, account_id });
+        return new Response(
+          JSON.stringify({ error: "Sem permissão para convidar nesta conta." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
     }
+
 
     // Já existe convite pendente?
     const { data: existing } = await admin
