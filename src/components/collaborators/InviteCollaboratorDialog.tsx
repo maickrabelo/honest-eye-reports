@@ -45,8 +45,21 @@ const InviteCollaboratorDialog: React.FC<Props> = ({
       const { data, error } = await supabase.functions.invoke("invite-collaborator", {
         body: { email: trimmed, account_type: accountType, account_id: accountId },
       });
-      if (error) throw error;
+      if (error) {
+        let detail = error.message;
+        try {
+          const ctx = (error as any).context;
+          if (ctx?.text) {
+            const raw = await ctx.text();
+            detail = JSON.parse(raw)?.error ?? raw ?? detail;
+          }
+        } catch {
+          /* mantém mensagem padrão */
+        }
+        throw new Error(detail);
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
+
 
       toast({
         title: "Convite enviado!",
