@@ -79,6 +79,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { toast } = useToast();
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
+  const { isPrimaryAdmin } = useIsCompanyPrimaryAdmin(companyId);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
 
   const companyTourSteps: TourStep[] = [
