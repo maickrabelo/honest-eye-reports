@@ -12,26 +12,91 @@ type ParsedLead = {
   email: string | null;
   contact_name: string | null;
   company_name: string;
+  has_sst_company?: string | null;
+  business_model?: string | null;
+  portfolio_size?: string | null;
 };
 
 const EMAIL_RE = /\S+@\S+\.\S+/;
+
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+const prettify = (s: string) =>
+  s
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, ' ')
+    .trim();
+
+/** Maps a normalized header to our lead field. */
+function matchHeader(h: string): keyof ParsedLead | null {
+  if (h.includes('full_name') || h === 'nome' || h.includes('responsavel') || h.includes('contato')) return 'contact_name';
+  if (h.includes('company_name') || h.includes('empresa') && !h.includes('quantas') && !h.includes('gerencia')) return 'company_name';
+  if (h.includes('email') || h.includes('e_mail')) return 'email';
+  if (h.includes('phone') || h.includes('telefone') || h.includes('celular')) return 'phone';
+  if (h.includes('mais_de_20_clientes') || h.includes('tem_uma_empresa_de_sst')) return 'has_sst_company';
+  if (h.includes('modelo')) return 'business_model';
+  if (h.includes('quantas') || h.includes('carteira') || h.includes('cnpjs')) return 'portfolio_size';
+  return null;
+}
+
+function splitLine(line: string): string[] {
+  if (line.includes('\t')) return line.split('\t');
+  if (line.includes(';')) return line.split(';');
+  if (line.includes('|')) return line.split('|');
+  if (/ {2,}/.test(line)) return line.split(/ {2,}/);
+  return [line];
+}
+
+const cleanPhone = (v: string | null) => (v ? v.replace(/^p:/i, '').trim() || null : null);
+
+/** Header-based parse (preferred): first line contains column names. */
+function parseWithHeader(lines: string[]): ParsedLead[] | null {
+  const headerCells = splitLine(lines[0]).map(c => normalize(c.trim()));
+  const mapped = headerCells.map(matchHeader);
+  if (mapped.filter(Boolean).length < 2) return null;
+
+  const out: ParsedLead[] = [];
+  for (const raw of lines.slice(1)) {
+    if (!raw.trim()) continue;
+    const cells = splitLine(raw).map(c => c.trim());
+    const lead: ParsedLead = { phone: null, email: null, contact_name: null, company_name: '' };
+    mapped.forEach((field, i) => {
+      const value = cells[i]?.trim();
+      if (!field || !value) return;
+      if (field === 'phone') {
+        const p = cleanPhone(value);
+        if (p && !lead.phone) lead.phone = p;
+      } else if (field === 'company_name') {
+        lead.company_name = value;
+      } else if (field === 'has_sst_company' || field === 'business_model' || field === 'portfolio_size') {
+        lead[field] = prettify(value);
+      } else {
+        (lead as any)[field] = value;
+      }
+    });
+    if (!lead.company_name.trim()) lead.company_name = lead.contact_name || lead.email || '';
+    if (!lead.company_name.trim()) continue;
+    out.push(lead);
+  }
+  return out.length > 0 ? out : null;
+}
 
 function parseLine(rawLine: string): ParsedLead | null {
   const line = rawLine.trim();
   if (!line) return null;
 
-  // Prefer TAB split; fall back to 2+ spaces; fall back to ; or |
-  let parts: string[];
-  if (line.includes('\t')) parts = line.split('\t');
-  else if (/ {2,}/.test(line)) parts = line.split(/ {2,}/);
-  else if (line.includes(';')) parts = line.split(';');
-  else if (line.includes('|')) parts = line.split('|');
-  else return null;
+  let parts = splitLine(line);
+  if (parts.length < 2) return null;
 
   parts = parts.map(p => p.trim()).filter(p => p.length > 0);
   if (parts.length === 0) return null;
 
-  // Try to detect email column
   const emailIdx = parts.findIndex(p => EMAIL_RE.test(p));
   let phone: string | null = null;
   let email: string | null = null;
@@ -50,7 +115,6 @@ function parseLine(rawLine: string): ParsedLead | null {
       contact_name = null;
     }
   } else {
-    // No email — assume: phone, contact, company
     phone = parts[0] || null;
     contact_name = parts[1] || null;
     company_name = parts.slice(2).join(' - ') || parts[1] || parts[0] || '';
@@ -58,7 +122,7 @@ function parseLine(rawLine: string): ParsedLead | null {
 
   if (!company_name.trim()) return null;
   return {
-    phone: phone?.trim() || null,
+    phone: cleanPhone(phone),
     email: email?.trim() || null,
     contact_name: contact_name?.trim() || null,
     company_name: company_name.trim(),
@@ -76,10 +140,9 @@ export const BulkImportLeadsDialog = ({ open, onOpenChange, onImported }: Props)
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const preview = text
-    .split(/\r?\n/)
-    .map(parseLine)
-    .filter((x): x is ParsedLead => !!x);
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  const headerParsed = lines.length > 1 ? parseWithHeader(lines) : null;
+  const preview = headerParsed ?? lines.map(parseLine).filter((x): x is ParsedLead => !!x);
 
   const handleImport = async () => {
     if (preview.length === 0) {
@@ -93,6 +156,10 @@ export const BulkImportLeadsDialog = ({ open, onOpenChange, onImported }: Props)
         company_name: p.company_name,
         phone: p.phone,
         contact_name: p.contact_name,
+        email: p.email,
+        has_sst_company: p.has_sst_company || null,
+        business_model: p.business_model || null,
+        portfolio_size: p.portfolio_size || null,
         notes: p.email,
         status: 'prospect',
         created_by: user?.id || null,
@@ -116,22 +183,24 @@ export const BulkImportLeadsDialog = ({ open, onOpenChange, onImported }: Props)
         <DialogHeader>
           <DialogTitle>Importar leads em lote</DialogTitle>
           <DialogDescription>
-            Cole os leads no formato (separados por TAB ou ponto e vírgula):<br />
-            <code className="text-xs">telefone &nbsp;&nbsp; email &nbsp;&nbsp; responsável &nbsp;&nbsp; empresa</code>
-            <br />Um lead por linha. O e-mail é detectado automaticamente.
+            Cole a planilha inteira <strong>com a linha de cabeçalho</strong> (TAB, ponto e vírgula ou pipe).
+            As colunas são reconhecidas automaticamente: <code className="text-xs">full_name</code>, <code className="text-xs">company_name</code>,{' '}
+            <code className="text-xs">email</code>, <code className="text-xs">phone_number</code>, além de
+            "você tem uma empresa de SST...", "qual o modelo do seu negócio?" e "quantas empresas/CNPJs...".
+            <br />Sem cabeçalho, o formato aceito é: telefone / e-mail / responsável / empresa.
           </DialogDescription>
         </DialogHeader>
 
         <Textarea
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder={'11 99999-9999\tjoao@empresa.com\tJoão Silva\tEmpresa X\n21 98888-8888\tmaria@acme.com\tMaria\tAcme'}
+          placeholder={'você_tem_uma_empresa_de_sst_que_atende_mais_de_20_clientes?\tqual_o_modelo_do_seu_negócio?\tquantas_empresas/cnpjs_você_gerencia_hoje_na_sua_carteira?\temail\tfull_name\tcompany_name\tphone_number\nsim\tconsultoria\tmenos_de_20_empresas\tjoao@empresa.com\tJoão Silva\tEmpresa X\tp:+5511999999999'}
           className="min-h-[260px] font-mono text-xs"
         />
 
         <div className="text-xs text-muted-foreground">
           {preview.length > 0
-            ? <>Pré-visualização: <strong>{preview.length}</strong> lead(s) detectado(s).</>
+            ? <>Pré-visualização: <strong>{preview.length}</strong> lead(s) detectado(s){headerParsed ? ' — cabeçalho reconhecido' : ''}.</>
             : 'Cole linhas no formato indicado para visualizar a quantidade.'}
         </div>
 
