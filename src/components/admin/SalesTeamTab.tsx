@@ -859,6 +859,12 @@ export const SalesTeamTab = () => {
                           <Phone className="h-3 w-3" />{lead.phone}
                         </div>
                       )}
+                      {lead.email && (
+                        <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                          <Mail className="h-3 w-3 shrink-0" /><span className="truncate">{lead.email}</span>
+                        </div>
+                      )}
+
                       {lead.meeting_date && (
                         <div className="flex items-center gap-1 mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                           <CalendarIcon className="h-3 w-3" />{formatMeetingDate(lead.meeting_date)}
