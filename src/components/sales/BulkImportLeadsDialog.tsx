@@ -160,7 +160,7 @@ export const BulkImportLeadsDialog = ({ open, onOpenChange, onImported }: Props)
         has_sst_company: p.has_sst_company || null,
         business_model: p.business_model || null,
         portfolio_size: p.portfolio_size || null,
-        notes: p.email,
+        notes: null,
         status: 'prospect',
         created_by: user?.id || null,
       }));
