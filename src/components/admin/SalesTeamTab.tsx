@@ -850,6 +850,16 @@ export const SalesTeamTab = () => {
                           <CalendarIcon className="h-3 w-3" />Fechamento: {formatMeetingDate(lead.closing_meeting_date)}
                         </div>
                       )}
+                      {hasClosingInfo && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-7 text-xs mt-2"
+                          onClick={(e) => { e.stopPropagation(); openClosingDialog(lead.id, lead.status as any, lead); }}
+                        >
+                          <Sparkles className="h-3 w-3 mr-1" />Dados da reunião
+                        </Button>
+                      )}
                       {/* Result buttons for leads in "closed" status */}
                       {lead.status === 'closed' && !lead.result && (
                         <div className="flex gap-2 mt-2">
@@ -873,6 +883,7 @@ export const SalesTeamTab = () => {
                     </div>
                     );
                   })}
+
 
                 </div>
               </div>
