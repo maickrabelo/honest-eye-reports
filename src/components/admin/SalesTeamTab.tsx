@@ -925,6 +925,8 @@ export const SalesTeamTab = () => {
                   <TableHead>Responsável</TableHead>
                   <TableHead>Cidade</TableHead>
                   <TableHead>Telefone</TableHead>
+                  <TableHead>E-mail</TableHead>
+
                   <TableHead>Status</TableHead>
                   <TableHead>Reunião</TableHead>
                   <TableHead className="w-32">Ações</TableHead>
