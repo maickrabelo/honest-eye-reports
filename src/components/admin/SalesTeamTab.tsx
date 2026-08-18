@@ -54,7 +54,7 @@ export const SalesTeamTab = () => {
   const [view, setView] = useState<string>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<SalesLead | null>(null);
-  const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
+  const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '', email: '', has_sst_company: '', business_model: '', portfolio_size: '' });
   const [notesLead, setNotesLead] = useState<SalesLead | null>(null);
   const [notesText, setNotesText] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
