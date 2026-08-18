@@ -141,9 +141,10 @@ Deno.serve(async (req) => {
 
       if (!firstCompanyId) firstCompanyId = companyId!;
 
-      await supabase.from("company_sst_assignments").upsert({
+      const { error: asgErr } = await supabase.from("company_sst_assignments").upsert({
         company_id: companyId, sst_manager_id: SST_MANAGER_ID,
-      }, { onConflict: "company_id,sst_manager_id" });
+      }, { onConflict: "company_id" });
+      if (asgErr) results.push({ cnpj: c.cnpj, error: `assignment: ${asgErr.message}` });
 
       await supabase.from("company_feature_access").upsert({
         company_id: companyId,
