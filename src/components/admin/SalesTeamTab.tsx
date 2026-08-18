@@ -967,8 +967,22 @@ export const SalesTeamTab = () => {
               <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Cidade / UF" />
             </div>
             <div className="space-y-2">
-              <Label>Observações</Label>
-              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Anotações sobre o lead..." rows={3} />
+              <div className="flex items-center justify-between">
+                <Label>Observações</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs"
+                  onClick={() => {
+                    const stamp = format(new Date(), 'dd/MM/yyyy HH:mm');
+                    setForm(f => ({ ...f, notes: f.notes.trim() ? `${f.notes.trim()}\n\n[${stamp}] ` : `[${stamp}] ` }));
+                  }}
+                >
+                  <Clock className="h-3 w-3 mr-1" />Data/hora
+                </Button>
+              </div>
+              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Anotações sobre o lead..." rows={6} />
             </div>
           </div>
           <DialogFooter>
