@@ -22,7 +22,12 @@ export type SalesLead = {
   updated_at: string;
   archived?: boolean | null;
   archived_at?: string | null;
+  email?: string | null;
+  has_sst_company?: string | null;
+  business_model?: string | null;
+  portfolio_size?: string | null;
 };
+
 
 export const STATUSES = [
   { value: 'prospect', label: 'Prospect', color: 'bg-muted border-muted-foreground/20' },

@@ -2655,6 +2655,7 @@ export type Database = {
           archived: boolean
           archived_at: string | null
           assisted_companies_count: number | null
+          business_model: string | null
           city: string | null
           closing_meeting_date: string | null
           closing_notes: string | null
@@ -2665,12 +2666,15 @@ export type Database = {
           created_at: string
           created_by: string | null
           denial_reason: string | null
+          email: string | null
+          has_sst_company: string | null
           id: string
           large_companies: string | null
           large_companies_employees: string | null
           meeting_date: string | null
           notes: string | null
           phone: string | null
+          portfolio_size: string | null
           result: string | null
           status: string
           total_assisted_employees: number | null
@@ -2680,6 +2684,7 @@ export type Database = {
           archived?: boolean
           archived_at?: string | null
           assisted_companies_count?: number | null
+          business_model?: string | null
           city?: string | null
           closing_meeting_date?: string | null
           closing_notes?: string | null
@@ -2690,12 +2695,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           denial_reason?: string | null
+          email?: string | null
+          has_sst_company?: string | null
           id?: string
           large_companies?: string | null
           large_companies_employees?: string | null
           meeting_date?: string | null
           notes?: string | null
           phone?: string | null
+          portfolio_size?: string | null
           result?: string | null
           status?: string
           total_assisted_employees?: number | null
@@ -2705,6 +2713,7 @@ export type Database = {
           archived?: boolean
           archived_at?: string | null
           assisted_companies_count?: number | null
+          business_model?: string | null
           city?: string | null
           closing_meeting_date?: string | null
           closing_notes?: string | null
@@ -2715,12 +2724,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           denial_reason?: string | null
+          email?: string | null
+          has_sst_company?: string | null
           id?: string
           large_companies?: string | null
           large_companies_employees?: string | null
           meeting_date?: string | null
           notes?: string | null
           phone?: string | null
+          portfolio_size?: string | null
           result?: string | null
           status?: string
           total_assisted_employees?: number | null

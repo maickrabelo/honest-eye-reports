@@ -54,7 +54,7 @@ export const SalesTeamTab = () => {
   const [view, setView] = useState<string>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<SalesLead | null>(null);
-  const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
+  const [form, setForm] = useState({ company_name: '', phone: '', contact_name: '', city: '', notes: '', email: '', has_sst_company: '', business_model: '', portfolio_size: '' });
   const [notesLead, setNotesLead] = useState<SalesLead | null>(null);
   const [notesText, setNotesText] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
@@ -224,7 +224,7 @@ export const SalesTeamTab = () => {
 
   const openNew = () => {
     setEditingLead(null);
-    setForm({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
+    setForm({ company_name: '', phone: '', contact_name: '', city: '', notes: '', email: '', has_sst_company: '', business_model: '', portfolio_size: '' });
     setDialogOpen(true);
   };
 
@@ -236,9 +236,14 @@ export const SalesTeamTab = () => {
       contact_name: lead.contact_name || '',
       city: lead.city || '',
       notes: lead.notes || '',
+      email: lead.email || '',
+      has_sst_company: lead.has_sst_company || '',
+      business_model: lead.business_model || '',
+      portfolio_size: lead.portfolio_size || '',
     });
     setDialogOpen(true);
   };
+
 
   const openNotes = (lead: SalesLead) => {
     setNotesLead(lead);
@@ -281,6 +286,10 @@ export const SalesTeamTab = () => {
           contact_name: form.contact_name.trim() || null,
           city: form.city.trim() || null,
           notes: form.notes.trim() || null,
+          email: form.email.trim() || null,
+          has_sst_company: form.has_sst_company.trim() || null,
+          business_model: form.business_model.trim() || null,
+          portfolio_size: form.portfolio_size.trim() || null,
         }).eq('id', editingLead.id) as any);
         if (error) throw error;
         toast({ title: 'Lead atualizado com sucesso' });
@@ -292,8 +301,13 @@ export const SalesTeamTab = () => {
           contact_name: form.contact_name.trim() || null,
           city: form.city.trim() || null,
           notes: form.notes.trim() || null,
+          email: form.email.trim() || null,
+          has_sst_company: form.has_sst_company.trim() || null,
+          business_model: form.business_model.trim() || null,
+          portfolio_size: form.portfolio_size.trim() || null,
           created_by: user?.id || null,
         }) as any);
+
         if (error) throw error;
         toast({ title: 'Lead adicionado com sucesso' });
       }
@@ -512,6 +526,7 @@ export const SalesTeamTab = () => {
     { key: 'company', label: 'Empresa', get: l => l.company_name || '' },
     { key: 'contact_name', label: 'Responsável', get: l => l.contact_name || '' },
     { key: 'phone', label: 'Telefone', get: l => l.phone || '' },
+    { key: 'email', label: 'E-mail', get: l => l.email || '' },
     { key: 'city', label: 'Cidade', get: l => l.city || '' },
     { key: 'notes', label: 'E-mail / Observações', get: l => l.notes || '' },
     { key: 'status', label: 'Status', get: l => STATUS_LABEL[l.status] || l.status },
@@ -520,7 +535,11 @@ export const SalesTeamTab = () => {
     { key: 'meeting_date', label: 'Data Reunião', get: l => l.meeting_date ? new Date(l.meeting_date).toLocaleString('pt-BR') : '' },
     { key: 'cnpj', label: 'CNPJ', get: l => l.cnpj || '' },
     { key: 'contact_role', label: 'Cargo', get: l => l.contact_role || '' },
+    { key: 'has_sst_company', label: 'Empresa SST com +20 clientes?', get: l => l.has_sst_company || '' },
+    { key: 'business_model', label: 'Modelo do negócio', get: l => l.business_model || '' },
+    { key: 'portfolio_size', label: 'Carteira (empresas/CNPJs)', get: l => l.portfolio_size || '' },
   ];
+
 
   const exportContactsCSV = () => {
     const base = exportScope === 'all' ? leads : activeLeads;
@@ -943,7 +962,7 @@ export const SalesTeamTab = () => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingLead ? 'Editar Lead' : 'Novo Lead'}</DialogTitle>
           </DialogHeader>
@@ -962,10 +981,38 @@ export const SalesTeamTab = () => {
                 <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(00) 00000-0000" />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Cidade</Label>
-              <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Cidade / UF" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@empresa.com" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Cidade / UF" />
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Empresa SST com +20 clientes?</Label>
+                <Select value={form.has_sst_company || 'none'} onValueChange={v => setForm(f => ({ ...f, has_sst_company: v === 'none' ? '' : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não informado</SelectItem>
+                    <SelectItem value="sim">Sim</SelectItem>
+                    <SelectItem value="nao">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Modelo do negócio</Label>
+                <Input value={form.business_model} onChange={e => setForm(f => ({ ...f, business_model: e.target.value }))} placeholder="Ex: consultoria, assessoria SST, clínica..." />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Carteira (empresas/CNPJs gerenciados)</Label>
+              <Input value={form.portfolio_size} onChange={e => setForm(f => ({ ...f, portfolio_size: e.target.value }))} placeholder="Ex: menos de 20 empresas" />
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Observações</Label>
