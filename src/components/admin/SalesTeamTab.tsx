@@ -766,15 +766,16 @@ export const SalesTeamTab = () => {
                   })}
 
                   {colLeads.map(lead => {
-                    const clickable = lead.status === 'meeting_done' || lead.status === 'closed';
+                    const hasClosingInfo = lead.status === 'meeting_done' || lead.status === 'closed';
                     const isSelected = selectedIds.has(lead.id);
                     return (
                     <div
                       key={lead.id}
                       draggable
                       onDragStart={e => onDragStart(e, lead.id)}
-                      onClick={() => { if (clickable) openClosingDialog(lead.id, lead.status as any, lead); }}
-                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''} ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}
+                      onClick={() => openEdit(lead)}
+                      title="Clique para ver e editar os dados e observações"
+                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group hover:border-primary/50 ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}
                     >
 
                       <div className="flex items-start justify-between gap-1">
@@ -849,6 +850,16 @@ export const SalesTeamTab = () => {
                           <CalendarIcon className="h-3 w-3" />Fechamento: {formatMeetingDate(lead.closing_meeting_date)}
                         </div>
                       )}
+                      {hasClosingInfo && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-7 text-xs mt-2"
+                          onClick={(e) => { e.stopPropagation(); openClosingDialog(lead.id, lead.status as any, lead); }}
+                        >
+                          <Sparkles className="h-3 w-3 mr-1" />Dados da reunião
+                        </Button>
+                      )}
                       {/* Result buttons for leads in "closed" status */}
                       {lead.status === 'closed' && !lead.result && (
                         <div className="flex gap-2 mt-2">
@@ -872,6 +883,7 @@ export const SalesTeamTab = () => {
                     </div>
                     );
                   })}
+
 
                 </div>
               </div>
@@ -955,8 +967,22 @@ export const SalesTeamTab = () => {
               <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Cidade / UF" />
             </div>
             <div className="space-y-2">
-              <Label>Observações</Label>
-              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Anotações sobre o lead..." rows={3} />
+              <div className="flex items-center justify-between">
+                <Label>Observações</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs"
+                  onClick={() => {
+                    const stamp = format(new Date(), 'dd/MM/yyyy HH:mm');
+                    setForm(f => ({ ...f, notes: f.notes.trim() ? `${f.notes.trim()}\n\n[${stamp}] ` : `[${stamp}] ` }));
+                  }}
+                >
+                  <Clock className="h-3 w-3 mr-1" />Data/hora
+                </Button>
+              </div>
+              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Anotações sobre o lead..." rows={6} />
             </div>
           </div>
           <DialogFooter>
