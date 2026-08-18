@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.send-company-welcome]
 verify_jwt = false
+
+[functions.seed-monique-companies]
+verify_jwt = false
