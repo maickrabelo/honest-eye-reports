@@ -512,6 +512,7 @@ export const SalesTeamTab = () => {
     { key: 'company', label: 'Empresa', get: l => l.company_name || '' },
     { key: 'contact_name', label: 'Responsável', get: l => l.contact_name || '' },
     { key: 'phone', label: 'Telefone', get: l => l.phone || '' },
+    { key: 'email', label: 'E-mail', get: l => l.email || '' },
     { key: 'city', label: 'Cidade', get: l => l.city || '' },
     { key: 'notes', label: 'E-mail / Observações', get: l => l.notes || '' },
     { key: 'status', label: 'Status', get: l => STATUS_LABEL[l.status] || l.status },
@@ -520,7 +521,11 @@ export const SalesTeamTab = () => {
     { key: 'meeting_date', label: 'Data Reunião', get: l => l.meeting_date ? new Date(l.meeting_date).toLocaleString('pt-BR') : '' },
     { key: 'cnpj', label: 'CNPJ', get: l => l.cnpj || '' },
     { key: 'contact_role', label: 'Cargo', get: l => l.contact_role || '' },
+    { key: 'has_sst_company', label: 'Empresa SST com +20 clientes?', get: l => l.has_sst_company || '' },
+    { key: 'business_model', label: 'Modelo do negócio', get: l => l.business_model || '' },
+    { key: 'portfolio_size', label: 'Carteira (empresas/CNPJs)', get: l => l.portfolio_size || '' },
   ];
+
 
   const exportContactsCSV = () => {
     const base = exportScope === 'all' ? leads : activeLeads;
