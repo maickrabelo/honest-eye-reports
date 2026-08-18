@@ -766,15 +766,16 @@ export const SalesTeamTab = () => {
                   })}
 
                   {colLeads.map(lead => {
-                    const clickable = lead.status === 'meeting_done' || lead.status === 'closed';
+                    const hasClosingInfo = lead.status === 'meeting_done' || lead.status === 'closed';
                     const isSelected = selectedIds.has(lead.id);
                     return (
                     <div
                       key={lead.id}
                       draggable
                       onDragStart={e => onDragStart(e, lead.id)}
-                      onClick={() => { if (clickable) openClosingDialog(lead.id, lead.status as any, lead); }}
-                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group ${clickable ? 'hover:border-primary/50' : ''} ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}
+                      onClick={() => openEdit(lead)}
+                      title="Clique para ver e editar os dados e observações"
+                      className={`bg-background border rounded-md p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group hover:border-primary/50 ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}
                     >
 
                       <div className="flex items-start justify-between gap-1">
