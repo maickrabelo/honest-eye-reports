@@ -981,10 +981,38 @@ export const SalesTeamTab = () => {
                 <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(00) 00000-0000" />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Cidade</Label>
-              <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Cidade / UF" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@empresa.com" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Cidade / UF" />
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Empresa SST com +20 clientes?</Label>
+                <Select value={form.has_sst_company || 'none'} onValueChange={v => setForm(f => ({ ...f, has_sst_company: v === 'none' ? '' : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não informado</SelectItem>
+                    <SelectItem value="sim">Sim</SelectItem>
+                    <SelectItem value="nao">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Modelo do negócio</Label>
+                <Input value={form.business_model} onChange={e => setForm(f => ({ ...f, business_model: e.target.value }))} placeholder="Ex: consultoria, assessoria SST, clínica..." />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Carteira (empresas/CNPJs gerenciados)</Label>
+              <Input value={form.portfolio_size} onChange={e => setForm(f => ({ ...f, portfolio_size: e.target.value }))} placeholder="Ex: menos de 20 empresas" />
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Observações</Label>
