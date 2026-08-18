@@ -859,6 +859,12 @@ export const SalesTeamTab = () => {
                           <Phone className="h-3 w-3" />{lead.phone}
                         </div>
                       )}
+                      {lead.email && (
+                        <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                          <Mail className="h-3 w-3 shrink-0" /><span className="truncate">{lead.email}</span>
+                        </div>
+                      )}
+
                       {lead.meeting_date && (
                         <div className="flex items-center gap-1 mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                           <CalendarIcon className="h-3 w-3" />{formatMeetingDate(lead.meeting_date)}
@@ -919,6 +925,7 @@ export const SalesTeamTab = () => {
                   <TableHead>Responsável</TableHead>
                   <TableHead>Cidade</TableHead>
                   <TableHead>Telefone</TableHead>
+                  <TableHead>E-mail</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Reunião</TableHead>
                   <TableHead className="w-32">Ações</TableHead>
@@ -926,14 +933,16 @@ export const SalesTeamTab = () => {
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum lead encontrado</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum lead encontrado</TableCell></TableRow>
                 ) : filtered.map(lead => (
                   <TableRow key={lead.id}>
                     <TableCell className="font-medium">{lead.company_name}</TableCell>
                     <TableCell>{lead.contact_name || '—'}</TableCell>
                     <TableCell>{lead.city || '—'}</TableCell>
                     <TableCell>{lead.phone || '—'}</TableCell>
+                    <TableCell className="text-xs">{lead.email || '—'}</TableCell>
                     <TableCell>{STATUS_LABEL[lead.status] || lead.status}</TableCell>
+
                     <TableCell className="text-xs">{formatMeetingDate(lead.meeting_date) || '—'}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
