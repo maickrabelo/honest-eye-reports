@@ -224,7 +224,7 @@ export const SalesTeamTab = () => {
 
   const openNew = () => {
     setEditingLead(null);
-    setForm({ company_name: '', phone: '', contact_name: '', city: '', notes: '' });
+    setForm({ company_name: '', phone: '', contact_name: '', city: '', notes: '', email: '', has_sst_company: '', business_model: '', portfolio_size: '' });
     setDialogOpen(true);
   };
 
@@ -236,9 +236,14 @@ export const SalesTeamTab = () => {
       contact_name: lead.contact_name || '',
       city: lead.city || '',
       notes: lead.notes || '',
+      email: lead.email || '',
+      has_sst_company: lead.has_sst_company || '',
+      business_model: lead.business_model || '',
+      portfolio_size: lead.portfolio_size || '',
     });
     setDialogOpen(true);
   };
+
 
   const openNotes = (lead: SalesLead) => {
     setNotesLead(lead);
