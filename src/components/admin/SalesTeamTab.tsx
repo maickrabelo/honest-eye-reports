@@ -286,6 +286,10 @@ export const SalesTeamTab = () => {
           contact_name: form.contact_name.trim() || null,
           city: form.city.trim() || null,
           notes: form.notes.trim() || null,
+          email: form.email.trim() || null,
+          has_sst_company: form.has_sst_company.trim() || null,
+          business_model: form.business_model.trim() || null,
+          portfolio_size: form.portfolio_size.trim() || null,
         }).eq('id', editingLead.id) as any);
         if (error) throw error;
         toast({ title: 'Lead atualizado com sucesso' });
@@ -297,8 +301,13 @@ export const SalesTeamTab = () => {
           contact_name: form.contact_name.trim() || null,
           city: form.city.trim() || null,
           notes: form.notes.trim() || null,
+          email: form.email.trim() || null,
+          has_sst_company: form.has_sst_company.trim() || null,
+          business_model: form.business_model.trim() || null,
+          portfolio_size: form.portfolio_size.trim() || null,
           created_by: user?.id || null,
         }) as any);
+
         if (error) throw error;
         toast({ title: 'Lead adicionado com sucesso' });
       }
