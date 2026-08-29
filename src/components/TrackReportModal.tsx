@@ -172,7 +172,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
           {
             date: new Date().toLocaleDateString('pt-BR'),
             note: newUpdate,
-            author: "Público"
+            author: "Denunciante"
           }
         ]
       };
