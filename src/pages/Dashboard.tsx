@@ -94,6 +94,25 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [detailTab, setDetailTab] = useState('historico');
   const [detailNotes, setDetailNotes] = useState<InternalNoteRow[]>([]);
   const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
+  const [reportCategoryFilter, setReportCategoryFilter] = useState('todos');
+  const [reportStatusFilter, setReportStatusFilter] = useState('todos');
+
+  const reportCategoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    reports.forEach((r) => { if (r.category) set.add(r.category); });
+    return Array.from(set).map((c) => ({ value: c, label: c }));
+  }, [reports]);
+
+  const reportCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    reports.forEach((r) => { if (r.category) counts[r.category] = (counts[r.category] || 0) + 1; });
+    return counts;
+  }, [reports]);
+
+  const filteredReports = useMemo(() => reports.filter((r) =>
+    (reportCategoryFilter === 'todos' || r.category === reportCategoryFilter) &&
+    (reportStatusFilter === 'todos' || r.status === reportStatusFilter)
+  ), [reports, reportCategoryFilter, reportStatusFilter]);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
 
 
