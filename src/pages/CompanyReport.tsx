@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ReportChat } from '@/components/ReportChatContent';
 import TrackReportModal from '@/components/TrackReportModal';
+import OuvidoriaEntryDialog from '@/components/ouvidoria/OuvidoriaEntryDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -12,6 +13,9 @@ const CompanyReport = () => {
   const { companySlug } = useParams<{ companySlug: string }>();
   const [company, setCompany] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [entryOpen, setEntryOpen] = useState(true);
+  const [trackOpen, setTrackOpen] = useState(false);
+
   
   useEffect(() => {
     const fetchCompany = async () => {
