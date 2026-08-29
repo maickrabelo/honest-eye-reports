@@ -732,6 +732,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
                   tasks={grouped[c.key] ?? []}
                   canEdit={canEdit}
                   checklistMap={checklistMap}
+                  assigneeMap={assigneeMap}
                   onOpen={setSelected}
                   onDelete={removeTask}
                 />
