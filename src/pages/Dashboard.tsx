@@ -208,6 +208,15 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           .eq('company_id', companyId);
         setTrainingsCount(access?.length ?? 0);
       })();
+      // count pending ouvidoria tasks (not done)
+      (async () => {
+        const { count } = await supabase
+          .from('ouvidoria_tasks')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', companyId)
+          .neq('status', 'done');
+        setPendingTaskCount(count ?? 0);
+      })();
     }
   }, [companyId]);
 
