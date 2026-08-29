@@ -287,9 +287,44 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       updates: updates || [],
       attachments: attachments || []
     });
+    setDetailTab('historico');
+    setDetailNotes([]);
+    setDetailLogs([]);
     setSelectedStatus(report.status);
     setIsDialogOpen(true);
   };
+
+  const exportHistoryPdf = () => {
+    if (!selectedReport) return;
+    downloadOuvidoriaHistoryPdf({
+      trackingCode: selectedReport.tracking_code,
+      channelLabel: 'Ouvidoria com IA',
+      createdAt: selectedReport.created_at,
+      status: selectedReport.status,
+      type: selectedReport.title,
+      category: selectedReport.category,
+      sector: selectedReport.department,
+      description: selectedReport.ai_summary || selectedReport.description,
+      updates: (selectedReport.updates || []).map((u: any) => ({
+        created_at: u.created_at,
+        message: u.notes,
+        author_label: `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ''}${u.author_role_title ? ` (${u.author_role_title})` : ''}`,
+        visibility: u.visibility,
+      })),
+      internalNotes: detailNotes.map((n) => ({
+        created_at: n.created_at,
+        note: n.note,
+        author_label: `${n.author_name ?? 'Equipe'}${n.author_role_title ? ` (${n.author_role_title})` : ''}`,
+      })),
+      attachments: (selectedReport.attachments || []).map((a: any) => a.file_name),
+      accessLogs: detailLogs.map((l) => ({
+        created_at: l.created_at,
+        success: l.success,
+        user_agent: l.user_agent,
+      })),
+    });
+  };
+
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <FileImage className="h-4 w-4" />;
