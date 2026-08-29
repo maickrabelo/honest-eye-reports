@@ -282,20 +282,41 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     const rows = (data ?? []) as TaskRow[];
     setTasks(rows);
     if (rows.length > 0) {
-      const { data: items } = await supabase
-        .from('ouvidoria_task_checklist_items')
-        .select('id, task_id, content, is_done, position')
-        .in('task_id', rows.map((r) => r.id))
-        .order('position', { ascending: true });
+      const ids = rows.map((r) => r.id);
+      const [{ data: items }, { data: people }] = await Promise.all([
+        supabase
+          .from('ouvidoria_task_checklist_items')
+          .select('id, task_id, content, is_done, position')
+          .in('task_id', ids)
+          .order('position', { ascending: true }),
+        supabase
+          .from('ouvidoria_task_assignees')
+          .select('id, task_id, ouvidoria_user_id, display_name, assignee_role')
+          .in('task_id', ids),
+      ]);
       setChecklists((items ?? []) as ChecklistItem[]);
+      setAssignees((people ?? []) as AssigneeRow[]);
     } else {
       setChecklists([]);
+      setAssignees([]);
     }
     setLoading(false);
   };
 
+  const loadUsers = async () => {
+    const { data } = await supabase
+      .from('ouvidoria_users')
+      .select('id, full_name, job_title, access_type, status')
+      .eq('company_id', companyId)
+      .order('full_name', { ascending: true });
+    setOuvidoriaUsers((data ?? []) as OuvidoriaUserRow[]);
+  };
+
   useEffect(() => {
-    if (companyId) load();
+    if (companyId) {
+      load();
+      loadUsers();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
@@ -318,10 +339,86 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     return map;
   }, [checklists]);
 
+  const assigneeMap = useMemo(() => {
+    const map: Record<string, AssigneeRow[]> = {};
+    assignees.forEach((a) => {
+      (map[a.task_id] ?? (map[a.task_id] = [])).push(a);
+    });
+    return map;
+  }, [assignees]);
+
   const selectedItems = useMemo(
     () => (selected ? checklists.filter((i) => i.task_id === selected.id) : []),
     [checklists, selected]
   );
+
+  const selectedAssignees = useMemo(
+    () => (selected ? assignees.filter((a) => a.task_id === selected.id) : []),
+    [assignees, selected]
+  );
+
+  const roleOf = (userId: string): string | null =>
+    selectedAssignees.find((a) => a.ouvidoria_user_id === userId)?.assignee_role ?? null;
+
+  const setAssigneeRole = async (person: OuvidoriaUserRow, role: string | null) => {
+    if (!selected) return;
+    const existing = selectedAssignees.find((a) => a.ouvidoria_user_id === person.id);
+
+    if (!role) {
+      if (!existing) return;
+      const { error } = await supabase
+        .from('ouvidoria_task_assignees')
+        .delete()
+        .eq('id', existing.id);
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+      setAssignees((prev) => prev.filter((a) => a.id !== existing.id));
+      await syncToReportHistory(
+        selected,
+        `[Tarefa] "${selected.title}" — ${person.full_name} removido(a) da apuração.`
+      );
+      return;
+    }
+
+    if (existing) {
+      const { error } = await supabase
+        .from('ouvidoria_task_assignees')
+        .update({ assignee_role: role })
+        .eq('id', existing.id);
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+      setAssignees((prev) =>
+        prev.map((a) => (a.id === existing.id ? { ...a, assignee_role: role } : a))
+      );
+    } else {
+      const { data, error } = await supabase
+        .from('ouvidoria_task_assignees')
+        .insert({
+          task_id: selected.id,
+          ouvidoria_user_id: person.id,
+          display_name: person.full_name,
+          assignee_role: role,
+        })
+        .select('id, task_id, ouvidoria_user_id, display_name, assignee_role')
+        .maybeSingle();
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+      if (data) setAssignees((prev) => [...prev, data as AssigneeRow]);
+    }
+
+    const roleLabel = ASSIGNEE_ROLES.find((r) => r.key === role)?.label ?? role;
+    await syncToReportHistory(
+      selected,
+      `[Tarefa] "${selected.title}" — ${person.full_name} definido(a) como ${roleLabel}.`
+    );
+  };
+
 
   /** Registra o andamento da tarefa no histórico interno da denúncia vinculada */
   const syncToReportHistory = async (task: TaskRow, message: string) => {
