@@ -475,7 +475,54 @@ const BetaOuvidoriaDashboard = () => {
               </div>
             </CardContent>
           </Card>
+            </TabsContent>
+
+            <TabsContent value="tarefas">
+              <OuvidoriaTasksBoard
+                companyId={companyId!}
+                channel="smart"
+                canEdit={canEdit}
+                reportOptions={reports.map((r) => ({
+                  id: r.id,
+                  code: r.tracking_code,
+                  label: `${r.tracking_code} — ${labelOf(CATEGORY_OPTIONS, r.category)}`,
+                }))}
+              />
+            </TabsContent>
+
+            <TabsContent value="usuarios">
+              <OuvidoriaUsersTab companyId={companyId!} canEdit={canEdit} />
+            </TabsContent>
+
+            <TabsContent value="logs">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Logs de acesso ao canal</CardTitle>
+                  <CardDescription>
+                    Todas as consultas de protocolo feitas por denunciantes, incluindo tentativas com
+                    códigos inválidos.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <OuvidoriaAccessLogs companyId={companyId} channel="smart" limit={200} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="divulgacao">
+              <OuvidoriaCampaignsTab
+                companyId={companyId!}
+                channelUrl={publicLink}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+
+            <TabsContent value="como-funciona">
+              <OuvidoriaHowItWorks />
+            </TabsContent>
+          </Tabs>
         </div>
+
       </main>
       <Footer />
 
