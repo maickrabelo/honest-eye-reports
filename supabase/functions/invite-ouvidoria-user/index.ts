@@ -92,26 +92,14 @@ Deno.serve(async (req) => {
     // Permissão
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
     if (!isAdmin) {
-      const { data: canEdit } = await admin.rpc("ouvidoria_can_edit_for", {
+      const { data: inCompany } = await admin.rpc("user_in_company", {
         _user_id: callerId,
         _company_id: company_id,
-      }).catch(() => ({ data: null } as any));
-
-      let allowed = canEdit === true;
-      if (!allowed) {
-        const { data: inCompany } = await admin.rpc("user_in_company", {
-          _user_id: callerId,
-          _company_id: company_id,
-        });
-        const { data: managesCompany } = await admin.rpc("user_manages_company", {
-          _user_id: callerId,
-          _company_id: company_id,
-        });
-        allowed = Boolean(inCompany || managesCompany);
-      }
-      if (!allowed) return json({ error: "Sem permissão para convidar nesta empresa." }, 403);
-
-      // Auditor não pode convidar
+      });
+      const { data: managesCompany } = await admin.rpc("user_manages_company", {
+        _user_id: callerId,
+        _company_id: company_id,
+      });
       const { data: me } = await admin
         .from("ouvidoria_users")
         .select("access_type")
@@ -119,6 +107,10 @@ Deno.serve(async (req) => {
         .eq("user_id", callerId)
         .eq("status", "active")
         .maybeSingle();
+
+      if (!inCompany && !managesCompany && !me) {
+        return json({ error: "Sem permissão para convidar nesta empresa." }, 403);
+      }
       if (me?.access_type === "auditor") {
         return json({ error: "Auditores não podem convidar usuários." }, 403);
       }
@@ -135,22 +127,14 @@ Deno.serve(async (req) => {
       return json({ error: "Este e-mail já possui acesso ou convite nesta ouvidoria." }, 409);
     }
 
-    // Usuário já existe na plataforma?
-    const { data: existingProfile } = await admin
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle()
-      .catch(() => ({ data: null } as any));
-
     const { error: ouErr } = await admin.from("ouvidoria_users").insert({
       company_id,
       email,
       full_name,
       job_title,
       access_type,
-      status: existingProfile?.id ? "active" : "pending",
-      user_id: existingProfile?.id ?? null,
+      status: "pending",
+      user_id: null,
       invited_by: callerId,
     });
     if (ouErr) {
