@@ -20,6 +20,8 @@ import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
+import CustomSubscriptionTab from '@/components/admin/CustomSubscriptionTab';
+
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { ExportUserDataDialog } from '@/components/admin/ExportUserDataDialog';
 import { useNavigate } from "react-router-dom";
@@ -1250,7 +1252,9 @@ const MasterDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="form-leads">Leads Formulários</TabsTrigger>
                 <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
+                <TabsTrigger value="custom-subs">Assinaturas Personalizadas</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
               </TabsList>
               
@@ -2006,7 +2010,12 @@ const MasterDashboard = () => {
               <TrialAccountsTab />
             </TabsContent>
 
+            <TabsContent value="custom-subs" className="space-y-6">
+              <CustomSubscriptionTab />
+            </TabsContent>
+
             <TabsContent value="stats" className="space-y-6">
+
               <StatisticsTab />
             </TabsContent>
 
