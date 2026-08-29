@@ -837,7 +837,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               <p className="text-sm text-muted-foreground">
                 {trainingsCount > 0
                   ? `${trainingsCount} ${trainingsCount === 1 ? 'módulo disponível' : 'módulos disponíveis'} pela sua gestora SST`
-                  : 'Aguardando conteúdo da sua gestora SST'}
+                  : 'Nenhum conteúdo disponível no momento.'}
               </p>
             </div>
             {trainingsCount > 0 && (
