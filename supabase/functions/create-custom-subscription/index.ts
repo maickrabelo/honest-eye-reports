@@ -198,19 +198,47 @@ Deno.serve(async (req) => {
             to: [body.customer.email],
             subject: `Sua proposta SOIA — ${plan.name} (${cycleLabel[body.billingCycle]})`,
             html: `
-              <div style="font-family:Arial,sans-serif;color:#0f172a">
-                <h2>Sua assinatura SOIA está pronta</h2>
-                <p>Olá, ${body.customer.name}! Segue o resumo da assinatura personalizada criada para você:</p>
-                <table cellpadding="8" style="border-collapse:collapse;font-size:14px">
-                  ${rows.map(([k, v]) => `<tr><td style="border:1px solid #e2e8f0"><strong>${k}</strong></td><td style="border:1px solid #e2e8f0">${v}</td></tr>`).join('')}
-                </table>
-                ${body.notes ? `<p style="font-size:14px">${body.notes}</p>` : ''}
-                <p style="margin:28px 0">
-                  <a href="${invoiceUrl}" style="background:#16a34a;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold">Pagar agora</a>
-                </p>
-                <p style="font-size:13px;color:#475569">Após a confirmação do pagamento você receberá os dados de acesso à plataforma por e-mail.</p>
+              <div style="background:#f1f5f9;padding:32px 12px;font-family:Arial,Helvetica,sans-serif">
+                <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0">
+                  <div style="background:#0f172a;padding:24px;text-align:center">
+                    <img src="https://soia.app.br/lovable-uploads/Logo_SOIA.png" alt="SOIA" width="130" style="display:inline-block;max-width:130px;height:auto" />
+                  </div>
+                  <div style="padding:32px 28px;color:#0f172a">
+                    <h2 style="margin:0 0 12px;font-size:20px">Olá, ${body.customer.name}!</h2>
+                    <p style="font-size:15px;line-height:1.6;color:#334155;margin:0 0 18px">
+                      Muito obrigado pela confiança na SOIA. Preparamos uma assinatura sob medida
+                      para ${body.companyName ? `<strong>${body.companyName}</strong>` : 'a sua operação'},
+                      com tudo o que você precisa para cumprir a NR-01 e cuidar da saúde mental do seu time.
+                    </p>
+                    <table cellpadding="10" cellspacing="0" style="border-collapse:collapse;font-size:14px;width:100%;margin-bottom:8px">
+                      ${rows.map(([k, v], i) => `<tr style="background:${i % 2 ? '#ffffff' : '#f8fafc'}"><td style="border:1px solid #e2e8f0;color:#475569">${k}</td><td style="border:1px solid #e2e8f0;font-weight:bold;color:#0f172a">${v}</td></tr>`).join('')}
+                    </table>
+                    ${body.notes ? `<p style="font-size:14px;line-height:1.6;color:#334155;background:#f8fafc;border-left:3px solid #16a34a;padding:12px 14px;margin:18px 0">${body.notes}</p>` : ''}
+                    <p style="text-align:center;margin:30px 0 22px">
+                      <a href="${invoiceUrl}" style="background:#16a34a;color:#ffffff;padding:15px 34px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;display:inline-block">Pagar agora</a>
+                    </p>
+                    <p style="font-size:13px;color:#475569;line-height:1.6;margin:0 0 6px">
+                      Assim que o pagamento for confirmado, você recebe automaticamente por e-mail os dados
+                      de acesso à plataforma, já com os limites acima liberados.
+                    </p>
+                    <p style="font-size:13px;color:#475569;line-height:1.6">
+                      Qualquer dúvida, é só responder este e-mail — nosso time acompanha você em toda a implantação.
+                    </p>
+                    <p style="font-size:14px;color:#0f172a;margin-top:26px">
+                      Um abraço,<br />
+                      <strong>Equipe SOIA</strong><br />
+                      <span style="color:#64748b;font-size:13px">Saúde Ocupacional e Inteligência Aplicada</span>
+                    </p>
+                  </div>
+                  <div style="background:#f8fafc;padding:16px 24px;text-align:center;border-top:1px solid #e2e8f0">
+                    <p style="margin:0;font-size:12px;color:#94a3b8">
+                      SOIA · <a href="https://soia.app.br" style="color:#16a34a;text-decoration:none">soia.app.br</a>
+                    </p>
+                  </div>
+                </div>
               </div>
             `,
+
           }),
         });
         if (res.ok) emailSent = true;
