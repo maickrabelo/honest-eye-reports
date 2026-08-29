@@ -247,7 +247,19 @@ const BetaOuvidoriaDashboard = () => {
             </div>
           </div>
 
+          <Tabs value={mainTab} onValueChange={setMainTab}>
+            <TabsList className="flex flex-wrap h-auto mb-6">
+              <TabsTrigger value="denuncias">Denúncias</TabsTrigger>
+              <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
+              <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+              <TabsTrigger value="logs">Logs de acesso</TabsTrigger>
+              <TabsTrigger value="divulgacao">Divulgação</TabsTrigger>
+              <TabsTrigger value="como-funciona">Como funciona?</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="denuncias">
           {/* Stats cards */}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardContent className="p-4 flex items-center gap-3">
