@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const DEFAULT_SLOT_PRICE_CENTS = 1990; // R$ 19,90 fallback
-const ASAAS_API_URL = Deno.env.get("ASAAS_ENV") === "production"
+const ASAAS_API_URL = (Deno.env.get('ASAAS_ENV') ?? 'production').trim().toLowerCase() !== 'sandbox'
   ? "https://api.asaas.com/v3"
   : "https://sandbox.asaas.com/api/v3";
 
