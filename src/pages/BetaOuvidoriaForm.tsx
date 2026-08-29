@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Copy, Upload, AlertTriangle, Lock } from "lucide-react";
+import OuvidoriaEntryDialog from "@/components/ouvidoria/OuvidoriaEntryDialog";
 import {
   REPORT_TYPE_OPTIONS, CATEGORY_OPTIONS, OCCURRENCE_OPTIONS, isBetaOuvidoriaCompany,
 } from "@/lib/betaOuvidoria";
@@ -33,6 +34,8 @@ const schema = z.object({
 const BetaOuvidoriaForm = () => {
   const { companyId } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [entryOpen, setEntryOpen] = useState(true);
   const [company, setCompany] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
