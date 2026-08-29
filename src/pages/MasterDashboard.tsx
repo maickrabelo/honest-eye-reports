@@ -1250,7 +1250,9 @@ const MasterDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="form-leads">Leads Formulários</TabsTrigger>
                 <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
+                <TabsTrigger value="custom-subs">Assinaturas Personalizadas</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
               </TabsList>
               
