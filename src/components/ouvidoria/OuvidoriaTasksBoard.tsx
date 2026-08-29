@@ -761,6 +761,10 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           </DndContext>
         )}
       </CardContent>
+      <div className="flex items-center justify-center gap-2 rounded-b-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white">
+        <ListChecks className="h-4 w-4" />
+        {pendingCount} {pendingCount === 1 ? 'tarefa pendente' : 'tarefas pendentes'} no momento
+      </div>
 
       {/* Nova tarefa */}
       <Dialog open={open} onOpenChange={setOpen}>
