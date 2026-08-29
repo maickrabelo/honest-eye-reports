@@ -325,7 +325,8 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       type: selectedReport.title,
       category: selectedReport.category,
       sector: selectedReport.department,
-      description: selectedReport.ai_summary || selectedReport.description,
+      summary: selectedReport.ai_summary || null,
+      description: selectedReport.description || selectedReport.ai_summary || 'Transcrição não disponível.',
       updates: (selectedReport.updates || []).map((u: any) => ({
         created_at: u.created_at,
         message: u.notes,
