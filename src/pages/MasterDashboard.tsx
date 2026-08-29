@@ -2008,7 +2008,12 @@ const MasterDashboard = () => {
               <TrialAccountsTab />
             </TabsContent>
 
+            <TabsContent value="custom-subs" className="space-y-6">
+              <CustomSubscriptionTab />
+            </TabsContent>
+
             <TabsContent value="stats" className="space-y-6">
+
               <StatisticsTab />
             </TabsContent>
 
