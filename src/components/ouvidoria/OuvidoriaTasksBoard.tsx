@@ -721,7 +721,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
         <div>
           <CardTitle className="text-lg">Quadro de apuração</CardTitle>
           <CardDescription>
-            Vincule tarefas às denúncias (o andamento vai automaticamente para o histórico interno),
+            Vincule tarefas às denúncias (o andamento vai automaticamente para o histórico da denúncia (visível ao denunciante)),
             crie checklists e exporte tudo para auditoria.
           </CardDescription>
         </div>
@@ -824,7 +824,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
               <div className="pr-3">
                 <Label className="text-sm">Atualizar histórico da denúncia</Label>
                 <p className="text-xs text-muted-foreground">
-                  Cada movimentação da tarefa é registrada no histórico interno (não visível ao denunciante).
+                  Cada movimentação da tarefa é registrada como atualização pública — o denunciante acompanha pelo protocolo. Somente as notas internas ficam ocultas.
                 </p>
               </div>
               <Switch
@@ -892,7 +892,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
                 <div className="pr-3">
                   <Label className="text-sm">Atualizar histórico da denúncia</Label>
                   <p className="text-xs text-muted-foreground">
-                    Registra automaticamente o andamento desta tarefa no histórico interno da denúncia.
+                    Registra automaticamente o andamento desta tarefa como atualização pública na denúncia (o denunciante visualiza).
                   </p>
                 </div>
                 <Switch
