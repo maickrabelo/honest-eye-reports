@@ -991,18 +991,20 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       )}
 
       {companyId && features.ouvidoria && (
-        <div className="mt-8">
-          <Tabs defaultValue="usuarios">
-            <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="usuarios">Usuários da ouvidoria</TabsTrigger>
-              <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
-              <TabsTrigger value="divulgacao">Divulgação</TabsTrigger>
-              <TabsTrigger value="como-funciona">Como funciona?</TabsTrigger>
-            </TabsList>
-            <TabsContent value="usuarios" className="pt-4">
+        <Dialog open={!!ouvidoriaPanel} onOpenChange={(o) => !o && setOuvidoriaPanel(null)}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {ouvidoriaPanel === 'usuarios' && 'Usuários da ouvidoria'}
+                {ouvidoriaPanel === 'tarefas' && 'Tarefas'}
+                {ouvidoriaPanel === 'divulgacao' && 'Divulgação'}
+                {ouvidoriaPanel === 'como-funciona' && 'Como funciona?'}
+              </DialogTitle>
+            </DialogHeader>
+            {ouvidoriaPanel === 'usuarios' && (
               <OuvidoriaUsersTab companyId={companyId} canEdit={canEdit} />
-            </TabsContent>
-            <TabsContent value="tarefas" className="pt-4">
+            )}
+            {ouvidoriaPanel === 'tarefas' && (
               <OuvidoriaTasksBoard
                 companyId={companyId}
                 channel="ia"
@@ -1010,22 +1012,21 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 reportOptions={reports.map((r) => ({
                   id: r.id,
                   code: r.tracking_code,
-                  label: r.title,
+                  label: `${r.tracking_code} — ${r.title}`,
+                  status: r.status,
                 }))}
               />
-            </TabsContent>
-            <TabsContent value="divulgacao" className="pt-4">
+            )}
+            {ouvidoriaPanel === 'divulgacao' && (
               <OuvidoriaCampaignsTab
                 companyId={companyId}
                 channelUrl={`${window.location.origin}/denuncia/${companySlug ?? companyId}`}
                 canEdit={canEdit}
               />
-            </TabsContent>
-            <TabsContent value="como-funciona" className="pt-4">
-              <OuvidoriaHowItWorks />
-            </TabsContent>
-          </Tabs>
-        </div>
+            )}
+            {ouvidoriaPanel === 'como-funciona' && <OuvidoriaHowItWorks />}
+          </DialogContent>
+        </Dialog>
       )}
 
       {companyId && (
