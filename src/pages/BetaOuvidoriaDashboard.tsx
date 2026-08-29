@@ -424,6 +424,18 @@ const BetaOuvidoriaDashboard = () => {
             </CardContent>
           </Card>
 
+          <div className="mb-6">
+            <OuvidoriaQuickFilters
+              options={CATEGORY_OPTIONS}
+              counts={categoryCounts}
+              total={reports.length}
+              value={filter.category}
+              onChange={(v) => setFilter({ ...filter, category: v })}
+            />
+          </div>
+
+
+
           {/* Reports list */}
           <Card>
             <CardHeader>
