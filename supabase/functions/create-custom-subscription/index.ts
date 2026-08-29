@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
         billing_cycle: body.billingCycle,
         status: 'pending',
         asaas_customer_id: customerId,
-        asaas_subscription_id: subJson.id,
+        asaas_subscription_id: subscriptionId,
         asaas_payment_id: paymentId,
         invoice_url: invoiceUrl,
         amount_cents: body.amountCents,
@@ -301,7 +301,7 @@ Deno.serve(async (req) => {
 
     return json({
       subscriptionId: inserted.id,
-      asaasSubscriptionId: subJson.id,
+      asaasSubscriptionId: subscriptionId,
       asaasPaymentId: paymentId,
       invoiceUrl,
       amountCents: body.amountCents,
