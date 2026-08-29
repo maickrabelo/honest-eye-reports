@@ -101,9 +101,8 @@ const OuvidoriaAccessLogs = ({
               <p className="text-xs text-destructive mt-1">{r.failure_reason}</p>
             )}
           </div>
-
-          </div>
         </div>
+
       ))}
     </div>
   );
