@@ -291,28 +291,69 @@ const BetaOuvidoriaDashboard = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
-        <div className="audit-container max-w-7xl mx-auto px-4">
-          {/* Header */}
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-bold text-audit-primary">Ouvidoria Smart</h1>
+      <main className="flex-grow bg-background">
+        {/* Hero Header */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary via-accent to-secondary py-12 md:py-14">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-10 left-10 w-72 h-72 bg-secondary rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary rounded-full blur-3xl" />
+          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+          <div className="audit-container max-w-7xl mx-auto px-4 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 animate-fade-in">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-4">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Canal 100% anônimo · sem consumo de créditos</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Ouvidoria Smart</h1>
+                <p className="text-white/70 mt-1">Acompanhe e trate os relatos recebidos pelo canal</p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Canal 100% anônimo, sem consumo de créditos.
-              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant="secondary"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                  onClick={() => { navigator.clipboard.writeText(publicLink); toast({ title: "Link copiado" }); }}
+                >
+                  <Copy className="h-4 w-4 mr-2" /> Copiar link público
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                  asChild
+                >
+                  <a href={publicLink} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-2" /> Abrir formulário</a>
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => { navigator.clipboard.writeText(publicLink); toast({ title: "Link copiado" }); }}>
-                <Copy className="h-4 w-4 mr-2" /> Copiar link público
-              </Button>
-              <Button variant="outline" asChild>
-                <a href={publicLink} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-2" /> Abrir formulário</a>
-              </Button>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              {[
+                { value: stats.total, label: 'Total de relatos', icon: ClipboardList },
+                { value: stats.aberto, label: 'Abertos', icon: AlertCircle },
+                { value: stats.em_analise, label: 'Em análise', icon: Activity },
+                { value: stats.respondido + stats.encerrado, label: 'Respondidos/Encerrados', icon: CheckCircle2 },
+              ].map((stat, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-3xl font-bold text-white">{stat.value}</div>
+                      <div className="text-white/60 text-xs mt-1">{stat.label}</div>
+                    </div>
+                    <stat.icon className="h-8 w-8 text-white/40" />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+        </section>
 
+        <div className="audit-container max-w-7xl mx-auto px-4 py-8">
           <Tabs value={mainTab} onValueChange={setMainTab}>
             <TabsList className="flex flex-wrap h-auto mb-6">
               <TabsTrigger value="denuncias">Denúncias</TabsTrigger>
@@ -324,46 +365,6 @@ const BetaOuvidoriaDashboard = () => {
             </TabsList>
 
             <TabsContent value="denuncias">
-          {/* Stats cards */}
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-md"><ClipboardList className="h-5 w-5 text-primary" /></div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                  <div className="text-xs text-muted-foreground">Total de relatos</div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-md"><AlertCircle className="h-5 w-5 text-yellow-700" /></div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.aberto}</div>
-                  <div className="text-xs text-muted-foreground">Abertos</div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-md"><Activity className="h-5 w-5 text-blue-700" /></div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.em_analise}</div>
-                  <div className="text-xs text-muted-foreground">Em análise</div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-md"><CheckCircle2 className="h-5 w-5 text-green-700" /></div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.respondido + stats.encerrado}</div>
-                  <div className="text-xs text-muted-foreground">Respondidos/Encerrados</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Charts */}
           <Tabs defaultValue="overview" className="mb-8">
