@@ -120,9 +120,9 @@ Deno.serve(async (req) => {
 
   try {
     // Validate Asaas access token (REQUIRED — fail closed)
-    const expectedToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN');
+    const expectedToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN') ?? Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!expectedToken) {
-      console.error('ASAAS_WEBHOOK_TOKEN is not configured — rejecting webhook');
+      console.error('ASAAS_WEBHOOK_TOKEN / STRIPE_WEBHOOK_SECRET not configured — rejecting webhook');
       return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
