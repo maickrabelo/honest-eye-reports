@@ -201,3 +201,6 @@ verify_jwt = false
 [functions.log-ouvidoria-access]
 verify_jwt = false
 
+
+[functions.create-custom-subscription]
+verify_jwt = false

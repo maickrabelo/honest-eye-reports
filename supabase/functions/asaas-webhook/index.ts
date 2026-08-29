@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
               subscription_status: 'active',
               employee_count: 0,
               parent_subscription_id: sub.id,
-              max_employees: plan.max_employees,
+              max_employees: meta.customEmployees ?? plan.max_employees,
             })
             .select('id')
             .single();
@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
           .insert({
             name: meta.companyName || customerName,
             email,
-            max_companies: plan.max_companies || 10,
+            max_companies: meta.customCompanies ?? plan.max_companies ?? 10,
             subscription_status: 'active',
           })
           .select('id')
