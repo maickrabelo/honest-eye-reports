@@ -679,6 +679,25 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           maxWidth: 480,
         });
         y += 16;
+        const people = assigneeMap[t.id] ?? [];
+        if (people.length > 0) {
+          if (y > 770) { doc.addPage(); y = 60; }
+          const resp = people
+            .filter((a) => a.assignee_role === 'responsavel')
+            .map((a) => a.display_name ?? 'Usuário');
+          const env = people
+            .filter((a) => a.assignee_role === 'envolvido')
+            .map((a) => a.display_name ?? 'Usuário');
+          doc.setFontSize(9);
+          doc.text(
+            `   Responsáveis: ${resp.join(', ') || '—'}${env.length ? ` | Envolvidos: ${env.join(', ')}` : ''}`,
+            marginX + 24,
+            y,
+            { maxWidth: 460 }
+          );
+          doc.setFontSize(10);
+          y += 14;
+        }
         checklists
           .filter((i) => i.task_id === t.id)
           .forEach((i) => {
