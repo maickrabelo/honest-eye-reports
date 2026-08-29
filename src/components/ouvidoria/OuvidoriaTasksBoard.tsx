@@ -439,11 +439,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
       if (data) setAssignees((prev) => [...prev, data as AssigneeRow]);
     }
 
-    const roleLabel = ASSIGNEE_ROLES.find((r) => r.key === role)?.label ?? role;
-    await syncToReportHistory(
-      selected,
-      `[Tarefa] "${selected.title}" — ${person.full_name} definido(a) como ${roleLabel}.`
-    );
+    // Atribuição de responsáveis é interna: não vai para o histórico da denúncia.
   };
 
 
