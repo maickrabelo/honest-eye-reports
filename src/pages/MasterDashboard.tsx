@@ -20,6 +20,8 @@ import FormLeadsTab from '@/components/admin/FormLeadsTab';
 import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
+import CustomSubscriptionTab from '@/components/admin/CustomSubscriptionTab';
+
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { ExportUserDataDialog } from '@/components/admin/ExportUserDataDialog';
 import { useNavigate } from "react-router-dom";
