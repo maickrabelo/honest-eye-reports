@@ -52,9 +52,15 @@ const BetaOuvidoriaDashboard = () => {
   const [attachments, setAttachments] = useState<any[]>([]);
   const [reply, setReply] = useState("");
   const [newStatus, setNewStatus] = useState<string>("aberto");
+  const [mainTab, setMainTab] = useState("denuncias");
+  const [detailTab, setDetailTab] = useState("historico");
+  const [detailNotes, setDetailNotes] = useState<InternalNoteRow[]>([]);
+  const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
 
   const companyId = profile?.company_id ?? BETA_OUVIDORIA_COMPANY_IDS[0];
   const [allowed, setAllowed] = useState<boolean>(isBetaOuvidoriaCompany(companyId));
+  const { canEdit, authorName, authorRoleTitle, accessType } = useOuvidoriaAccess(companyId);
+
 
   const publicLink = useMemo(
     () => `${window.location.origin}/ouvidoria-beta/${companyId}`,
