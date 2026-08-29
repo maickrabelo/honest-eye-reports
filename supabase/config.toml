@@ -197,3 +197,7 @@ verify_jwt = false
 
 [functions.send-ouvidoria-campaign]
 verify_jwt = false
+
+[functions.log-ouvidoria-access]
+verify_jwt = false
+
