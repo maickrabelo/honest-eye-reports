@@ -703,7 +703,7 @@ const BetaOuvidoriaDashboard = () => {
                       companyId={companyId}
                       reportId={selected.id}
                       channel="smart"
-                      canEdit={canEdit}
+                      canEdit={true}
                       authorName={authorName}
                       authorRoleTitle={authorRoleTitle}
                       onChange={setDetailNotes}
