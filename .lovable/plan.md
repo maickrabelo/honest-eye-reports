@@ -1,6 +1,6 @@
-# Ouvidoria Smart — 8 melhorias no painel
+# Ouvidoria — 8 melhorias no painel (Smart e IA)
 
-Todas as mudanças ficam no módulo Ouvidoria Smart (formulário público, acompanhamento por protocolo e painel interno), sem afetar os outros módulos.
+As 8 melhorias valem para os dois canais: a **Ouvidoria Smart** (formulário estático) e a **Ouvidoria com IA** (relatos por chat, módulo `Reports`). A lógica e a interface são construídas uma vez e aplicadas nos dois painéis, respeitando as diferenças de cada canal (protocolo + chave de acesso no Smart; código de acompanhamento e transcrição do chat na Ouvidoria com IA).
 
 ## 1. Logs de acesso + download do histórico
 - Nova tabela de logs de consulta: cada vez que alguém consulta o protocolo na página de acompanhamento, grava data/hora, sucesso ou falha (chave errada), IP aproximado e user agent.
