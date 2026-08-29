@@ -243,15 +243,18 @@ const TrackReportModal = ({ className, open: openProp, onOpenChange, hideTrigger
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className={className}
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Acompanhar Denúncia
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            className={className}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Acompanhar Denúncia
+          </Button>
+        </DialogTrigger>
+      )}
+
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Acompanhar Denúncia</DialogTitle>
