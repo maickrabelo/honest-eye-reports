@@ -48,13 +48,28 @@ export const useOuvidoriaAccess = (companyId?: string | null): OuvidoriaAccess =
         return;
       }
 
-      const { data } = await supabase
+      let { data } = await supabase
         .from('ouvidoria_users')
         .select('access_type, full_name, job_title, status')
         .eq('company_id', companyId)
         .eq('user_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
+
+      // Vincula convites pendentes ao usuário recém-criado
+      if (!data && (user as any)?.email) {
+        const email = String((user as any).email).toLowerCase();
+        const { data: linked } = await supabase
+          .from('ouvidoria_users')
+          .update({ user_id: user.id, status: 'active' })
+          .eq('company_id', companyId)
+          .eq('email', email)
+          .is('user_id', null)
+          .select('access_type, full_name, job_title, status')
+          .maybeSingle();
+        if (linked) data = linked;
+      }
+
 
       if (!active) return;
 
