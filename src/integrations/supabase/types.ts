@@ -352,25 +352,37 @@ export type Database = {
       }
       beta_ouvidoria_updates: {
         Row: {
+          author_name: string | null
+          author_role_title: string | null
           author_type: string
+          author_user_id: string | null
           created_at: string
           id: string
           message: string
           report_id: string
+          visibility: string
         }
         Insert: {
+          author_name?: string | null
+          author_role_title?: string | null
           author_type: string
+          author_user_id?: string | null
           created_at?: string
           id?: string
           message: string
           report_id: string
+          visibility?: string
         }
         Update: {
+          author_name?: string | null
+          author_role_title?: string | null
           author_type?: string
+          author_user_id?: string | null
           created_at?: string
           id?: string
           message?: string
           report_id?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -1610,6 +1622,326 @@ export type Database = {
           },
         ]
       }
+      ouvidoria_access_logs: {
+        Row: {
+          channel: string
+          company_id: string | null
+          created_at: string
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          report_id: string | null
+          success: boolean
+          tracking_code: string
+          user_agent: string | null
+        }
+        Insert: {
+          channel?: string
+          company_id?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          report_id?: string | null
+          success?: boolean
+          tracking_code: string
+          user_agent?: string | null
+        }
+        Update: {
+          channel?: string
+          company_id?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          report_id?: string | null
+          success?: boolean
+          tracking_code?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      ouvidoria_campaigns: {
+        Row: {
+          channel_url: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          failed_count: number
+          id: string
+          message: string
+          recipients_count: number
+          sent_count: number
+          status: string
+          subject: string
+        }
+        Insert: {
+          channel_url?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          failed_count?: number
+          id?: string
+          message: string
+          recipients_count?: number
+          sent_count?: number
+          status?: string
+          subject: string
+        }
+        Update: {
+          channel_url?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          failed_count?: number
+          id?: string
+          message?: string
+          recipients_count?: number
+          sent_count?: number
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      ouvidoria_internal_notes: {
+        Row: {
+          author_name: string | null
+          author_role_title: string | null
+          author_user_id: string | null
+          channel: string
+          company_id: string
+          created_at: string
+          id: string
+          note: string
+          report_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          author_role_title?: string | null
+          author_user_id?: string | null
+          channel?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          note: string
+          report_id: string
+        }
+        Update: {
+          author_name?: string | null
+          author_role_title?: string | null
+          author_user_id?: string | null
+          channel?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          report_id?: string
+        }
+        Relationships: []
+      }
+      ouvidoria_mailing_list: {
+        Row: {
+          company_id: string
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      ouvidoria_task_assignees: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          ouvidoria_user_id: string | null
+          task_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          ouvidoria_user_id?: string | null
+          task_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          ouvidoria_user_id?: string | null
+          task_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ouvidoria_task_assignees_ouvidoria_user_id_fkey"
+            columns: ["ouvidoria_user_id"]
+            isOneToOne: false
+            referencedRelation: "ouvidoria_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ouvidoria_task_assignees_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ouvidoria_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ouvidoria_task_checklist_items: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_done: boolean
+          position: number
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_done?: boolean
+          position?: number
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_done?: boolean
+          position?: number
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ouvidoria_task_checklist_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ouvidoria_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ouvidoria_tasks: {
+        Row: {
+          channel: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          exported_at: string | null
+          id: string
+          position: number
+          report_code: string | null
+          report_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          exported_at?: string | null
+          id?: string
+          position?: number
+          report_code?: string | null
+          report_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          exported_at?: string | null
+          id?: string
+          position?: number
+          report_code?: string | null
+          report_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ouvidoria_users: {
+        Row: {
+          access_type: string
+          company_id: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invited_by: string | null
+          job_title: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_type?: string
+          company_id: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          invited_by?: string | null
+          job_title?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_type?: string
+          company_id?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invited_by?: string | null
+          job_title?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       partner_prospects: {
         Row: {
           company_name: string
@@ -2535,6 +2867,8 @@ export type Database = {
       }
       report_updates: {
         Row: {
+          author_name: string | null
+          author_role_title: string | null
           created_at: string
           id: string
           new_status: string
@@ -2542,8 +2876,11 @@ export type Database = {
           old_status: string | null
           report_id: string
           user_id: string | null
+          visibility: string
         }
         Insert: {
+          author_name?: string | null
+          author_role_title?: string | null
           created_at?: string
           id?: string
           new_status: string
@@ -2551,8 +2888,11 @@ export type Database = {
           old_status?: string | null
           report_id: string
           user_id?: string | null
+          visibility?: string
         }
         Update: {
+          author_name?: string | null
+          author_role_title?: string | null
           created_at?: string
           id?: string
           new_status?: string
@@ -2560,6 +2900,7 @@ export type Database = {
           old_status?: string | null
           report_id?: string
           user_id?: string | null
+          visibility?: string
         }
         Relationships: [
           {
@@ -3914,6 +4255,8 @@ export type Database = {
         Args: { _module_id: string; _user_id: string }
         Returns: boolean
       }
+      ouvidoria_can_edit: { Args: { _company_id: string }; Returns: boolean }
+      ouvidoria_can_view: { Args: { _company_id: string }; Returns: boolean }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
       user_has_pgr_shortcut_plan: {
