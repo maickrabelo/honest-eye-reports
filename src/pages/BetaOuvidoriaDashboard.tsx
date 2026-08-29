@@ -144,15 +144,59 @@ const BetaOuvidoriaDashboard = () => {
       r.description.toLowerCase().includes(filter.search.toLowerCase()))
   ), [reports, filter]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    reports.forEach((r) => {
+      counts[r.category] = (counts[r.category] || 0) + 1;
+    });
+    return counts;
+  }, [reports]);
+
   const openDetail = async (r: any) => {
     setSelected(r);
     setNewStatus(r.status);
+    setDetailTab("historico");
     const [{ data: u }, { data: a }] = await Promise.all([
       supabase.from("beta_ouvidoria_updates").select("*").eq("report_id", r.id).order("created_at", { ascending: true }),
       supabase.from("beta_ouvidoria_attachments").select("*").eq("report_id", r.id).order("created_at", { ascending: true }),
     ]);
     setUpdates((u as any[]) ?? []);
     setAttachments((a as any[]) ?? []);
+  };
+
+  const exportHistoryPdf = () => {
+    if (!selected) return;
+    downloadOuvidoriaHistoryPdf({
+      trackingCode: selected.tracking_code,
+      channelLabel: "Ouvidoria Smart",
+      createdAt: selected.created_at,
+      status: labelOf(STATUS_OPTIONS, selected.status),
+      type: labelOf(REPORT_TYPE_OPTIONS, selected.report_type),
+      category: labelOf(CATEGORY_OPTIONS, selected.category),
+      sector: selected.location_sector,
+      occurrence: selected.occurrence_date ?? selected.occurrence_type,
+      description: selected.description,
+      updates: updates.map((u) => ({
+        created_at: u.created_at,
+        message: u.message,
+        author_label:
+          u.author_type === "investigator"
+            ? `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
+            : "Denunciante anônimo",
+        visibility: u.visibility,
+      })),
+      internalNotes: detailNotes.map((n) => ({
+        created_at: n.created_at,
+        note: n.note,
+        author_label: `${n.author_name ?? "Equipe"}${n.author_role_title ? ` (${n.author_role_title})` : ""}`,
+      })),
+      attachments: attachments.map((a) => a.file_name),
+      accessLogs: detailLogs.map((l) => ({
+        created_at: l.created_at,
+        success: l.success,
+        user_agent: l.user_agent,
+      })),
+    });
   };
 
   const handleSubmit = async () => {
@@ -166,10 +210,16 @@ const BetaOuvidoriaDashboard = () => {
     try {
       if (hasReply) {
         const { error } = await supabase.from("beta_ouvidoria_updates").insert({
-          report_id: selected.id, author_type: "investigator", message: reply.trim(),
+          report_id: selected.id,
+          author_type: "investigator",
+          message: reply.trim(),
+          author_name: authorName,
+          author_role_title: authorRoleTitle,
+          visibility: "public",
         });
         if (error) throw error;
       }
+
       if (hasStatusChange) {
         const { error } = await supabase.from("beta_ouvidoria_reports").update({ status: newStatus }).eq("id", selected.id);
         if (error) throw error;
