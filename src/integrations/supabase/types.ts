@@ -1768,6 +1768,7 @@ export type Database = {
       }
       ouvidoria_task_assignees: {
         Row: {
+          assignee_role: string
           created_at: string
           display_name: string | null
           id: string
@@ -1776,6 +1777,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          assignee_role?: string
           created_at?: string
           display_name?: string | null
           id?: string
@@ -1784,6 +1786,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          assignee_role?: string
           created_at?: string
           display_name?: string | null
           id?: string

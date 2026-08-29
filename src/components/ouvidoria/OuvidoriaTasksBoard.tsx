@@ -43,6 +43,7 @@ import {
   ListChecks,
   Link2,
   Link2Off,
+  Users,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRealAuth } from '@/contexts/RealAuthContext';
@@ -70,6 +71,27 @@ interface ChecklistItem {
   is_done: boolean;
   position: number;
 }
+
+interface OuvidoriaUserRow {
+  id: string;
+  full_name: string;
+  job_title: string | null;
+  access_type: string;
+  status: string;
+}
+
+interface AssigneeRow {
+  id: string;
+  task_id: string;
+  ouvidoria_user_id: string | null;
+  display_name: string | null;
+  assignee_role: string;
+}
+
+const ASSIGNEE_ROLES = [
+  { key: 'responsavel', label: 'Responsável' },
+  { key: 'envolvido', label: 'Envolvido' },
+] as const;
 
 const COLUMNS = [
   { key: 'todo', label: 'A fazer' },
@@ -99,12 +121,14 @@ const TaskCard = ({
   task,
   canEdit,
   checklistSummary,
+  taskAssignees = [],
   onOpen,
   onDelete,
 }: {
   task: TaskRow;
   canEdit: boolean;
   checklistSummary?: { total: number; done: number };
+  taskAssignees?: AssigneeRow[];
   onOpen: (task: TaskRow) => void;
   onDelete: (id: string) => void;
 }) => {
@@ -168,6 +192,21 @@ const TaskCard = ({
               </Badge>
             )}
           </div>
+          {taskAssignees.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-2">
+              <Users className="h-3 w-3 text-muted-foreground" />
+              {taskAssignees.map((a) => (
+                <Badge
+                  key={a.id}
+                  variant={a.assignee_role === 'responsavel' ? 'default' : 'outline'}
+                  className="text-[10px] font-normal"
+                >
+                  {a.display_name ?? 'Usuário'}
+                  {a.assignee_role === 'envolvido' ? ' · envolvido' : ''}
+                </Badge>
+              ))}
+            </div>
+          )}
         </button>
         {canEdit && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(task.id)}>
@@ -185,6 +224,7 @@ const Column = ({
   tasks,
   canEdit,
   checklistMap,
+  assigneeMap,
   onOpen,
   onDelete,
 }: {
@@ -193,6 +233,7 @@ const Column = ({
   tasks: TaskRow[];
   canEdit: boolean;
   checklistMap: Record<string, { total: number; done: number }>;
+  assigneeMap: Record<string, AssigneeRow[]>;
   onOpen: (task: TaskRow) => void;
   onDelete: (id: string) => void;
 }) => {
@@ -214,6 +255,7 @@ const Column = ({
           task={t}
           canEdit={canEdit}
           checklistSummary={checklistMap[t.id]}
+          taskAssignees={assigneeMap[t.id] ?? []}
           onOpen={onOpen}
           onDelete={onDelete}
         />
@@ -225,9 +267,12 @@ const Column = ({
   );
 };
 
+
 const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }: Props) => {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
+  const [assignees, setAssignees] = useState<AssigneeRow[]>([]);
+  const [ouvidoriaUsers, setOuvidoriaUsers] = useState<OuvidoriaUserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -259,20 +304,41 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     const rows = (data ?? []) as TaskRow[];
     setTasks(rows);
     if (rows.length > 0) {
-      const { data: items } = await supabase
-        .from('ouvidoria_task_checklist_items')
-        .select('id, task_id, content, is_done, position')
-        .in('task_id', rows.map((r) => r.id))
-        .order('position', { ascending: true });
+      const ids = rows.map((r) => r.id);
+      const [{ data: items }, { data: people }] = await Promise.all([
+        supabase
+          .from('ouvidoria_task_checklist_items')
+          .select('id, task_id, content, is_done, position')
+          .in('task_id', ids)
+          .order('position', { ascending: true }),
+        supabase
+          .from('ouvidoria_task_assignees')
+          .select('id, task_id, ouvidoria_user_id, display_name, assignee_role')
+          .in('task_id', ids),
+      ]);
       setChecklists((items ?? []) as ChecklistItem[]);
+      setAssignees((people ?? []) as AssigneeRow[]);
     } else {
       setChecklists([]);
+      setAssignees([]);
     }
     setLoading(false);
   };
 
+  const loadUsers = async () => {
+    const { data } = await supabase
+      .from('ouvidoria_users')
+      .select('id, full_name, job_title, access_type, status')
+      .eq('company_id', companyId)
+      .order('full_name', { ascending: true });
+    setOuvidoriaUsers((data ?? []) as OuvidoriaUserRow[]);
+  };
+
   useEffect(() => {
-    if (companyId) load();
+    if (companyId) {
+      load();
+      loadUsers();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
@@ -295,10 +361,86 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     return map;
   }, [checklists]);
 
+  const assigneeMap = useMemo(() => {
+    const map: Record<string, AssigneeRow[]> = {};
+    assignees.forEach((a) => {
+      (map[a.task_id] ?? (map[a.task_id] = [])).push(a);
+    });
+    return map;
+  }, [assignees]);
+
   const selectedItems = useMemo(
     () => (selected ? checklists.filter((i) => i.task_id === selected.id) : []),
     [checklists, selected]
   );
+
+  const selectedAssignees = useMemo(
+    () => (selected ? assignees.filter((a) => a.task_id === selected.id) : []),
+    [assignees, selected]
+  );
+
+  const roleOf = (userId: string): string | null =>
+    selectedAssignees.find((a) => a.ouvidoria_user_id === userId)?.assignee_role ?? null;
+
+  const setAssigneeRole = async (person: OuvidoriaUserRow, role: string | null) => {
+    if (!selected) return;
+    const existing = selectedAssignees.find((a) => a.ouvidoria_user_id === person.id);
+
+    if (!role) {
+      if (!existing) return;
+      const { error } = await supabase
+        .from('ouvidoria_task_assignees')
+        .delete()
+        .eq('id', existing.id);
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+      setAssignees((prev) => prev.filter((a) => a.id !== existing.id));
+      await syncToReportHistory(
+        selected,
+        `[Tarefa] "${selected.title}" — ${person.full_name} removido(a) da apuração.`
+      );
+      return;
+    }
+
+    if (existing) {
+      const { error } = await supabase
+        .from('ouvidoria_task_assignees')
+        .update({ assignee_role: role })
+        .eq('id', existing.id);
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+      setAssignees((prev) =>
+        prev.map((a) => (a.id === existing.id ? { ...a, assignee_role: role } : a))
+      );
+    } else {
+      const { data, error } = await supabase
+        .from('ouvidoria_task_assignees')
+        .insert({
+          task_id: selected.id,
+          ouvidoria_user_id: person.id,
+          display_name: person.full_name,
+          assignee_role: role,
+        })
+        .select('id, task_id, ouvidoria_user_id, display_name, assignee_role')
+        .maybeSingle();
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+      if (data) setAssignees((prev) => [...prev, data as AssigneeRow]);
+    }
+
+    const roleLabel = ASSIGNEE_ROLES.find((r) => r.key === role)?.label ?? role;
+    await syncToReportHistory(
+      selected,
+      `[Tarefa] "${selected.title}" — ${person.full_name} definido(a) como ${roleLabel}.`
+    );
+  };
+
 
   /** Registra o andamento da tarefa no histórico interno da denúncia vinculada */
   const syncToReportHistory = async (task: TaskRow, message: string) => {
@@ -537,6 +679,25 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           maxWidth: 480,
         });
         y += 16;
+        const people = assigneeMap[t.id] ?? [];
+        if (people.length > 0) {
+          if (y > 770) { doc.addPage(); y = 60; }
+          const resp = people
+            .filter((a) => a.assignee_role === 'responsavel')
+            .map((a) => a.display_name ?? 'Usuário');
+          const env = people
+            .filter((a) => a.assignee_role === 'envolvido')
+            .map((a) => a.display_name ?? 'Usuário');
+          doc.setFontSize(9);
+          doc.text(
+            `   Responsáveis: ${resp.join(', ') || '—'}${env.length ? ` | Envolvidos: ${env.join(', ')}` : ''}`,
+            marginX + 24,
+            y,
+            { maxWidth: 460 }
+          );
+          doc.setFontSize(10);
+          y += 14;
+        }
         checklists
           .filter((i) => i.task_id === t.id)
           .forEach((i) => {
@@ -590,6 +751,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
                   tasks={grouped[c.key] ?? []}
                   canEdit={canEdit}
                   checklistMap={checklistMap}
+                  assigneeMap={assigneeMap}
                   onOpen={setSelected}
                   onDelete={removeTask}
                 />
@@ -740,6 +902,62 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
               </div>
 
               <Separator />
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" /> Responsáveis e envolvidos
+                  </Label>
+                  <Badge variant="secondary">{selectedAssignees.length}</Badge>
+                </div>
+                {ouvidoriaUsers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Cadastre usuários em "Usuários da ouvidoria" para atribuí-los às tarefas.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {ouvidoriaUsers.map((person) => {
+                      const role = roleOf(person.id);
+                      return (
+                        <div
+                          key={person.id}
+                          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm truncate">{person.full_name}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {person.job_title || (person.access_type === 'auditor' ? 'Auditor' : 'Gestor')}
+                              {person.status !== 'active' ? ' · convite pendente' : ''}
+                            </p>
+                          </div>
+                          <Select
+                            value={role ?? 'nenhum'}
+                            onValueChange={(v) =>
+                              setAssigneeRole(person, v === 'nenhum' ? null : v)
+                            }
+                            disabled={!canEdit}
+                          >
+                            <SelectTrigger className="w-[150px] shrink-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="nenhum">Não atribuído</SelectItem>
+                              {ASSIGNEE_ROLES.map((r) => (
+                                <SelectItem key={r.key} value={r.key}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
 
               <div>
                 <div className="flex items-center justify-between mb-2">
