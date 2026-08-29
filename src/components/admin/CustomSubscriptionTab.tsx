@@ -28,7 +28,7 @@ interface Result {
   planName: string;
   billingCycle: string;
   amountCents: number;
-  asaasSubscriptionId: string;
+  asaasSubscriptionId: string | null;
   installmentCount?: number;
   installmentCents?: number;
   emailSent: boolean;
@@ -237,6 +237,11 @@ const CustomSubscriptionTab = () => {
                     sem juros · total {brl(amountCentsPreview)}
                   </p>
                 )}
+                {Number(form.installmentCount) > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    Parcelado gera cobrança única no cartão (sem renovação automática).
+                  </p>
+                )}
               </div>
             )}
 
@@ -382,8 +387,11 @@ const CustomSubscriptionTab = () => {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Assinatura Asaas: {result.asaasSubscriptionId}. Após o pagamento confirmado, o acesso
-              é provisionado automaticamente com os limites definidos.
+              {result.asaasSubscriptionId
+                ? `Assinatura Asaas: ${result.asaasSubscriptionId}.`
+                : "Cobrança parcelada única no cartão (sem renovação automática)."}{" "}
+              Após o pagamento confirmado, o acesso é provisionado automaticamente com os limites
+              definidos.
             </p>
           </CardContent>
         </Card>
