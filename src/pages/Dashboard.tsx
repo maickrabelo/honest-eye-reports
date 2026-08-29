@@ -1086,12 +1086,10 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </Dialog>
       )}
 
-      {companyId && (
+      {companyId && isPrimaryAdmin && (
         <div className="mt-8 space-y-6">
-          <TeamManagementCard accountType="company" accountId={companyId} />
-          {isPrimaryAdmin && <CompanyAuditLogCard companyId={companyId} />}
+          <CompanyAuditLogCard companyId={companyId} />
         </div>
-
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
