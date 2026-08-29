@@ -71,6 +71,27 @@ interface ChecklistItem {
   position: number;
 }
 
+interface OuvidoriaUserRow {
+  id: string;
+  full_name: string;
+  job_title: string | null;
+  access_type: string;
+  status: string;
+}
+
+interface AssigneeRow {
+  id: string;
+  task_id: string;
+  ouvidoria_user_id: string | null;
+  display_name: string | null;
+  assignee_role: string;
+}
+
+const ASSIGNEE_ROLES = [
+  { key: 'responsavel', label: 'Responsável' },
+  { key: 'envolvido', label: 'Envolvido' },
+] as const;
+
 const COLUMNS = [
   { key: 'todo', label: 'A fazer' },
   { key: 'doing', label: 'Em apuração' },
