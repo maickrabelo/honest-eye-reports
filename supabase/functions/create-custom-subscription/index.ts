@@ -16,6 +16,7 @@ interface Body {
   billingCycle: 'monthly' | 'quarterly' | 'annual';
   billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD';
   amountCents: number; // valor cobrado por ciclo
+  installmentCount?: number | null; // parcelamento no cartão (1 = à vista)
   maxCompanies?: number | null;
   maxEmployees?: number | null;
   customer: { name: string; email: string; cpfCnpj: string; phone?: string };
@@ -120,9 +121,13 @@ Deno.serve(async (req) => {
       description: `SOIA - ${plan.name} (personalizado - ${cycleLabel[body.billingCycle]})`,
       externalReference: `soia-custom-${body.planSlug}-${Date.now()}`,
     };
-    if (body.billingType === 'CREDIT_CARD' && monthsPerCycle > 1) {
-      payload.maxInstallmentCount = monthsPerCycle;
+    const installments = body.billingType === 'CREDIT_CARD'
+      ? Math.min(Math.max(Number(body.installmentCount ?? 1) || 1, 1), 21)
+      : 1;
+    if (body.billingType === 'CREDIT_CARD') {
+      payload.maxInstallmentCount = Math.max(installments, monthsPerCycle > 1 ? monthsPerCycle : 1);
     }
+    const installmentCents = Math.round(body.amountCents / installments);
 
     const subRes = await fetch(`${ASAAS_BASE}/subscriptions`, {
       method: 'POST',
@@ -161,6 +166,7 @@ Deno.serve(async (req) => {
           companyName: body.companyName,
           cnpjs: cpfCnpj.length === 14 ? [cpfCnpj] : [],
           billingType: body.billingType,
+          installmentCount: installments,
           customCompanies: body.maxCompanies ?? null,
           customEmployees: body.maxEmployees ?? null,
           notes: body.notes ?? null,
@@ -181,6 +187,9 @@ Deno.serve(async (req) => {
         ['Plano', plan.name],
         ['Recorrência', cycleLabel[body.billingCycle]],
         ['Valor por cobrança', brl(body.amountCents)],
+        installments > 1
+          ? ['Parcelamento no cartão', `em até ${installments}x de ${brl(installmentCents)} sem juros`]
+          : null,
         body.maxCompanies != null ? ['Empresas liberadas', String(body.maxCompanies)] : null,
         body.maxEmployees != null ? ['Vidas liberadas', String(body.maxEmployees)] : null,
       ].filter(Boolean) as [string, string][];
@@ -269,6 +278,8 @@ Deno.serve(async (req) => {
       asaasPaymentId: paymentId,
       invoiceUrl,
       amountCents: body.amountCents,
+      installmentCount: installments,
+      installmentCents,
       planName: plan.name,
       billingCycle: body.billingCycle,
       emailSent,
