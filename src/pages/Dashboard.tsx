@@ -47,7 +47,7 @@ import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
+
 import CompanyAuditLogCard from '@/components/company/CompanyAuditLogCard';
 import { useIsCompanyPrimaryAdmin } from '@/hooks/useIsCompanyPrimaryAdmin';
 import { logCompanyAudit } from '@/lib/companyAudit';
