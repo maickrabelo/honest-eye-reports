@@ -86,6 +86,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [departmentData, setDepartmentData] = useState<any[]>([]);
   const [statusData, setStatusData] = useState<any[]>([]);
   const [trainingsCount, setTrainingsCount] = useState<number>(0);
+  const [pendingTaskCount, setPendingTaskCount] = useState<number>(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { features } = useCompanyFeatures(companyId);
@@ -206,6 +207,15 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           .select('module_id')
           .eq('company_id', companyId);
         setTrainingsCount(access?.length ?? 0);
+      })();
+      // count pending ouvidoria tasks (not done)
+      (async () => {
+        const { count } = await supabase
+          .from('ouvidoria_tasks')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', companyId)
+          .neq('status', 'done');
+        setPendingTaskCount(count ?? 0);
       })();
     }
   }, [companyId]);
@@ -784,21 +794,28 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 desc: 'Entenda o fluxo do canal',
               },
             ].map((tool) => (
-              <Card
-                key={tool.key}
-                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
-                onClick={() => setOuvidoriaPanel(tool.key)}
-              >
-                <CardContent className="p-5 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <tool.icon className="h-6 w-6 text-primary" />
+              <div key={tool.key} className="flex flex-col">
+                <Card
+                  className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all flex-1"
+                  onClick={() => setOuvidoriaPanel(tool.key)}
+                >
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <tool.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">{tool.title}</h3>
+                      <p className="text-sm text-muted-foreground">{tool.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                {tool.key === 'tarefas' && pendingTaskCount > 0 && (
+                  <div className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white">
+                    <ListChecks className="h-3.5 w-3.5" />
+                    {pendingTaskCount} {pendingTaskCount === 1 ? 'tarefa pendente' : 'tarefas pendentes'} no momento
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{tool.title}</h3>
-                    <p className="text-sm text-muted-foreground">{tool.desc}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                )}
+              </div>
             ))}
           </div>
         </div>
