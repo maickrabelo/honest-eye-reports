@@ -945,11 +945,50 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       </>
       )}
 
+      {companyId && features.ouvidoria && (
+        <div className="mt-8">
+          <Tabs defaultValue="usuarios">
+            <TabsList className="flex flex-wrap h-auto">
+              <TabsTrigger value="usuarios">Usuários da ouvidoria</TabsTrigger>
+              <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
+              <TabsTrigger value="divulgacao">Divulgação</TabsTrigger>
+              <TabsTrigger value="como-funciona">Como funciona?</TabsTrigger>
+            </TabsList>
+            <TabsContent value="usuarios" className="pt-4">
+              <OuvidoriaUsersTab companyId={companyId} canEdit={canEdit} />
+            </TabsContent>
+            <TabsContent value="tarefas" className="pt-4">
+              <OuvidoriaTasksBoard
+                companyId={companyId}
+                channel="ia"
+                canEdit={canEdit}
+                reportOptions={reports.map((r) => ({
+                  id: r.id,
+                  code: r.tracking_code,
+                  label: r.title,
+                }))}
+              />
+            </TabsContent>
+            <TabsContent value="divulgacao" className="pt-4">
+              <OuvidoriaCampaignsTab
+                companyId={companyId}
+                channelUrl={`${window.location.origin}/denuncia/${companySlug ?? companyId}`}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+            <TabsContent value="como-funciona" className="pt-4">
+              <OuvidoriaHowItWorks />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+
       {companyId && (
         <div className="mt-8 space-y-6">
           <TeamManagementCard accountType="company" accountId={companyId} />
           {isPrimaryAdmin && <CompanyAuditLogCard companyId={companyId} />}
         </div>
+
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
