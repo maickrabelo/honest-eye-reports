@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -58,6 +58,7 @@ import OuvidoriaUsersTab from '@/components/ouvidoria/OuvidoriaUsersTab';
 import OuvidoriaTasksBoard from '@/components/ouvidoria/OuvidoriaTasksBoard';
 import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab';
 import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
+import OuvidoriaQuickFilters from '@/components/ouvidoria/OuvidoriaQuickFilters';
 import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
 import { FileDown, Eye } from 'lucide-react';
 
@@ -94,6 +95,25 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [detailTab, setDetailTab] = useState('historico');
   const [detailNotes, setDetailNotes] = useState<InternalNoteRow[]>([]);
   const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
+  const [reportCategoryFilter, setReportCategoryFilter] = useState('todos');
+  const [reportStatusFilter, setReportStatusFilter] = useState('todos');
+
+  const reportCategoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    reports.forEach((r) => { if (r.category) set.add(r.category); });
+    return Array.from(set).map((c) => ({ value: c, label: c }));
+  }, [reports]);
+
+  const reportCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    reports.forEach((r) => { if (r.category) counts[r.category] = (counts[r.category] || 0) + 1; });
+    return counts;
+  }, [reports]);
+
+  const filteredReports = useMemo(() => reports.filter((r) =>
+    (reportCategoryFilter === 'todos' || r.category === reportCategoryFilter) &&
+    (reportStatusFilter === 'todos' || r.status === reportStatusFilter)
+  ), [reports, reportCategoryFilter, reportStatusFilter]);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
 
 
@@ -886,10 +906,34 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
-          <CardDescription>
-            Últimas denúncias registradas no sistema
-          </CardDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between flex-wrap gap-2">
+              <div>
+                <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
+                <CardDescription>
+                  {filteredReports.length} {filteredReports.length === 1 ? 'denúncia encontrada' : 'denúncias encontradas'}
+                </CardDescription>
+              </div>
+              <Select value={reportStatusFilter} onValueChange={setReportStatusFilter}>
+                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="in_progress">Em andamento</SelectItem>
+                  <SelectItem value="resolved">Resolvida</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {reportCategoryOptions.length > 0 && (
+              <OuvidoriaQuickFilters
+                options={reportCategoryOptions}
+                counts={reportCategoryCounts}
+                total={reports.length}
+                value={reportCategoryFilter}
+                onChange={setReportCategoryFilter}
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -906,14 +950,14 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </tr>
               </thead>
               <tbody>
-                {reports.length === 0 ? (
+                {filteredReports.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      Nenhuma denúncia registrada ainda
+                      Nenhuma denúncia encontrada com os filtros selecionados
                     </td>
                   </tr>
                 ) : (
-                  reports.map((report) => (
+                  filteredReports.map((report) => (
                     <tr key={report.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-4 text-audit-primary font-medium">{report.tracking_code}</td>
                       <td className="px-4 py-4">{report.title}</td>
