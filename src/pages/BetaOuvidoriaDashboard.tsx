@@ -21,12 +21,22 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import {
-  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File,
+  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File, FileDown, Eye,
 } from "lucide-react";
 import {
   isBetaOuvidoriaCompany, labelOf,
   REPORT_TYPE_OPTIONS, CATEGORY_OPTIONS, STATUS_OPTIONS, BETA_OUVIDORIA_COMPANY_IDS,
 } from "@/lib/betaOuvidoria";
+import { useOuvidoriaAccess } from "@/hooks/useOuvidoriaAccess";
+import OuvidoriaQuickFilters from "@/components/ouvidoria/OuvidoriaQuickFilters";
+import OuvidoriaInternalNotes, { InternalNoteRow } from "@/components/ouvidoria/OuvidoriaInternalNotes";
+import OuvidoriaAccessLogs, { AccessLogRow } from "@/components/ouvidoria/OuvidoriaAccessLogs";
+import OuvidoriaUsersTab from "@/components/ouvidoria/OuvidoriaUsersTab";
+import OuvidoriaTasksBoard from "@/components/ouvidoria/OuvidoriaTasksBoard";
+import OuvidoriaCampaignsTab from "@/components/ouvidoria/OuvidoriaCampaignsTab";
+import OuvidoriaHowItWorks from "@/components/ouvidoria/OuvidoriaHowItWorks";
+import { downloadOuvidoriaHistoryPdf } from "@/components/ouvidoria/ouvidoriaHistoryPdf";
+
 
 const COLORS = ["#0F3460", "#1A97B9", "#1E6F5C", "#D32626", "#E97E00", "#777777", "#8e44ad", "#16a085"];
 
@@ -42,9 +52,15 @@ const BetaOuvidoriaDashboard = () => {
   const [attachments, setAttachments] = useState<any[]>([]);
   const [reply, setReply] = useState("");
   const [newStatus, setNewStatus] = useState<string>("aberto");
+  const [mainTab, setMainTab] = useState("denuncias");
+  const [detailTab, setDetailTab] = useState("historico");
+  const [detailNotes, setDetailNotes] = useState<InternalNoteRow[]>([]);
+  const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
 
   const companyId = profile?.company_id ?? BETA_OUVIDORIA_COMPANY_IDS[0];
   const [allowed, setAllowed] = useState<boolean>(isBetaOuvidoriaCompany(companyId));
+  const { canEdit, authorName, authorRoleTitle, accessType } = useOuvidoriaAccess(companyId);
+
 
   const publicLink = useMemo(
     () => `${window.location.origin}/ouvidoria-beta/${companyId}`,
@@ -128,15 +144,59 @@ const BetaOuvidoriaDashboard = () => {
       r.description.toLowerCase().includes(filter.search.toLowerCase()))
   ), [reports, filter]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    reports.forEach((r) => {
+      counts[r.category] = (counts[r.category] || 0) + 1;
+    });
+    return counts;
+  }, [reports]);
+
   const openDetail = async (r: any) => {
     setSelected(r);
     setNewStatus(r.status);
+    setDetailTab("historico");
     const [{ data: u }, { data: a }] = await Promise.all([
       supabase.from("beta_ouvidoria_updates").select("*").eq("report_id", r.id).order("created_at", { ascending: true }),
       supabase.from("beta_ouvidoria_attachments").select("*").eq("report_id", r.id).order("created_at", { ascending: true }),
     ]);
     setUpdates((u as any[]) ?? []);
     setAttachments((a as any[]) ?? []);
+  };
+
+  const exportHistoryPdf = () => {
+    if (!selected) return;
+    downloadOuvidoriaHistoryPdf({
+      trackingCode: selected.tracking_code,
+      channelLabel: "Ouvidoria Smart",
+      createdAt: selected.created_at,
+      status: labelOf(STATUS_OPTIONS, selected.status),
+      type: labelOf(REPORT_TYPE_OPTIONS, selected.report_type),
+      category: labelOf(CATEGORY_OPTIONS, selected.category),
+      sector: selected.location_sector,
+      occurrence: selected.occurrence_date ?? selected.occurrence_type,
+      description: selected.description,
+      updates: updates.map((u) => ({
+        created_at: u.created_at,
+        message: u.message,
+        author_label:
+          u.author_type === "investigator"
+            ? `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
+            : "Denunciante anônimo",
+        visibility: u.visibility,
+      })),
+      internalNotes: detailNotes.map((n) => ({
+        created_at: n.created_at,
+        note: n.note,
+        author_label: `${n.author_name ?? "Equipe"}${n.author_role_title ? ` (${n.author_role_title})` : ""}`,
+      })),
+      attachments: attachments.map((a) => a.file_name),
+      accessLogs: detailLogs.map((l) => ({
+        created_at: l.created_at,
+        success: l.success,
+        user_agent: l.user_agent,
+      })),
+    });
   };
 
   const handleSubmit = async () => {
@@ -150,10 +210,16 @@ const BetaOuvidoriaDashboard = () => {
     try {
       if (hasReply) {
         const { error } = await supabase.from("beta_ouvidoria_updates").insert({
-          report_id: selected.id, author_type: "investigator", message: reply.trim(),
+          report_id: selected.id,
+          author_type: "investigator",
+          message: reply.trim(),
+          author_name: authorName,
+          author_role_title: authorRoleTitle,
+          visibility: "public",
         });
         if (error) throw error;
       }
+
       if (hasStatusChange) {
         const { error } = await supabase.from("beta_ouvidoria_reports").update({ status: newStatus }).eq("id", selected.id);
         if (error) throw error;
@@ -247,7 +313,19 @@ const BetaOuvidoriaDashboard = () => {
             </div>
           </div>
 
+          <Tabs value={mainTab} onValueChange={setMainTab}>
+            <TabsList className="flex flex-wrap h-auto mb-6">
+              <TabsTrigger value="denuncias">Denúncias</TabsTrigger>
+              <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
+              <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+              <TabsTrigger value="logs">Logs de acesso</TabsTrigger>
+              <TabsTrigger value="divulgacao">Divulgação</TabsTrigger>
+              <TabsTrigger value="como-funciona">Como funciona?</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="denuncias">
           {/* Stats cards */}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardContent className="p-4 flex items-center gap-3">
@@ -424,6 +502,18 @@ const BetaOuvidoriaDashboard = () => {
             </CardContent>
           </Card>
 
+          <div className="mb-6">
+            <OuvidoriaQuickFilters
+              options={CATEGORY_OPTIONS}
+              counts={categoryCounts}
+              total={reports.length}
+              value={filter.category}
+              onChange={(v) => setFilter({ ...filter, category: v })}
+            />
+          </div>
+
+
+
           {/* Reports list */}
           <Card>
             <CardHeader>
@@ -475,7 +565,54 @@ const BetaOuvidoriaDashboard = () => {
               </div>
             </CardContent>
           </Card>
+            </TabsContent>
+
+            <TabsContent value="tarefas">
+              <OuvidoriaTasksBoard
+                companyId={companyId!}
+                channel="smart"
+                canEdit={canEdit}
+                reportOptions={reports.map((r) => ({
+                  id: r.id,
+                  code: r.tracking_code,
+                  label: `${r.tracking_code} — ${labelOf(CATEGORY_OPTIONS, r.category)}`,
+                }))}
+              />
+            </TabsContent>
+
+            <TabsContent value="usuarios">
+              <OuvidoriaUsersTab companyId={companyId!} canEdit={canEdit} />
+            </TabsContent>
+
+            <TabsContent value="logs">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Logs de acesso ao canal</CardTitle>
+                  <CardDescription>
+                    Todas as consultas de protocolo feitas por denunciantes, incluindo tentativas com
+                    códigos inválidos.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <OuvidoriaAccessLogs companyId={companyId} channel="smart" limit={200} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="divulgacao">
+              <OuvidoriaCampaignsTab
+                companyId={companyId!}
+                channelUrl={publicLink}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+
+            <TabsContent value="como-funciona">
+              <OuvidoriaHowItWorks />
+            </TabsContent>
+          </Tabs>
         </div>
+
       </main>
       <Footer />
 
@@ -547,53 +684,102 @@ const BetaOuvidoriaDashboard = () => {
                 </div>
               )}
 
-              <div>
-                <h3 className="font-medium mb-3">Histórico de mensagens</h3>
-                {updates.length === 0 ? (
-                  <p className="text-sm text-gray-500">Nenhuma mensagem ainda.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {updates.map((u) => (
-                      <li key={u.id} className={`p-3 rounded-md border ${u.author_type === "investigator" ? "bg-primary/5" : "bg-muted/30"}`}>
-                        <div className="text-xs text-muted-foreground mb-1">
-                          {u.author_type === "investigator" ? "Ouvidoria" : "Denunciante anônimo"} ·{" "}
-                          {new Date(u.created_at).toLocaleString("pt-BR")}
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm">{u.message}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <Tabs value={detailTab} onValueChange={setDetailTab}>
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="historico">Histórico</TabsTrigger>
+                  <TabsTrigger value="notas">Notas internas</TabsTrigger>
+                  <TabsTrigger value="logs">Logs de acesso</TabsTrigger>
+                </TabsList>
 
-              <div>
-                <h3 className="font-medium mb-3">Alterar status</h3>
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+                <TabsContent value="historico" className="pt-4">
+                  {updates.length === 0 ? (
+                    <p className="text-sm text-gray-500">Nenhuma mensagem ainda.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {updates.map((u) => (
+                        <li key={u.id} className={`p-3 rounded-md border ${u.author_type === "investigator" ? "bg-primary/5" : "bg-muted/30"}`}>
+                          <div className="text-xs text-muted-foreground mb-1">
+                            {u.author_type === "investigator"
+                              ? `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
+                              : "Denunciante anônimo"} ·{" "}
+                            {new Date(u.created_at).toLocaleString("pt-BR")}
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm">{u.message}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-3">
+                    O denunciante vê apenas a mensagem e a data — nunca o nome de quem atualizou.
+                  </p>
+                </TabsContent>
 
-              <div>
-                <h3 className="font-medium mb-3">Resposta ao denunciante (opcional)</h3>
-                <Textarea
-                  placeholder="Escreva uma resposta. Ela ficará visível para o denunciante anônimo no painel de acompanhamento."
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  rows={4}
-                  maxLength={4000}
-                />
-              </div>
+                <TabsContent value="notas" className="pt-4">
+                  {companyId && (
+                    <OuvidoriaInternalNotes
+                      companyId={companyId}
+                      reportId={selected.id}
+                      channel="smart"
+                      canEdit={canEdit}
+                      authorName={authorName}
+                      authorRoleTitle={authorRoleTitle}
+                      onChange={setDetailNotes}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="logs" className="pt-4">
+                  <OuvidoriaAccessLogs
+                    reportId={selected.id}
+                    companyId={companyId}
+                    channel="smart"
+                    onLoaded={setDetailLogs}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              {canEdit ? (
+                <>
+                  <div>
+                    <h3 className="font-medium mb-3">Alterar status</h3>
+                    <Select value={newStatus} onValueChange={setNewStatus}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium mb-3">Resposta ao denunciante (opcional)</h3>
+                    <Textarea
+                      placeholder="Escreva uma resposta. Ela ficará visível para o denunciante anônimo no painel de acompanhamento."
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      rows={4}
+                      maxLength={4000}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  <Eye className="h-4 w-4" /> Seu acesso é de auditor (somente leitura).
+                </div>
+              )}
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSelected(null)}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={newStatus === selected.status && reply.trim().length === 0}>
-                Salvar alterações
+            <DialogFooter className="flex-wrap gap-2">
+              <Button variant="outline" onClick={exportHistoryPdf}>
+                <FileDown className="h-4 w-4 mr-2" /> Baixar histórico (PDF)
               </Button>
+              <Button variant="outline" onClick={() => setSelected(null)}>Fechar</Button>
+              {canEdit && (
+                <Button onClick={handleSubmit} disabled={newStatus === selected.status && reply.trim().length === 0}>
+                  Salvar alterações
+                </Button>
+              )}
             </DialogFooter>
+
           </DialogContent>
         )}
       </Dialog>

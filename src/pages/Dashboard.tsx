@@ -51,6 +51,16 @@ import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import CompanyAuditLogCard from '@/components/company/CompanyAuditLogCard';
 import { useIsCompanyPrimaryAdmin } from '@/hooks/useIsCompanyPrimaryAdmin';
 import { logCompanyAudit } from '@/lib/companyAudit';
+import { useOuvidoriaAccess } from '@/hooks/useOuvidoriaAccess';
+import OuvidoriaInternalNotes, { InternalNoteRow } from '@/components/ouvidoria/OuvidoriaInternalNotes';
+import OuvidoriaAccessLogs, { AccessLogRow } from '@/components/ouvidoria/OuvidoriaAccessLogs';
+import OuvidoriaUsersTab from '@/components/ouvidoria/OuvidoriaUsersTab';
+import OuvidoriaTasksBoard from '@/components/ouvidoria/OuvidoriaTasksBoard';
+import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab';
+import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
+import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
+import { FileDown, Eye } from 'lucide-react';
+
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
@@ -80,7 +90,12 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
   const { isPrimaryAdmin } = useIsCompanyPrimaryAdmin(companyId);
+  const { canEdit, authorName, authorRoleTitle } = useOuvidoriaAccess(companyId);
+  const [detailTab, setDetailTab] = useState('historico');
+  const [detailNotes, setDetailNotes] = useState<InternalNoteRow[]>([]);
+  const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
+
 
   const companyTourSteps: TourStep[] = [
     { targetId: 'company-tour-anchor', title: 'Bem-vinda à SOIA! 🎉', description: 'Você tem 7 dias para testar a plataforma. Vamos te mostrar as principais ferramentas.', position: 'bottom' },
@@ -272,9 +287,44 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       updates: updates || [],
       attachments: attachments || []
     });
+    setDetailTab('historico');
+    setDetailNotes([]);
+    setDetailLogs([]);
     setSelectedStatus(report.status);
     setIsDialogOpen(true);
   };
+
+  const exportHistoryPdf = () => {
+    if (!selectedReport) return;
+    downloadOuvidoriaHistoryPdf({
+      trackingCode: selectedReport.tracking_code,
+      channelLabel: 'Ouvidoria com IA',
+      createdAt: selectedReport.created_at,
+      status: selectedReport.status,
+      type: selectedReport.title,
+      category: selectedReport.category,
+      sector: selectedReport.department,
+      description: selectedReport.ai_summary || selectedReport.description,
+      updates: (selectedReport.updates || []).map((u: any) => ({
+        created_at: u.created_at,
+        message: u.notes,
+        author_label: `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ''}${u.author_role_title ? ` (${u.author_role_title})` : ''}`,
+        visibility: u.visibility,
+      })),
+      internalNotes: detailNotes.map((n) => ({
+        created_at: n.created_at,
+        note: n.note,
+        author_label: `${n.author_name ?? 'Equipe'}${n.author_role_title ? ` (${n.author_role_title})` : ''}`,
+      })),
+      attachments: (selectedReport.attachments || []).map((a: any) => a.file_name),
+      accessLogs: detailLogs.map((l) => ({
+        created_at: l.created_at,
+        success: l.success,
+        user_agent: l.user_agent,
+      })),
+    });
+  };
+
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <FileImage className="h-4 w-4" />;
@@ -349,7 +399,11 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           user_id: user.id,
           old_status: selectedReport.status,
           new_status: selectedStatus,
+          author_name: authorName,
+          author_role_title: authorRoleTitle,
+          visibility: 'public',
         };
+
 
         // Only add notes if they exist
         if (hasNotes) {
@@ -891,11 +945,50 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       </>
       )}
 
+      {companyId && features.ouvidoria && (
+        <div className="mt-8">
+          <Tabs defaultValue="usuarios">
+            <TabsList className="flex flex-wrap h-auto">
+              <TabsTrigger value="usuarios">Usuários da ouvidoria</TabsTrigger>
+              <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
+              <TabsTrigger value="divulgacao">Divulgação</TabsTrigger>
+              <TabsTrigger value="como-funciona">Como funciona?</TabsTrigger>
+            </TabsList>
+            <TabsContent value="usuarios" className="pt-4">
+              <OuvidoriaUsersTab companyId={companyId} canEdit={canEdit} />
+            </TabsContent>
+            <TabsContent value="tarefas" className="pt-4">
+              <OuvidoriaTasksBoard
+                companyId={companyId}
+                channel="ia"
+                canEdit={canEdit}
+                reportOptions={reports.map((r) => ({
+                  id: r.id,
+                  code: r.tracking_code,
+                  label: r.title,
+                }))}
+              />
+            </TabsContent>
+            <TabsContent value="divulgacao" className="pt-4">
+              <OuvidoriaCampaignsTab
+                companyId={companyId}
+                channelUrl={`${window.location.origin}/denuncia/${companySlug ?? companyId}`}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+            <TabsContent value="como-funciona" className="pt-4">
+              <OuvidoriaHowItWorks />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+
       {companyId && (
         <div className="mt-8 space-y-6">
           <TeamManagementCard accountType="company" accountId={companyId} />
           {isPrimaryAdmin && <CompanyAuditLogCard companyId={companyId} />}
         </div>
+
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -991,84 +1084,132 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </div>
               )}
               
-              <div>
-                <h3 className="font-medium mb-3">Histórico de Atualizações</h3>
-                <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
-                  {selectedReport.updates?.length === 0 ? (
-                    <p className="text-sm text-gray-500">Nenhuma atualização ainda</p>
-                  ) : (
-                    selectedReport.updates?.map((update: any, idx: number) => (
-                      <div key={idx} className="flex gap-3 text-sm">
-                        <div className="flex-shrink-0 w-5 h-5 bg-audit-primary rounded-full flex items-center justify-center">
-                          <Check className="h-3 w-3 text-white" />
-                        </div>
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-gray-700">{update.notes}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {update.old_status !== update.new_status && `Status alterado: ${update.old_status} → ${update.new_status}`}
-                              </p>
+              <Tabs value={detailTab} onValueChange={setDetailTab}>
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="historico">Histórico</TabsTrigger>
+                  <TabsTrigger value="notas">Notas internas</TabsTrigger>
+                  <TabsTrigger value="logs">Logs de acesso</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="historico" className="pt-4">
+                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
+                    {selectedReport.updates?.length === 0 ? (
+                      <p className="text-sm text-gray-500">Nenhuma atualização ainda</p>
+                    ) : (
+                      selectedReport.updates?.map((update: any, idx: number) => (
+                        <div key={idx} className="flex gap-3 text-sm">
+                          <div className="flex-shrink-0 w-5 h-5 bg-audit-primary rounded-full flex items-center justify-center">
+                            <Check className="h-3 w-3 text-white" />
+                          </div>
+                          <div className="flex-grow">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="text-gray-700">{update.notes}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {update.author_name ? `${update.author_name}${update.author_role_title ? ` (${update.author_role_title})` : ''} · ` : ''}
+                                  {update.old_status !== update.new_status && `Status alterado: ${update.old_status} → ${update.new_status}`}
+                                </p>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {new Date(update.created_at).toLocaleDateString('pt-BR')}
+                              </span>
                             </div>
-                            <span className="text-xs text-gray-500">
-                              {new Date(update.created_at).toLocaleDateString('pt-BR')}
-                            </span>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="font-medium mb-3">Alterar Status</h3>
-                <Select 
-                  value={selectedStatus} 
-                  onValueChange={setSelectedStatus}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="in_progress">Em análise</SelectItem>
-                    <SelectItem value="resolved">Resolvida</SelectItem>
-                    <SelectItem value="archived">Arquivada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <h3 className="font-medium mb-3">Adicionar Atualização (Opcional)</h3>
-                <div className="space-y-3">
-                  <Textarea
-                    placeholder="Adicione uma atualização ou comentário (opcional)..."
-                    value={responseText}
-                    onChange={(e) => setResponseText(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Você pode salvar apenas alterando o status, sem adicionar uma nota.
+                      ))
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    O denunciante vê apenas a mensagem e a data — nunca o nome de quem atualizou.
                   </p>
+                </TabsContent>
+
+                <TabsContent value="notas" className="pt-4">
+                  {companyId && (
+                    <OuvidoriaInternalNotes
+                      companyId={companyId}
+                      reportId={selectedReport.id}
+                      channel="ia"
+                      canEdit={canEdit}
+                      authorName={authorName}
+                      authorRoleTitle={authorRoleTitle}
+                      onChange={setDetailNotes}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="logs" className="pt-4">
+                  <OuvidoriaAccessLogs
+                    reportId={selectedReport.id}
+                    companyId={companyId}
+                    channel="ia"
+                    onLoaded={setDetailLogs}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              {canEdit ? (
+                <>
+                  <div>
+                    <h3 className="font-medium mb-3">Alterar Status</h3>
+                    <Select
+                      value={selectedStatus}
+                      onValueChange={setSelectedStatus}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione um status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                        <SelectItem value="in_progress">Em análise</SelectItem>
+                        <SelectItem value="resolved">Resolvida</SelectItem>
+                        <SelectItem value="archived">Arquivada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium mb-3">Adicionar Atualização (Opcional)</h3>
+                    <div className="space-y-3">
+                      <Textarea
+                        placeholder="Adicione uma atualização ou comentário (opcional)..."
+                        value={responseText}
+                        onChange={(e) => setResponseText(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Você pode salvar apenas alterando o status, sem adicionar uma nota.
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  <Eye className="h-4 w-4" /> Seu acesso é de auditor (somente leitura).
                 </div>
-              </div>
+              )}
             </div>
-            
-            <DialogFooter>
+
+            <DialogFooter className="flex-wrap gap-2">
+              <Button variant="outline" onClick={exportHistoryPdf}>
+                <FileDown className="mr-2 h-4 w-4" /> Baixar histórico (PDF)
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)}
               >
-                Cancelar
+                Fechar
               </Button>
-              <Button 
-                onClick={handleSubmitResponse}
-                disabled={selectedStatus === selectedReport.status && !responseText.trim()}
-              >
-                <Check className="mr-2 h-4 w-4" />
-                Salvar Alterações
-              </Button>
+              {canEdit && (
+                <Button 
+                  onClick={handleSubmitResponse}
+                  disabled={selectedStatus === selectedReport.status && !responseText.trim()}
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Salvar Alterações
+                </Button>
+              )}
             </DialogFooter>
+
           </DialogContent>
         )}
       </Dialog>

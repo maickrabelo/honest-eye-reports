@@ -191,3 +191,9 @@ verify_jwt = false
 
 [functions.seed-monique-companies]
 verify_jwt = false
+
+[functions.invite-ouvidoria-user]
+verify_jwt = false
+
+[functions.send-ouvidoria-campaign]
+verify_jwt = false
