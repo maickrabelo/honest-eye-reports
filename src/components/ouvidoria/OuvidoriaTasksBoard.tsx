@@ -887,6 +887,62 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" /> Responsáveis e envolvidos
+                  </Label>
+                  <Badge variant="secondary">{selectedAssignees.length}</Badge>
+                </div>
+                {ouvidoriaUsers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Cadastre usuários em "Usuários da ouvidoria" para atribuí-los às tarefas.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {ouvidoriaUsers.map((person) => {
+                      const role = roleOf(person.id);
+                      return (
+                        <div
+                          key={person.id}
+                          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm truncate">{person.full_name}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {person.job_title || (person.access_type === 'auditor' ? 'Auditor' : 'Gestor')}
+                              {person.status !== 'active' ? ' · convite pendente' : ''}
+                            </p>
+                          </div>
+                          <Select
+                            value={role ?? 'nenhum'}
+                            onValueChange={(v) =>
+                              setAssigneeRole(person, v === 'nenhum' ? null : v)
+                            }
+                            disabled={!canEdit}
+                          >
+                            <SelectTrigger className="w-[150px] shrink-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="nenhum">Não atribuído</SelectItem>
+                              {ASSIGNEE_ROLES.map((r) => (
+                                <SelectItem key={r.key} value={r.key}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2">
                     <ListChecks className="h-4 w-4" /> Checklist interno
                   </Label>
                   <Badge variant="secondary">
