@@ -191,6 +191,21 @@ const TaskCard = ({
               </Badge>
             )}
           </div>
+          {taskAssignees.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-2">
+              <Users className="h-3 w-3 text-muted-foreground" />
+              {taskAssignees.map((a) => (
+                <Badge
+                  key={a.id}
+                  variant={a.assignee_role === 'responsavel' ? 'default' : 'outline'}
+                  className="text-[10px] font-normal"
+                >
+                  {a.display_name ?? 'Usuário'}
+                  {a.assignee_role === 'envolvido' ? ' · envolvido' : ''}
+                </Badge>
+              ))}
+            </div>
+          )}
         </button>
         {canEdit && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(task.id)}>
