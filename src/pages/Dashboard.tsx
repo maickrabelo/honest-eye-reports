@@ -90,7 +90,12 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const { features } = useCompanyFeatures(companyId);
   const { hasSST } = useCompanyHasSST(companyId);
   const { isPrimaryAdmin } = useIsCompanyPrimaryAdmin(companyId);
+  const { canEdit, authorName, authorRoleTitle } = useOuvidoriaAccess(companyId);
+  const [detailTab, setDetailTab] = useState('historico');
+  const [detailNotes, setDetailNotes] = useState<InternalNoteRow[]>([]);
+  const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
   const { shouldShowTour, completeTour } = useOnboarding('company-dashboard');
+
 
   const companyTourSteps: TourStep[] = [
     { targetId: 'company-tour-anchor', title: 'Bem-vinda à SOIA! 🎉', description: 'Você tem 7 dias para testar a plataforma. Vamos te mostrar as principais ferramentas.', position: 'bottom' },
