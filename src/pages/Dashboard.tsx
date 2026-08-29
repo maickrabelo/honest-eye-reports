@@ -1394,7 +1394,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       )}
     </div>
     </SoniaChatLayout>
-    <SoniaChat companyId={companyId} contextType="dashboard" />
+    {!(features.ouvidoria && !features.psicossocial && !features.burnout && !features.clima) && (
+      <SoniaChat companyId={companyId} contextType="dashboard" />
+    )}
     </SoniaChatProvider>
   );
 };
