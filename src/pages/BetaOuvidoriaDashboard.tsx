@@ -181,8 +181,8 @@ const BetaOuvidoriaDashboard = () => {
         message: u.message,
         author_label:
           u.author_type === "investigator"
-            ? `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
-            : "Denunciante anônimo",
+            ? `Empresa${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
+            : "Denunciante",
         visibility: u.visibility,
       })),
       internalNotes: detailNotes.map((n) => ({
@@ -683,8 +683,8 @@ const BetaOuvidoriaDashboard = () => {
                         <li key={u.id} className={`p-3 rounded-md border ${u.author_type === "investigator" ? "bg-primary/5" : "bg-muted/30"}`}>
                           <div className="text-xs text-muted-foreground mb-1">
                             {u.author_type === "investigator"
-                              ? `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
-                              : "Denunciante anônimo"} ·{" "}
+                              ? `Empresa${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
+                              : "Denunciante"} ·{" "}
                             {new Date(u.created_at).toLocaleString("pt-BR")}
                           </div>
                           <p className="whitespace-pre-wrap text-sm">{u.message}</p>
