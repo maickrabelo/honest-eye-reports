@@ -703,7 +703,7 @@ const BetaOuvidoriaDashboard = () => {
                       companyId={companyId}
                       reportId={selected.id}
                       channel="smart"
-                      canEdit={canEdit}
+                      canEdit={true}
                       authorName={authorName}
                       authorRoleTitle={authorRoleTitle}
                       onChange={setDetailNotes}
@@ -746,7 +746,7 @@ const BetaOuvidoriaDashboard = () => {
                 </>
               ) : (
                 <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
-                  <Eye className="h-4 w-4" /> Seu acesso é de auditor (somente leitura).
+                  <Eye className="h-4 w-4" /> Seu acesso é de auditor: você não pode alterar o status nem publicar atualizações da denúncia — apenas registrar notas internas.
                 </div>
               )}
             </div>
