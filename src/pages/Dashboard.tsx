@@ -58,6 +58,7 @@ import OuvidoriaUsersTab from '@/components/ouvidoria/OuvidoriaUsersTab';
 import OuvidoriaTasksBoard from '@/components/ouvidoria/OuvidoriaTasksBoard';
 import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab';
 import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
+import OuvidoriaQuickFilters from '@/components/ouvidoria/OuvidoriaQuickFilters';
 import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
 import { FileDown, Eye } from 'lucide-react';
 
