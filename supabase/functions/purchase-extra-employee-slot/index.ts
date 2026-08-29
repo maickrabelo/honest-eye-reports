@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const ASAAS_API_URL = Deno.env.get("ASAAS_ENV") === "production"
+const ASAAS_API_URL = (Deno.env.get('ASAAS_ENV') ?? 'production').trim().toLowerCase() !== 'sandbox'
   ? "https://api.asaas.com/v3"
   : "https://sandbox.asaas.com/api/v3";
 

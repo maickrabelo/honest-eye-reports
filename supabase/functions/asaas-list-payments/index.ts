@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ASAAS_BASE = Deno.env.get('ASAAS_ENV') === 'production'
+const ASAAS_BASE = (Deno.env.get('ASAAS_ENV') ?? 'production').trim().toLowerCase() !== 'sandbox'
   ? 'https://api.asaas.com/v3'
   : 'https://sandbox.asaas.com/api/v3';
 
