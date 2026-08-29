@@ -1861,6 +1861,7 @@ export type Database = {
           report_code: string | null
           report_id: string | null
           status: string
+          sync_to_report: boolean
           title: string
           updated_at: string
         }
@@ -1878,6 +1879,7 @@ export type Database = {
           report_code?: string | null
           report_id?: string | null
           status?: string
+          sync_to_report?: boolean
           title: string
           updated_at?: string
         }
@@ -1895,6 +1897,7 @@ export type Database = {
           report_code?: string | null
           report_id?: string | null
           status?: string
+          sync_to_report?: boolean
           title?: string
           updated_at?: string
         }
