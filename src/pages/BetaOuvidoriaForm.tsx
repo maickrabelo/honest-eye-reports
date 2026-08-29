@@ -132,8 +132,19 @@ const BetaOuvidoriaForm = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <OuvidoriaEntryDialog
+        open={entryOpen}
+        onOpenChange={setEntryOpen}
+        companyName={company.name}
+        onTrack={() => {
+          setEntryOpen(false);
+          navigate("/ouvidoria-beta/acompanhar");
+        }}
+        onNewReport={() => setEntryOpen(false)}
+      />
       <Navbar />
       <main className="flex-1 max-w-3xl mx-auto w-full p-4 md:p-8 space-y-6">
+
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-amber-500 text-amber-600">Beta</Badge>
           <Badge variant="secondary">Sem IA</Badge>
