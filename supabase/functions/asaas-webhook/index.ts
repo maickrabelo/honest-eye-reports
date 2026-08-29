@@ -177,12 +177,24 @@ Deno.serve(async (req) => {
       const email: string = sub.owner_email;
       const customerName: string = meta.customer?.name || email;
 
-      // Skip if already active
-      if (sub.status === 'active') {
-        return new Response(JSON.stringify({ ok: true, alreadyActive: true }), {
+      // Recurring renewal: subscription já provisionada, apenas estende o período
+      if (sub.status === 'active' || sub.status === 'past_due') {
+        const period = cyclePeriod(sub.billing_cycle);
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'active',
+            asaas_payment_id: asaasPaymentId,
+            current_period_start: period.start,
+            current_period_end: period.end,
+            next_charge_date: period.end,
+          })
+          .eq('id', sub.id);
+        return new Response(JSON.stringify({ ok: true, renewed: true, nextChargeDate: period.end }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
 
       // Generate password (CNPJ digits or random)
       const cpfCnpj = (meta.customer?.cpfCnpj || '').replace(/\D/g, '');
