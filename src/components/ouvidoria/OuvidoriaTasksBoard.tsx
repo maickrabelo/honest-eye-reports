@@ -249,6 +249,8 @@ const Column = ({
 const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }: Props) => {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
+  const [assignees, setAssignees] = useState<AssigneeRow[]>([]);
+  const [ouvidoriaUsers, setOuvidoriaUsers] = useState<OuvidoriaUserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
