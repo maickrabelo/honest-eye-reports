@@ -83,6 +83,16 @@ const CompanyReport = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <OuvidoriaEntryDialog
+        open={entryOpen}
+        onOpenChange={setEntryOpen}
+        companyName={company.name}
+        onTrack={() => {
+          setEntryOpen(false);
+          setTrackOpen(true);
+        }}
+        onNewReport={() => setEntryOpen(false)}
+      />
       <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
         <div className="audit-container max-w-4xl">
@@ -100,10 +110,11 @@ const CompanyReport = () => {
                 Aqui você pode registrar sua denúncia de forma anônima e segura.
               </p>
               <div className="mt-4">
-                <TrackReportModal />
+                <TrackReportModal open={trackOpen} onOpenChange={setTrackOpen} />
               </div>
             </div>
           </div>
+
           
           {/* Reuse the ReportChat component */}
           <ReportChat companyId={company.id} companyName={company.name} />
