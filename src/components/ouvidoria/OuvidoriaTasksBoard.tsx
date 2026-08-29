@@ -402,11 +402,8 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
         return;
       }
       setAssignees((prev) => prev.filter((a) => a.id !== existing.id));
-      await syncToReportHistory(
-        selected,
-        `[Tarefa] "${selected.title}" — ${person.full_name} removido(a) da apuração.`
-      );
       return;
+
     }
 
     if (existing) {
