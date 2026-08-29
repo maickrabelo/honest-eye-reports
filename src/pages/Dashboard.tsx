@@ -51,6 +51,16 @@ import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import CompanyAuditLogCard from '@/components/company/CompanyAuditLogCard';
 import { useIsCompanyPrimaryAdmin } from '@/hooks/useIsCompanyPrimaryAdmin';
 import { logCompanyAudit } from '@/lib/companyAudit';
+import { useOuvidoriaAccess } from '@/hooks/useOuvidoriaAccess';
+import OuvidoriaInternalNotes, { InternalNoteRow } from '@/components/ouvidoria/OuvidoriaInternalNotes';
+import OuvidoriaAccessLogs, { AccessLogRow } from '@/components/ouvidoria/OuvidoriaAccessLogs';
+import OuvidoriaUsersTab from '@/components/ouvidoria/OuvidoriaUsersTab';
+import OuvidoriaTasksBoard from '@/components/ouvidoria/OuvidoriaTasksBoard';
+import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab';
+import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
+import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
+import { FileDown, Eye } from 'lucide-react';
+
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
 
