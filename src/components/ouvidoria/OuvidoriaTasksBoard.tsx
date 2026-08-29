@@ -452,8 +452,8 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           report_id: task.report_id,
           author_type: 'investigator',
           author_user_id: user?.id ?? null,
-          author_name: authorName || null,
-          author_role_title: authorRoleTitle || null,
+          author_name: null,
+          author_role_title: null,
           message,
           visibility: 'public',
         });
