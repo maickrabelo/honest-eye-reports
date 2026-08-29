@@ -949,14 +949,14 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 </tr>
               </thead>
               <tbody>
-                {reports.length === 0 ? (
+                {filteredReports.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      Nenhuma denúncia registrada ainda
+                      Nenhuma denúncia encontrada com os filtros selecionados
                     </td>
                   </tr>
                 ) : (
-                  reports.map((report) => (
+                  filteredReports.map((report) => (
                     <tr key={report.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-4 text-audit-primary font-medium">{report.tracking_code}</td>
                       <td className="px-4 py-4">{report.title}</td>
