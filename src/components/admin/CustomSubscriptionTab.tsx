@@ -29,6 +29,8 @@ interface Result {
   billingCycle: string;
   amountCents: number;
   asaasSubscriptionId: string;
+  installmentCount?: number;
+  installmentCents?: number;
   emailSent: boolean;
   emailError: string | null;
 }
@@ -51,6 +53,7 @@ const CustomSubscriptionTab = () => {
     planSlug: "",
     billingCycle: "monthly",
     billingType: "PIX",
+    installmentCount: "1",
     amount: "",
     maxCompanies: "",
     maxEmployees: "",
@@ -75,10 +78,13 @@ const CustomSubscriptionTab = () => {
     })();
   }, []);
 
+  const parseAmount = (value: string) =>
+    Math.round((parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0) * 100);
+
+  const amountCentsPreview = parseAmount(form.amount);
+
   const handleSubmit = async () => {
-    const amountCents = Math.round(
-      parseFloat(form.amount.replace(/\./g, "").replace(",", ".")) * 100,
-    );
+    const amountCents = parseAmount(form.amount);
 
     if (!form.planSlug || !form.email || !form.name || !form.cpfCnpj || !amountCents) {
       toast({
@@ -98,6 +104,8 @@ const CustomSubscriptionTab = () => {
           billingCycle: form.billingCycle,
           billingType: form.billingType,
           amountCents,
+          installmentCount:
+            form.billingType === "CREDIT_CARD" ? Number(form.installmentCount) : 1,
           maxCompanies: form.maxCompanies ? Number(form.maxCompanies) : null,
           maxEmployees: form.maxEmployees ? Number(form.maxEmployees) : null,
           companyName: form.companyName || undefined,
@@ -138,7 +146,11 @@ const CustomSubscriptionTab = () => {
   };
 
   const summaryText = result
-    ? `Assinatura SOIA — ${result.planName}\nRecorrência: ${cycleLabels[result.billingCycle] ?? result.billingCycle}\nValor: ${brl(result.amountCents)}\nLink de pagamento: ${result.invoiceUrl ?? "-"}`
+    ? `Assinatura SOIA — ${result.planName}\nRecorrência: ${cycleLabels[result.billingCycle] ?? result.billingCycle}\nValor: ${brl(result.amountCents)}${
+        result.installmentCount && result.installmentCount > 1
+          ? `\nParcelamento: em até ${result.installmentCount}x de ${brl(result.installmentCents ?? Math.round(result.amountCents / result.installmentCount))} sem juros (total ${brl(result.amountCents)})`
+          : ""
+      }\nLink de pagamento: ${result.invoiceUrl ?? "-"}`
     : "";
 
   return (
@@ -200,6 +212,33 @@ const CustomSubscriptionTab = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {form.billingType === "CREDIT_CARD" && (
+              <div className="space-y-2">
+                <Label>Parcelamento no cartão</Label>
+                <Select value={form.installmentCount} onValueChange={set("installmentCount")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n === 1 ? "À vista (1x)" : `Até ${n}x sem juros`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {amountCentsPreview > 0 && Number(form.installmentCount) > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    {form.installmentCount}x de{" "}
+                    <span className="font-medium text-foreground">
+                      {brl(Math.round(amountCentsPreview / Number(form.installmentCount)))}
+                    </span>{" "}
+                    sem juros · total {brl(amountCentsPreview)}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Valor por cobrança (R$) *</Label>
@@ -318,6 +357,16 @@ const CustomSubscriptionTab = () => {
               <div>
                 <p className="text-muted-foreground">Valor por cobrança</p>
                 <p className="font-medium">{brl(result.amountCents)}</p>
+                {result.installmentCount && result.installmentCount > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    em até {result.installmentCount}x de{" "}
+                    {brl(
+                      result.installmentCents ??
+                        Math.round(result.amountCents / result.installmentCount),
+                    )}{" "}
+                    sem juros
+                  </p>
+                )}
               </div>
             </div>
 
