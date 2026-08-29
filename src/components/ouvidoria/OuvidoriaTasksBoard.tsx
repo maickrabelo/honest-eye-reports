@@ -43,6 +43,7 @@ import {
   ListChecks,
   Link2,
   Link2Off,
+  Users,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRealAuth } from '@/contexts/RealAuthContext';
