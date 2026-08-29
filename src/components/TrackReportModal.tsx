@@ -11,17 +11,32 @@ import { supabase } from "@/integrations/supabase/client";
 
 type TrackReportModalProps = {
   className?: string;
+  /** Controle externo do dialog (usado pelo popup de entrada do canal) */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Esconde o botão que abre o modal (quando controlado externamente) */
+  hideTrigger?: boolean;
 };
 
-const TrackReportModal = ({ className }: TrackReportModalProps) => {
+/** Atualizações que citam usuários internos nunca podem ser vistas pelo denunciante */
+const ASSIGNEE_MENTION_RE =
+  /(respons[áa]vel|envolvido|atribu[íi]d|removido\(a\) da apura|apura[çc][ãa]o)/i;
+
+const TrackReportModal = ({ className, open: openProp, onOpenChange, hideTrigger }: TrackReportModalProps) => {
   const [reportId, setReportId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
   const [error, setError] = useState("");
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (v: boolean) => {
+    setOpenState(v);
+    onOpenChange?.(v);
+  };
   const [newUpdate, setNewUpdate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+
 
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReportId(e.target.value);
