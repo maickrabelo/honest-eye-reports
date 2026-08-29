@@ -223,6 +223,7 @@ const Column = ({
   tasks,
   canEdit,
   checklistMap,
+  assigneeMap,
   onOpen,
   onDelete,
 }: {
@@ -231,6 +232,7 @@ const Column = ({
   tasks: TaskRow[];
   canEdit: boolean;
   checklistMap: Record<string, { total: number; done: number }>;
+  assigneeMap: Record<string, AssigneeRow[]>;
   onOpen: (task: TaskRow) => void;
   onDelete: (id: string) => void;
 }) => {
@@ -252,6 +254,7 @@ const Column = ({
           task={t}
           canEdit={canEdit}
           checklistSummary={checklistMap[t.id]}
+          taskAssignees={assigneeMap[t.id] ?? []}
           onOpen={onOpen}
           onDelete={onDelete}
         />
@@ -262,6 +265,7 @@ const Column = ({
     </div>
   );
 };
+
 
 const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }: Props) => {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
