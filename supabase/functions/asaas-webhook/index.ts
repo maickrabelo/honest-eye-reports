@@ -309,15 +309,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Activate subscription
+      // Activate subscription (primeiro ciclo)
+      const firstPeriod = cyclePeriod(sub.billing_cycle);
       await supabase
         .from('subscriptions')
         .update({
           owner_user_id: userId,
           status: 'active',
-          current_period_start: new Date().toISOString(),
+          asaas_payment_id: asaasPaymentId,
+          current_period_start: firstPeriod.start,
+          current_period_end: firstPeriod.end,
+          next_charge_date: firstPeriod.end,
         })
         .eq('id', sub.id);
+
 
       // Send confirmation email; on failure, persist provisional password as fallback
       const emailResult = await sendCredentialsEmail(
