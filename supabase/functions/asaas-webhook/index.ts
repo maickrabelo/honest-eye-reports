@@ -7,6 +7,16 @@ const corsHeaders = {
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend';
 
+// Período coberto por cada cobrança recorrente, conforme o ciclo do plano
+function cyclePeriod(billingCycle: string | null | undefined) {
+  const months = billingCycle === 'annual' ? 12 : billingCycle === 'quarterly' ? 3 : 1;
+  const start = new Date();
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + months);
+  return { start: start.toISOString(), end: end.toISOString(), months };
+}
+
+
 async function logEmailAttempt(
   supabase: any,
   recipientEmail: string,
