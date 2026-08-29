@@ -86,6 +86,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [departmentData, setDepartmentData] = useState<any[]>([]);
   const [statusData, setStatusData] = useState<any[]>([]);
   const [trainingsCount, setTrainingsCount] = useState<number>(0);
+  const [pendingTaskCount, setPendingTaskCount] = useState<number>(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { features } = useCompanyFeatures(companyId);
