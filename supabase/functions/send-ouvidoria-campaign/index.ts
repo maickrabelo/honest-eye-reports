@@ -152,6 +152,8 @@ Deno.serve(async (req) => {
 
     let sent = 0;
     let failed = 0;
+    let lastError: string | null = null;
+    const sentEmails: string[] = [];
 
     // Envia em lotes para não estourar limites
     const batchSize = 20;
@@ -175,17 +177,38 @@ Deno.serve(async (req) => {
               }),
             });
             if (!resp.ok) {
-              console.error("resend failed", to, resp.status);
+              const body = await resp.text();
+              console.error("resend failed", to, resp.status, body);
+              lastError = `[${resp.status}] ${body}`.slice(0, 500);
               return false;
             }
             return true;
           } catch (e) {
             console.error("send error", to, e);
+            lastError = String((e as Error)?.message ?? e).slice(0, 500);
             return false;
           }
         }),
       );
-      results.forEach((ok) => (ok ? sent++ : failed++));
+      results.forEach((ok, idx) => {
+        if (ok) {
+          sent++;
+          sentEmails.push(batch[idx]);
+        } else {
+          failed++;
+        }
+      });
+    }
+
+    // Registra os destinatarios enviados na lista de contatos (ignora duplicados)
+    if (sentEmails.length > 0) {
+      const { error: listErr } = await admin
+        .from("ouvidoria_mailing_list")
+        .upsert(
+          sentEmails.map((email) => ({ company_id, email })),
+          { onConflict: "company_id,email", ignoreDuplicates: true },
+        );
+      if (listErr) console.error("mailing list upsert", listErr);
     }
 
     if (campaign) {
@@ -195,11 +218,16 @@ Deno.serve(async (req) => {
           status: failed === emails.length ? "failed" : "sent",
           sent_count: sent,
           failed_count: failed,
+          error_message: failed > 0 ? lastError : null,
         })
         .eq("id", campaign.id);
     }
 
-    return json({ success: true, sent, failed });
+    if (sent === 0) {
+      return json({ error: `Falha ao enviar: ${lastError ?? "erro desconhecido"}` }, 500);
+    }
+
+    return json({ success: true, sent, failed, error_detail: failed > 0 ? lastError : null });
   } catch (e) {
     console.error("unexpected", e);
     return json({ error: "Erro interno" }, 500);
