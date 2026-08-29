@@ -105,11 +105,15 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
         summary: "Detalhes da denúncia disponíveis apenas para usuários autorizados.", // Hide description from public
         status: reportData.status,
         date: new Date(reportData.created_at).toLocaleDateString('pt-BR'),
-        updates: updatesData?.map(update => ({
-          date: new Date(update.created_at).toLocaleDateString('pt-BR'),
-          note: update.notes || `Status alterado para: ${update.new_status}`,
-          author: update.user_id || update.author_name ? "Empresa" : "Denunciante"
-        })) || []
+        updates: (updatesData || [])
+          .filter((update: any) => (update.visibility ?? 'public') === 'public')
+          .filter((update: any) => !ASSIGNEE_MENTION_RE.test(String(update.notes || '')))
+          .map(update => ({
+            date: new Date(update.created_at).toLocaleDateString('pt-BR'),
+            note: update.notes || `Status alterado para: ${update.new_status}`,
+            author: update.user_id || update.author_name ? "Empresa" : "Denunciante"
+          }))
+
       };
 
       setReport(formattedReport);
