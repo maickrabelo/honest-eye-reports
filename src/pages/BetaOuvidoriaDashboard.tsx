@@ -684,53 +684,102 @@ const BetaOuvidoriaDashboard = () => {
                 </div>
               )}
 
-              <div>
-                <h3 className="font-medium mb-3">Histórico de mensagens</h3>
-                {updates.length === 0 ? (
-                  <p className="text-sm text-gray-500">Nenhuma mensagem ainda.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {updates.map((u) => (
-                      <li key={u.id} className={`p-3 rounded-md border ${u.author_type === "investigator" ? "bg-primary/5" : "bg-muted/30"}`}>
-                        <div className="text-xs text-muted-foreground mb-1">
-                          {u.author_type === "investigator" ? "Ouvidoria" : "Denunciante anônimo"} ·{" "}
-                          {new Date(u.created_at).toLocaleString("pt-BR")}
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm">{u.message}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <Tabs value={detailTab} onValueChange={setDetailTab}>
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="historico">Histórico</TabsTrigger>
+                  <TabsTrigger value="notas">Notas internas</TabsTrigger>
+                  <TabsTrigger value="logs">Logs de acesso</TabsTrigger>
+                </TabsList>
 
-              <div>
-                <h3 className="font-medium mb-3">Alterar status</h3>
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+                <TabsContent value="historico" className="pt-4">
+                  {updates.length === 0 ? (
+                    <p className="text-sm text-gray-500">Nenhuma mensagem ainda.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {updates.map((u) => (
+                        <li key={u.id} className={`p-3 rounded-md border ${u.author_type === "investigator" ? "bg-primary/5" : "bg-muted/30"}`}>
+                          <div className="text-xs text-muted-foreground mb-1">
+                            {u.author_type === "investigator"
+                              ? `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ""}${u.author_role_title ? ` (${u.author_role_title})` : ""}`
+                              : "Denunciante anônimo"} ·{" "}
+                            {new Date(u.created_at).toLocaleString("pt-BR")}
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm">{u.message}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-3">
+                    O denunciante vê apenas a mensagem e a data — nunca o nome de quem atualizou.
+                  </p>
+                </TabsContent>
 
-              <div>
-                <h3 className="font-medium mb-3">Resposta ao denunciante (opcional)</h3>
-                <Textarea
-                  placeholder="Escreva uma resposta. Ela ficará visível para o denunciante anônimo no painel de acompanhamento."
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  rows={4}
-                  maxLength={4000}
-                />
-              </div>
+                <TabsContent value="notas" className="pt-4">
+                  {companyId && (
+                    <OuvidoriaInternalNotes
+                      companyId={companyId}
+                      reportId={selected.id}
+                      channel="smart"
+                      canEdit={canEdit}
+                      authorName={authorName}
+                      authorRoleTitle={authorRoleTitle}
+                      onChange={setDetailNotes}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="logs" className="pt-4">
+                  <OuvidoriaAccessLogs
+                    reportId={selected.id}
+                    companyId={companyId}
+                    channel="smart"
+                    onLoaded={setDetailLogs}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              {canEdit ? (
+                <>
+                  <div>
+                    <h3 className="font-medium mb-3">Alterar status</h3>
+                    <Select value={newStatus} onValueChange={setNewStatus}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium mb-3">Resposta ao denunciante (opcional)</h3>
+                    <Textarea
+                      placeholder="Escreva uma resposta. Ela ficará visível para o denunciante anônimo no painel de acompanhamento."
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      rows={4}
+                      maxLength={4000}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  <Eye className="h-4 w-4" /> Seu acesso é de auditor (somente leitura).
+                </div>
+              )}
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSelected(null)}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={newStatus === selected.status && reply.trim().length === 0}>
-                Salvar alterações
+            <DialogFooter className="flex-wrap gap-2">
+              <Button variant="outline" onClick={exportHistoryPdf}>
+                <FileDown className="h-4 w-4 mr-2" /> Baixar histórico (PDF)
               </Button>
+              <Button variant="outline" onClick={() => setSelected(null)}>Fechar</Button>
+              {canEdit && (
+                <Button onClick={handleSubmit} disabled={newStatus === selected.status && reply.trim().length === 0}>
+                  Salvar alterações
+                </Button>
+              )}
             </DialogFooter>
+
           </DialogContent>
         )}
       </Dialog>
