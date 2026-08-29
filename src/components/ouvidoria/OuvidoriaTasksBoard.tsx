@@ -351,6 +351,11 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     return map;
   }, [tasks]);
 
+  const pendingCount = useMemo(
+    () => tasks.filter((t) => t.status !== 'done').length,
+    [tasks],
+  );
+
   const checklistMap = useMemo(() => {
     const map: Record<string, { total: number; done: number }> = {};
     checklists.forEach((i) => {
