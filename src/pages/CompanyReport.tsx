@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ReportChat } from '@/components/ReportChatContent';
 import TrackReportModal from '@/components/TrackReportModal';
+import OuvidoriaEntryDialog from '@/components/ouvidoria/OuvidoriaEntryDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -12,6 +13,9 @@ const CompanyReport = () => {
   const { companySlug } = useParams<{ companySlug: string }>();
   const [company, setCompany] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [entryOpen, setEntryOpen] = useState(true);
+  const [trackOpen, setTrackOpen] = useState(false);
+
   
   useEffect(() => {
     const fetchCompany = async () => {
@@ -79,6 +83,16 @@ const CompanyReport = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <OuvidoriaEntryDialog
+        open={entryOpen}
+        onOpenChange={setEntryOpen}
+        companyName={company.name}
+        onTrack={() => {
+          setEntryOpen(false);
+          setTrackOpen(true);
+        }}
+        onNewReport={() => setEntryOpen(false)}
+      />
       <Navbar />
       <main className="flex-grow bg-gray-50 py-8">
         <div className="audit-container max-w-4xl">
@@ -96,10 +110,11 @@ const CompanyReport = () => {
                 Aqui você pode registrar sua denúncia de forma anônima e segura.
               </p>
               <div className="mt-4">
-                <TrackReportModal />
+                <TrackReportModal open={trackOpen} onOpenChange={setTrackOpen} />
               </div>
             </div>
           </div>
+
           
           {/* Reuse the ReportChat component */}
           <ReportChat companyId={company.id} companyName={company.name} />

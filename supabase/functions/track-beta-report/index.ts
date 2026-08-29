@@ -65,12 +65,19 @@ serve(async (req) => {
       .eq("visibility", "public")
       .order("created_at", { ascending: true });
 
-    const publicUpdates = (updates ?? []).map((u) => ({
-      id: u.id,
-      author_type: u.author_type,
-      message: u.message,
-      created_at: u.created_at,
-    }));
+    // Atualizações que citam usuários internos ficam ocultas do denunciante
+    const assigneeMention =
+      /(respons[áa]vel|envolvido|atribu[íi]d|removido\(a\) da apura|apura[çc][ãa]o)/i;
+
+    const publicUpdates = (updates ?? [])
+      .filter((u) => !assigneeMention.test(String(u.message ?? "")))
+      .map((u) => ({
+        id: u.id,
+        author_type: u.author_type,
+        message: u.message,
+        created_at: u.created_at,
+      }));
+
 
     return new Response(JSON.stringify({ report, updates: publicUpdates }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

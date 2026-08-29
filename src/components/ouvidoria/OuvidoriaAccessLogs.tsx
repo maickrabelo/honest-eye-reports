@@ -100,11 +100,9 @@ const OuvidoriaAccessLogs = ({
             {!r.success && r.failure_reason && (
               <p className="text-xs text-destructive mt-1">{r.failure_reason}</p>
             )}
-            {r.user_agent && (
-              <p className="text-xs text-muted-foreground mt-1 truncate">{r.user_agent}</p>
-            )}
           </div>
         </div>
+
       ))}
     </div>
   );

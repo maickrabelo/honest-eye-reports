@@ -11,17 +11,32 @@ import { supabase } from "@/integrations/supabase/client";
 
 type TrackReportModalProps = {
   className?: string;
+  /** Controle externo do dialog (usado pelo popup de entrada do canal) */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Esconde o botão que abre o modal (quando controlado externamente) */
+  hideTrigger?: boolean;
 };
 
-const TrackReportModal = ({ className }: TrackReportModalProps) => {
+/** Atualizações que citam usuários internos nunca podem ser vistas pelo denunciante */
+const ASSIGNEE_MENTION_RE =
+  /(respons[áa]vel|envolvido|atribu[íi]d|removido\(a\) da apura|apura[çc][ãa]o)/i;
+
+const TrackReportModal = ({ className, open: openProp, onOpenChange, hideTrigger }: TrackReportModalProps) => {
   const [reportId, setReportId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
   const [error, setError] = useState("");
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (v: boolean) => {
+    setOpenState(v);
+    onOpenChange?.(v);
+  };
   const [newUpdate, setNewUpdate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+
 
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReportId(e.target.value);
@@ -105,11 +120,15 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
         summary: "Detalhes da denúncia disponíveis apenas para usuários autorizados.", // Hide description from public
         status: reportData.status,
         date: new Date(reportData.created_at).toLocaleDateString('pt-BR'),
-        updates: updatesData?.map(update => ({
-          date: new Date(update.created_at).toLocaleDateString('pt-BR'),
-          note: update.notes || `Status alterado para: ${update.new_status}`,
-          author: update.user_id || update.author_name ? "Empresa" : "Denunciante"
-        })) || []
+        updates: (updatesData || [])
+          .filter((update: any) => (update.visibility ?? 'public') === 'public')
+          .filter((update: any) => !ASSIGNEE_MENTION_RE.test(String(update.notes || '')))
+          .map(update => ({
+            date: new Date(update.created_at).toLocaleDateString('pt-BR'),
+            note: update.notes || `Status alterado para: ${update.new_status}`,
+            author: update.user_id || update.author_name ? "Empresa" : "Denunciante"
+          }))
+
       };
 
       setReport(formattedReport);
@@ -224,15 +243,18 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className={className}
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Acompanhar Denúncia
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            className={className}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Acompanhar Denúncia
+          </Button>
+        </DialogTrigger>
+      )}
+
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Acompanhar Denúncia</DialogTitle>
