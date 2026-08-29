@@ -7,6 +7,16 @@ const corsHeaders = {
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend';
 
+// Período coberto por cada cobrança recorrente, conforme o ciclo do plano
+function cyclePeriod(billingCycle: string | null | undefined) {
+  const months = billingCycle === 'annual' ? 12 : billingCycle === 'quarterly' ? 3 : 1;
+  const start = new Date();
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + months);
+  return { start: start.toISOString(), end: end.toISOString(), months };
+}
+
+
 async function logEmailAttempt(
   supabase: any,
   recipientEmail: string,
@@ -177,12 +187,24 @@ Deno.serve(async (req) => {
       const email: string = sub.owner_email;
       const customerName: string = meta.customer?.name || email;
 
-      // Skip if already active
-      if (sub.status === 'active') {
-        return new Response(JSON.stringify({ ok: true, alreadyActive: true }), {
+      // Recurring renewal: subscription já provisionada, apenas estende o período
+      if (sub.status === 'active' || sub.status === 'past_due') {
+        const period = cyclePeriod(sub.billing_cycle);
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'active',
+            asaas_payment_id: asaasPaymentId,
+            current_period_start: period.start,
+            current_period_end: period.end,
+            next_charge_date: period.end,
+          })
+          .eq('id', sub.id);
+        return new Response(JSON.stringify({ ok: true, renewed: true, nextChargeDate: period.end }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
 
       // Generate password (CNPJ digits or random)
       const cpfCnpj = (meta.customer?.cpfCnpj || '').replace(/\D/g, '');
@@ -287,15 +309,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Activate subscription
+      // Activate subscription (primeiro ciclo)
+      const firstPeriod = cyclePeriod(sub.billing_cycle);
       await supabase
         .from('subscriptions')
         .update({
           owner_user_id: userId,
           status: 'active',
-          current_period_start: new Date().toISOString(),
+          asaas_payment_id: asaasPaymentId,
+          current_period_start: firstPeriod.start,
+          current_period_end: firstPeriod.end,
+          next_charge_date: firstPeriod.end,
         })
         .eq('id', sub.id);
+
 
       // Send confirmation email; on failure, persist provisional password as fallback
       const emailResult = await sendCredentialsEmail(
