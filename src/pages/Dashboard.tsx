@@ -60,7 +60,7 @@ import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab'
 import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
 import OuvidoriaQuickFilters from '@/components/ouvidoria/OuvidoriaQuickFilters';
 import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
-import { FileDown, Eye } from 'lucide-react';
+import { FileDown, Eye, Users as UsersIcon, ListChecks, Megaphone, HelpCircle } from 'lucide-react';
 
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
@@ -97,6 +97,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
   const [reportCategoryFilter, setReportCategoryFilter] = useState('todos');
   const [reportStatusFilter, setReportStatusFilter] = useState('todos');
+  const [ouvidoriaPanel, setOuvidoriaPanel] = useState<null | 'usuarios' | 'tarefas' | 'divulgacao' | 'como-funciona'>(null);
 
   const reportCategoryOptions = useMemo(() => {
     const set = new Set<string>();
@@ -744,6 +745,62 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       )}
 
+      {/* Gestão da Ouvidoria — cards no estilo "Suas Ferramentas" */}
+      {companyId && features.ouvidoria && (
+        <div className="mb-8">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-foreground">Gestão da Ouvidoria</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Usuários, apuração de tarefas e divulgação do canal
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                key: 'usuarios' as const,
+                icon: UsersIcon,
+                title: 'Usuários da ouvidoria',
+                desc: 'Gestores e auditores do canal',
+              },
+              {
+                key: 'tarefas' as const,
+                icon: ListChecks,
+                title: 'Tarefas',
+                desc: 'Quadro de apuração e checklists',
+              },
+              {
+                key: 'divulgacao' as const,
+                icon: Megaphone,
+                title: 'Divulgação',
+                desc: 'Convide colaboradores por e-mail',
+              },
+              {
+                key: 'como-funciona' as const,
+                icon: HelpCircle,
+                title: 'Como funciona?',
+                desc: 'Entenda o fluxo do canal',
+              },
+            ].map((tool) => (
+              <Card
+                key={tool.key}
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => setOuvidoriaPanel(tool.key)}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <tool.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">{tool.title}</h3>
+                    <p className="text-sm text-muted-foreground">{tool.desc}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Treinamentos card */}
       {features.treinamentos && (
         <Card
@@ -990,18 +1047,20 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       )}
 
       {companyId && features.ouvidoria && (
-        <div className="mt-8">
-          <Tabs defaultValue="usuarios">
-            <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="usuarios">Usuários da ouvidoria</TabsTrigger>
-              <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
-              <TabsTrigger value="divulgacao">Divulgação</TabsTrigger>
-              <TabsTrigger value="como-funciona">Como funciona?</TabsTrigger>
-            </TabsList>
-            <TabsContent value="usuarios" className="pt-4">
+        <Dialog open={!!ouvidoriaPanel} onOpenChange={(o) => !o && setOuvidoriaPanel(null)}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {ouvidoriaPanel === 'usuarios' && 'Usuários da ouvidoria'}
+                {ouvidoriaPanel === 'tarefas' && 'Tarefas'}
+                {ouvidoriaPanel === 'divulgacao' && 'Divulgação'}
+                {ouvidoriaPanel === 'como-funciona' && 'Como funciona?'}
+              </DialogTitle>
+            </DialogHeader>
+            {ouvidoriaPanel === 'usuarios' && (
               <OuvidoriaUsersTab companyId={companyId} canEdit={canEdit} />
-            </TabsContent>
-            <TabsContent value="tarefas" className="pt-4">
+            )}
+            {ouvidoriaPanel === 'tarefas' && (
               <OuvidoriaTasksBoard
                 companyId={companyId}
                 channel="ia"
@@ -1009,22 +1068,21 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                 reportOptions={reports.map((r) => ({
                   id: r.id,
                   code: r.tracking_code,
-                  label: r.title,
+                  label: `${r.tracking_code} — ${r.title}`,
+                  status: r.status,
                 }))}
               />
-            </TabsContent>
-            <TabsContent value="divulgacao" className="pt-4">
+            )}
+            {ouvidoriaPanel === 'divulgacao' && (
               <OuvidoriaCampaignsTab
                 companyId={companyId}
                 channelUrl={`${window.location.origin}/denuncia/${companySlug ?? companyId}`}
                 canEdit={canEdit}
               />
-            </TabsContent>
-            <TabsContent value="como-funciona" className="pt-4">
-              <OuvidoriaHowItWorks />
-            </TabsContent>
-          </Tabs>
-        </div>
+            )}
+            {ouvidoriaPanel === 'como-funciona' && <OuvidoriaHowItWorks />}
+          </DialogContent>
+        </Dialog>
       )}
 
       {companyId && (

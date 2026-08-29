@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -30,9 +33,20 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Loader2, Plus, Trash2, CalendarDays, FileDown, GripVertical } from 'lucide-react';
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  CalendarDays,
+  FileDown,
+  GripVertical,
+  ListChecks,
+  Link2,
+  Link2Off,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRealAuth } from '@/contexts/RealAuthContext';
+import { useOuvidoriaAccess } from '@/hooks/useOuvidoriaAccess';
 import jsPDF from 'jspdf';
 
 interface TaskRow {
@@ -41,10 +55,20 @@ interface TaskRow {
   description: string | null;
   status: string;
   due_date: string | null;
+  report_id: string | null;
   report_code: string | null;
+  sync_to_report: boolean;
   position: number;
   created_at: string;
   completed_at: string | null;
+}
+
+interface ChecklistItem {
+  id: string;
+  task_id: string;
+  content: string;
+  is_done: boolean;
+  position: number;
 }
 
 const COLUMNS = [
@@ -54,21 +78,34 @@ const COLUMNS = [
   { key: 'done', label: 'Concluída' },
 ] as const;
 
+const labelOfStatus = (key: string) => COLUMNS.find((c) => c.key === key)?.label ?? key;
+
+interface ReportOption {
+  id: string;
+  code: string;
+  label: string;
+  status?: string;
+}
+
 interface Props {
   companyId: string;
   channel: 'smart' | 'ia';
   canEdit: boolean;
   /** Denúncias disponíveis para vincular */
-  reportOptions?: { id: string; code: string; label: string }[];
+  reportOptions?: ReportOption[];
 }
 
 const TaskCard = ({
   task,
   canEdit,
+  checklistSummary,
+  onOpen,
   onDelete,
 }: {
   task: TaskRow;
   canEdit: boolean;
+  checklistSummary?: { total: number; done: number };
+  onOpen: (task: TaskRow) => void;
   onDelete: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -100,15 +137,30 @@ const TaskCard = ({
             <GripVertical className="h-4 w-4" />
           </button>
         )}
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => onOpen(task)}
+          className="min-w-0 flex-1 text-left"
+        >
           <p className="text-sm font-medium">{task.title}</p>
           {task.description && (
-            <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">
+            <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-3">
               {task.description}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            {task.report_code && <Badge variant="outline">{task.report_code}</Badge>}
+            {task.report_code && (
+              <Badge variant="outline" className="gap-1">
+                {task.sync_to_report ? <Link2 className="h-3 w-3" /> : <Link2Off className="h-3 w-3" />}
+                {task.report_code}
+              </Badge>
+            )}
+            {checklistSummary && checklistSummary.total > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                <ListChecks className="h-3 w-3" />
+                {checklistSummary.done}/{checklistSummary.total}
+              </Badge>
+            )}
             {task.due_date && (
               <Badge variant={overdue ? 'destructive' : 'secondary'} className="gap-1">
                 <CalendarDays className="h-3 w-3" />
@@ -116,7 +168,7 @@ const TaskCard = ({
               </Badge>
             )}
           </div>
-        </div>
+        </button>
         {canEdit && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(task.id)}>
             <Trash2 className="h-3.5 w-3.5" />
@@ -132,12 +184,16 @@ const Column = ({
   label,
   tasks,
   canEdit,
+  checklistMap,
+  onOpen,
   onDelete,
 }: {
   columnKey: string;
   label: string;
   tasks: TaskRow[];
   canEdit: boolean;
+  checklistMap: Record<string, { total: number; done: number }>;
+  onOpen: (task: TaskRow) => void;
   onDelete: (id: string) => void;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id: columnKey });
@@ -153,7 +209,14 @@ const Column = ({
         <Badge variant="secondary">{tasks.length}</Badge>
       </div>
       {tasks.map((t) => (
-        <TaskCard key={t.id} task={t} canEdit={canEdit} onDelete={onDelete} />
+        <TaskCard
+          key={t.id}
+          task={t}
+          canEdit={canEdit}
+          checklistSummary={checklistMap[t.id]}
+          onOpen={onOpen}
+          onDelete={onDelete}
+        />
       ))}
       {tasks.length === 0 && (
         <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma tarefa</p>
@@ -164,29 +227,47 @@ const Column = ({
 
 const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }: Props) => {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<TaskRow | null>(null);
+  const [newItem, setNewItem] = useState('');
   const [form, setForm] = useState({
     title: '',
     description: '',
     due_date: '',
     report_id: 'none',
     status: 'todo',
+    sync_to_report: true,
   });
   const { toast } = useToast();
   const { user } = useRealAuth();
+  const { authorName, authorRoleTitle } = useOuvidoriaAccess(companyId);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
       .from('ouvidoria_tasks')
-      .select('id, title, description, status, due_date, report_code, position, created_at, completed_at')
+      .select(
+        'id, title, description, status, due_date, report_id, report_code, sync_to_report, position, created_at, completed_at'
+      )
       .eq('company_id', companyId)
       .order('position', { ascending: true })
       .order('created_at', { ascending: false });
-    setTasks(data ?? []);
+    const rows = (data ?? []) as TaskRow[];
+    setTasks(rows);
+    if (rows.length > 0) {
+      const { data: items } = await supabase
+        .from('ouvidoria_task_checklist_items')
+        .select('id, task_id, content, is_done, position')
+        .in('task_id', rows.map((r) => r.id))
+        .order('position', { ascending: true });
+      setChecklists((items ?? []) as ChecklistItem[]);
+    } else {
+      setChecklists([]);
+    }
     setLoading(false);
   };
 
@@ -204,42 +285,97 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     return map;
   }, [tasks]);
 
+  const checklistMap = useMemo(() => {
+    const map: Record<string, { total: number; done: number }> = {};
+    checklists.forEach((i) => {
+      const entry = map[i.task_id] ?? (map[i.task_id] = { total: 0, done: 0 });
+      entry.total += 1;
+      if (i.is_done) entry.done += 1;
+    });
+    return map;
+  }, [checklists]);
+
+  const selectedItems = useMemo(
+    () => (selected ? checklists.filter((i) => i.task_id === selected.id) : []),
+    [checklists, selected]
+  );
+
+  /** Registra o andamento da tarefa no histórico interno da denúncia vinculada */
+  const syncToReportHistory = async (task: TaskRow, message: string) => {
+    if (!task.report_id || !task.sync_to_report) return;
+    try {
+      if (channel === 'smart') {
+        await supabase.from('beta_ouvidoria_updates').insert({
+          report_id: task.report_id,
+          author_type: 'investigator',
+          author_user_id: user?.id ?? null,
+          author_name: authorName || null,
+          author_role_title: authorRoleTitle || null,
+          message,
+          visibility: 'internal',
+        });
+      } else {
+        const reportStatus =
+          reportOptions.find((r) => r.id === task.report_id)?.status ?? 'in_progress';
+        await supabase.from('report_updates').insert({
+          report_id: task.report_id,
+          new_status: reportStatus,
+          old_status: reportStatus,
+          notes: message,
+          user_id: user?.id ?? null,
+          author_name: authorName || null,
+          author_role_title: authorRoleTitle || null,
+          visibility: 'internal',
+        });
+      }
+    } catch {
+      // histórico é complementar: não bloqueia a operação da tarefa
+    }
+  };
+
   const createTask = async () => {
     if (!form.title.trim()) return;
     setSaving(true);
     const linked = reportOptions.find((r) => r.id === form.report_id);
-    const { error } = await supabase.from('ouvidoria_tasks').insert({
-      company_id: companyId,
-      channel,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      due_date: form.due_date || null,
-      status: form.status,
-      report_id: form.report_id !== 'none' ? form.report_id : null,
-      report_code: linked?.code ?? null,
-      created_by: user?.id ?? null,
-      position: tasks.length,
-    });
+    const { data, error } = await supabase
+      .from('ouvidoria_tasks')
+      .insert({
+        company_id: companyId,
+        channel,
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        due_date: form.due_date || null,
+        status: form.status,
+        report_id: form.report_id !== 'none' ? form.report_id : null,
+        report_code: linked?.code ?? null,
+        sync_to_report: form.sync_to_report,
+        created_by: user?.id ?? null,
+        position: tasks.length,
+      })
+      .select(
+        'id, title, description, status, due_date, report_id, report_code, sync_to_report, position, created_at, completed_at'
+      )
+      .maybeSingle();
     setSaving(false);
     if (error) {
       toast({ variant: 'destructive', title: 'Erro ao criar tarefa', description: error.message });
       return;
     }
-    setForm({ title: '', description: '', due_date: '', report_id: 'none', status: 'todo' });
+    if (data) {
+      await syncToReportHistory(
+        data as TaskRow,
+        `[Tarefa] "${(data as TaskRow).title}" criada em "${labelOfStatus((data as TaskRow).status)}".`
+      );
+    }
+    setForm({ title: '', description: '', due_date: '', report_id: 'none', status: 'todo', sync_to_report: true });
     setOpen(false);
     load();
   };
 
-  const onDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-    const newStatus = String(over.id);
-    const task = tasks.find((t) => t.id === active.id);
-    if (!task || task.status === newStatus) return;
-
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
-    );
+  const moveTask = async (task: TaskRow, newStatus: string) => {
+    if (task.status === newStatus) return;
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)));
+    setSelected((prev) => (prev && prev.id === task.id ? { ...prev, status: newStatus } : prev));
 
     const { error } = await supabase
       .from('ouvidoria_tasks')
@@ -252,7 +388,20 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
     if (error) {
       toast({ variant: 'destructive', title: 'Erro ao mover', description: error.message });
       load();
+      return;
     }
+    await syncToReportHistory(
+      task,
+      `[Tarefa] "${task.title}" movida de "${labelOfStatus(task.status)}" para "${labelOfStatus(newStatus)}".`
+    );
+  };
+
+  const onDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    const task = tasks.find((t) => t.id === active.id);
+    if (!task) return;
+    await moveTask(task, String(over.id));
   };
 
   const removeTask = async (id: string) => {
@@ -261,7 +410,95 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
       return;
     }
+    if (selected?.id === id) setSelected(null);
     load();
+  };
+
+  const updateTaskLink = async (task: TaskRow, reportId: string) => {
+    const linked = reportOptions.find((r) => r.id === reportId);
+    const patch = {
+      report_id: reportId !== 'none' ? reportId : null,
+      report_code: linked?.code ?? null,
+    };
+    const { error } = await supabase.from('ouvidoria_tasks').update(patch).eq('id', task.id);
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro ao vincular', description: error.message });
+      return;
+    }
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, ...patch } : t)));
+    setSelected((prev) => (prev && prev.id === task.id ? { ...prev, ...patch } : prev));
+    if (patch.report_id) {
+      await syncToReportHistory(
+        { ...task, ...patch },
+        `[Tarefa] "${task.title}" vinculada a esta denúncia (situação: ${labelOfStatus(task.status)}).`
+      );
+    }
+  };
+
+  const updateTaskSync = async (task: TaskRow, value: boolean) => {
+    const { error } = await supabase
+      .from('ouvidoria_tasks')
+      .update({ sync_to_report: value })
+      .eq('id', task.id);
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+      return;
+    }
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, sync_to_report: value } : t)));
+    setSelected((prev) => (prev && prev.id === task.id ? { ...prev, sync_to_report: value } : prev));
+  };
+
+  const addChecklistItem = async () => {
+    if (!selected || !newItem.trim()) return;
+    const { data, error } = await supabase
+      .from('ouvidoria_task_checklist_items')
+      .insert({
+        task_id: selected.id,
+        content: newItem.trim(),
+        position: selectedItems.length,
+      })
+      .select('id, task_id, content, is_done, position')
+      .maybeSingle();
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro ao adicionar item', description: error.message });
+      return;
+    }
+    if (data) setChecklists((prev) => [...prev, data as ChecklistItem]);
+    setNewItem('');
+  };
+
+  const toggleChecklistItem = async (item: ChecklistItem) => {
+    const value = !item.is_done;
+    const { error } = await supabase
+      .from('ouvidoria_task_checklist_items')
+      .update({ is_done: value })
+      .eq('id', item.id);
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+      return;
+    }
+    setChecklists((prev) => prev.map((i) => (i.id === item.id ? { ...i, is_done: value } : i)));
+    const task = tasks.find((t) => t.id === item.task_id);
+    if (task) {
+      const total = checklists.filter((i) => i.task_id === task.id).length;
+      const done = checklists.filter((i) => i.task_id === task.id && i.is_done).length + (value ? 1 : -1);
+      await syncToReportHistory(
+        task,
+        `[Tarefa] "${task.title}" — item "${item.content}" ${value ? 'concluído' : 'reaberto'} (checklist ${done}/${total}).`
+      );
+    }
+  };
+
+  const removeChecklistItem = async (item: ChecklistItem) => {
+    const { error } = await supabase
+      .from('ouvidoria_task_checklist_items')
+      .delete()
+      .eq('id', item.id);
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+      return;
+    }
+    setChecklists((prev) => prev.filter((i) => i.id !== item.id));
   };
 
   const exportPdf = () => {
@@ -300,6 +537,15 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           maxWidth: 480,
         });
         y += 16;
+        checklists
+          .filter((i) => i.task_id === t.id)
+          .forEach((i) => {
+            if (y > 770) { doc.addPage(); y = 60; }
+            doc.setFontSize(9);
+            doc.text(`   ${i.is_done ? '[x]' : '[ ]'} ${i.content}`, marginX + 24, y, { maxWidth: 460 });
+            doc.setFontSize(10);
+            y += 14;
+          });
       });
       y += 8;
     });
@@ -313,7 +559,8 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
         <div>
           <CardTitle className="text-lg">Quadro de apuração</CardTitle>
           <CardDescription>
-            Organize as tarefas de cada denúncia e exporte o histórico para auditoria.
+            Vincule tarefas às denúncias (o andamento vai automaticamente para o histórico interno),
+            crie checklists e exporte tudo para auditoria.
           </CardDescription>
         </div>
         <div className="flex gap-2">
@@ -342,6 +589,8 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
                   label={c.label}
                   tasks={grouped[c.key] ?? []}
                   canEdit={canEdit}
+                  checklistMap={checklistMap}
+                  onOpen={setSelected}
                   onDelete={removeTask}
                 />
               ))}
@@ -350,6 +599,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
         )}
       </CardContent>
 
+      {/* Nova tarefa */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -401,6 +651,23 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
                   ))}
                 </SelectContent>
               </Select>
+              {reportOptions.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nenhuma denúncia disponível para vincular ainda.
+                </p>
+              )}
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div className="pr-3">
+                <Label className="text-sm">Atualizar histórico da denúncia</Label>
+                <p className="text-xs text-muted-foreground">
+                  Cada movimentação da tarefa é registrada no histórico interno (não visível ao denunciante).
+                </p>
+              </div>
+              <Switch
+                checked={form.sync_to_report}
+                onCheckedChange={(v) => setForm({ ...form, sync_to_report: v })}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -410,6 +677,134 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
             </Button>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
+
+      {/* Detalhe da tarefa */}
+      <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setNewItem(''); } }}>
+        {selected && (
+          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selected.title}</DialogTitle>
+              <DialogDescription>
+                {selected.description || 'Sem descrição'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Situação</Label>
+                  <Select
+                    value={selected.status}
+                    onValueChange={(v) => moveTask(selected, v)}
+                    disabled={!canEdit}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {COLUMNS.map((c) => (
+                        <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Denúncia vinculada</Label>
+                  <Select
+                    value={selected.report_id ?? 'none'}
+                    onValueChange={(v) => updateTaskLink(selected, v)}
+                    disabled={!canEdit}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma</SelectItem>
+                      {reportOptions.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="pr-3">
+                  <Label className="text-sm">Atualizar histórico da denúncia</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Registra automaticamente o andamento desta tarefa no histórico interno da denúncia.
+                  </p>
+                </div>
+                <Switch
+                  checked={selected.sync_to_report}
+                  onCheckedChange={(v) => updateTaskSync(selected, v)}
+                  disabled={!canEdit || !selected.report_id}
+                />
+              </div>
+
+              <Separator />
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4" /> Checklist interno
+                  </Label>
+                  <Badge variant="secondary">
+                    {selectedItems.filter((i) => i.is_done).length}/{selectedItems.length}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {selectedItems.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Nenhum item no checklist.</p>
+                  )}
+                  {selectedItems.map((item) => (
+                    <div key={item.id} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                      <Checkbox
+                        checked={item.is_done}
+                        onCheckedChange={() => canEdit && toggleChecklistItem(item)}
+                        disabled={!canEdit}
+                      />
+                      <span
+                        className={`flex-1 text-sm ${item.is_done ? 'line-through text-muted-foreground' : ''}`}
+                      >
+                        {item.content}
+                      </span>
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => removeChecklistItem(item)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {canEdit && (
+                  <div className="flex gap-2 mt-3">
+                    <Input
+                      placeholder="Novo item do checklist"
+                      value={newItem}
+                      onChange={(e) => setNewItem(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addChecklistItem();
+                        }
+                      }}
+                    />
+                    <Button onClick={addChecklistItem} disabled={!newItem.trim()}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelected(null)}>Fechar</Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
       </Dialog>
     </Card>
   );

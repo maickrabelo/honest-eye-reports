@@ -1,0 +1,1 @@
+ALTER TABLE public.ouvidoria_tasks ADD COLUMN IF NOT EXISTS sync_to_report boolean NOT NULL DEFAULT true;
