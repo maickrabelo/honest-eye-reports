@@ -745,6 +745,62 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       )}
 
+      {/* Gestão da Ouvidoria — cards no estilo "Suas Ferramentas" */}
+      {companyId && features.ouvidoria && (
+        <div className="mb-8">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-foreground">Gestão da Ouvidoria</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Usuários, apuração de tarefas e divulgação do canal
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                key: 'usuarios' as const,
+                icon: UsersIcon,
+                title: 'Usuários da ouvidoria',
+                desc: 'Gestores e auditores do canal',
+              },
+              {
+                key: 'tarefas' as const,
+                icon: ListChecks,
+                title: 'Tarefas',
+                desc: 'Quadro de apuração e checklists',
+              },
+              {
+                key: 'divulgacao' as const,
+                icon: Megaphone,
+                title: 'Divulgação',
+                desc: 'Convide colaboradores por e-mail',
+              },
+              {
+                key: 'como-funciona' as const,
+                icon: HelpCircle,
+                title: 'Como funciona?',
+                desc: 'Entenda o fluxo do canal',
+              },
+            ].map((tool) => (
+              <Card
+                key={tool.key}
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all"
+                onClick={() => setOuvidoriaPanel(tool.key)}
+              >
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <tool.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">{tool.title}</h3>
+                    <p className="text-sm text-muted-foreground">{tool.desc}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Treinamentos card */}
       {features.treinamentos && (
         <Card
