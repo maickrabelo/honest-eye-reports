@@ -108,43 +108,70 @@ Deno.serve(async (req) => {
       customerId = createJson.id;
     }
 
-    // 2. Assinatura recorrente Asaas
     const nextDue = new Date();
     nextDue.setDate(nextDue.getDate() + 1);
+    const dueDate = nextDue.toISOString().split('T')[0];
 
-    const payload: Record<string, unknown> = {
-      customer: customerId,
-      billingType: body.billingType,
-      value: body.amountCents / 100,
-      nextDueDate: nextDue.toISOString().split('T')[0],
-      cycle: body.billingCycle === 'annual' ? 'YEARLY' : body.billingCycle === 'quarterly' ? 'QUARTERLY' : 'MONTHLY',
-      description: `SOIA - ${plan.name} (personalizado - ${cycleLabel[body.billingCycle]})`,
-      externalReference: `soia-custom-${body.planSlug}-${Date.now()}`,
-    };
     const installments = body.billingType === 'CREDIT_CARD'
       ? Math.min(Math.max(Number(body.installmentCount ?? 1) || 1, 1), 21)
       : 1;
-    if (body.billingType === 'CREDIT_CARD') {
-      payload.maxInstallmentCount = Math.max(installments, monthsPerCycle > 1 ? monthsPerCycle : 1);
-    }
     const installmentCents = Math.round(body.amountCents / installments);
 
-    const subRes = await fetch(`${ASAAS_BASE}/subscriptions`, {
-      method: 'POST',
-      headers: { access_token: ASAAS_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const subJson = await subRes.json();
-    if (!subRes.ok) throw new Error(`Asaas subscription: ${JSON.stringify(subJson)}`);
+    let subscriptionId: string | null = null;
+    let invoiceUrl: string | null = null;
+    let paymentId: string | null = null;
 
-    // 3. Primeira cobrança (link de pagamento)
-    const payRes = await fetch(`${ASAAS_BASE}/payments?subscription=${subJson.id}&limit=1`, {
-      headers: { access_token: ASAAS_API_KEY },
-    });
-    const payJson = await payRes.json();
-    const firstPayment = payJson?.data?.[0];
-    const invoiceUrl: string | null = firstPayment?.invoiceUrl ?? null;
-    const paymentId: string | null = firstPayment?.id ?? null;
+    if (installments > 1) {
+      // 2a. Cobrança parcelada no cartão (sem juros) — o link já exibe as parcelas
+      const payPayload: Record<string, unknown> = {
+        customer: customerId,
+        billingType: 'CREDIT_CARD',
+        dueDate,
+        installmentCount: installments,
+        totalValue: body.amountCents / 100,
+        description: `SOIA - ${plan.name} (personalizado - ${cycleLabel[body.billingCycle]} - ${installments}x sem juros)`,
+        externalReference: `soia-custom-${body.planSlug}-${Date.now()}`,
+      };
+      const payRes = await fetch(`${ASAAS_BASE}/payments`, {
+        method: 'POST',
+        headers: { access_token: ASAAS_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payPayload),
+      });
+      const payJson = await payRes.json();
+      if (!payRes.ok) throw new Error(`Asaas payment: ${JSON.stringify(payJson)}`);
+      invoiceUrl = payJson?.invoiceUrl ?? null;
+      paymentId = payJson?.id ?? null;
+    } else {
+      // 2b. Assinatura recorrente Asaas
+      const payload: Record<string, unknown> = {
+        customer: customerId,
+        billingType: body.billingType,
+        value: body.amountCents / 100,
+        nextDueDate: dueDate,
+        cycle: body.billingCycle === 'annual' ? 'YEARLY' : body.billingCycle === 'quarterly' ? 'QUARTERLY' : 'MONTHLY',
+        description: `SOIA - ${plan.name} (personalizado - ${cycleLabel[body.billingCycle]})`,
+        externalReference: `soia-custom-${body.planSlug}-${Date.now()}`,
+      };
+
+      const subRes = await fetch(`${ASAAS_BASE}/subscriptions`, {
+        method: 'POST',
+        headers: { access_token: ASAAS_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const subJson = await subRes.json();
+      if (!subRes.ok) throw new Error(`Asaas subscription: ${JSON.stringify(subJson)}`);
+      subscriptionId = subJson.id;
+
+      // 3. Primeira cobrança (link de pagamento)
+      const payRes = await fetch(`${ASAAS_BASE}/payments?subscription=${subJson.id}&limit=1`, {
+        headers: { access_token: ASAAS_API_KEY },
+      });
+      const payJson = await payRes.json();
+      const firstPayment = payJson?.data?.[0];
+      invoiceUrl = firstPayment?.invoiceUrl ?? null;
+      paymentId = firstPayment?.id ?? null;
+    }
+
 
     // 4. Persistir assinatura
     const { data: inserted, error: insErr } = await supabase
