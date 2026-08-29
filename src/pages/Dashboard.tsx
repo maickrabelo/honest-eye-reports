@@ -97,6 +97,7 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
   const [detailLogs, setDetailLogs] = useState<AccessLogRow[]>([]);
   const [reportCategoryFilter, setReportCategoryFilter] = useState('todos');
   const [reportStatusFilter, setReportStatusFilter] = useState('todos');
+  const [ouvidoriaPanel, setOuvidoriaPanel] = useState<null | 'usuarios' | 'tarefas' | 'divulgacao' | 'como-funciona'>(null);
 
   const reportCategoryOptions = useMemo(() => {
     const set = new Set<string>();
