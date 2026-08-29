@@ -442,7 +442,8 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
   };
 
 
-  /** Registra o andamento da tarefa no histórico interno da denúncia vinculada */
+  /** Registra o andamento da tarefa no histórico PÚBLICO da denúncia vinculada
+   *  (o denunciante vê as atualizações de tarefas; apenas notas internas ficam ocultas) */
   const syncToReportHistory = async (task: TaskRow, message: string) => {
     if (!task.report_id || !task.sync_to_report) return;
     try {
@@ -454,7 +455,7 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           author_name: authorName || null,
           author_role_title: authorRoleTitle || null,
           message,
-          visibility: 'internal',
+          visibility: 'public',
         });
       } else {
         const reportStatus =
@@ -465,9 +466,9 @@ const OuvidoriaTasksBoard = ({ companyId, channel, canEdit, reportOptions = [] }
           old_status: reportStatus,
           notes: message,
           user_id: user?.id ?? null,
-          author_name: authorName || null,
-          author_role_title: authorRoleTitle || null,
-          visibility: 'internal',
+          author_name: null,
+          author_role_title: null,
+          visibility: 'public',
         });
       }
     } catch {
