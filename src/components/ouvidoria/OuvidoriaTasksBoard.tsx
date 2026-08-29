@@ -120,12 +120,14 @@ const TaskCard = ({
   task,
   canEdit,
   checklistSummary,
+  taskAssignees = [],
   onOpen,
   onDelete,
 }: {
   task: TaskRow;
   canEdit: boolean;
   checklistSummary?: { total: number; done: number };
+  taskAssignees?: AssigneeRow[];
   onOpen: (task: TaskRow) => void;
   onDelete: (id: string) => void;
 }) => {
