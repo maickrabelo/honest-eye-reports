@@ -905,10 +905,34 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
-          <CardDescription>
-            Últimas denúncias registradas no sistema
-          </CardDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between flex-wrap gap-2">
+              <div>
+                <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
+                <CardDescription>
+                  {filteredReports.length} {filteredReports.length === 1 ? 'denúncia encontrada' : 'denúncias encontradas'}
+                </CardDescription>
+              </div>
+              <Select value={reportStatusFilter} onValueChange={setReportStatusFilter}>
+                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="in_progress">Em andamento</SelectItem>
+                  <SelectItem value="resolved">Resolvida</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {reportCategoryOptions.length > 0 && (
+              <OuvidoriaQuickFilters
+                options={reportCategoryOptions}
+                counts={reportCategoryCounts}
+                total={reports.length}
+                value={reportCategoryFilter}
+                onChange={setReportCategoryFilter}
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
