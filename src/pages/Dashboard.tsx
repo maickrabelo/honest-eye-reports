@@ -399,7 +399,11 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
           user_id: user.id,
           old_status: selectedReport.status,
           new_status: selectedStatus,
+          author_name: authorName,
+          author_role_title: authorRoleTitle,
+          visibility: 'public',
         };
+
 
         // Only add notes if they exist
         if (hasNotes) {
