@@ -21,12 +21,22 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import {
-  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File,
+  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File, FileDown, Eye,
 } from "lucide-react";
 import {
   isBetaOuvidoriaCompany, labelOf,
   REPORT_TYPE_OPTIONS, CATEGORY_OPTIONS, STATUS_OPTIONS, BETA_OUVIDORIA_COMPANY_IDS,
 } from "@/lib/betaOuvidoria";
+import { useOuvidoriaAccess } from "@/hooks/useOuvidoriaAccess";
+import OuvidoriaQuickFilters from "@/components/ouvidoria/OuvidoriaQuickFilters";
+import OuvidoriaInternalNotes, { InternalNoteRow } from "@/components/ouvidoria/OuvidoriaInternalNotes";
+import OuvidoriaAccessLogs, { AccessLogRow } from "@/components/ouvidoria/OuvidoriaAccessLogs";
+import OuvidoriaUsersTab from "@/components/ouvidoria/OuvidoriaUsersTab";
+import OuvidoriaTasksBoard from "@/components/ouvidoria/OuvidoriaTasksBoard";
+import OuvidoriaCampaignsTab from "@/components/ouvidoria/OuvidoriaCampaignsTab";
+import OuvidoriaHowItWorks from "@/components/ouvidoria/OuvidoriaHowItWorks";
+import { downloadOuvidoriaHistoryPdf } from "@/components/ouvidoria/ouvidoriaHistoryPdf";
+
 
 const COLORS = ["#0F3460", "#1A97B9", "#1E6F5C", "#D32626", "#E97E00", "#777777", "#8e44ad", "#16a085"];
 
