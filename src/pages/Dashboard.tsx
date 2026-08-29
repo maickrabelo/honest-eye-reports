@@ -330,7 +330,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       updates: (selectedReport.updates || []).map((u: any) => ({
         created_at: u.created_at,
         message: u.notes,
-        author_label: `Ouvidoria${u.author_name ? ` — ${u.author_name}` : ''}${u.author_role_title ? ` (${u.author_role_title})` : ''}`,
+        author_label: u.user_id || u.author_name
+          ? `Empresa${u.author_name ? ` — ${u.author_name}` : ''}${u.author_role_title ? ` (${u.author_role_title})` : ''}`
+          : 'Denunciante',
         visibility: u.visibility,
       })),
       internalNotes: detailNotes.map((n) => ({
@@ -1207,8 +1209,11 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
                               <div>
                                 <p className="text-gray-700">{update.notes}</p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  {update.author_name ? `${update.author_name}${update.author_role_title ? ` (${update.author_role_title})` : ''} · ` : ''}
-                                  {update.old_status !== update.new_status && `Status alterado: ${update.old_status} → ${update.new_status}`}
+                                  {update.user_id || update.author_name ? 'Empresa' : 'Denunciante'}
+                                  {update.author_name ? ` — ${update.author_name}${update.author_role_title ? ` (${update.author_role_title})` : ''}` : ''}
+                                  {' · '}
+                                  {new Date(update.created_at).toLocaleString('pt-BR')}
+                                  {update.old_status !== update.new_status && ` · Status alterado: ${update.old_status} → ${update.new_status}`}
                                 </p>
                               </div>
                               <span className="text-xs text-gray-500">

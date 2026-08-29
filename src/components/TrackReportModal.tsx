@@ -49,6 +49,14 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
       console.log('Search result:', { rawReportData, reportError });
 
       if (reportError || !rawReportData) {
+        supabase.functions.invoke('log-ouvidoria-access', {
+          body: {
+            channel: 'ia',
+            tracking_code: reportId.toUpperCase(),
+            success: false,
+            failure_reason: 'Código não encontrado',
+          },
+        }).catch(() => {});
         setReport(null);
         setError("Denúncia não encontrada. Verifique o código e tente novamente.");
         toast({
@@ -75,6 +83,16 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
         department: string | null;
       };
 
+      supabase.functions.invoke('log-ouvidoria-access', {
+        body: {
+          channel: 'ia',
+          tracking_code: reportData.tracking_code,
+          report_id: reportData.id,
+          company_id: reportData.company_id,
+          success: true,
+        },
+      }).catch(() => {});
+
       const { data: updatesData } = await supabase
         .from('report_updates')
         .select('*')
@@ -90,7 +108,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
         updates: updatesData?.map(update => ({
           date: new Date(update.created_at).toLocaleDateString('pt-BR'),
           note: update.notes || `Status alterado para: ${update.new_status}`,
-          author: "Sistema"
+          author: update.user_id || update.author_name ? "Empresa" : "Denunciante"
         })) || []
       };
 
@@ -154,7 +172,7 @@ const TrackReportModal = ({ className }: TrackReportModalProps) => {
           {
             date: new Date().toLocaleDateString('pt-BR'),
             note: newUpdate,
-            author: "Público"
+            author: "Denunciante"
           }
         ]
       };
