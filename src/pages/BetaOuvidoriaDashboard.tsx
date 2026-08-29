@@ -466,62 +466,44 @@ const BetaOuvidoriaDashboard = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle>Filtros</CardTitle>
-              <CardDescription>Refine a lista de relatos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="w-full sm:w-1/3">
-                  <Select value={filter.status} onValueChange={(v) => setFilter({ ...filter, status: v })}>
-                    <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos os status</SelectItem>
-                      {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-full sm:w-1/3">
-                  <Select value={filter.category} onValueChange={(v) => setFilter({ ...filter, category: v })}>
-                    <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todas as categorias</SelectItem>
-                      {CATEGORY_OPTIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-full sm:w-1/3">
-                  <Input
-                    placeholder="Buscar por protocolo ou descrição"
-                    value={filter.search}
-                    onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="mb-6">
-            <OuvidoriaQuickFilters
-              options={CATEGORY_OPTIONS}
-              counts={categoryCounts}
-              total={reports.length}
-              value={filter.category}
-              onChange={(v) => setFilter({ ...filter, category: v })}
-            />
-          </div>
-
-
-
-          {/* Reports list */}
+          {/* Reports list with inline filters */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Relatos recebidos</CardTitle>
-              <CardDescription>
-                {filteredReports.length} {filteredReports.length === 1 ? "relato encontrado" : "relatos encontrados"}
-              </CardDescription>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-xl">Relatos recebidos</CardTitle>
+                    <CardDescription>
+                      {filteredReports.length} {filteredReports.length === 1 ? "relato encontrado" : "relatos encontrados"}
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <Select value={filter.status} onValueChange={(v) => setFilter({ ...filter, status: v })}>
+                      <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos os status</SelectItem>
+                        {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        className="pl-9 w-[220px]"
+                        placeholder="Protocolo ou descrição"
+                        value={filter.search}
+                        onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <OuvidoriaQuickFilters
+                  options={CATEGORY_OPTIONS}
+                  counts={categoryCounts}
+                  total={reports.length}
+                  value={filter.category}
+                  onChange={(v) => setFilter({ ...filter, category: v })}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
