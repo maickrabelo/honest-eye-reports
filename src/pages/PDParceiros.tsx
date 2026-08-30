@@ -568,6 +568,56 @@ const PDParceiros = () => {
         </div>
       </section>
 
+      {/* PAINEL DE GESTÃO COMPLETO — claro */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/40 to-background border-b">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4 border-audit-secondary/40 text-audit-secondary">
+              <KanbanSquare className="h-3.5 w-3.5 mr-1" /> Tudo incluso, sem módulo extra
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold">Um painel de gestão completo, pronto para auditoria</h2>
+            <p className="text-muted-foreground mt-3">
+              Não é só um formulário de denúncias: é uma operação completa de tratativa, com tarefas, equipe, evidências
+              e rastreabilidade. Você entrega tudo isso ao seu cliente no dia um.
+            </p>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
+            {painelFeatures.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-2xl border bg-card p-6 space-y-3 shadow-sm hover:shadow-lg hover:border-audit-secondary/40 transition-all"
+              >
+                <div className="h-12 w-12 rounded-xl bg-audit-secondary/12 flex items-center justify-center">
+                  <f.icon className="h-6 w-6 text-audit-secondary" />
+                </div>
+                <h3 className="font-bold">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Lock className="h-4 w-4 text-audit-secondary" /> Denunciante nunca vê notas nem responsáveis internos
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-audit-secondary" /> Evidências prontas para auditoria, CIPA e eSocial
+            </span>
+            <span className="flex items-center gap-1.5">
+              <History className="h-4 w-4 text-audit-secondary" /> Histórico imutável de cada caso
+            </span>
+          </div>
+          <div className="text-center mt-10">
+            <Button
+              size="lg"
+              className="h-14 px-8 text-base font-bold shadow-lg"
+              onClick={() => scrollTo('cadastro')}
+            >
+              Quero entregar isso aos meus clientes <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* 3 FONTES DE RECEITA — escuro */}
       <section className="relative overflow-hidden py-16 md:py-20 px-4 bg-audit-primary">
         <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_15%_70%,hsl(var(--audit-secondary))_0%,transparent_45%)]" />
