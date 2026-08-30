@@ -430,63 +430,65 @@ const PDParceiros = () => {
       <section className="relative overflow-hidden bg-audit-primary">
         <div className="absolute inset-0 opacity-[0.18] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--audit-secondary))_0%,transparent_45%),radial-gradient(circle_at_85%_10%,hsl(var(--audit-secondary))_0%,transparent_40%)]" />
         <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24">
-          <div className="flex justify-center mb-10">
+          <div className="flex justify-center md:justify-start mb-10">
             <img src={logoSoia} alt="SOIA" className="h-10 w-auto object-contain brightness-0 invert" />
           </div>
 
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <Badge className="bg-audit-secondary/15 text-audit-secondary border border-audit-secondary/40 hover:bg-audit-secondary/15">
-              <Sparkles className="h-3.5 w-3.5 mr-1" /> Programa de Parceiros Licenciados SOIA
-            </Badge>
-            <h1 className="text-3xl md:text-5xl font-extrabold leading-tight text-primary-foreground">
-              Leve o Canal de Ouvidoria com IA para seus clientes e ganhe{' '}
-              <span className="text-audit-secondary">até 30% de comissão recorrente</span>
-            </h1>
-            <p className="text-lg text-primary-foreground/75">
-              Um serviço que toda empresa precisa por lei — e que agrega valor imediato à sua Gestora de SST, Advocacia
-              ou Contabilidade. Você indica, implanta, gerencia e recebe todo mês.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <Button
-                size="lg"
-                className="text-base h-14 px-8 shadow-xl bg-audit-secondary text-audit-primary hover:bg-audit-secondary/90 font-bold"
-                onClick={() => scrollTo('simulador')}
-              >
-                <Calculator className="h-5 w-5 mr-2" /> Simular minha comissão
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-base h-14 px-8 border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-                onClick={() => scrollTo('cadastro')}
-              >
-                Quero ser parceiro <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
+          <div className="grid gap-10 md:grid-cols-2 md:items-center">
+            <div className="text-left space-y-6">
+              <Badge className="bg-audit-secondary/15 text-audit-secondary border border-audit-secondary/40 hover:bg-audit-secondary/15">
+                <Sparkles className="h-3.5 w-3.5 mr-1" /> Programa de Parceiros Licenciados SOIA
+              </Badge>
+              <h1 className="text-3xl md:text-5xl font-extrabold leading-tight text-primary-foreground">
+                Leve o Canal de Ouvidoria com IA para seus clientes e ganhe{' '}
+                <span className="text-audit-secondary">até 30% de comissão recorrente</span>
+              </h1>
+              <p className="text-lg text-primary-foreground/75">
+                Um serviço que toda empresa precisa por lei — e que agrega valor imediato à sua Gestora de SST, Advocacia
+                ou Contabilidade. Você indica, implanta, gerencia e recebe todo mês.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  size="lg"
+                  className="text-base h-14 px-8 shadow-xl bg-audit-secondary text-audit-primary hover:bg-audit-secondary/90 font-bold"
+                  onClick={() => scrollTo('simulador')}
+                >
+                  <Calculator className="h-5 w-5 mr-2" /> Simular minha comissão
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-base h-14 px-8 border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  onClick={() => scrollTo('cadastro')}
+                >
+                  Quero ser parceiro <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-4 pt-4 text-sm text-primary-foreground/70">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Adesão gratuita
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Sem teto de indicações
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Conta de Gestora SST inclusa
+                </span>
+              </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 pt-4 text-sm text-primary-foreground/70">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Adesão gratuita
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Sem teto de indicações
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-audit-secondary" /> Conta de Gestora SST inclusa
-              </span>
-            </div>
-          </div>
 
-          <div className="mt-12 flex justify-center">
-            <div className="relative w-full max-w-[340px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary-foreground/15 bg-black">
-              <iframe
-                className="absolute inset-0 h-full w-full"
-                src="https://www.youtube.com/embed/uazqE-_dFRw?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=uazqE-_dFRw"
-                title="Programa de Parceiros Licenciados SOIA"
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
+            <div className="flex justify-center md:justify-end">
+              <div className="relative w-full max-w-[340px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary-foreground/15 bg-black">
+                <iframe
+                  className="absolute inset-0 h-full w-full"
+                  src="https://www.youtube.com/embed/uazqE-_dFRw?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=uazqE-_dFRw"
+                  title="Programa de Parceiros Licenciados SOIA"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              </div>
             </div>
           </div>
         </div>
