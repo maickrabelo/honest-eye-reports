@@ -36,6 +36,7 @@ import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
+import OuvidoriaDashboardSimulation from '@/components/ouvidoria/OuvidoriaDashboardSimulation';
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
 type ChatMsg = { from: 'sonia' | 'user'; text: string };

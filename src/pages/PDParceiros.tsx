@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
 import OuvidoriaChatSimulation from '@/components/ouvidoria/OuvidoriaChatSimulation';
+import OuvidoriaDashboardSimulation from '@/components/ouvidoria/OuvidoriaDashboardSimulation';
 
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
