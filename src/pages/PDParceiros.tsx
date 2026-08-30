@@ -340,6 +340,55 @@ const PDParceiros = () => {
     'E-mail e caixinha de sugestões não garantem anonimato nem rastreabilidade.',
   ];
 
+  /** Funcionalidades do painel de gestão da ouvidoria — espelho do que é mostrado na /ouvidoria */
+  const painelFeatures = [
+    {
+      icon: KanbanSquare,
+      title: 'Quadro de tarefas estilo Kanban',
+      desc: 'Cada denúncia pode virar tarefa com responsável, prazo e status (a fazer, em andamento, concluída) — tudo sincronizado com o histórico do caso.',
+    },
+    {
+      icon: ListChecks,
+      title: 'Checklist interno por tarefa',
+      desc: 'Checklist de apuração dentro de cada tarefa: entrevistas, coleta de evidências, conclusão. Nada passa batido.',
+    },
+    {
+      icon: UserCog,
+      title: 'Perfis Gestor e Auditor',
+      desc: 'Gestores tratam denúncias e tarefas; auditores apenas visualizam e fazem notas — ideal para conselho, jurídico e auditoria externa.',
+    },
+    {
+      icon: History,
+      title: 'Log de acessos e alterações',
+      desc: 'Cada acesso e cada mudança de status fica registrada com data, hora e origem (empresa ou denunciante). Rastreabilidade total.',
+    },
+    {
+      icon: StickyNote,
+      title: 'Notas internas privadas',
+      desc: 'Anotações visíveis só para a equipe de tratativa — nunca para o denunciante. Perfeitas para decisões e alinhamentos.',
+    },
+    {
+      icon: Filter,
+      title: 'Filtros por categoria e status',
+      desc: 'Assédio, discriminação, segurança, fraude e mais: filtre a fila por categoria, gravidade e andamento em um clique.',
+    },
+    {
+      icon: FileDown,
+      title: 'Histórico completo em PDF',
+      desc: 'Exporte o dossiê de cada denúncia com todo o histórico de atualizações — evidência pronta para auditorias e eSocial.',
+    },
+    {
+      icon: Mail,
+      title: 'Campanhas de divulgação por e-mail',
+      desc: 'Envie o link e o QR Code do canal para a base de colaboradores, com lista de contatos gerenciada e deduplicação automática.',
+    },
+    {
+      icon: ClipboardList,
+      title: 'Equipe da ouvidoria via convite',
+      desc: 'Convide gestores e auditores por e-mail. Cada pessoa cria a própria conta e passa a acessar só o que o perfil dela permite.',
+    },
+  ];
+
   const steps = [
     { n: '1', title: 'Cadastro', desc: 'Você preenche o formulário e nosso time de parcerias faz uma reunião de alinhamento.' },
     { n: '2', title: 'Aprovação e contrato', desc: 'Assinatura digital do contrato de parceiro licenciado.' },
