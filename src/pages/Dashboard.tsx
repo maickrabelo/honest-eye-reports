@@ -61,7 +61,7 @@ import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab'
 import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
 import OuvidoriaQuickFilters from '@/components/ouvidoria/OuvidoriaQuickFilters';
 import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
-import { FileDown, Eye, Users as UsersIcon, ListChecks, Megaphone, HelpCircle } from 'lucide-react';
+import { FileDown, Eye, Users as UsersIcon, ListChecks, Megaphone, HelpCircle, ShieldCheck } from 'lucide-react';
 
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
@@ -985,18 +985,21 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
         </div>
       </div>
       
-      <Card>
-        <CardHeader>
+      {/* Fila de denúncias (layout da simulação) */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3 rounded-xl border border-border bg-muted/20 p-4 md:p-5">
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
-                <CardTitle className="text-xl">Denúncias Recentes</CardTitle>
-                <CardDescription>
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5 text-audit-secondary" /> Fila de denúncias
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
                   {filteredReports.length} {filteredReports.length === 1 ? 'denúncia encontrada' : 'denúncias encontradas'}
-                </CardDescription>
+                </p>
               </div>
               <Select value={reportStatusFilter} onValueChange={setReportStatusFilter}>
-                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className="w-[170px] bg-card"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os status</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>
@@ -1015,58 +1018,78 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
               />
             )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="px-4 py-3 text-left font-medium">ID</th>
-                  <th className="px-4 py-3 text-left font-medium">Título</th>
-                  <th className="px-4 py-3 text-left font-medium">Categoria</th>
-                  <th className="px-4 py-3 text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-left font-medium">Data</th>
-                  <th className="px-4 py-3 text-left font-medium">Urgência</th>
-                  <th className="px-4 py-3 text-left font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredReports.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      Nenhuma denúncia encontrada com os filtros selecionados
-                    </td>
-                  </tr>
-                ) : (
-                  filteredReports.map((report) => (
-                    <tr key={report.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-4 text-audit-primary font-medium">{report.tracking_code}</td>
-                      <td className="px-4 py-4">{report.title}</td>
-                      <td className="px-4 py-4">
-                        <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100">
-                          {report.category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">{getStatusBadge(report.status)}</td>
-                      <td className="px-4 py-4">{new Date(report.created_at).toLocaleDateString('pt-BR')}</td>
-                      <td className="px-4 py-4">{getUrgencyBadge(report.urgency)}</td>
-                      <td className="px-4 py-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenReportDetails(report)}
-                        >
-                          Detalhes
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+
+          <div className="space-y-2.5 mt-4">
+            {filteredReports.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Nenhuma denúncia encontrada com os filtros selecionados
+              </p>
+            ) : (
+              filteredReports.map((report) => (
+                <button
+                  key={report.id}
+                  type="button"
+                  onClick={() => handleOpenReportDetails(report)}
+                  className="w-full text-left rounded-lg border border-border bg-card p-3 flex items-center gap-3 shadow-sm hover:border-audit-secondary/50 transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-mono font-semibold text-audit-primary">{report.tracking_code}</span>
+                      {getUrgencyBadge(report.urgency)}
+                    </div>
+                    <p className="text-sm font-medium mt-1 truncate">{report.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {report.category}
+                      {report.department ? ` · ${report.department}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 space-y-1">
+                    {getStatusBadge(report.status)}
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(report.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </button>
+              ))
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Coluna lateral: atividade recente */}
+        <div className="lg:col-span-2 rounded-xl border border-border bg-muted/20 p-4 md:p-5 flex flex-col">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 mb-3">
+            <Activity className="h-3.5 w-3.5 text-audit-secondary" /> Últimos relatos recebidos
+          </p>
+          <div className="space-y-2.5">
+            {reports.slice(0, 8).map((r) => (
+              <div key={`feed-${r.id}`} className="rounded-lg border border-border bg-card p-2.5 flex gap-2.5 shadow-sm">
+                <div className="h-7 w-7 rounded-md bg-audit-secondary/12 flex items-center justify-center shrink-0">
+                  <ClipboardList className="h-3.5 w-3.5 text-audit-secondary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium leading-snug truncate">{r.category || 'Sem categoria'}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">{r.tracking_code}</p>
+                  <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                    {new Date(r.created_at).toLocaleString('pt-BR')}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {reports.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum relato ainda.</p>
+            )}
+          </div>
+          <div className="mt-3 pt-3 border-t border-border text-[11px] text-muted-foreground space-y-1.5">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3 w-3 text-audit-secondary" /> O denunciante nunca vê notas nem responsáveis
+            </span>
+            <span className="flex items-center gap-1.5">
+              <FileDown className="h-3 w-3 text-audit-secondary" /> Dossiê completo exportável em PDF
+            </span>
+          </div>
+        </div>
+      </div>
+
       </>
       )}
 
