@@ -521,6 +521,21 @@ const LicensedOperatorDashboard = () => {
             </TabsContent>
           </Tabs>
         </div>
+
+        <RequestManagementDialog
+          open={!!dialogCompany}
+          onOpenChange={(o) => !o && setDialogCompany(null)}
+          company={dialogCompany}
+          status={dialogCompany ? (mgmtStatus[dialogCompany.company_id] ?? "none") : "none"}
+          onRequested={() => {
+            setDialogCompany(null);
+            loadData();
+          }}
+          onOpenDashboard={() => {
+            if (dialogCompany?.companies?.slug) setSelectedCompanySlug(dialogCompany.companies.slug);
+            setDialogCompany(null);
+          }}
+        />
       </main>
       <Footer />
     </div>
