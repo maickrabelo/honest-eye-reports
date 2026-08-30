@@ -61,7 +61,7 @@ import OuvidoriaCampaignsTab from '@/components/ouvidoria/OuvidoriaCampaignsTab'
 import OuvidoriaHowItWorks from '@/components/ouvidoria/OuvidoriaHowItWorks';
 import OuvidoriaQuickFilters from '@/components/ouvidoria/OuvidoriaQuickFilters';
 import { downloadOuvidoriaHistoryPdf } from '@/components/ouvidoria/ouvidoriaHistoryPdf';
-import { FileDown, Eye, Users as UsersIcon, ListChecks, Megaphone, HelpCircle, ShieldCheck, Activity, ClipboardList } from 'lucide-react';
+import { FileDown, Eye, Users as UsersIcon, ListChecks, Megaphone, HelpCircle, ShieldCheck } from 'lucide-react';
 
 
 const COLORS = ['#0F3460', '#1A97B9', '#1E6F5C', '#D32626', '#E97E00', '#777777'];
