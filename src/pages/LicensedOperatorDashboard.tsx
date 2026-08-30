@@ -62,7 +62,7 @@ const statusBadge = (status: string) => {
 };
 
 const LicensedOperatorDashboard = () => {
-  const { user, role, loading: authLoading } = useRealAuth();
+  const { user, isLoading: authLoading } = useRealAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [operator, setOperator] = useState<any>(null);
