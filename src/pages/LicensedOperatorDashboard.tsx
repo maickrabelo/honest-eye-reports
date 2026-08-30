@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, Building2, DollarSign, FileText, Handshake, Image as ImageIcon,
-  Loader2, MessageSquareWarning, Percent, TrendingUp,
+  Loader2, MessageSquareWarning, Percent, ShieldCheck, TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import EmbeddedDashboard from "@/components/EmbeddedDashboard";
 import NewOperatorCompanyDialog from "@/components/licensed-operator/NewOperatorCompanyDialog";
+import RequestManagementDialog, { type ManagementStatus } from "@/components/licensed-operator/RequestManagementDialog";
 import { formatBRL, OPERATOR_PLAN_LABELS } from "@/lib/licensedOperatorPricing";
 import usePageSEO from "@/hooks/usePageSEO";
 import { toast } from "sonner";
@@ -71,6 +72,8 @@ const LicensedOperatorDashboard = () => {
   const [invoiceItems, setInvoiceItems] = useState<Record<string, any[]>>({});
   const [selectedCompanySlug, setSelectedCompanySlug] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [mgmtStatus, setMgmtStatus] = useState<Record<string, ManagementStatus>>({});
+  const [dialogCompany, setDialogCompany] = useState<OperatorCompany | null>(null);
 
   usePageSEO({
     title: "Painel do Parceiro Licenciado | SOIA",
@@ -105,6 +108,18 @@ const LicensedOperatorDashboard = () => {
       setCompanies((companiesRes.data as any) ?? []);
       const invs = (invoicesRes.data as any) ?? [];
       setInvoices(invs);
+
+      const { data: reqs } = await supabase
+        .from("licensed_operator_management_requests")
+        .select("company_id, status")
+        .eq("operator_id", op.id);
+      const statusMap: Record<string, ManagementStatus> = {};
+      (reqs ?? []).forEach((r: any) => {
+        statusMap[r.company_id] = r.status as ManagementStatus;
+      });
+      setMgmtStatus(statusMap);
+
+
 
       if (invs.length) {
         const { data: items } = await supabase
@@ -319,7 +334,7 @@ const LicensedOperatorDashboard = () => {
                     <Card
                       key={c.id}
                       className="cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all"
-                      onClick={() => c.companies?.slug && setSelectedCompanySlug(c.companies.slug)}
+                      onClick={() => setDialogCompany(c)}
                     >
                       <div className="h-24 bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
                         {c.companies?.logo_url ? (
@@ -336,9 +351,18 @@ const LicensedOperatorDashboard = () => {
                           {OPERATOR_PLAN_LABELS[c.plan_slug as "ouvidoria"] ?? c.plan_slug} · {c.employee_count} colaboradores
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="flex items-center justify-between">
-                        {statusBadge(c.payment_status)}
-                        <span className="text-sm font-semibold">{formatBRL(c.monthly_amount_cents)}/mês</span>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          {statusBadge(c.payment_status)}
+                          <span className="text-sm font-semibold">{formatBRL(c.monthly_amount_cents)}/mês</span>
+                        </div>
+                        {mgmtStatus[c.company_id] === "active" ? (
+                          <Badge className="bg-green-600 gap-1"><ShieldCheck className="h-3 w-3" />Gerenciamento ativo</Badge>
+                        ) : mgmtStatus[c.company_id] === "pending" ? (
+                          <Badge variant="secondary">Aguardando autorização</Badge>
+                        ) : (
+                          <Badge variant="outline">Solicitar gerenciamento</Badge>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -498,6 +522,21 @@ const LicensedOperatorDashboard = () => {
             </TabsContent>
           </Tabs>
         </div>
+
+        <RequestManagementDialog
+          open={!!dialogCompany}
+          onOpenChange={(o) => !o && setDialogCompany(null)}
+          company={dialogCompany}
+          status={dialogCompany ? (mgmtStatus[dialogCompany.company_id] ?? "none") : "none"}
+          onRequested={() => {
+            setDialogCompany(null);
+            loadData();
+          }}
+          onOpenDashboard={() => {
+            if (dialogCompany?.companies?.slug) setSelectedCompanySlug(dialogCompany.companies.slug);
+            setDialogCompany(null);
+          }}
+        />
       </main>
       <Footer />
     </div>

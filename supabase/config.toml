@@ -217,3 +217,9 @@ verify_jwt = false
 [functions.seed-licensed-operator-demo]
 verify_jwt = false
 
+
+[functions.licensed-operator-request-management]
+verify_jwt = false
+
+[functions.company-decide-management-request]
+verify_jwt = false
