@@ -247,10 +247,11 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           // SST user -> get their own SST manager
           if ((role === 'sst' || (role as string) === 'licensed_operator') && profile.sst_manager_id) {
             const { data: sstManager } = await supabase
-              .from('sst_managers')
+              .from('sst_managers_public' as any)
               .select('logo_url, name, slug, brand_color, id, is_licensed_operator')
               .eq('id', profile.sst_manager_id)
-              .maybeSingle();
+              .maybeSingle() as { data: any };
+
 
             if (sstManager) {
               setBrandLogo(sstManager.logo_url || null);
