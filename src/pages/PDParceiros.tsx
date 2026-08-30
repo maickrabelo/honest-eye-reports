@@ -475,6 +475,20 @@ const PDParceiros = () => {
               </span>
             </div>
           </div>
+
+          <div className="mt-12 flex justify-center">
+            <div className="relative w-full max-w-[340px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary-foreground/15 bg-black">
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src="https://www.youtube.com/embed/uazqE-_dFRw?rel=0&modestbranding=1"
+                title="Programa de Parceiros Licenciados SOIA"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
