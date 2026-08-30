@@ -1723,6 +1723,64 @@ export type Database = {
           },
         ]
       }
+      licensed_operator_management_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          operator_id: string
+          requested_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          operator_id: string
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          operator_id?: string
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licensed_operator_management_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_operator_management_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_operator_management_requests_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_operators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licensed_operators: {
         Row: {
           cnpj: string | null
@@ -4532,6 +4590,10 @@ export type Database = {
       }
       is_sst_module_owner: {
         Args: { _module_id: string; _user_id: string }
+        Returns: boolean
+      }
+      operator_manages_company: {
+        Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
       ouvidoria_can_edit: { Args: { _company_id: string }; Returns: boolean }
