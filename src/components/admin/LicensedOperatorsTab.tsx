@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Handshake, Loader2, Plus, RefreshCw, Receipt, Copy } from "lucide-react";
+import { Handshake, Loader2, Plus, RefreshCw, Receipt, Copy, FlaskConical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -31,6 +31,7 @@ const LicensedOperatorsTab = () => {
   const [counts, setCounts] = useState<Record<string, { companies: number; monthly: number }>>({});
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [open, setOpen] = useState(false);
   const [credentials, setCredentials] = useState<{ email: string; tempPassword: string } | null>(null);
   const [form, setForm] = useState({
