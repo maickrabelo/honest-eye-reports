@@ -609,6 +609,9 @@ const Dashboard = ({ embeddedCompanyId, hideNavigation }: { embeddedCompanyId?: 
       {isTrialExpired && <TrialExpiredOverlay category="company" />}
       {!isTrialExpired && trialEndsAt && <TrialBanner trialEndsAt={trialEndsAt} />}
       {!isTrialExpired && <ProfileCompletionBanner companyId={companyId} />}
+      {!embeddedCompanyId && companyId && (
+        <ManagementRequestBanner companyId={companyId} canDecide={isPrimaryAdmin} />
+      )}
       <div className="flex justify-between items-start mb-8 gap-6">
         <div className="flex-1">
           <h1 id="company-tour-anchor" className="text-3xl font-bold text-audit-primary mb-2">Dashboard</h1>
