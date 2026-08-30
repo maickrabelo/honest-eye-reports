@@ -21,6 +21,7 @@ import TrialAccountsTab from '@/components/admin/TrialAccountsTab';
 import { SalesTeamTab } from '@/components/admin/SalesTeamTab';
 import { WebhooksTab } from '@/components/admin/WebhooksTab';
 import CustomSubscriptionTab from '@/components/admin/CustomSubscriptionTab';
+import LicensedOperatorsTab from '@/components/admin/LicensedOperatorsTab';
 
 import { AssignManualPlanDialog } from '@/components/admin/AssignManualPlanDialog';
 import { ExportUserDataDialog } from '@/components/admin/ExportUserDataDialog';
@@ -1253,6 +1254,7 @@ const MasterDashboard = () => {
                 <TabsTrigger value="form-leads">Leads Formulários</TabsTrigger>
                 <TabsTrigger value="trials">Contas em Teste</TabsTrigger>
                 <TabsTrigger value="custom-subs">Assinaturas Personalizadas</TabsTrigger>
+                <TabsTrigger value="licensed-operators">Parceiros Licenciados</TabsTrigger>
                 <TabsTrigger value="stats">Estatísticas</TabsTrigger>
 
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
@@ -1953,6 +1955,10 @@ const MasterDashboard = () => {
             </TabsContent>
 
             {/* Portal Tab */}
+            <TabsContent value="licensed-operators" className="space-y-6">
+              <LicensedOperatorsTab />
+            </TabsContent>
+
             <TabsContent value="portal" className="space-y-6">
               <AdminPortalManager />
             </TabsContent>

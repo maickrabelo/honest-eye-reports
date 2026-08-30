@@ -27,6 +27,7 @@ const SSTManagerProfile = React.lazy(() => import("./pages/SSTManagerProfile"));
 const Financeiro = React.lazy(() => import("./pages/Financeiro"));
 const SSTDashboard = React.lazy(() => import("./pages/SSTDashboard"));
 const MasterDashboard = React.lazy(() => import("./pages/MasterDashboard"));
+const LicensedOperatorDashboard = React.lazy(() => import("./pages/LicensedOperatorDashboard"));
 const CompanyReport = React.lazy(() => import("./pages/CompanyReport"));
 const PendingApproval = React.lazy(() => import("./pages/PendingApproval"));
 const UserManagement = React.lazy(() => import("./pages/UserManagement"));
@@ -154,6 +155,7 @@ const App = () => (
                 <Route path="/sst-dashboard" element={<SSTDashboard />} />
                 <Route path="/sst-portal" element={<SSTPortal />} />
                 <Route path="/master-dashboard" element={<MasterDashboard />} />
+                <Route path="/parceiro-licenciado" element={<LicensedOperatorDashboard />} />
                 <Route path="/user-management" element={<UserManagement />} />
                 <Route path="/company-dashboard/:id" element={<Dashboard />} />
                 <Route path="/report/:companySlug" element={<CompanyReport />} />

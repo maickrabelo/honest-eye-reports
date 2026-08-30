@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { sendAccessLog } from '@/hooks/useAccessLogger';
 
-type UserRole = 'admin' | 'company' | 'sst' | 'pending' | 'partner' | 'affiliate' | 'sales' | null;
+type UserRole = 'admin' | 'company' | 'sst' | 'pending' | 'partner' | 'affiliate' | 'sales' | 'licensed_operator' | null;
 
 interface Profile {
   id: string;
@@ -230,6 +230,7 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     else if (newRole === 'admin') navigate('/master-dashboard');
     else if (newRole === 'partner') navigate('/parceiro/dashboard');
     else if (newRole === 'affiliate') navigate('/afiliado/dashboard');
+    else if (newRole === 'licensed_operator') navigate('/parceiro-licenciado');
     else if (newRole === 'sales') navigate('/sales-dashboard');
   };
 
@@ -264,6 +265,8 @@ export const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       navigate('/afiliado/dashboard');
     } else if ((userRole as string) === 'sales') {
       navigate('/sales-dashboard');
+    } else if ((userRole as string) === 'licensed_operator') {
+      navigate('/parceiro-licenciado');
     } else if ((userRole as string) === 'sector_viewer') {
       navigate('/setor/dashboard');
     }

@@ -166,6 +166,142 @@ Deno.serve(async (req) => {
     const asaasSubscriptionId = payment.subscription;
     const asaasPaymentId = payment.id;
 
+    // ---- Parceiro Licenciado: empresas e faturas mensais ----
+    const isPaid = eventType === 'PAYMENT_CONFIRMED' || eventType === 'PAYMENT_RECEIVED';
+    const isOverdue = eventType === 'PAYMENT_OVERDUE';
+
+    const { data: operatorInvoice } = await supabase
+      .from('licensed_operator_invoices')
+      .select('id')
+      .eq('asaas_payment_id', asaasPaymentId)
+      .maybeSingle();
+    if (operatorInvoice) {
+      if (isPaid) {
+        await supabase
+          .from('licensed_operator_invoices')
+          .update({ status: 'paid', paid_at: new Date().toISOString() })
+          .eq('id', operatorInvoice.id);
+      } else if (isOverdue) {
+        await supabase.from('licensed_operator_invoices').update({ status: 'overdue' }).eq('id', operatorInvoice.id);
+      }
+      return new Response(JSON.stringify({ ok: true, operatorInvoice: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const orFilter = [
+      asaasSubscriptionId ? `asaas_subscription_id.eq.${asaasSubscriptionId}` : null,
+      asaasPaymentId ? `asaas_payment_id.eq.${asaasPaymentId}` : null,
+    ].filter(Boolean).join(',');
+
+    const { data: operatorCompany } = orFilter
+      ? await supabase
+          .from('licensed_operator_companies')
+          .select('*')
+          .or(orFilter)
+          .maybeSingle()
+      : { data: null } as any;
+
+    if (operatorCompany) {
+      if (isPaid) {
+        await supabase
+          .from('licensed_operator_companies')
+          .update({
+            payment_status: 'paid',
+            last_paid_at: new Date().toISOString(),
+            asaas_payment_id: asaasPaymentId,
+          })
+          .eq('id', operatorCompany.id);
+        await supabase
+          .from('companies')
+          .update({ subscription_status: 'active' })
+          .eq('id', operatorCompany.company_id);
+        // libera o acesso da empresa (login + boas-vindas)
+        try {
+          const { data: company } = await supabase
+            .from('companies')
+            .select('id, name, email, cnpj')
+            .eq('id', operatorCompany.company_id)
+            .maybeSingle();
+          const { data: operator } = await supabase
+            .from('licensed_operators')
+            .select('razao_social')
+            .eq('id', operatorCompany.operator_id)
+            .maybeSingle();
+          if (company?.email) {
+            const cnpjDigits = String(company.cnpj ?? '').replace(/\D/g, '');
+            const tempPassword = cnpjDigits || Math.random().toString(36).slice(2, 10).toUpperCase();
+            const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            const existingAuth = list?.users?.find((u: any) => u.email?.toLowerCase() === company.email!.toLowerCase());
+            let companyUserId: string | null = existingAuth?.id ?? null;
+            let sendPassword = false;
+            if (!companyUserId) {
+              const { data: created } = await supabase.auth.admin.createUser({
+                email: company.email,
+                password: tempPassword,
+                email_confirm: true,
+                user_metadata: { full_name: company.name },
+              });
+              companyUserId = created?.user?.id ?? null;
+              sendPassword = true;
+            }
+            if (companyUserId) {
+              const { data: currentProfile } = await supabase
+                .from('profiles')
+                .select('company_id, full_name, must_change_password')
+                .eq('id', companyUserId)
+                .maybeSingle();
+              await supabase.from('profiles').upsert({
+                id: companyUserId,
+                full_name: currentProfile?.full_name || company.name,
+                company_id: currentProfile?.company_id || company.id,
+                must_change_password: currentProfile?.must_change_password ?? true,
+              }, { onConflict: 'id' });
+              const { data: cRoles } = await supabase
+                .from('user_roles').select('id')
+                .eq('user_id', companyUserId).eq('role', 'company').limit(1);
+              if (!cRoles?.length) {
+                await supabase.from('user_roles').insert({ user_id: companyUserId, role: 'company' });
+              }
+              await supabase.from('user_roles').delete().eq('user_id', companyUserId).eq('role', 'pending');
+              const { data: cLinks } = await supabase
+                .from('user_companies').select('id')
+                .eq('user_id', companyUserId).eq('company_id', company.id).limit(1);
+              if (!cLinks?.length) {
+                await supabase.from('user_companies').insert({ user_id: companyUserId, company_id: company.id });
+              }
+            }
+            await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-company-welcome`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              },
+              body: JSON.stringify({
+                to: company.email,
+                companyName: company.name,
+                tempPassword: sendPassword ? tempPassword : 'A senha já cadastrada anteriormente',
+                sstName: operator?.razao_social ?? null,
+              }),
+            });
+          }
+        } catch (provErr) {
+          console.error('[asaas-webhook] operator company provisioning error', provErr);
+        }
+      } else if (isOverdue) {
+        await supabase
+          .from('licensed_operator_companies')
+          .update({ payment_status: 'overdue' })
+          .eq('id', operatorCompany.id);
+      } else if (eventType === 'SUBSCRIPTION_DELETED' || eventType === 'PAYMENT_DELETED') {
+        await supabase
+          .from('licensed_operator_companies')
+          .update({ payment_status: 'canceled', active: false })
+          .eq('id', operatorCompany.id);
+      }
+    }
+
+
     // Find subscription
     const { data: sub } = await supabase
       .from('subscriptions')

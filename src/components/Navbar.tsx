@@ -37,7 +37,7 @@ interface NavbarProps {
 const Navbar = ({ smsBrand = false }: NavbarProps) => {
   const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
   const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
-  const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
+  const { brandLogo, isWhiteLabel, isCoBranded, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { isSmsPlan } = useSmsPlan();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
@@ -72,7 +72,7 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
       case 'partner': return '/partner-dashboard';
       case 'affiliate': return '/afiliado/dashboard';
       case 'sales': return '/sales-dashboard';
-      default: return '/';
+      default: return (role as string) === 'licensed_operator' ? '/parceiro-licenciado' : '/';
     }
   };
 
@@ -90,6 +90,12 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
                 />
               ) : isLoggedIn && isBrandLoading ? (
                 <div className="h-10 w-28 rounded-md bg-muted animate-pulse" aria-label="Carregando marca" />
+              ) : isCoBranded && brandLogo ? (
+                <span className="flex items-center gap-3">
+                  <img src={brandLogo} alt="Logo do parceiro" className="h-9 object-contain" />
+                  <span className="h-7 w-px bg-border" aria-hidden />
+                  <img src="/lovable-uploads/Logo_SOIA.png" alt="SOIA Logo" className="h-7" />
+                </span>
               ) : isWhiteLabel && brandLogo ? (
                 <img 
                   src={brandLogo} 
@@ -104,6 +110,7 @@ const Navbar = ({ smsBrand = false }: NavbarProps) => {
                 />
               )}
             </Link>
+
             {isLoggedIn && (
               <div className="hidden sm:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
                 <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />

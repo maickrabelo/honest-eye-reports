@@ -1526,6 +1526,272 @@ export type Database = {
           },
         ]
       }
+      licensed_operator_companies: {
+        Row: {
+          active: boolean
+          asaas_customer_id: string | null
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          billing_cycle: string
+          billing_mode: string
+          charge_amount_cents: number
+          company_id: string
+          created_at: string
+          employee_count: number
+          id: string
+          invoice_url: string | null
+          last_paid_at: string | null
+          monthly_amount_cents: number
+          next_due_date: string | null
+          operator_id: string
+          payment_status: string
+          plan_slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_cycle?: string
+          billing_mode?: string
+          charge_amount_cents?: number
+          company_id: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          invoice_url?: string | null
+          last_paid_at?: string | null
+          monthly_amount_cents?: number
+          next_due_date?: string | null
+          operator_id: string
+          payment_status?: string
+          plan_slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_cycle?: string
+          billing_mode?: string
+          charge_amount_cents?: number
+          company_id?: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          invoice_url?: string | null
+          last_paid_at?: string | null
+          monthly_amount_cents?: number
+          next_due_date?: string | null
+          operator_id?: string
+          payment_status?: string
+          plan_slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licensed_operator_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_operator_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_operator_companies_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_operators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licensed_operator_invoice_items: {
+        Row: {
+          amount_cents: number
+          company_id: string | null
+          company_name: string | null
+          created_at: string
+          description: string
+          employee_count: number | null
+          id: string
+          invoice_id: string
+          kind: string
+          plan_slug: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          company_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          description: string
+          employee_count?: number | null
+          id?: string
+          invoice_id: string
+          kind: string
+          plan_slug?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          company_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          description?: string
+          employee_count?: number | null
+          id?: string
+          invoice_id?: string
+          kind?: string
+          plan_slug?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licensed_operator_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_operator_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licensed_operator_invoices: {
+        Row: {
+          asaas_payment_id: string | null
+          closed_at: string
+          commission_credit_cents: number
+          created_at: string
+          discount_cents: number
+          gross_cents: number
+          id: string
+          invoice_url: string | null
+          operator_id: string
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          reference_month: string
+          status: string
+          total_cents: number
+        }
+        Insert: {
+          asaas_payment_id?: string | null
+          closed_at?: string
+          commission_credit_cents?: number
+          created_at?: string
+          discount_cents?: number
+          gross_cents?: number
+          id?: string
+          invoice_url?: string | null
+          operator_id: string
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          reference_month: string
+          status?: string
+          total_cents?: number
+        }
+        Update: {
+          asaas_payment_id?: string | null
+          closed_at?: string
+          commission_credit_cents?: number
+          created_at?: string
+          discount_cents?: number
+          gross_cents?: number
+          id?: string
+          invoice_url?: string | null
+          operator_id?: string
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          reference_month?: string
+          status?: string
+          total_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licensed_operator_invoices_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "licensed_operators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licensed_operators: {
+        Row: {
+          cnpj: string | null
+          commission_rate: number
+          created_at: string
+          email: string
+          endereco_completo: string | null
+          id: string
+          logo_url: string | null
+          nome_fantasia: string | null
+          notes: string | null
+          phone: string | null
+          razao_social: string
+          sst_manager_id: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          commission_rate?: number
+          created_at?: string
+          email: string
+          endereco_completo?: string | null
+          id?: string
+          logo_url?: string | null
+          nome_fantasia?: string | null
+          notes?: string | null
+          phone?: string | null
+          razao_social: string
+          sst_manager_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          commission_rate?: number
+          created_at?: string
+          email?: string
+          endereco_completo?: string | null
+          id?: string
+          logo_url?: string | null
+          nome_fantasia?: string | null
+          notes?: string | null
+          phone?: string | null
+          razao_social?: string
+          sst_manager_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licensed_operators_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_operators_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "sst_managers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licensed_partners: {
         Row: {
           approved_at: string | null
@@ -3261,6 +3527,7 @@ export type Database = {
           extra_company_slots: number
           extra_employee_slots: number
           id: string
+          is_licensed_operator: boolean
           logo_url: string | null
           max_companies: number
           name: string
@@ -3283,6 +3550,7 @@ export type Database = {
           extra_company_slots?: number
           extra_employee_slots?: number
           id?: string
+          is_licensed_operator?: boolean
           logo_url?: string | null
           max_companies?: number
           name: string
@@ -3305,6 +3573,7 @@ export type Database = {
           extra_company_slots?: number
           extra_employee_slots?: number
           id?: string
+          is_licensed_operator?: boolean
           logo_url?: string | null
           max_companies?: number
           name?: string
@@ -4225,6 +4494,10 @@ export type Database = {
         Args: { _sst_manager_id: string }
         Returns: number
       }
+      get_user_licensed_operator_id: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_user_sector_access: {
         Args: { _user_id: string }
         Returns: {
@@ -4293,6 +4566,7 @@ export type Database = {
         | "affiliate"
         | "sales"
         | "sector_viewer"
+        | "licensed_operator"
       billing_cycle_enum: "monthly" | "quarterly" | "annual"
       subscription_status_enum:
         | "pending"
@@ -4444,6 +4718,7 @@ export const Constants = {
         "affiliate",
         "sales",
         "sector_viewer",
+        "licensed_operator",
       ],
       billing_cycle_enum: ["monthly", "quarterly", "annual"],
       subscription_status_enum: [
