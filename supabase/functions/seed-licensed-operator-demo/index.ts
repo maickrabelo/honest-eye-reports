@@ -15,7 +15,7 @@ const json = (body: Record<string, unknown>, status = 200) =>
 const OPERATOR = {
   razaoSocial: "VIGIA COMPLIANCE LTDA (DEMO)",
   nomeFantasia: "Vigia Compliance",
-  cnpj: "11222333000181",
+  cnpj: "31555888000199",
   email: "parceiro.licenciado@soia.app",
   phone: "(11) 98888-1212",
   endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo/SP",
