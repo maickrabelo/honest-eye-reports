@@ -466,20 +466,22 @@ const BetaOuvidoriaDashboard = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Reports list with inline filters */}
-          <Card>
-            <CardHeader>
+          {/* Fila de denúncias (layout inspirado na simulação) */}
+          <div className="grid lg:grid-cols-5 gap-4">
+            <div className="lg:col-span-3 rounded-xl border border-border bg-muted/20 p-4 md:p-5">
               <div className="flex flex-col gap-4">
                 <div className="flex items-start justify-between flex-wrap gap-2">
                   <div>
-                    <CardTitle className="text-xl">Relatos recebidos</CardTitle>
-                    <CardDescription>
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 text-audit-secondary" /> Fila de denúncias
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
                       {filteredReports.length} {filteredReports.length === 1 ? "relato encontrado" : "relatos encontrados"}
-                    </CardDescription>
+                    </p>
                   </div>
                   <div className="flex gap-2 flex-wrap items-center">
                     <Select value={filter.status} onValueChange={(v) => setFilter({ ...filter, status: v })}>
-                      <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectTrigger className="w-[160px] bg-card"><SelectValue placeholder="Status" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="todos">Todos os status</SelectItem>
                         {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
@@ -488,7 +490,7 @@ const BetaOuvidoriaDashboard = () => {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        className="pl-9 w-[220px]"
+                        className="pl-9 w-[220px] bg-card"
                         placeholder="Protocolo ou descrição"
                         value={filter.search}
                         onChange={(e) => setFilter({ ...filter, search: e.target.value })}
@@ -504,50 +506,81 @@ const BetaOuvidoriaDashboard = () => {
                   onChange={(v) => setFilter({ ...filter, category: v })}
                 />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="px-4 py-3 text-left font-medium">Protocolo</th>
-                      <th className="px-4 py-3 text-left font-medium">Tipo</th>
-                      <th className="px-4 py-3 text-left font-medium">Categoria</th>
-                      <th className="px-4 py-3 text-left font-medium">Status</th>
-                      <th className="px-4 py-3 text-left font-medium">Data</th>
-                      <th className="px-4 py-3 text-left font-medium">Setor</th>
-                      <th className="px-4 py-3 text-left font-medium">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Carregando…</td></tr>
-                    ) : filteredReports.length === 0 ? (
-                      <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Nenhum relato encontrado.</td></tr>
-                    ) : (
-                      filteredReports.map((r) => (
-                        <tr key={r.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-4 text-audit-primary font-mono text-xs">{r.tracking_code}</td>
-                          <td className="px-4 py-4">{labelOf(REPORT_TYPE_OPTIONS, r.report_type)}</td>
-                          <td className="px-4 py-4">
-                            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100">
-                              {labelOf(CATEGORY_OPTIONS, r.category)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">{getStatusBadge(r.status)}</td>
-                          <td className="px-4 py-4 text-gray-500">{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
-                          <td className="px-4 py-4 text-gray-600 max-w-[160px] truncate">{r.location_sector ?? "—"}</td>
-                          <td className="px-4 py-4">
-                            <Button variant="outline" size="sm" onClick={() => openDetail(r)}>Detalhes</Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+
+              <div className="space-y-2.5 mt-4">
+                {loading ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Carregando…</p>
+                ) : filteredReports.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Nenhum relato encontrado.</p>
+                ) : (
+                  filteredReports.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => openDetail(r)}
+                      className="w-full text-left rounded-lg border border-border bg-card p-3 flex items-center gap-3 shadow-sm hover:border-audit-secondary/50 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono font-semibold text-audit-primary">{r.tracking_code}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted/60 text-muted-foreground">
+                            {labelOf(REPORT_TYPE_OPTIONS, r.report_type)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 truncate">
+                          {labelOf(CATEGORY_OPTIONS, r.category)}
+                          {r.location_sector ? ` · ${r.location_sector}` : ""}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0 space-y-1">
+                        {getStatusBadge(r.status)}
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(r.created_at).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Coluna lateral: atividade recente */}
+            <div className="lg:col-span-2 rounded-xl border border-border bg-muted/20 p-4 md:p-5 flex flex-col">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 mb-3">
+                <Activity className="h-3.5 w-3.5 text-audit-secondary" /> Últimos relatos recebidos
+              </p>
+              <div className="space-y-2.5">
+                {reports.slice(0, 8).map((r) => (
+                  <div key={`feed-${r.id}`} className="rounded-lg border border-border bg-card p-2.5 flex gap-2.5 shadow-sm">
+                    <div className="h-7 w-7 rounded-md bg-audit-secondary/12 flex items-center justify-center shrink-0">
+                      <ClipboardList className="h-3.5 w-3.5 text-audit-secondary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium leading-snug truncate">
+                        {labelOf(CATEGORY_OPTIONS, r.category)} · {labelOf(STATUS_OPTIONS, r.status)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">{r.tracking_code}</p>
+                      <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                        {new Date(r.created_at).toLocaleString("pt-BR")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {!loading && reports.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Nenhum relato ainda.</p>
+                )}
+              </div>
+              <div className="mt-3 pt-3 border-t border-border text-[11px] text-muted-foreground space-y-1.5">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-3 w-3 text-audit-secondary" /> O denunciante nunca vê notas nem responsáveis
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <FileDown className="h-3 w-3 text-audit-secondary" /> Dossiê completo exportável em PDF
+                </span>
+              </div>
+            </div>
+          </div>
+
             </TabsContent>
 
             <TabsContent value="tarefas">
