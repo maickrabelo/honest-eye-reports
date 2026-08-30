@@ -213,3 +213,7 @@ verify_jwt = false
 
 [functions.licensed-operator-close-invoices]
 verify_jwt = false
+
+[functions.seed-licensed-operator-demo]
+verify_jwt = false
+

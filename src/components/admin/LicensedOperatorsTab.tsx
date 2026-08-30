@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Handshake, Loader2, Plus, RefreshCw, Receipt, Copy } from "lucide-react";
+import { Handshake, Loader2, Plus, RefreshCw, Receipt, Copy, FlaskConical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -31,6 +31,7 @@ const LicensedOperatorsTab = () => {
   const [counts, setCounts] = useState<Record<string, { companies: number; monthly: number }>>({});
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [open, setOpen] = useState(false);
   const [credentials, setCredentials] = useState<{ email: string; tempPassword: string } | null>(null);
   const [form, setForm] = useState({
@@ -131,6 +132,28 @@ const LicensedOperatorsTab = () => {
     }
   };
 
+  const seedDemo = async () => {
+    setSeeding(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("seed-licensed-operator-demo", {
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
+        body: {},
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setCredentials({ email: data.operator.email, tempPassword: data.operator.password });
+      setOpen(true);
+      toast.success(`Parceiro demo criado com ${data.companies?.length ?? 0} empresas.`);
+      load();
+    } catch (err) {
+      toast.error(getSafeErrorMessage(err));
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
       <Card>
@@ -145,10 +168,15 @@ const LicensedOperatorsTab = () => {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="secondary" className="gap-2" onClick={seedDemo} disabled={seeding}>
+              {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+              Criar parceiro demo
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => closeInvoices()} disabled={closing}>
               {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
               Fechar faturas do mês (dia 20)
             </Button>
+
             <Button variant="ghost" size="icon" onClick={load}><RefreshCw className="h-4 w-4" /></Button>
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setCredentials(null); }}>
               <DialogTrigger asChild>
