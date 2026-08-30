@@ -112,6 +112,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "account_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "account_invitations_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
+          },
+          {
             foreignKeyName: "account_invitations_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
             isOneToOne: false
@@ -481,6 +495,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "burnout_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       burnout_departments: {
@@ -676,6 +697,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clasa_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       clasa_departments: {
@@ -808,6 +836,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "climate_surveys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -996,6 +1031,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "company_feature_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       company_sst_assignments: {
@@ -1031,6 +1073,20 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_sst_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "company_sst_assignments_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
           },
           {
             foreignKeyName: "company_sst_assignments_sst_manager_id_fkey"
@@ -1137,6 +1193,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copsoq_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -1448,6 +1511,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "hseit_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       hseit_departments: {
@@ -1604,6 +1674,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licensed_operator_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "licensed_operator_companies_operator_id_fkey"
@@ -1773,6 +1850,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "licensed_operator_management_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "licensed_operator_management_requests_operator_id_fkey"
             columns: ["operator_id"]
             isOneToOne: false
@@ -1834,6 +1918,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "licensed_operators_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
+          },
           {
             foreignKeyName: "licensed_operators_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
@@ -1930,6 +2021,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "licensed_partners_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
+          },
           {
             foreignKeyName: "licensed_partners_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
@@ -2326,6 +2424,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_prospects_converted_company_id_fkey"
+            columns: ["converted_company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "partner_prospects_partner_id_fkey"
@@ -2889,6 +2994,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "profiles_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
+          },
+          {
             foreignKeyName: "profiles_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
             isOneToOne: false
@@ -3148,6 +3267,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pulse_surveys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       report_attachments: {
@@ -3318,6 +3444,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -3549,6 +3682,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sst_extra_slot_purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "sst_extra_slot_purchases_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
           },
           {
             foreignKeyName: "sst_extra_slot_purchases_sst_manager_id_fkey"
@@ -3794,6 +3941,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sst_training_company_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "sst_training_company_access_module_id_fkey"
             columns: ["module_id"]
             isOneToOne: false
@@ -3884,6 +4038,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sst_training_modules_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
+          },
           {
             foreignKeyName: "sst_training_modules_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
@@ -4275,6 +4436,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       user_roles: {
@@ -4321,6 +4489,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_sst_managers_sst_manager_id_fkey"
+            columns: ["sst_manager_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["sst_manager_id"]
+          },
           {
             foreignKeyName: "user_sst_managers_sst_manager_id_fkey"
             columns: ["sst_manager_id"]
@@ -4426,6 +4601,19 @@ export type Database = {
         }
         Relationships: []
       }
+      company_branding_public: {
+        Row: {
+          brand_color: string | null
+          brand_logo: string | null
+          brand_name: string | null
+          brand_slug: string | null
+          company_id: string | null
+          company_slug: string | null
+          is_licensed_operator: boolean | null
+          sst_manager_id: string | null
+        }
+        Relationships: []
+      }
       reports_public: {
         Row: {
           category: string | null
@@ -4481,6 +4669,13 @@ export type Database = {
             referencedRelation: "companies_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_branding_public"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       sst_managers_public: {
@@ -4488,6 +4683,7 @@ export type Database = {
           brand_color: string | null
           email: string | null
           id: string | null
+          is_licensed_operator: boolean | null
           logo_url: string | null
           name: string | null
           phone: string | null
@@ -4497,6 +4693,7 @@ export type Database = {
           brand_color?: string | null
           email?: string | null
           id?: string | null
+          is_licensed_operator?: boolean | null
           logo_url?: string | null
           name?: string | null
           phone?: string | null
@@ -4506,6 +4703,7 @@ export type Database = {
           brand_color?: string | null
           email?: string | null
           id?: string | null
+          is_licensed_operator?: boolean | null
           logo_url?: string | null
           name?: string | null
           phone?: string | null
