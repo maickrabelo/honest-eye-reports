@@ -24,6 +24,13 @@ import {
   Zap,
   HardHat,
   Users,
+  ListChecks,
+  KanbanSquare,
+  History,
+  Filter,
+  UserCog,
+  FileDown,
+  Mail,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
@@ -265,6 +272,64 @@ const Ouvidoria = () => {
     },
   ];
 
+  const painelFeatures = [
+    {
+      icon: KanbanSquare,
+      title: 'Quadro de tarefas Kanban',
+      desc: 'Cada denúncia vira tarefas com responsáveis, envolvidos, prazos e checklist interno. Arraste e solte entre estágios — o histórico da denúncia é atualizado automaticamente.',
+    },
+    {
+      icon: UserCog,
+      title: 'Papéis: Gestor e Auditor',
+      desc: 'Gestores editam denúncias, criam tarefas e notas. Auditores (jurídico, conselho, auditoria externa) apenas visualizam — sem poder alterar nada.',
+    },
+    {
+      icon: History,
+      title: 'Log de acessos e alterações',
+      desc: 'Trilha de auditoria completa: quem acessou, quando e o que mudou. Consultas por protocolo também ficam registradas com data e horário. Só o admin principal da empresa vê.',
+    },
+    {
+      icon: Lock,
+      title: 'Notas internas privadas',
+      desc: 'Anote o que só o time precisa ver, sem expor ao denunciante. O nome de quem atualizou aparece só no painel interno — o denunciante vê apenas a mensagem e a data.',
+    },
+    {
+      icon: Filter,
+      title: 'Filtros por categoria',
+      desc: 'Filtre por assédio, discriminação, fraude, conduta e mais. Encontre rapidamente os casos críticos e priorize o tratamento.',
+    },
+    {
+      icon: FileDown,
+      title: 'Histórico em PDF para auditoria',
+      desc: 'Exporte todo o histórico de uma denúncia (atualizações, notas, acessos) em PDF para MPT, compliance e eSocial.',
+    },
+    {
+      icon: Mail,
+      title: 'Campanhas por e-mail',
+      desc: 'Importe uma lista CSV de e-mails, gerencie contatos cadastrados e dispare o convite ao canal com o link direto. Detecta duplicidades automaticamente.',
+    },
+    {
+      icon: UserCheck,
+      title: 'Convite de colaboradores',
+      desc: 'Convide e-mails para acessar o painel de ouvidoria da empresa. O convidado recebe um e-mail de boas-vindas, cria a conta e passa a ter acesso com o papel definido.',
+    },
+    {
+      icon: ListChecks,
+      title: 'Checklist interno por tarefa',
+      desc: 'Monte checklists de apuração dentro de cada tarefa. Marque itens conforme avança — tudo fica registrado no histórico do caso.',
+    },
+  ];
+
+  const fluxoSteps = [
+    { icon: MessageSquare, title: 'Relato anônimo', text: 'O colaborador relata pelo chat com IA ou formulário, sem login.' },
+    { icon: Bot, title: 'Triagem automática', text: 'Tipo, gravidade e urgência identificados em segundos pela IA.' },
+    { icon: BellRing, title: 'Comissão notificada', text: 'Casos críticos alertam o time em tempo real.' },
+    { icon: KanbanSquare, title: 'Apuração em tarefas', text: 'Responsáveis, prazos e checklists organizam a investigação.' },
+    { icon: FileDown, title: 'Encerramento auditável', text: 'Histórico exportado em PDF para MPT e auditorias.' },
+  ];
+
+
+
   const benefits = [
     'Conformidade com NR-01, Lei 14.457/22, Lei Anticorrupção e LGPD',
     'Redução drástica de passivos trabalhistas e ações no MPT',
@@ -482,6 +547,69 @@ const Ouvidoria = () => {
                   <div key={b} className="flex items-start gap-3 p-4 rounded-xl bg-card border-2 border-border hover:border-audit-secondary/40 transition-colors">
                     <CheckCircle2 className="h-6 w-6 text-audit-secondary mt-0.5 flex-shrink-0" />
                     <span className="text-foreground font-medium">{b}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* RECURSOS DO PAINEL DE GESTÃO */}
+        <section className="py-20 px-4 bg-background border-y border-border/60">
+          <div className="container mx-auto max-w-7xl">
+            <div className="text-center mb-14">
+              <Badge className="mb-4 bg-audit-primary text-white border-0 uppercase text-[10px] tracking-widest font-bold">
+                Painel de gestão completo
+              </Badge>
+              <h2 className="text-3xl md:text-5xl font-bold text-audit-primary mb-4 leading-tight">
+                Muito mais que um canal: um <span className="text-audit-secondary">sistema de gestão ética</span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Cada denúncia vira um caso gerenciado de ponta a ponta — com tarefas, prazos,
+                auditoria, papéis e comunicação anônima, tudo em um só painel.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {painelFeatures.map((f) => (
+                <Card
+                  key={f.title}
+                  className="group hover:shadow-xl hover:-translate-y-1 transition-all border-2 border-border hover:border-audit-secondary/40 bg-card"
+                >
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 rounded-xl bg-audit-secondary/10 flex items-center justify-center mb-4 group-hover:bg-audit-secondary group-hover:scale-110 transition-all">
+                      <f.icon className="h-6 w-6 text-audit-secondary group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="font-bold text-base text-audit-primary mb-2">{f.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Fluxo de trabalho visual */}
+            <div className="mt-16">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl md:text-3xl font-bold text-audit-primary mb-3">
+                  Do relato ao <span className="text-audit-secondary">encerramento auditável</span>
+                </h3>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Um fluxo transparente que protege o denunciante e blinda a empresa juridicamente.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {fluxoSteps.map((s, i) => (
+                  <div key={s.title} className="relative">
+                    <div className="rounded-xl border-2 border-border bg-card p-5 h-full hover:border-audit-secondary/40 transition-colors">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-7 h-7 rounded-full bg-audit-secondary text-white text-xs font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <s.icon className="h-4 w-4 text-audit-secondary" />
+                      </div>
+                      <p className="font-bold text-sm text-audit-primary">{s.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{s.text}</p>
+                    </div>
                   </div>
                 ))}
               </div>
