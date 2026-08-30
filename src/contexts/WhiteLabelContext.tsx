@@ -193,6 +193,32 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
         }
 
+        // 1b. Public company pages (canal de denúncias, formulários): brand by company slug
+        const publicCompanyMatch = location.pathname.match(
+          /^\/(?:report|pesquisa|hseit|burnout|copsoq|clasa)\/([^/]+)/
+        );
+        if (publicCompanyMatch) {
+          const companySlug = publicCompanyMatch[1];
+          const { data: branding } = await supabase
+            .from('company_branding_public' as any)
+            .select('brand_name, brand_slug, brand_logo, brand_color, is_licensed_operator')
+            .eq('company_slug', companySlug)
+            .maybeSingle() as { data: any };
+
+          if (branding && (branding.brand_logo || branding.brand_color)) {
+            setBrandLogo(branding.brand_logo || null);
+            setBrandName(branding.brand_name || null);
+            setSstSlug(branding.brand_slug || null);
+            setSstManagerId(null);
+            setIsCoBranded(!!branding.is_licensed_operator);
+            const color = branding.brand_color as BrandColorTheme | null;
+            setBrandColor(color);
+            applyColorTheme(color);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         // 2. Check if logged-in user is on a Sr. SMS plan (takes precedence over SST manager logo)
         if (user) {
           const { data: sub } = await (supabase as any)
