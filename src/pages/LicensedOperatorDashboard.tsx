@@ -108,6 +108,18 @@ const LicensedOperatorDashboard = () => {
       const invs = (invoicesRes.data as any) ?? [];
       setInvoices(invs);
 
+      const { data: reqs } = await supabase
+        .from("licensed_operator_management_requests")
+        .select("company_id, status")
+        .eq("operator_id", op.id);
+      const statusMap: Record<string, ManagementStatus> = {};
+      (reqs ?? []).forEach((r: any) => {
+        statusMap[r.company_id] = r.status as ManagementStatus;
+      });
+      setMgmtStatus(statusMap);
+
+
+
       if (invs.length) {
         const { data: items } = await supabase
           .from("licensed_operator_invoice_items")
