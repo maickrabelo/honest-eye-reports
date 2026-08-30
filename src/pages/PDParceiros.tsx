@@ -33,6 +33,15 @@ import {
   AlertTriangle,
   QrCode,
   UserCheck,
+  KanbanSquare,
+  History,
+  UserCog,
+  FileDown,
+  Mail,
+  ListChecks,
+  Filter,
+  StickyNote,
+  ClipboardList,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
@@ -331,6 +340,55 @@ const PDParceiros = () => {
     'E-mail e caixinha de sugestões não garantem anonimato nem rastreabilidade.',
   ];
 
+  /** Funcionalidades do painel de gestão da ouvidoria — espelho do que é mostrado na /ouvidoria */
+  const painelFeatures = [
+    {
+      icon: KanbanSquare,
+      title: 'Quadro de tarefas estilo Kanban',
+      desc: 'Cada denúncia pode virar tarefa com responsável, prazo e status (a fazer, em andamento, concluída) — tudo sincronizado com o histórico do caso.',
+    },
+    {
+      icon: ListChecks,
+      title: 'Checklist interno por tarefa',
+      desc: 'Checklist de apuração dentro de cada tarefa: entrevistas, coleta de evidências, conclusão. Nada passa batido.',
+    },
+    {
+      icon: UserCog,
+      title: 'Perfis Gestor e Auditor',
+      desc: 'Gestores tratam denúncias e tarefas; auditores apenas visualizam e fazem notas — ideal para conselho, jurídico e auditoria externa.',
+    },
+    {
+      icon: History,
+      title: 'Log de acessos e alterações',
+      desc: 'Cada acesso e cada mudança de status fica registrada com data, hora e origem (empresa ou denunciante). Rastreabilidade total.',
+    },
+    {
+      icon: StickyNote,
+      title: 'Notas internas privadas',
+      desc: 'Anotações visíveis só para a equipe de tratativa — nunca para o denunciante. Perfeitas para decisões e alinhamentos.',
+    },
+    {
+      icon: Filter,
+      title: 'Filtros por categoria e status',
+      desc: 'Assédio, discriminação, segurança, fraude e mais: filtre a fila por categoria, gravidade e andamento em um clique.',
+    },
+    {
+      icon: FileDown,
+      title: 'Histórico completo em PDF',
+      desc: 'Exporte o dossiê de cada denúncia com todo o histórico de atualizações — evidência pronta para auditorias e eSocial.',
+    },
+    {
+      icon: Mail,
+      title: 'Campanhas de divulgação por e-mail',
+      desc: 'Envie o link e o QR Code do canal para a base de colaboradores, com lista de contatos gerenciada e deduplicação automática.',
+    },
+    {
+      icon: ClipboardList,
+      title: 'Equipe da ouvidoria via convite',
+      desc: 'Convide gestores e auditores por e-mail. Cada pessoa cria a própria conta e passa a acessar só o que o perfil dela permite.',
+    },
+  ];
+
   const steps = [
     { n: '1', title: 'Cadastro', desc: 'Você preenche o formulário e nosso time de parcerias faz uma reunião de alinhamento.' },
     { n: '2', title: 'Aprovação e contrato', desc: 'Assinatura digital do contrato de parceiro licenciado.' },
@@ -506,6 +564,56 @@ const PDParceiros = () => {
             <span className="flex items-center gap-1.5">
               <ScrollText className="h-4 w-4 text-audit-secondary" /> Evidências para auditoria
             </span>
+          </div>
+        </div>
+      </section>
+
+      {/* PAINEL DE GESTÃO COMPLETO — claro */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/40 to-background border-b">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4 border-audit-secondary/40 text-audit-secondary">
+              <KanbanSquare className="h-3.5 w-3.5 mr-1" /> Tudo incluso, sem módulo extra
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold">Um painel de gestão completo, pronto para auditoria</h2>
+            <p className="text-muted-foreground mt-3">
+              Não é só um formulário de denúncias: é uma operação completa de tratativa, com tarefas, equipe, evidências
+              e rastreabilidade. Você entrega tudo isso ao seu cliente no dia um.
+            </p>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
+            {painelFeatures.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-2xl border bg-card p-6 space-y-3 shadow-sm hover:shadow-lg hover:border-audit-secondary/40 transition-all"
+              >
+                <div className="h-12 w-12 rounded-xl bg-audit-secondary/12 flex items-center justify-center">
+                  <f.icon className="h-6 w-6 text-audit-secondary" />
+                </div>
+                <h3 className="font-bold">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Lock className="h-4 w-4 text-audit-secondary" /> Denunciante nunca vê notas nem responsáveis internos
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-audit-secondary" /> Evidências prontas para auditoria, CIPA e eSocial
+            </span>
+            <span className="flex items-center gap-1.5">
+              <History className="h-4 w-4 text-audit-secondary" /> Histórico imutável de cada caso
+            </span>
+          </div>
+          <div className="text-center mt-10">
+            <Button
+              size="lg"
+              className="h-14 px-8 text-base font-bold shadow-lg"
+              onClick={() => scrollTo('cadastro')}
+            >
+              Quero entregar isso aos meus clientes <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
           </div>
         </div>
       </section>
