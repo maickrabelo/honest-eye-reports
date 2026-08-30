@@ -4293,6 +4293,7 @@ export type Database = {
         | "affiliate"
         | "sales"
         | "sector_viewer"
+        | "licensed_operator"
       billing_cycle_enum: "monthly" | "quarterly" | "annual"
       subscription_status_enum:
         | "pending"
@@ -4444,6 +4445,7 @@ export const Constants = {
         "affiliate",
         "sales",
         "sector_viewer",
+        "licensed_operator",
       ],
       billing_cycle_enum: ["monthly", "quarterly", "annual"],
       subscription_status_enum: [
