@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, Building2, DollarSign, FileText, Handshake, Image as ImageIcon,
-  Loader2, MessageSquareWarning, Percent, TrendingUp,
+  Loader2, MessageSquareWarning, Percent, ShieldCheck, TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
 import EmbeddedDashboard from "@/components/EmbeddedDashboard";
 import NewOperatorCompanyDialog from "@/components/licensed-operator/NewOperatorCompanyDialog";
+import RequestManagementDialog, { type ManagementStatus } from "@/components/licensed-operator/RequestManagementDialog";
 import { formatBRL, OPERATOR_PLAN_LABELS } from "@/lib/licensedOperatorPricing";
 import usePageSEO from "@/hooks/usePageSEO";
 import { toast } from "sonner";
