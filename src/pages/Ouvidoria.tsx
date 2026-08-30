@@ -24,6 +24,13 @@ import {
   Zap,
   HardHat,
   Users,
+  ListChecks,
+  KanbanSquare,
+  History,
+  Filter,
+  UserCog,
+  FileDown,
+  Mail,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
