@@ -489,6 +489,69 @@ const Ouvidoria = () => {
           </div>
         </section>
 
+        {/* RECURSOS DO PAINEL DE GESTÃO */}
+        <section className="py-20 px-4 bg-background border-y border-border/60">
+          <div className="container mx-auto max-w-7xl">
+            <div className="text-center mb-14">
+              <Badge className="mb-4 bg-audit-primary text-white border-0 uppercase text-[10px] tracking-widest font-bold">
+                Painel de gestão completo
+              </Badge>
+              <h2 className="text-3xl md:text-5xl font-bold text-audit-primary mb-4 leading-tight">
+                Muito mais que um canal: um <span className="text-audit-secondary">sistema de gestão ética</span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Cada denúncia vira um caso gerenciado de ponta a ponta — com tarefas, prazos,
+                auditoria, papéis e comunicação anônima, tudo em um só painel.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {painelFeatures.map((f) => (
+                <Card
+                  key={f.title}
+                  className="group hover:shadow-xl hover:-translate-y-1 transition-all border-2 border-border hover:border-audit-secondary/40 bg-card"
+                >
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 rounded-xl bg-audit-secondary/10 flex items-center justify-center mb-4 group-hover:bg-audit-secondary group-hover:scale-110 transition-all">
+                      <f.icon className="h-6 w-6 text-audit-secondary group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="font-bold text-base text-audit-primary mb-2">{f.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Fluxo de trabalho visual */}
+            <div className="mt-16">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl md:text-3xl font-bold text-audit-primary mb-3">
+                  Do relato ao <span className="text-audit-secondary">encerramento auditável</span>
+                </h3>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Um fluxo transparente que protege o denunciante e blinda a empresa juridicamente.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {fluxoSteps.map((s, i) => (
+                  <div key={s.title} className="relative">
+                    <div className="rounded-xl border-2 border-border bg-card p-5 h-full hover:border-audit-secondary/40 transition-colors">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-7 h-7 rounded-full bg-audit-secondary text-white text-xs font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <f.icon className="h-4 w-4 text-audit-secondary" />
+                      </div>
+                      <p className="font-bold text-sm text-audit-primary">{s.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{s.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PLANOS — exclusivos desta página */}
         <section id="planos-ouvidoria" className="py-20 px-4 bg-background border-b border-border scroll-mt-24">
           <div className="container mx-auto max-w-5xl">
