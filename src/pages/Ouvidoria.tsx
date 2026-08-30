@@ -272,6 +272,64 @@ const Ouvidoria = () => {
     },
   ];
 
+  const painelFeatures = [
+    {
+      icon: KanbanSquare,
+      title: 'Quadro de tarefas Kanban',
+      desc: 'Cada denúncia vira tarefas com responsáveis, envolvidos, prazos e checklist interno. Arraste e solte entre estágios — o histórico da denúncia é atualizado automaticamente.',
+    },
+    {
+      icon: UserCog,
+      title: 'Papéis: Gestor e Auditor',
+      desc: 'Gestores editam denúncias, criam tarefas e notas. Auditores (jurídico, conselho, auditoria externa) apenas visualizam — sem poder alterar nada.',
+    },
+    {
+      icon: History,
+      title: 'Log de acessos e alterações',
+      desc: 'Trilha de auditoria completa: quem acessou, quando e o que mudou. Consultas por protocolo também ficam registradas com data e horário. Só o admin principal da empresa vê.',
+    },
+    {
+      icon: Lock,
+      title: 'Notas internas privadas',
+      desc: 'Anote o que só o time precisa ver, sem expor ao denunciante. O nome de quem atualizou aparece só no painel interno — o denunciante vê apenas a mensagem e a data.',
+    },
+    {
+      icon: Filter,
+      title: 'Filtros por categoria',
+      desc: 'Filtre por assédio, discriminação, fraude, conduta e mais. Encontre rapidamente os casos críticos e priorize o tratamento.',
+    },
+    {
+      icon: FileDown,
+      title: 'Histórico em PDF para auditoria',
+      desc: 'Exporte todo o histórico de uma denúncia (atualizações, notas, acessos) em PDF para MPT, compliance e eSocial.',
+    },
+    {
+      icon: Mail,
+      title: 'Campanhas por e-mail',
+      desc: 'Importe uma lista CSV de e-mails, gerencie contatos cadastrados e dispare o convite ao canal com o link direto. Detecta duplicidades automaticamente.',
+    },
+    {
+      icon: UserCheck,
+      title: 'Convite de colaboradores',
+      desc: 'Convide e-mails para acessar o painel de ouvidoria da empresa. O convidado recebe um e-mail de boas-vindas, cria a conta e passa a ter acesso com o papel definido.',
+    },
+    {
+      icon: ListChecks,
+      title: 'Checklist interno por tarefa',
+      desc: 'Monte checklists de apuração dentro de cada tarefa. Marque itens conforme avança — tudo fica registrado no histórico do caso.',
+    },
+  ];
+
+  const fluxoSteps = [
+    { icon: MessageSquare, title: 'Relato anônimo', text: 'O colaborador relata pelo chat com IA ou formulário, sem login.' },
+    { icon: Bot, title: 'Triagem automática', text: 'Tipo, gravidade e urgência identificados em segundos pela IA.' },
+    { icon: BellRing, title: 'Comissão notificada', text: 'Casos críticos alertam o time em tempo real.' },
+    { icon: KanbanSquare, title: 'Apuração em tarefas', text: 'Responsáveis, prazos e checklists organizam a investigação.' },
+    { icon: FileDown, title: 'Encerramento auditável', text: 'Histórico exportado em PDF para MPT e auditorias.' },
+  ];
+
+
+
   const benefits = [
     'Conformidade com NR-01, Lei 14.457/22, Lei Anticorrupção e LGPD',
     'Redução drástica de passivos trabalhistas e ações no MPT',
