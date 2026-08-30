@@ -71,6 +71,8 @@ const LicensedOperatorDashboard = () => {
   const [invoiceItems, setInvoiceItems] = useState<Record<string, any[]>>({});
   const [selectedCompanySlug, setSelectedCompanySlug] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [mgmtStatus, setMgmtStatus] = useState<Record<string, ManagementStatus>>({});
+  const [dialogCompany, setDialogCompany] = useState<OperatorCompany | null>(null);
 
   usePageSEO({
     title: "Painel do Parceiro Licenciado | SOIA",
