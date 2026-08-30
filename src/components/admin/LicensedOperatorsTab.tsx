@@ -131,6 +131,28 @@ const LicensedOperatorsTab = () => {
     }
   };
 
+  const seedDemo = async () => {
+    setSeeding(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("seed-licensed-operator-demo", {
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
+        body: {},
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setCredentials({ email: data.operator.email, tempPassword: data.operator.password });
+      setOpen(true);
+      toast.success(`Parceiro demo criado com ${data.companies?.length ?? 0} empresas.`);
+      load();
+    } catch (err) {
+      toast.error(getSafeErrorMessage(err));
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
       <Card>
