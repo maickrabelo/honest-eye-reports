@@ -16,7 +16,7 @@ import { useRealAuth } from "@/contexts/RealAuthContext";
 import EmbeddedDashboard from "@/components/EmbeddedDashboard";
 import NewOperatorCompanyDialog from "@/components/licensed-operator/NewOperatorCompanyDialog";
 import { formatBRL, OPERATOR_PLAN_LABELS } from "@/lib/licensedOperatorPricing";
-import { usePageSEO } from "@/hooks/usePageSEO";
+import usePageSEO from "@/hooks/usePageSEO";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 
@@ -75,7 +75,6 @@ const LicensedOperatorDashboard = () => {
   usePageSEO({
     title: "Painel do Parceiro Licenciado | SOIA",
     description: "Gerencie suas empresas de ouvidoria, faturamento e comissões no programa de parceria SOIA.",
-    noIndex: true,
   });
 
   const loadData = useCallback(async () => {
