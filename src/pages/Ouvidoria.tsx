@@ -587,6 +587,19 @@ const Ouvidoria = () => {
               ))}
             </div>
 
+            {/* Simulação do dashboard */}
+            <div className="mt-16">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl md:text-3xl font-bold text-audit-primary mb-3">
+                  Veja o painel em <span className="text-audit-secondary">funcionamento</span>
+                </h3>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Fila de denúncias, tarefas do caso e log de atividades — exatamente como a sua equipe vai operar.
+                </p>
+              </div>
+              <OuvidoriaDashboardSimulation />
+            </div>
+
             {/* Fluxo de trabalho visual */}
             <div className="mt-16">
               <div className="text-center mb-10">
