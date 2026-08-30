@@ -267,33 +267,25 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             }
           }
 
-          // Company user -> check if company has an SST assignment
+          // Company user -> brand by the SST manager / licensed partner responsible for it
           if (role === 'company' && profile.company_id) {
-            const { data: assignment } = await supabase
-              .from('company_sst_assignments')
-              .select('sst_manager_id')
+            const { data: branding } = await supabase
+              .from('company_branding_public' as any)
+              .select('brand_name, brand_slug, brand_logo, brand_color, sst_manager_id, is_licensed_operator')
               .eq('company_id', profile.company_id)
-              .maybeSingle();
+              .maybeSingle() as { data: any };
 
-            if (assignment?.sst_manager_id) {
-              const { data: sstManager } = await supabase
-                .from('sst_managers')
-                .select('logo_url, name, slug, brand_color, id, is_licensed_operator')
-                .eq('id', assignment.sst_manager_id)
-                .maybeSingle();
-
-              if (sstManager) {
-                setBrandLogo(sstManager.logo_url || null);
-                setBrandName(sstManager.name);
-                setSstSlug(sstManager.slug);
-                setSstManagerId(sstManager.id);
-                setIsCoBranded(!!(sstManager as any).is_licensed_operator);
-                const color = sstManager.brand_color as BrandColorTheme | null;
-                setBrandColor(color);
-                applyColorTheme(color);
-                setIsLoading(false);
-                return;
-              }
+            if (branding) {
+              setBrandLogo(branding.brand_logo || null);
+              setBrandName(branding.brand_name || null);
+              setSstSlug(branding.brand_slug || null);
+              setSstManagerId(branding.sst_manager_id || null);
+              setIsCoBranded(!!branding.is_licensed_operator);
+              const color = branding.brand_color as BrandColorTheme | null;
+              setBrandColor(color);
+              applyColorTheme(color);
+              setIsLoading(false);
+              return;
             }
           }
         }
