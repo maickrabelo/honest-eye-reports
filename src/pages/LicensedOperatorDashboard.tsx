@@ -333,7 +333,7 @@ const LicensedOperatorDashboard = () => {
                     <Card
                       key={c.id}
                       className="cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all"
-                      onClick={() => c.companies?.slug && setSelectedCompanySlug(c.companies.slug)}
+                      onClick={() => setDialogCompany(c)}
                     >
                       <div className="h-24 bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
                         {c.companies?.logo_url ? (
@@ -350,9 +350,18 @@ const LicensedOperatorDashboard = () => {
                           {OPERATOR_PLAN_LABELS[c.plan_slug as "ouvidoria"] ?? c.plan_slug} · {c.employee_count} colaboradores
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="flex items-center justify-between">
-                        {statusBadge(c.payment_status)}
-                        <span className="text-sm font-semibold">{formatBRL(c.monthly_amount_cents)}/mês</span>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          {statusBadge(c.payment_status)}
+                          <span className="text-sm font-semibold">{formatBRL(c.monthly_amount_cents)}/mês</span>
+                        </div>
+                        {mgmtStatus[c.company_id] === "active" ? (
+                          <Badge className="bg-green-600 gap-1"><ShieldCheck className="h-3 w-3" />Gerenciamento ativo</Badge>
+                        ) : mgmtStatus[c.company_id] === "pending" ? (
+                          <Badge variant="secondary">Aguardando autorização</Badge>
+                        ) : (
+                          <Badge variant="outline">Solicitar gerenciamento</Badge>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
