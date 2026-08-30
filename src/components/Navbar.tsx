@@ -37,7 +37,7 @@ interface NavbarProps {
 const Navbar = ({ smsBrand = false }: NavbarProps) => {
   const { user, role, availableRoles, switchRole, signOut, profile } = useRealAuth();
   const hasDualRole = availableRoles.includes('sst') && availableRoles.includes('company');
-  const { brandLogo, isWhiteLabel, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
+  const { brandLogo, isWhiteLabel, isCoBranded, brandColor, isLoading: isBrandLoading, setBrandColorDB } = useWhiteLabel();
   const { isSmsPlan } = useSmsPlan();
   const { resetTour: resetSstTour } = useOnboarding('sst-dashboard');
   const { resetTour: resetCompanyTour } = useOnboarding('company-dashboard');
