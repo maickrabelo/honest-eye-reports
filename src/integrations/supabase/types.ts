@@ -3527,6 +3527,7 @@ export type Database = {
           extra_company_slots: number
           extra_employee_slots: number
           id: string
+          is_licensed_operator: boolean
           logo_url: string | null
           max_companies: number
           name: string
@@ -3549,6 +3550,7 @@ export type Database = {
           extra_company_slots?: number
           extra_employee_slots?: number
           id?: string
+          is_licensed_operator?: boolean
           logo_url?: string | null
           max_companies?: number
           name: string
@@ -3571,6 +3573,7 @@ export type Database = {
           extra_company_slots?: number
           extra_employee_slots?: number
           id?: string
+          is_licensed_operator?: boolean
           logo_url?: string | null
           max_companies?: number
           name?: string

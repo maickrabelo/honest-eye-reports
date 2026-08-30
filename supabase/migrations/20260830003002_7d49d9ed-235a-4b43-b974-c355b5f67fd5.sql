@@ -1,0 +1,1 @@
+ALTER TABLE public.sst_managers ADD COLUMN IF NOT EXISTS is_licensed_operator boolean NOT NULL DEFAULT false;
