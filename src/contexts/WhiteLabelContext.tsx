@@ -69,6 +69,7 @@ interface WhiteLabelBrand {
   sstSlug: string | null;
   brandColor: BrandColorTheme | null;
   isWhiteLabel: boolean;
+  isCoBranded: boolean;
   isLoading: boolean;
   setBrandColorDB: (color: BrandColorTheme) => Promise<void>;
   getColorPalette: () => ColorPalette;
@@ -80,6 +81,7 @@ const WhiteLabelContext = createContext<WhiteLabelBrand>({
   sstSlug: null,
   brandColor: null,
   isWhiteLabel: false,
+  isCoBranded: false,
   isLoading: true,
   setBrandColorDB: async () => {},
   getColorPalette: () => COLOR_PALETTES.green,
@@ -123,6 +125,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [sstSlug, setSstSlug] = useState<string | null>(null);
   const [brandColor, setBrandColor] = useState<BrandColorTheme | null>(null);
   const [sstManagerId, setSstManagerId] = useState<string | null>(null);
+  const [isCoBranded, setIsCoBranded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const { user, role, profile } = useRealAuth();
@@ -158,6 +161,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setSstSlug(null);
         setBrandColor(null);
         setSstManagerId(null);
+        setIsCoBranded(false);
         applyColorTheme(null);
         setIsLoading(false);
         return;
@@ -172,7 +176,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const slug = sstPathMatch[1];
           const { data: sstManager } = await supabase
             .from('sst_managers_public' as any)
-            .select('logo_url, name, slug, brand_color, id')
+            .select('logo_url, name, slug, brand_color, id, is_licensed_operator')
             .eq('slug', slug)
             .maybeSingle() as { data: any };
 
@@ -215,10 +219,10 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // 3. Check logged-in user
         if (user && profile) {
           // SST user -> get their own SST manager
-          if (role === 'sst' && profile.sst_manager_id) {
+          if ((role === 'sst' || (role as string) === 'licensed_operator') && profile.sst_manager_id) {
             const { data: sstManager } = await supabase
               .from('sst_managers')
-              .select('logo_url, name, slug, brand_color, id')
+              .select('logo_url, name, slug, brand_color, id, is_licensed_operator')
               .eq('id', profile.sst_manager_id)
               .maybeSingle();
 
@@ -227,6 +231,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               setBrandName(sstManager.name);
               setSstSlug(sstManager.slug);
               setSstManagerId(sstManager.id);
+              setIsCoBranded(!!(sstManager as any).is_licensed_operator);
               const color = sstManager.brand_color as BrandColorTheme | null;
               setBrandColor(color);
               applyColorTheme(color);
@@ -246,7 +251,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             if (assignment?.sst_manager_id) {
               const { data: sstManager } = await supabase
                 .from('sst_managers')
-                .select('logo_url, name, slug, brand_color, id')
+                .select('logo_url, name, slug, brand_color, id, is_licensed_operator')
                 .eq('id', assignment.sst_manager_id)
                 .maybeSingle();
 
@@ -255,6 +260,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setBrandName(sstManager.name);
                 setSstSlug(sstManager.slug);
                 setSstManagerId(sstManager.id);
+                setIsCoBranded(!!(sstManager as any).is_licensed_operator);
                 const color = sstManager.brand_color as BrandColorTheme | null;
                 setBrandColor(color);
                 applyColorTheme(color);
@@ -271,6 +277,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setSstSlug(null);
         setBrandColor(null);
         setSstManagerId(null);
+        setIsCoBranded(false);
         applyColorTheme(null);
       } catch (error) {
         console.error('Error detecting white-label branding:', error);
@@ -288,7 +295,7 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [location.pathname, user, role, profile]);
 
   return (
-    <WhiteLabelContext.Provider value={{ brandLogo, brandName, sstSlug, brandColor, isWhiteLabel: !!brandLogo || !!brandColor, isLoading, setBrandColorDB, getColorPalette }}>
+    <WhiteLabelContext.Provider value={{ brandLogo, brandName, sstSlug, brandColor, isCoBranded, isWhiteLabel: !!brandLogo || !!brandColor, isLoading, setBrandColorDB, getColorPalette }}>
       {children}
     </WhiteLabelContext.Provider>
   );

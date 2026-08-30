@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
         slug: slugify(razaoSocial),
         max_companies: maxCompanies,
         subscription_status: "active",
+        is_licensed_operator: true,
       })
       .select("id")
       .single();
