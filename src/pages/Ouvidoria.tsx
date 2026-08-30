@@ -540,7 +540,7 @@ const Ouvidoria = () => {
                         <span className="w-7 h-7 rounded-full bg-audit-secondary text-white text-xs font-bold flex items-center justify-center">
                           {i + 1}
                         </span>
-                        <f.icon className="h-4 w-4 text-audit-secondary" />
+                        <s.icon className="h-4 w-4 text-audit-secondary" />
                       </div>
                       <p className="font-bold text-sm text-audit-primary">{s.title}</p>
                       <p className="text-xs text-muted-foreground mt-1">{s.text}</p>
