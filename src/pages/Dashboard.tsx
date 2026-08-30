@@ -43,6 +43,7 @@ import { QRCodeDownloader } from "@/components/QRCodeDownloader";
 import TrialBanner from '@/components/TrialBanner';
 import TrialExpiredOverlay from '@/components/TrialExpiredOverlay';
 import ProfileCompletionBanner from '@/components/ProfileCompletionBanner';
+import ManagementRequestBanner from '@/components/company/ManagementRequestBanner';
 import { useCompanyFeatures } from '@/hooks/useCompanyFeatures';
 import { useCompanyHasSST } from '@/hooks/useCompanyHasSST';
 import OnboardingTour, { TourStep } from '@/components/OnboardingTour';
