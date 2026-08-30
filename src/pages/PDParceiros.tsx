@@ -33,6 +33,15 @@ import {
   AlertTriangle,
   QrCode,
   UserCheck,
+  KanbanSquare,
+  History,
+  UserCog,
+  FileDown,
+  Mail,
+  ListChecks,
+  Filter,
+  StickyNote,
+  ClipboardList,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
