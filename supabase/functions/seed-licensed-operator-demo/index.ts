@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
       }
     }
     await supabase.from("companies").delete().in("cnpj", COMPANIES.map((c) => c.cnpj));
+    await supabase.from("sst_managers").delete().eq("email", OPERATOR.email);
 
     // ---------- gestora interna (marca do parceiro) ----------
     const { data: manager, error: managerErr } = await supabase
