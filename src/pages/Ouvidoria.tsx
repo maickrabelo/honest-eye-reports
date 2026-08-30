@@ -36,6 +36,7 @@ import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
+import OuvidoriaDashboardSimulation from '@/components/ouvidoria/OuvidoriaDashboardSimulation';
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
 type ChatMsg = { from: 'sonia' | 'user'; text: string };
@@ -585,6 +586,19 @@ const Ouvidoria = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Simulação do dashboard */}
+            <div className="mt-16">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl md:text-3xl font-bold text-audit-primary mb-3">
+                  Veja o painel em <span className="text-audit-secondary">funcionamento</span>
+                </h3>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Fila de denúncias, tarefas do caso e log de atividades — exatamente como a sua equipe vai operar.
+                </p>
+              </div>
+              <OuvidoriaDashboardSimulation />
             </div>
 
             {/* Fluxo de trabalho visual */}

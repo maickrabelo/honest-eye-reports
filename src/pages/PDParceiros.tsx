@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
 import OuvidoriaChatSimulation from '@/components/ouvidoria/OuvidoriaChatSimulation';
+import OuvidoriaDashboardSimulation from '@/components/ouvidoria/OuvidoriaDashboardSimulation';
 
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
@@ -595,6 +596,21 @@ const PDParceiros = () => {
               </div>
             ))}
           </div>
+
+          {/* Simulação do dashboard */}
+          <div className="mt-14">
+            <div className="text-center mb-8">
+              <h3 className="text-xl md:text-2xl font-bold">
+                Veja o painel que você e seus clientes vão usar
+              </h3>
+              <p className="text-muted-foreground mt-2 text-sm max-w-2xl mx-auto">
+                Fila de denúncias, tarefas com checklist e log de atividades — o mesmo painel para a empresa e para a
+                sua operação de parceiro.
+              </p>
+            </div>
+            <OuvidoriaDashboardSimulation />
+          </div>
+
           <div className="mt-10 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Lock className="h-4 w-4 text-audit-secondary" /> Denunciante nunca vê notas nem responsáveis internos
