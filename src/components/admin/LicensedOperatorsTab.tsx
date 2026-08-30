@@ -167,10 +167,15 @@ const LicensedOperatorsTab = () => {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="secondary" className="gap-2" onClick={seedDemo} disabled={seeding}>
+              {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+              Criar parceiro demo
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => closeInvoices()} disabled={closing}>
               {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
               Fechar faturas do mês (dia 20)
             </Button>
+
             <Button variant="ghost" size="icon" onClick={load}><RefreshCw className="h-4 w-4" /></Button>
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setCredentials(null); }}>
               <DialogTrigger asChild>
