@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
 import OuvidoriaChatSimulation from '@/components/ouvidoria/OuvidoriaChatSimulation';
+import { calculateOperatorPrice } from '@/lib/licensedOperatorPricing';
 import OuvidoriaDashboardSimulation from '@/components/ouvidoria/OuvidoriaDashboardSimulation';
 
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
@@ -88,7 +89,7 @@ function CommissionSimulator() {
             <Calculator className="h-6 w-6 text-audit-secondary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold">Simulador de comissões</h3>
+            <h3 className="text-xl font-bold">Simulador de comissões — até 30% de comissão</h3>
             <p className="text-sm text-muted-foreground">
               Veja quanto a sua carteira atual pode gerar de receita recorrente.
             </p>
@@ -157,7 +158,7 @@ function CommissionSimulator() {
         </div>
 
         <div className="rounded-2xl bg-audit-primary text-primary-foreground p-6 text-center shadow-lg">
-          <p className="text-sm font-medium text-audit-secondary">Sua comissão de 30% sobre a anuidade</p>
+          <p className="text-sm font-medium text-audit-secondary">Até 30% de comissão sobre a anuidade</p>
           <p className="text-4xl md:text-5xl font-extrabold mt-2">{brl(result.annualCommission)}</p>
           <p className="text-sm mt-2 opacity-90">
             equivalente a <strong>{brl(result.monthlyCommission)}</strong> por mês — recorrente, enquanto os clientes
@@ -166,9 +167,10 @@ function CommissionSimulator() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          Base de cálculo: R$ 99 por empresa/mês + R$ 1,70 por colaborador acima de 30 colaboradores. Comissão de 30%
-          sobre o valor da anuidade. Este valor não inclui a taxa de implementação nem a mensalidade de gestão que você
-          cobra diretamente do seu cliente.
+          Base de cálculo: tabela oficial do plano Ouvidoria — R$ 149/mês por empresa até 50 colaboradores, R$ 199/mês
+          até 100 colaboradores e R$ 1,80 por colaborador/mês acima de 100. Comissão de até 30% sobre o valor da
+          anuidade. Valor de comissão baseado no nível de parceiro ouro. Consulte condições. Este valor não inclui a
+          taxa de implementação nem a mensalidade de gestão que você cobra diretamente do seu cliente.
         </p>
       </CardContent>
     </Card>
