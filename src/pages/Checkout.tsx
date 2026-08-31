@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2, Plus, X, CreditCard, QrCode, FileText, Mail, Phone 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { fbqTrack } from '@/lib/metaPixel';
+import { calculateOperatorPrice, type OperatorPlanSlug, type OperatorBillingCycle } from '@/lib/licensedOperatorPricing';
 
 const SMS_LOGO_URL = '/__l5e/assets-v1/86052a62-59f9-47bf-af09-bc2d67c91278/sr-sms-logo.png';
 
@@ -60,6 +61,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cnpjs, setCnpjs] = useState<string[]>(['']);
+  const [employeeCount, setEmployeeCount] = useState<number>(Number(params.get('vidas')) || 50);
 
   const [form, setForm] = useState({
     name: '',
@@ -94,16 +96,20 @@ const Checkout = () => {
         window.location.href = `https://wa.me/5511999406560?text=${encodeURIComponent(msg)}`;
         return;
       }
+      // Planos Ouvidoria usam preço por faixa de vidas (não dependem de price_*_cents)
+      const isOuvidoriaTieredPlan = formatted.slug === 'ouvidoria' || formatted.slug === 'ouvidoria-smart';
       // Garante um ciclo com preço definido (planos mensais-only, ex.: Ouvidoria)
-      const priceFor = (c: Cycle) =>
-        c === 'annual'
-          ? formatted.price_annual_cents
-          : c === 'quarterly'
-            ? formatted.price_quarterly_cents
-            : formatted.price_monthly_cents;
-      if (!priceFor(initialCycle)) {
-        const fallback = (['annual', 'quarterly', 'monthly'] as Cycle[]).find((c) => priceFor(c));
-        if (fallback) setCycle(fallback);
+      if (!isOuvidoriaTieredPlan) {
+        const priceFor = (c: Cycle) =>
+          c === 'annual'
+            ? formatted.price_annual_cents
+            : c === 'quarterly'
+              ? formatted.price_quarterly_cents
+              : formatted.price_monthly_cents;
+        if (!priceFor(initialCycle)) {
+          const fallback = (['annual', 'quarterly', 'monthly'] as Cycle[]).find((c) => priceFor(c));
+          if (fallback) setCycle(fallback);
+        }
       }
       setPlan(formatted);
       setLoading(false);
@@ -111,8 +117,15 @@ const Checkout = () => {
     })();
   }, [planSlug, navigate]);
 
+  const isOuvidoriaTiered = !!plan && (plan.slug === 'ouvidoria' || plan.slug === 'ouvidoria-smart');
+  const ouvidoriaCycle: OperatorBillingCycle = cycle === 'annual' ? 'annual' : 'monthly';
+  const opPrice = isOuvidoriaTiered
+    ? calculateOperatorPrice(plan!.slug as OperatorPlanSlug, Math.max(1, employeeCount), ouvidoriaCycle)
+    : null;
+
   const getMonthlyPrice = () => {
     if (!plan) return 0;
+    if (opPrice) return opPrice.monthlyCents;
     return cycle === 'annual'
       ? plan.price_annual_cents ?? 0
       : cycle === 'quarterly'
@@ -120,7 +133,7 @@ const Checkout = () => {
         : plan.price_monthly_cents ?? 0;
   };
   const monthsPerCycle = cycle === 'annual' ? 12 : cycle === 'quarterly' ? 3 : 1;
-  const getCycleTotal = () => getMonthlyPrice() * monthsPerCycle;
+  const getCycleTotal = () => (opPrice ? opPrice.totalChargeCents : getMonthlyPrice() * monthsPerCycle);
 
   const isCorporate = plan?.slug === 'corporate';
   const maxCnpjs = plan?.max_cnpjs ?? 1;
@@ -178,6 +191,7 @@ const Checkout = () => {
           },
           companyName: form.companyName || form.name,
           cnpjs: isCorporate ? cnpjs.filter((c) => c.replace(/\D/g, '').length >= 14) : [],
+          employeeCount: isOuvidoriaTiered ? Math.max(1, employeeCount) : undefined,
         },
       });
       if (error) throw error;
@@ -231,7 +245,30 @@ const Checkout = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[plan.price_annual_cents, plan.price_quarterly_cents, plan.price_monthly_cents].filter(Boolean).length > 1 && (
+              {isOuvidoriaTiered ? (
+                <div className="space-y-2">
+                  <Label>Ciclo de pagamento</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['monthly', 'annual'] as OperatorBillingCycle[]).map((c) => {
+                      const p = calculateOperatorPrice(plan!.slug as OperatorPlanSlug, Math.max(1, employeeCount), c);
+                      const active = ouvidoriaCycle === c;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setCycle(c === 'annual' ? 'annual' : 'monthly')}
+                          className={`flex flex-col items-center gap-0.5 p-3 border-2 rounded cursor-pointer transition-all ${
+                            active ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <span className="text-sm font-semibold">{c === 'annual' ? 'Anual (12x)' : 'Mensal'}</span>
+                          <span className="text-sm font-bold text-primary">{formatBRL(p.monthlyCents)}/mês</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : [plan.price_annual_cents, plan.price_quarterly_cents, plan.price_monthly_cents].filter(Boolean).length > 1 ? (
                 <div className="space-y-2">
                   <Label>Ciclo de pagamento</Label>
                   <RadioGroup value={cycle} onValueChange={(v) => setCycle(v as Cycle)}>
@@ -260,7 +297,7 @@ const Checkout = () => {
                     })}
                   </RadioGroup>
                 </div>
-              )}
+              ) : null}
 
 
               <div className="border-t pt-4 space-y-3">
@@ -345,6 +382,19 @@ const Checkout = () => {
                     value={form.companyName}
                     onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                   />
+                </div>
+              )}
+
+              {isOuvidoriaTiered && (
+                <div className="space-y-2">
+                  <Label>Número de colaboradores *</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={employeeCount}
+                    onChange={(e) => setEmployeeCount(Math.max(1, Number(e.target.value) || 1))}
+                  />
+                  <p className="text-xs text-muted-foreground">O valor é calculado conforme a faixa de colaboradores.</p>
                 </div>
               )}
 
