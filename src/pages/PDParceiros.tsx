@@ -54,9 +54,6 @@ const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
 /** Constantes comerciais do Programa de Parceiros Licenciados */
 export const PARTNER_PRICING = {
-  basePricePerCompanyMonthly: 99,
-  pricePerExtraEmployeeMonthly: 1.7,
-  freeEmployeesIncluded: 30,
   commissionRate: 0.3,
 };
 
@@ -68,10 +65,8 @@ function CommissionSimulator() {
   const [employees, setEmployees] = useState(60);
 
   const result = useMemo(() => {
-    const { basePricePerCompanyMonthly, pricePerExtraEmployeeMonthly, freeEmployeesIncluded, commissionRate } =
-      PARTNER_PRICING;
-    const extra = Math.max(0, employees - freeEmployeesIncluded);
-    const monthlyPerCompany = basePricePerCompanyMonthly + extra * pricePerExtraEmployeeMonthly;
+    const { commissionRate } = PARTNER_PRICING;
+    const monthlyPerCompany = calculateOperatorPrice('ouvidoria', employees, 'monthly').monthlyCents / 100;
     const annualPerCompany = monthlyPerCompany * 12;
     const annualTotal = annualPerCompany * companies;
     const annualCommission = annualTotal * commissionRate;
@@ -83,6 +78,7 @@ function CommissionSimulator() {
       monthlyCommission: annualCommission / 12,
     };
   }, [companies, employees]);
+
 
   return (
     <Card className="border-2 border-audit-secondary/40 bg-card shadow-2xl">
