@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
 import OuvidoriaDashboardSimulation from '@/components/ouvidoria/OuvidoriaDashboardSimulation';
+import { calculateOperatorPrice, OPERATOR_PRICING, SMART_FACTOR, formatBRL as formatOpBRL, type OperatorPlanSlug, type OperatorBillingCycle } from '@/lib/licensedOperatorPricing';
 const logoSoia = '/lovable-uploads/Logo_SOIA.png';
 
 type ChatMsg = { from: 'sonia' | 'user'; text: string };
@@ -163,6 +164,176 @@ function ChatSimulation() {
   );
 }
 
+const OUV_PLAN_DEFS: {
+  slug: OperatorPlanSlug;
+  name: string;
+  icon: typeof Bot;
+  badge: string;
+  badgeClass: string;
+  border: string;
+  desc: string;
+  features: { txt: string; color: string }[];
+  cta: string;
+  outline: boolean;
+}[] = [
+  {
+    slug: 'ouvidoria',
+    name: 'Ouvidoria',
+    icon: Bot,
+    badge: 'Mais completo',
+    badgeClass: 'bg-audit-secondary text-white',
+    border: 'border-audit-secondary',
+    desc: 'Canal com a SOnIA: conversa acolhedora, triagem e classificação automáticas.',
+    features: [
+      { txt: 'Canal de denúncias com IA (SOnIA)', color: 'text-audit-secondary' },
+      { txt: 'Triagem e classificação automática', color: 'text-audit-secondary' },
+      { txt: 'Anonimato garantido (LGPD)', color: 'text-audit-secondary' },
+      { txt: 'Protocolo e acompanhamento do relato', color: 'text-audit-secondary' },
+      { txt: 'Painel de gestão das denúncias', color: 'text-audit-secondary' },
+    ],
+    cta: 'Assinar Ouvidoria',
+    outline: false,
+  },
+  {
+    slug: 'ouvidoria-smart',
+    name: 'Ouvidoria Smart',
+    icon: ClipboardList,
+    badge: 'Melhor custo',
+    badgeClass: 'bg-audit-primary text-white',
+    border: 'border-border',
+    desc: 'Formulário anônimo com protocolo e chave de acesso. Simples, direto e sem IA.',
+    features: [
+      { txt: 'Canal de denúncias por formulário anônimo', color: 'text-audit-primary' },
+      { txt: 'Protocolo + chave de acesso para acompanhar', color: 'text-audit-primary' },
+      { txt: 'Anonimato garantido (LGPD)', color: 'text-audit-primary' },
+      { txt: 'Painel de gestão das denúncias', color: 'text-audit-primary' },
+      { txt: 'Sem inteligência artificial', color: 'text-audit-primary' },
+    ],
+    cta: 'Assinar Ouvidoria Smart',
+    outline: true,
+  },
+];
+
+function OuvidoriaPlanCards({
+  onCheckout,
+}: {
+  onCheckout: (slug: string, planName: string, priceBRL: number, cycle: OperatorBillingCycle, employees: number) => void;
+}) {
+  const [cycle, setCycle] = useState<OperatorBillingCycle>('monthly');
+  const [employees, setEmployees] = useState('50');
+  const count = Math.max(1, Math.round(Number(employees) || 0));
+
+  const tierRows = (slug: OperatorPlanSlug) => {
+    const t50 = calculateOperatorPrice(slug, 50, cycle).monthlyCents;
+    const t100 = calculateOperatorPrice(slug, 100, cycle).monthlyCents;
+    const factor = slug === 'ouvidoria-smart' ? SMART_FACTOR : 1;
+    const perLife = Math.round((OPERATOR_PRICING[cycle].perLifeCents * factor) / 10) * 10;
+    return [
+      { label: 'Até 50 colaboradores', value: `${formatOpBRL(t50)}/mês` },
+      { label: 'Até 100 colaboradores', value: `${formatOpBRL(t100)}/mês` },
+      { label: 'Acima de 100', value: `${formatOpBRL(perLife)}/vida` },
+    ];
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="rounded-2xl border-2 border-border bg-muted/30 p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Users className="h-5 w-5 text-audit-primary" />
+          <div>
+            <Label className="text-sm font-semibold text-audit-primary">Quantos colaboradores?</Label>
+            <p className="text-xs text-muted-foreground">O preço é calculado automaticamente.</p>
+          </div>
+          <Input
+            type="number"
+            min={1}
+            value={employees}
+            onChange={(e) => setEmployees(e.target.value)}
+            className="w-28"
+          />
+        </div>
+        <div className="flex items-center gap-1 rounded-full bg-card border-2 border-border p-1">
+          {(['monthly', 'annual'] as OperatorBillingCycle[]).map((c) => (
+            <button
+              key={c}
+              onClick={() => setCycle(c)}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
+                cycle === c ? 'bg-audit-primary text-white shadow' : 'text-audit-primary hover:bg-muted'
+              }`}
+            >
+              {c === 'monthly' ? 'Mensal' : 'Anual (12x sem juros)'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {OUV_PLAN_DEFS.map((p) => {
+          const live = calculateOperatorPrice(p.slug, count, cycle);
+          return (
+            <div key={p.slug} className={`relative rounded-2xl border-2 ${p.border} bg-card p-7 shadow-xl flex flex-col`}>
+              <Badge className={`absolute -top-3 left-6 ${p.badgeClass} font-bold text-[10px] uppercase tracking-wider`}>
+                {p.badge}
+              </Badge>
+              <div className="flex items-center gap-2 mb-1">
+                <p.icon className="h-5 w-5 text-audit-secondary" />
+                <h3 className="text-xl font-bold text-audit-primary">{p.name}</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-5">{p.desc}</p>
+
+              <div className="mb-4 rounded-xl bg-muted/40 p-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-extrabold text-audit-primary">{formatOpBRL(live.monthlyCents)}</span>
+                  <span className="text-muted-foreground text-sm">/mês</span>
+                </div>
+                {cycle === 'annual' ? (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    12x de {formatOpBRL(live.monthlyCents)} sem juros · Total {formatOpBRL(live.totalChargeCents)}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">cobrança mensal recorrente</p>
+                )}
+                <p className="text-[11px] text-audit-secondary font-semibold mt-1">{live.tier}</p>
+              </div>
+
+              <div className="mb-5 space-y-1.5">
+                {tierRows(p.slug).map((r) => (
+                  <div key={r.label} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{r.label}</span>
+                    <span className="font-semibold text-foreground">{r.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <ul className="space-y-2.5 mb-7 flex-1">
+                {p.features.map((f) => (
+                  <li key={f.txt} className="flex items-start gap-2 text-sm text-foreground">
+                    <CheckCircle2 className={`h-4 w-4 ${f.color} mt-0.5 flex-shrink-0`} />
+                    {f.txt}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                size="lg"
+                variant={p.outline ? 'outline' : 'default'}
+                onClick={() => onCheckout(p.slug, p.name, live.monthlyCents / 100, cycle, count)}
+                className={
+                  p.outline
+                    ? 'w-full border-2 border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-bold py-6 group'
+                    : 'w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold py-6 group'
+                }
+              >
+                {p.cta}
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const Ouvidoria = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -186,7 +357,7 @@ const Ouvidoria = () => {
     document.getElementById('planos-ouvidoria')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const goToCheckout = (slug: string, planName: string, priceBRL: number) => {
+  const goToCheckout = (slug: string, planName: string, priceBRL: number, cycle: string, employees: number) => {
     try {
       fbqTrack('InitiateCheckout', {
         content_name: planName,
@@ -197,7 +368,7 @@ const Ouvidoria = () => {
     } catch (err) {
       console.warn('fbqTrack falhou:', err);
     }
-    window.location.href = `/contratar?plano=${slug}&ciclo=monthly`;
+    window.location.href = `/contratar?plano=${slug}&ciclo=${cycle}&vidas=${employees}`;
   };
 
 
@@ -634,7 +805,7 @@ const Ouvidoria = () => {
         {/* PLANOS — exclusivos desta página */}
         <section id="planos-ouvidoria" className="py-20 px-4 bg-background border-b border-border scroll-mt-24">
           <div className="container mx-auto max-w-5xl">
-            <div className="text-center mb-12">
+            <div className="text-center mb-10">
               <Badge className="mb-4 bg-audit-secondary/15 text-audit-secondary border-audit-secondary/30 uppercase text-[10px] tracking-widest font-bold">
                 Planos exclusivos
               </Badge>
@@ -642,98 +813,11 @@ const Ouvidoria = () => {
                 Escolha seu canal de ouvidoria
               </h2>
               <p className="text-muted-foreground text-lg">
-                Contratação 100% online. Ativação imediata após o pagamento.
+                Preço por faixa de colaboradores. Contratação 100% online e ativação imediata após o pagamento.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Ouvidoria (com IA) */}
-              <div className="relative rounded-2xl border-2 border-audit-secondary bg-card p-7 shadow-xl shadow-audit-secondary/10 flex flex-col">
-                <Badge className="absolute -top-3 left-6 bg-audit-secondary text-white font-bold text-[10px] uppercase tracking-wider">
-                  Mais completo
-                </Badge>
-                <div className="flex items-center gap-2 mb-1">
-                  <Bot className="h-5 w-5 text-audit-secondary" />
-                  <h3 className="text-xl font-bold text-audit-primary">Ouvidoria</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-5">
-                  Canal com a SOnIA: conversa acolhedora, triagem e classificação automáticas.
-                </p>
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-audit-primary">R$ 99</span>
-                    <span className="text-muted-foreground text-sm">/mês</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">até 50 colaboradores</p>
-                </div>
-                <ul className="space-y-2.5 mb-7 flex-1">
-                  {[
-                    'Canal de denúncias com IA (SOnIA)',
-                    'Triagem e classificação automática',
-                    'Anonimato garantido (LGPD)',
-                    'Protocolo e acompanhamento do relato',
-                    'Painel de gestão das denúncias',
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-audit-secondary mt-0.5 flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  size="lg"
-                  onClick={() => goToCheckout('ouvidoria', 'Ouvidoria', 99)}
-                  className="w-full bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold py-6 group"
-                >
-                  Assinar Ouvidoria
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </div>
-
-              {/* Ouvidoria Smart (sem IA) */}
-              <div className="relative rounded-2xl border-2 border-border bg-card p-7 shadow-lg flex flex-col">
-                <Badge className="absolute -top-3 left-6 bg-audit-primary text-white font-bold text-[10px] uppercase tracking-wider">
-                  Melhor custo
-                </Badge>
-                <div className="flex items-center gap-2 mb-1">
-                  <ClipboardList className="h-5 w-5 text-audit-primary" />
-                  <h3 className="text-xl font-bold text-audit-primary">Ouvidoria Smart</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-5">
-                  Formulário anônimo com protocolo e chave de acesso. Simples, direto e sem IA.
-                </p>
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-audit-primary">R$ 39,90</span>
-                    <span className="text-muted-foreground text-sm">/mês</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">até 50 colaboradores</p>
-                </div>
-                <ul className="space-y-2.5 mb-7 flex-1">
-                  {[
-                    'Canal de denúncias por formulário anônimo',
-                    'Protocolo + chave de acesso para acompanhar',
-                    'Anonimato garantido (LGPD)',
-                    'Painel de gestão das denúncias',
-                    'Sem inteligência artificial',
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-audit-primary mt-0.5 flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => goToCheckout('ouvidoria-smart', 'Ouvidoria Smart', 39.9)}
-                  className="w-full border-2 border-audit-primary text-audit-primary hover:bg-audit-primary hover:text-white font-bold py-6 group"
-                >
-                  Assinar Ouvidoria Smart
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </div>
-            </div>
+            <OuvidoriaPlanCards onCheckout={goToCheckout} />
 
             <p className="text-center text-xs text-muted-foreground mt-6">
               Pagamento no cartão, PIX ou boleto · Cancele quando quiser

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { calculateOperatorPrice, type OperatorPlanSlug, type OperatorBillingCycle } from '../_shared/operatorPricing.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,7 @@ interface SubReq {
   };
   companyName?: string;
   cnpjs?: string[]; // for Corporate
+  employeeCount?: number; // Planos Ouvidoria (preço por faixa de vidas)
   metadata?: Record<string, unknown>;
 }
 
@@ -55,22 +57,36 @@ Deno.serve(async (req) => {
     if (planErr || !plan) throw new Error(`Plan not found: ${body.planSlug}`);
     if (plan.is_custom_quote) throw new Error('Este plano é sob demanda. Entre em contato com o consultor.');
 
-    const priceField = body.billingCycle === 'annual'
-      ? 'price_annual_cents'
-      : body.billingCycle === 'quarterly'
-        ? 'price_quarterly_cents'
-        : 'price_monthly_cents';
-    const monthlyEquivalentCents: number = (plan as any)[priceField];
-    if (!monthlyEquivalentCents || monthlyEquivalentCents <= 0) {
-      throw new Error('Preço inválido para o ciclo selecionado');
+    const isOuvidoriaTiered = body.planSlug === 'ouvidoria' || body.planSlug === 'ouvidoria-smart';
+    const normCycle: OperatorBillingCycle =
+      body.billingCycle === 'annual' ? 'annual' : body.billingCycle === 'quarterly' ? 'quarterly' : 'monthly';
+
+    let monthlyEquivalentCents: number;
+    let monthsPerCycle: number;
+
+    if (isOuvidoriaTiered && body.employeeCount && body.employeeCount > 0) {
+      const opCycle: OperatorBillingCycle = normCycle === 'annual' ? 'annual' : 'monthly';
+      const op = calculateOperatorPrice(body.planSlug as OperatorPlanSlug, body.employeeCount, opCycle);
+      monthlyEquivalentCents = op.monthlyCents;
+      monthsPerCycle = op.installments;
+    } else {
+      const priceField = body.billingCycle === 'annual'
+        ? 'price_annual_cents'
+        : body.billingCycle === 'quarterly'
+          ? 'price_quarterly_cents'
+          : 'price_monthly_cents';
+      monthlyEquivalentCents = (plan as any)[priceField];
+      if (!monthlyEquivalentCents || monthlyEquivalentCents <= 0) {
+        throw new Error('Preço inválido para o ciclo selecionado');
+      }
+      monthsPerCycle = body.billingCycle === 'annual' ? 12 : body.billingCycle === 'quarterly' ? 3 : 1;
     }
 
     // Asaas cycles: MONTHLY=1mo, QUARTERLY=3mo, YEARLY=12mo
     // Each charge in the cycle = monthly equivalent * months in cycle
-    const monthsPerCycle = body.billingCycle === 'annual' ? 12 : body.billingCycle === 'quarterly' ? 3 : 1;
     const amountCents = monthlyEquivalentCents * monthsPerCycle;
-    const cycleMap = { monthly: 'MONTHLY', quarterly: 'QUARTERLY', annual: 'YEARLY' };
-    const asaasCycle = cycleMap[body.billingCycle];
+    const cycleMap: Record<string, string> = { monthly: 'MONTHLY', quarterly: 'QUARTERLY', annual: 'YEARLY' };
+    const asaasCycle = cycleMap[isOuvidoriaTiered ? (normCycle === 'annual' ? 'annual' : 'monthly') : body.billingCycle];
 
     // 2. Create or fetch Asaas customer
     const cpfCnpj = body.customer.cpfCnpj.replace(/\D/g, '');
@@ -154,6 +170,7 @@ Deno.serve(async (req) => {
           companyName: body.companyName,
           cnpjs: body.cnpjs ?? [],
           billingType: body.billingType,
+          ...(isOuvidoriaTiered && body.employeeCount ? { customEmployees: body.employeeCount } : {}),
           ...(body.metadata ?? {}),
         },
       })
