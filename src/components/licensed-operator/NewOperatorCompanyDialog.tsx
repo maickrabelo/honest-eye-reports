@@ -213,12 +213,25 @@ const NewOperatorCompanyDialog = ({ onCreated }: Props) => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  {form.billingMode === "direct"
-                    ? "A cobrança vai direto para a empresa. O acesso é liberado após o pagamento e a comissão entra na sua apuração."
-                    : "O valor entra na sua fatura do dia 20 (com desconto da sua comissão) e a empresa recebe o acesso imediatamente."}
-                </p>
+                <BillingModesDialog />
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2 text-xs">
+                  <p className="text-sm font-semibold text-primary">
+                    {BILLING_MODE_DETAILS[form.billingMode].title}
+                  </p>
+                  <ul className="space-y-1 pl-4 text-muted-foreground">
+                    {BILLING_MODE_DETAILS[form.billingMode].bullets.map((b) => (
+                      <li key={b} className="list-disc">{b}</li>
+                    ))}
+                  </ul>
+                  <div className="rounded-md bg-background/70 p-2">
+                    <p className="font-semibold text-foreground">Exemplo</p>
+                    {BILLING_MODE_DETAILS[form.billingMode].example.map((e) => (
+                      <p key={e} className="text-muted-foreground">{e}</p>
+                    ))}
+                  </div>
+                </div>
               </div>
+
             </div>
 
             <Card className="bg-muted/40">
