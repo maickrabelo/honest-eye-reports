@@ -261,6 +261,14 @@ const LicensedOperatorDashboard = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <Button
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-audit-primary font-bold shadow-lg"
+                  asChild
+                >
+                  <a href="https://youtu.be/mm-l_pK6UGE" target="_blank" rel="noopener noreferrer">
+                    <Play className="h-4 w-4 mr-2 fill-current" /> Veja como funciona
+                  </a>
+                </Button>
                 {operator.logo_url && (
                   <img src={operator.logo_url} alt="Sua logo" className="h-12 bg-white rounded-lg p-2 object-contain" />
                 )}

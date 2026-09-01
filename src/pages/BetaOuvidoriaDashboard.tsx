@@ -325,6 +325,14 @@ const BetaOuvidoriaDashboard = () => {
                 >
                   <a href={publicLink} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-2" /> Abrir formulário</a>
                 </Button>
+                <Button
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-audit-primary font-bold shadow-lg"
+                  asChild
+                >
+                  <a href="https://youtu.be/mm-l_pK6UGE" target="_blank" rel="noopener noreferrer">
+                    <Play className="h-4 w-4 mr-2 fill-current" /> Veja como funciona
+                  </a>
+                </Button>
               </div>
             </div>
 
