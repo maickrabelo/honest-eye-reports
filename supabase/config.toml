@@ -223,3 +223,6 @@ verify_jwt = false
 
 [functions.company-decide-management-request]
 verify_jwt = false
+
+[functions.pdparceiros-partner-signup]
+verify_jwt = false
