@@ -273,6 +273,14 @@ const LicensedOperatorDashboard = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Button
+                  variant="secondary"
+                  className="bg-white/15 hover:bg-white/25 text-primary-foreground border-none"
+                  onClick={() => setOnboardingOpen(true)}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> Como funciona a parceria
+                </Button>
+
+                <Button
                   className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold shadow-lg"
                   asChild
                 >
@@ -563,7 +571,10 @@ const LicensedOperatorDashboard = () => {
             setDialogCompany(null);
           }}
         />
+
+        <PartnerOnboardingDialog open={onboardingOpen} onOpenChange={setOnboardingOpen} />
       </main>
+
       <Footer />
     </div>
   );

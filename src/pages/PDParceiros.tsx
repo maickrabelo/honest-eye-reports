@@ -222,24 +222,33 @@ const PDParceiros = () => {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.from('demo_leads').insert({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        company_name: form.company_name || null,
-        employee_count: form.employee_count || null,
-        message: form.message || null,
-        source: 'pdparceiros',
+      const { data, error } = await supabase.functions.invoke('pdparceiros-partner-signup', {
+        body: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          company_name: form.company_name || null,
+          employee_count: form.employee_count || null,
+          message: form.message || null,
+          origin: window.location.origin,
+        },
       });
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       try {
         fbqTrack('Lead', { content_name: 'PDPARCEIROS — Programa de Parceiros' });
       } catch {
         /* noop */
       }
-      toast({ title: 'Cadastro enviado!', description: 'Nosso time de parcerias entrará em contato.' });
+      toast({
+        title: (data as any)?.accountCreated ? 'Parceria aprovada! 🎉' : 'Cadastro enviado!',
+        description: (data as any)?.accountCreated
+          ? 'Enviamos um e-mail para você criar sua senha e acessar o painel de parceiros.'
+          : (data as any)?.message || 'Nosso time de parcerias entrará em contato.',
+      });
       setForm({ name: '', email: '', phone: '', company_name: '', employee_count: '', message: '' });
       setSubmitted(true);
+
     } catch (err: any) {
       toast({
         title: 'Erro ao enviar',
