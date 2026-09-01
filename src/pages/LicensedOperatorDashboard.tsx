@@ -17,6 +17,8 @@ import EmbeddedDashboard from "@/components/EmbeddedDashboard";
 import NewOperatorCompanyDialog from "@/components/licensed-operator/NewOperatorCompanyDialog";
 import RequestManagementDialog, { type ManagementStatus } from "@/components/licensed-operator/RequestManagementDialog";
 import { formatBRL, OPERATOR_PLAN_LABELS } from "@/lib/licensedOperatorPricing";
+import PartnerTierProgressCard from "@/components/licensed-operator/PartnerTierProgressCard";
+import BillingModesDialog from "@/components/licensed-operator/BillingModesDialog";
 import usePageSEO from "@/hooks/usePageSEO";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -316,6 +318,8 @@ const LicensedOperatorDashboard = () => {
             </Card>
           </div>
 
+          <PartnerTierProgressCard monthlyVolumeCents={totals.monthlyVolume} />
+
           <Tabs defaultValue="empresas">
             <TabsList>
               <TabsTrigger value="empresas" className="gap-2"><MessageSquareWarning className="h-4 w-4" />Ouvidorias</TabsTrigger>
@@ -379,7 +383,10 @@ const LicensedOperatorDashboard = () => {
                       Cadastre novas empresas, escolha o plano de ouvidoria e defina quem recebe a cobrança.
                     </CardDescription>
                   </div>
-                  <NewOperatorCompanyDialog onCreated={loadData} />
+                  <div className="flex flex-col items-end gap-1">
+                    <NewOperatorCompanyDialog onCreated={loadData} />
+                    <BillingModesDialog />
+                  </div>
                 </CardHeader>
                 <CardContent className="p-0">
                   {companies.length === 0 ? (
