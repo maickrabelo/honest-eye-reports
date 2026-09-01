@@ -19,6 +19,8 @@ import RequestManagementDialog, { type ManagementStatus } from "@/components/lic
 import { formatBRL, OPERATOR_PLAN_LABELS } from "@/lib/licensedOperatorPricing";
 import PartnerTierProgressCard from "@/components/licensed-operator/PartnerTierProgressCard";
 import BillingModesDialog from "@/components/licensed-operator/BillingModesDialog";
+import PartnerOnboardingDialog from "@/components/licensed-operator/PartnerOnboardingDialog";
+
 import usePageSEO from "@/hooks/usePageSEO";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -76,6 +78,8 @@ const LicensedOperatorDashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [mgmtStatus, setMgmtStatus] = useState<Record<string, ManagementStatus>>({});
   const [dialogCompany, setDialogCompany] = useState<OperatorCompany | null>(null);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
 
   usePageSEO({
     title: "Painel do Parceiro Licenciado | SOIA",
@@ -93,6 +97,13 @@ const LicensedOperatorDashboard = () => {
         .maybeSingle();
       setOperator(op);
       if (!op) return;
+
+      const seenKey = `soia_partner_onboarding_seen_${op.id}`;
+      if (!localStorage.getItem(seenKey)) {
+        setOnboardingOpen(true);
+        localStorage.setItem(seenKey, new Date().toISOString());
+      }
+
 
       const [companiesRes, invoicesRes] = await Promise.all([
         supabase
@@ -261,6 +272,14 @@ const LicensedOperatorDashboard = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <Button
+                  variant="secondary"
+                  className="bg-white/15 hover:bg-white/25 text-primary-foreground border-none"
+                  onClick={() => setOnboardingOpen(true)}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> Como funciona a parceria
+                </Button>
+
                 <Button
                   className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold shadow-lg"
                   asChild
@@ -552,7 +571,10 @@ const LicensedOperatorDashboard = () => {
             setDialogCompany(null);
           }}
         />
+
+        <PartnerOnboardingDialog open={onboardingOpen} onOpenChange={setOnboardingOpen} />
       </main>
+
       <Footer />
     </div>
   );
