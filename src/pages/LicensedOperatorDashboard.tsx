@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, Building2, DollarSign, FileText, Handshake, Image as ImageIcon,
-  Loader2, MessageSquareWarning, Percent, ShieldCheck, TrendingUp,
+  Loader2, MessageSquareWarning, Percent, ShieldCheck, TrendingUp, Play,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
@@ -261,6 +261,14 @@ const LicensedOperatorDashboard = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <Button
+                  className="bg-audit-secondary hover:bg-audit-secondary/90 text-white font-bold shadow-lg"
+                  asChild
+                >
+                  <a href="https://youtu.be/mm-l_pK6UGE" target="_blank" rel="noopener noreferrer">
+                    <Play className="h-4 w-4 mr-2 fill-current" /> Veja como funciona
+                  </a>
+                </Button>
                 {operator.logo_url && (
                   <img src={operator.logo_url} alt="Sua logo" className="h-12 bg-white rounded-lg p-2 object-contain" />
                 )}
