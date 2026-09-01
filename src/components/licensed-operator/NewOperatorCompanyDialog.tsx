@@ -17,7 +17,9 @@ import {
   type OperatorBillingCycle,
   type OperatorBillingMode,
   type OperatorPlanSlug,
+  BILLING_MODE_DETAILS,
 } from "@/lib/licensedOperatorPricing";
+import BillingModesDialog from "./BillingModesDialog";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
