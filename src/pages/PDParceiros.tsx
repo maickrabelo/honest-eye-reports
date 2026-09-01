@@ -480,7 +480,7 @@ const PDParceiros = () => {
               <div className="relative w-full max-w-[340px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary-foreground/15 bg-black">
                 <iframe
                   className="absolute inset-0 h-full w-full"
-                  src="https://www.youtube.com/embed/uazqE-_dFRw?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=uazqE-_dFRw"
+                  src="https://www.youtube.com/embed/cT5OkR56hNg?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=cT5OkR56hNg"
                   title="Programa de Parceiros Licenciados SOIA"
                   loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -514,6 +514,29 @@ const PDParceiros = () => {
                 <p className="text-sm text-foreground/90">{p}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* VIDEO: COMO FUNCIONA A OUVIDORIA */}
+      <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/40 to-background border-b">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <Badge className="mb-4 bg-audit-secondary/15 text-audit-secondary border border-audit-secondary/40 hover:bg-audit-secondary/15">
+              <Play className="h-3.5 w-3.5 mr-1" /> Vídeo
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold">Veja como funciona nossa ouvidoria na prática</h2>
+          </div>
+          <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-audit-secondary/30 bg-black">
+            <iframe
+              className="absolute inset-0 h-full w-full"
+              src="https://www.youtube.com/embed/mm-l_pK6UGE?rel=0&modestbranding=1"
+              title="Veja como funciona nossa ouvidoria na prática"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
           </div>
         </div>
       </section>
