@@ -19,6 +19,8 @@ import RequestManagementDialog, { type ManagementStatus } from "@/components/lic
 import { formatBRL, OPERATOR_PLAN_LABELS } from "@/lib/licensedOperatorPricing";
 import PartnerTierProgressCard from "@/components/licensed-operator/PartnerTierProgressCard";
 import BillingModesDialog from "@/components/licensed-operator/BillingModesDialog";
+import PartnerOnboardingDialog from "@/components/licensed-operator/PartnerOnboardingDialog";
+
 import usePageSEO from "@/hooks/usePageSEO";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -76,6 +78,8 @@ const LicensedOperatorDashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [mgmtStatus, setMgmtStatus] = useState<Record<string, ManagementStatus>>({});
   const [dialogCompany, setDialogCompany] = useState<OperatorCompany | null>(null);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
 
   usePageSEO({
     title: "Painel do Parceiro Licenciado | SOIA",
@@ -93,6 +97,13 @@ const LicensedOperatorDashboard = () => {
         .maybeSingle();
       setOperator(op);
       if (!op) return;
+
+      const seenKey = `soia_partner_onboarding_seen_${op.id}`;
+      if (!localStorage.getItem(seenKey)) {
+        setOnboardingOpen(true);
+        localStorage.setItem(seenKey, new Date().toISOString());
+      }
+
 
       const [companiesRes, invoicesRes] = await Promise.all([
         supabase
