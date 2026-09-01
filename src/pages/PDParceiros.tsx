@@ -42,6 +42,7 @@ import {
   Filter,
   StickyNote,
   ClipboardList,
+  Play,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
 import { useToast } from '@/hooks/use-toast';

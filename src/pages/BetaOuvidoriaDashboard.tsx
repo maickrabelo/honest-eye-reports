@@ -21,7 +21,7 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import {
-  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File, FileDown, Eye, ShieldCheck, Search,
+  Copy, ExternalLink, ClipboardList, AlertCircle, Activity, CheckCircle2, Calendar, Download, FileImage, FileVideo, FileAudio, File, FileDown, Eye, ShieldCheck, Search, Play,
 } from "lucide-react";
 import {
   isBetaOuvidoriaCompany, labelOf,

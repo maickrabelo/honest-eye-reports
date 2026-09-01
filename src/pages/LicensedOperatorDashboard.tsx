@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, Building2, DollarSign, FileText, Handshake, Image as ImageIcon,
-  Loader2, MessageSquareWarning, Percent, ShieldCheck, TrendingUp,
+  Loader2, MessageSquareWarning, Percent, ShieldCheck, TrendingUp, Play,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealAuth } from "@/contexts/RealAuthContext";
