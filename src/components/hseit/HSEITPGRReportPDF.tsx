@@ -640,7 +640,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
   // Horizontal bar chart
   const barEndY = drawHorizontalBarChart(pdf, data.categoryAverages, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
-  y = barEndY + 10;
+  y = barEndY + 6;
+
+  // Legenda completa das dimensões (os gráficos usam abreviações)
+  const chartLegend = 'Legenda das abreviações nos gráficos: ' + CATEGORIES
+    .map(cat => `${HSEIT_CATEGORY_SHORT_LABELS[cat]} = ${HSEIT_CATEGORY_LABELS[cat]} (${RISK_AGENTS[cat].agent})`)
+    .join('; ') + '.';
+  drawText(chartLegend, 0, 7.5);
+  y += 6;
+
 
   // ═══════════════════════════════
   // SECTION 5: INVENTÁRIO POR GHE/SETOR
