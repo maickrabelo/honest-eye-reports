@@ -2,13 +2,13 @@ import jsPDF from 'jspdf';
 import {
   HSEITCategory,
   HSEIT_CATEGORY_LABELS,
+  HSEIT_CATEGORY_SHORT_LABELS,
+  HSEIT_CATEGORY_SHORT_LABEL_LINES,
   HSEIT_QUESTIONS,
   getHealthImpact,
   HEALTH_IMPACT_LABELS,
   calculateCategoryAverage,
   normalizeScore,
-  getRiskLevel,
-  RISK_LEVEL_LABELS,
   type HSEITWordingVariant
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
@@ -119,10 +119,11 @@ function drawRadarChart(
     pdf.setFontSize(6);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(60, 60, 60);
-    const label = categoryAverages[i].label.length > 12 
-      ? categoryAverages[i].label.substring(0, 12) + '.'
-      : categoryAverages[i].label;
-    pdf.text(label, lx, ly + 1, { align: 'center' });
+    const labelLines = HSEIT_CATEGORY_SHORT_LABEL_LINES[categoryAverages[i].category]
+      || [categoryAverages[i].label];
+    labelLines.forEach((line, li) => {
+      pdf.text(line, lx, ly + 1 + li * 3, { align: 'center' });
+    });
   }
 
   // Data polygon (filled)
@@ -195,7 +196,7 @@ function drawHorizontalBarChart(
     pdf.setFontSize(7);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(60, 60, 60);
-    const label = cat.label.length > 16 ? cat.label.substring(0, 16) + '.' : cat.label;
+    const label = HSEIT_CATEGORY_SHORT_LABELS[cat.category] || cat.label;
     pdf.text(label, startX, y + barHeight / 2 + 1);
 
     // Background bar
@@ -283,19 +284,37 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     const impact = getHealthImpact(avg);
     return impact === 'risk' ? [220, 53, 69] : impact === 'intermediate' ? [255, 152, 0] : [40, 167, 69];
   };
-  const getSeverity = (avg: number): string => {
-    if (avg >= 3.67) return 'Baixa';
-    if (avg >= 2.33) return 'Moderada';
-    return 'Alta';
+  // Régua única de 5 níveis, aninhada nas faixas do semáforo de impacto na saúde
+  // (Favorável a partir de 3,67 | Intermediário 2,33–3,66 | Risco abaixo de 2,33)
+  type PGRLevel = 'very_low' | 'low' | 'moderate' | 'high' | 'very_high';
+  const getPGRLevel = (avg: number): PGRLevel => {
+    if (avg >= 4.21) return 'very_low';
+    if (avg >= 3.67) return 'low';
+    if (avg >= 3.00) return 'moderate';
+    if (avg >= 2.33) return 'high';
+    return 'very_high';
   };
-  const getProbability = (avg: number): string => {
-    if (avg >= 3.67) return 'Improvável';
-    if (avg >= 2.33) return 'Possível';
-    return 'Provável';
+  const SEVERITY_BY_LEVEL: Record<PGRLevel, string> = {
+    very_low: 'Muito Baixa', low: 'Baixa', moderate: 'Moderada', high: 'Alta', very_high: 'Muito Alta',
   };
-  const getRiskClassification = (avg: number): string => {
+  const PROBABILITY_BY_LEVEL: Record<PGRLevel, string> = {
+    very_low: 'Rara', low: 'Improvável', moderate: 'Possível', high: 'Provável', very_high: 'Muito Provável',
+  };
+  const LEVEL_LABELS: Record<PGRLevel, string> = {
+    very_low: 'Muito Baixo', low: 'Baixo', moderate: 'Moderado', high: 'Alto', very_high: 'Muito Alto',
+  };
+  const getSeverity = (avg: number): string => SEVERITY_BY_LEVEL[getPGRLevel(avg)];
+  const getProbability = (avg: number): string => PROBABILITY_BY_LEVEL[getPGRLevel(avg)];
+  const getRiskClassification = (avg: number): string => LEVEL_LABELS[getPGRLevel(avg)];
+  // Tolerabilidade NR-1: decisão de intervenção
+  const getTolerance = (avg: number): string => {
     const impact = getHealthImpact(avg);
     return impact === 'risk' ? 'Intolerável' : impact === 'intermediate' ? 'Moderado' : 'Tolerável';
+  };
+  // Medida proposta — terminologia única em todo o relatório
+  const getMeasure = (avg: number): string => {
+    const impact = getHealthImpact(avg);
+    return impact === 'risk' ? 'Intervenção imediata' : impact === 'intermediate' ? 'Plano de ação' : 'Manter e monitorar';
   };
 
   const drawSection = (title: string, number: string) => {
@@ -538,13 +557,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     drawText('Questões sobre fatores negativos têm pontuação invertida, de modo que scores mais altos representam condições mais favoráveis.');
     y += 5;
 
-    drawSubSection('4.3 Classificação de Risco');
+    drawSubSection('4.3 Classificação de Risco e Tolerabilidade');
+    drawText('A régua abaixo é a única utilizada em todas as tabelas deste relatório. A coluna "Classificação" indica a intensidade do risco (cinco níveis) e a coluna "Tolerabilidade" traduz essa intensidade na decisão de intervenção exigida pela NR-1.');
+    y += 3;
     const riskThresholds = [
-      ['Muito Baixo', '≥ 4,21', 'Condição muito favorável', [34, 197, 94]],
-      ['Baixo', '3,41 – 4,20', 'Condição favorável', [132, 204, 22]],
-      ['Moderado', '2,61 – 3,40', 'Atenção necessária', [234, 179, 8]],
-      ['Alto', '1,81 – 2,60', 'Intervenção necessária', [249, 115, 22]],
-      ['Muito Alto', '< 1,81', 'Ação imediata requerida', [239, 68, 68]],
+      ['Muito Baixo', 'a partir de 4,21', 'Tolerável — condição muito favorável', [34, 197, 94]],
+      ['Baixo', 'de 3,67 a 4,20', 'Tolerável — condição favorável', [132, 204, 22]],
+      ['Moderado', 'de 3,00 a 3,66', 'Moderado — atenção e plano de ação', [234, 179, 8]],
+      ['Alto', 'de 2,33 a 2,99', 'Moderado — intervenção necessária', [249, 115, 22]],
+      ['Muito Alto', 'abaixo de 2,33', 'Intolerável — intervenção imediata', [239, 68, 68]],
     ] as [string, string, string, number[]][];
 
     riskThresholds.forEach(([label, range, desc, color]) => {
@@ -557,16 +578,42 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       pdf.text(`${label} (${range})`, m + 12, y);
       pdf.setFont('helvetica', 'normal');
       setColor(80, 80, 80);
-      pdf.text(`— ${desc}`, m + 70, y);
+      pdf.text(`— ${desc}`, m + 80, y);
+      y += 7;
+    });
+    y += 2;
+    drawText('Observação: por se tratar de escala normalizada, médias mais altas indicam condição mais favorável e risco menor.', 5, 9);
+
+    y += 5;
+    drawSubSection('4.4 Semáforo de Impacto na Saúde');
+    const semaphoreLegend: [string, string, [number, number, number]][] = [
+      ['Favorável (a partir de 3,67)', 'Ambiente psicossocial saudável', [34, 197, 94]],
+      ['Intermediário (de 2,33 a 3,66)', 'Atenção e monitoramento necessários', [249, 115, 22]],
+      ['Risco (abaixo de 2,33)', 'Intervenção imediata necessária', [239, 68, 68]],
+    ];
+    semaphoreLegend.forEach(([label, desc, color]) => {
+      checkPage(8);
+      pdf.setFillColor(color[0], color[1], color[2]);
+      pdf.circle(m + 6, y - 1, 3, 'F');
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      setColor(0, 0, 0);
+      pdf.text(label, m + 12, y);
+      pdf.setFont('helvetica', 'normal');
+      setColor(80, 80, 80);
+      pdf.text(`— ${desc}`, m + 80, y);
       y += 7;
     });
 
     y += 5;
-    drawSubSection('4.4 Semáforo de Impacto na Saúde');
-    drawText('🟢 Favorável (< 2,33): Ambiente psicossocial saudável', 5);
-    drawText('🟡 Intermediário (2,33 – 3,66): Atenção e monitoramento necessários', 5);
-    drawText('🔴 Risco (≥ 3,67): Intervenção urgente necessária', 5);
+    drawSubSection('4.5 Equivalência entre Dimensões do HSE-IT e Agentes de Risco Psicossocial');
+    drawText('As dimensões do instrumento correspondem aos seguintes agentes de risco no inventário do PGR:');
+    y += 3;
+    CATEGORIES.forEach(cat => {
+      drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} = ${RISK_AGENTS[cat].agent}`, 5, 9.5);
+    });
   }
+
 
   y += 5;
   drawSubSection(`4.${data.methodology === 'hseit' ? '5' : '4'} Amostra e Participação`);
@@ -591,7 +638,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
   // Horizontal bar chart
   const barEndY = drawHorizontalBarChart(pdf, data.categoryAverages, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
-  y = barEndY + 10;
+  y = barEndY + 6;
+
+  // Legenda completa das dimensões (os gráficos usam abreviações)
+  const chartLegend = 'Legenda das abreviações nos gráficos: ' + CATEGORIES
+    .map(cat => `${HSEIT_CATEGORY_SHORT_LABELS[cat]} = ${HSEIT_CATEGORY_LABELS[cat]} (${RISK_AGENTS[cat].agent})`)
+    .join('; ') + '.';
+  drawText(chartLegend, 0, 7.5);
+  y += 6;
+
 
   // ═══════════════════════════════
   // SECTION 5: INVENTÁRIO POR GHE/SETOR
@@ -606,12 +661,12 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawSubSection('5.1 Visão Geral — Resultado por Dimensão');
   
   // Table header
-  const colW = [50, 18, 23, 25, 25, pw - 2 * m - 141];
-  const headers = ['Dimensão', 'Média', 'Severidade', 'Probabilidade', 'Classificação', 'Medida Proposta'];
+  const colW = [44, 13, 21, 24, 22, 22, pw - 2 * m - 146];
+  const headers = ['Dimensão (Agente de Risco)', 'Média', 'Severidade', 'Probabilidade', 'Classificação', 'Tolerabilidade', 'Medida Proposta'];
   
   pdf.setFillColor(0, 51, 102);
   pdf.rect(m, y, pw - 2 * m, 10, 'F');
-  pdf.setFontSize(7);
+  pdf.setFontSize(6.5);
   pdf.setFont('helvetica', 'bold');
   setColor(255, 255, 255);
   let xPos = m + 2;
@@ -622,22 +677,27 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   y += 12;
 
   data.categoryAverages.forEach((cat, idx) => {
-    checkPage(12);
+    checkPage(14);
     const bgCol = idx % 2 === 0 ? 250 : 240;
     pdf.setFillColor(bgCol, bgCol, bgCol);
-    pdf.rect(m, y - 3, pw - 2 * m, 10, 'F');
+    pdf.rect(m, y - 3, pw - 2 * m, 12, 'F');
 
-    const impact = getHealthImpact(cat.average);
     const [cr, cg, cb] = getRiskColor(cat.average);
     pdf.setFillColor(cr, cg, cb);
     pdf.circle(m + 4, y + 2, 2, 'F');
 
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
     pdf.setFont('helvetica', 'normal');
     setColor(0, 0, 0);
     let x = m + 8;
-    const dimName = cat.label;
-    pdf.text(dimName, x, y + 3); x += colW[0] - 6;
+    pdf.text(cat.label, x, y + 2);
+    pdf.setFontSize(6);
+    setColor(90, 90, 90);
+    pdf.text(`(${RISK_AGENTS[cat.category].agent})`, x, y + 6.5);
+    x += colW[0] - 6;
+
+    pdf.setFontSize(7);
+    setColor(0, 0, 0);
     pdf.text(cat.average.toFixed(2), x, y + 3); x += colW[1];
     pdf.text(getSeverity(cat.average), x, y + 3); x += colW[2];
     pdf.text(getProbability(cat.average), x, y + 3); x += colW[3];
@@ -645,14 +705,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(cr, cg, cb);
     pdf.text(getRiskClassification(cat.average), x, y + 3); x += colW[4];
+    pdf.text(getTolerance(cat.average), x, y + 3); x += colW[5];
     
     pdf.setFont('helvetica', 'normal');
     setColor(60, 60, 60);
-    const measure = impact === 'risk' ? 'Ação imediata' : impact === 'intermediate' ? 'Monitoramento' : 'Manter';
-    pdf.text(measure, x, y + 3);
+    pdf.text(getMeasure(cat.average), x, y + 3);
     
-    y += 10;
+    y += 12;
   });
+
 
   // Per-department detailed analysis
   if (data.departments.length > 0) {
@@ -690,33 +751,37 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       // Risk specification table for this department
       pdf.setFillColor(0, 51, 102);
       pdf.rect(m, y, pw - 2 * m, 10, 'F');
-      pdf.setFontSize(7);
+      pdf.setFontSize(6.5);
       pdf.setFont('helvetica', 'bold');
       setColor(255, 255, 255);
-      const deptCols = ['Agente de Risco', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Nível', 'Medida'];
-      const deptColW = [48, 25, 15, 18, 18, 22, pw - 2 * m - 146];
+      const deptCols = ['Dimensão (Agente de Risco)', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Classificação', 'Tolerabilidade', 'Medida Proposta'];
+      const deptColW = [44, 18, 13, 18, 20, 22, 22, pw - 2 * m - 157];
       let dx = m + 2;
       deptCols.forEach((h, i) => { pdf.text(h, dx, y + 7); dx += deptColW[i]; });
       y += 12;
 
       CATEGORIES.forEach((cat, idx) => {
-        checkPage(12);
+        checkPage(14);
         const catAvg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
-        const impact = getHealthImpact(catAvg);
         const [cr, cg, cb] = getRiskColor(catAvg);
         
         const bgCol = idx % 2 === 0 ? 250 : 240;
         pdf.setFillColor(bgCol, bgCol, bgCol);
-        pdf.rect(m, y - 3, pw - 2 * m, 10, 'F');
+        pdf.rect(m, y - 3, pw - 2 * m, 12, 'F');
 
         pdf.setFontSize(7);
         pdf.setFont('helvetica', 'normal');
         setColor(0, 0, 0);
         
         let x2 = m + 2;
-        const agentInfo = RISK_AGENTS[cat];
-        const agentName = agentInfo.agent;
-        pdf.text(agentName, x2, y + 3); x2 += deptColW[0];
+        pdf.text(HSEIT_CATEGORY_LABELS[cat], x2, y + 2);
+        pdf.setFontSize(6);
+        setColor(90, 90, 90);
+        pdf.text(`(${RISK_AGENTS[cat].agent})`, x2, y + 6.5);
+        x2 += deptColW[0];
+
+        pdf.setFontSize(7);
+        setColor(0, 0, 0);
         pdf.text('Habitual', x2, y + 3); x2 += deptColW[1];
         pdf.text(catAvg.toFixed(2), x2, y + 3); x2 += deptColW[2];
         pdf.text(getSeverity(catAvg), x2, y + 3); x2 += deptColW[3];
@@ -725,14 +790,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(cr, cg, cb);
         pdf.text(getRiskClassification(catAvg), x2, y + 3); x2 += deptColW[5];
+        pdf.text(getTolerance(catAvg), x2, y + 3); x2 += deptColW[6];
         
         pdf.setFont('helvetica', 'normal');
         setColor(60, 60, 60);
-        const measure = impact === 'risk' ? 'Intervenção urgente' : impact === 'intermediate' ? 'Plano de ação' : 'Manter';
-        pdf.text(measure, x2, y + 3);
+        pdf.text(getMeasure(catAvg), x2, y + 3);
         
-        y += 10;
+        y += 12;
       });
+
 
       // Department charts page
       pdf.addPage(); y = m;
@@ -760,6 +826,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       // Bar chart
       const deptBarEnd = drawHorizontalBarChart(pdf, deptCatAvgs, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
       y = deptBarEnd + 5;
+      drawText(chartLegend, 0, 7.5);
     }
   }
 
@@ -852,14 +919,14 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       });
 
       if (criticalCats.length === 0) {
-        drawText('Nenhuma dimensão em nível de risco identificada neste setor. Manter monitoramento periódico.', 5);
+        drawText('Nenhuma dimensão em nível intolerável identificada neste setor. Medida proposta: manter e monitorar.', 5);
       } else {
         criticalCats.forEach(cat => {
           const avg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
           const agentInfo = RISK_AGENTS[cat];
-          drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} (média: ${avg.toFixed(2)})`, 5);
+          drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} (${agentInfo.agent}) — média: ${avg.toFixed(2)} | Classificação: ${getRiskClassification(avg)} | Tolerabilidade: ${getTolerance(avg)}`, 5);
           drawText(`  Riscos: ${agentInfo.risks.join(', ')}`, 10);
-          drawText(`  Medida: Intervenção imediata com plano específico para o setor`, 10);
+          drawText(`  Medida Proposta: ${getMeasure(avg)} com plano específico para o setor`, 10);
           y += 3;
         });
       }

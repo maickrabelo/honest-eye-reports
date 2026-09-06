@@ -58,6 +58,30 @@ export const HSEIT_CATEGORY_LABELS: Record<HSEITCategory, string> = {
   change: 'Mudanças'
 };
 
+// Abreviações legíveis para rótulos de gráficos (evita cortes cegos de texto)
+export const HSEIT_CATEGORY_SHORT_LABELS: Record<HSEITCategory, string> = {
+  demands: 'Demandas',
+  control: 'Controle',
+  managerSupport: 'Apoio Chefia',
+  peerSupport: 'Apoio Colegas',
+  relationships: 'Relacionam.',
+  role: 'Papel/Cargo',
+  change: 'Mudanças'
+};
+
+// Rótulos em duas linhas para o gráfico de radar
+export const HSEIT_CATEGORY_SHORT_LABEL_LINES: Record<HSEITCategory, string[]> = {
+  demands: ['Demandas'],
+  control: ['Controle'],
+  managerSupport: ['Apoio', 'Chefia'],
+  peerSupport: ['Apoio', 'Colegas'],
+  relationships: ['Relaciona-', 'mentos'],
+  role: ['Papel/', 'Cargo'],
+  change: ['Mudanças']
+};
+
+
+
 export const HSEIT_CATEGORY_COLORS: Record<HSEITCategory, string> = {
   demands: '#ef4444',       // red
   control: '#3b82f6',       // blue
