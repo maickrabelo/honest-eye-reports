@@ -9,8 +9,7 @@ import {
   HEALTH_IMPACT_LABELS,
   calculateCategoryAverage,
   normalizeScore,
-  getRiskLevel,
-  RISK_LEVEL_LABELS,
+  normalizeScore,
   type HSEITWordingVariant
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
