@@ -324,7 +324,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     setColor(255, 255, 255);
-    pdf.text(`${number}. ${title.toUpperCase()}`, m + 4, y + 7);
+    pdf.text(number ? `${number}. ${title.toUpperCase()}` : title.toUpperCase(), m + 4, y + 7);
     y += 16;
   };
 
@@ -616,7 +616,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
 
 
   y += 5;
-  drawSubSection(`4.${data.methodology === 'hseit' ? '5' : '4'} Amostra e Participação`);
+  drawSubSection(`4.${data.methodology === 'hseit' ? '6' : '4'} Amostra e Participação`);
   drawText(`Total de respostas válidas: ${data.responses.length}`);
   drawText(`Setores avaliados: ${data.departments.length || 1}`);
   drawText(`Data da avaliação: ${new Date(data.assessment.createdAt).toLocaleDateString('pt-BR')}`);
@@ -754,8 +754,8 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       pdf.setFontSize(6.5);
       pdf.setFont('helvetica', 'bold');
       setColor(255, 255, 255);
-      const deptCols = ['Dimensão (Agente de Risco)', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Classificação', 'Tolerabilidade', 'Medida Proposta'];
-      const deptColW = [44, 18, 13, 18, 20, 22, 22, pw - 2 * m - 157];
+      const deptCols = ['Dimensão (Agente de Risco)', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Classificação', 'Tolerab.', 'Medida Proposta'];
+      const deptColW = [44, 18, 12, 17, 19, 21, 18, pw - 2 * m - 149];
       let dx = m + 2;
       deptCols.forEach((h, i) => { pdf.text(h, dx, y + 7); dx += deptColW[i]; });
       y += 12;
