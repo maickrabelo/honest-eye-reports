@@ -828,6 +828,7 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       // Bar chart
       const deptBarEnd = drawHorizontalBarChart(pdf, deptCatAvgs, m, y, pw - 2 * m, 7, 'Detalhamento por Categoria');
       y = deptBarEnd + 5;
+      drawText(chartLegend, 0, 7.5);
     }
   }
 
