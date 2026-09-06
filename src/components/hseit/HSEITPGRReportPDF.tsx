@@ -286,19 +286,34 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     const impact = getHealthImpact(avg);
     return impact === 'risk' ? [220, 53, 69] : impact === 'intermediate' ? [255, 152, 0] : [40, 167, 69];
   };
+  // Severidade e probabilidade derivadas da régua única de 5 níveis
   const getSeverity = (avg: number): string => {
-    if (avg >= 3.67) return 'Baixa';
-    if (avg >= 2.33) return 'Moderada';
-    return 'Alta';
+    const lvl = getRiskLevel(avg);
+    if (lvl === 'very_low') return 'Muito Baixa';
+    if (lvl === 'low') return 'Baixa';
+    if (lvl === 'moderate') return 'Moderada';
+    if (lvl === 'high') return 'Alta';
+    return 'Muito Alta';
   };
   const getProbability = (avg: number): string => {
-    if (avg >= 3.67) return 'Improvável';
-    if (avg >= 2.33) return 'Possível';
-    return 'Provável';
+    const lvl = getRiskLevel(avg);
+    if (lvl === 'very_low') return 'Rara';
+    if (lvl === 'low') return 'Improvável';
+    if (lvl === 'moderate') return 'Possível';
+    if (lvl === 'high') return 'Provável';
+    return 'Muito Provável';
   };
-  const getRiskClassification = (avg: number): string => {
+  // Classificação: régua única de 5 níveis (Muito Baixo a Muito Alto)
+  const getRiskClassification = (avg: number): string => RISK_LEVEL_LABELS[getRiskLevel(avg)];
+  // Tolerabilidade NR-1: decisão de intervenção
+  const getTolerance = (avg: number): string => {
     const impact = getHealthImpact(avg);
     return impact === 'risk' ? 'Intolerável' : impact === 'intermediate' ? 'Moderado' : 'Tolerável';
+  };
+  // Medida proposta — terminologia única em todo o relatório
+  const getMeasure = (avg: number): string => {
+    const impact = getHealthImpact(avg);
+    return impact === 'risk' ? 'Intervenção imediata' : impact === 'intermediate' ? 'Plano de ação' : 'Manter e monitorar';
   };
 
   const drawSection = (title: string, number: string) => {
