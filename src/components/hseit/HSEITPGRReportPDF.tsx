@@ -286,25 +286,28 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     const impact = getHealthImpact(avg);
     return impact === 'risk' ? [220, 53, 69] : impact === 'intermediate' ? [255, 152, 0] : [40, 167, 69];
   };
-  // Severidade e probabilidade derivadas da régua única de 5 níveis
-  const getSeverity = (avg: number): string => {
-    const lvl = getRiskLevel(avg);
-    if (lvl === 'very_low') return 'Muito Baixa';
-    if (lvl === 'low') return 'Baixa';
-    if (lvl === 'moderate') return 'Moderada';
-    if (lvl === 'high') return 'Alta';
-    return 'Muito Alta';
+  // Régua única de 5 níveis, aninhada nas faixas do semáforo de impacto na saúde
+  // (Favorável a partir de 3,67 | Intermediário 2,33–3,66 | Risco abaixo de 2,33)
+  type PGRLevel = 'very_low' | 'low' | 'moderate' | 'high' | 'very_high';
+  const getPGRLevel = (avg: number): PGRLevel => {
+    if (avg >= 4.21) return 'very_low';
+    if (avg >= 3.67) return 'low';
+    if (avg >= 3.00) return 'moderate';
+    if (avg >= 2.33) return 'high';
+    return 'very_high';
   };
-  const getProbability = (avg: number): string => {
-    const lvl = getRiskLevel(avg);
-    if (lvl === 'very_low') return 'Rara';
-    if (lvl === 'low') return 'Improvável';
-    if (lvl === 'moderate') return 'Possível';
-    if (lvl === 'high') return 'Provável';
-    return 'Muito Provável';
+  const SEVERITY_BY_LEVEL: Record<PGRLevel, string> = {
+    very_low: 'Muito Baixa', low: 'Baixa', moderate: 'Moderada', high: 'Alta', very_high: 'Muito Alta',
   };
-  // Classificação: régua única de 5 níveis (Muito Baixo a Muito Alto)
-  const getRiskClassification = (avg: number): string => RISK_LEVEL_LABELS[getRiskLevel(avg)];
+  const PROBABILITY_BY_LEVEL: Record<PGRLevel, string> = {
+    very_low: 'Rara', low: 'Improvável', moderate: 'Possível', high: 'Provável', very_high: 'Muito Provável',
+  };
+  const LEVEL_LABELS: Record<PGRLevel, string> = {
+    very_low: 'Muito Baixo', low: 'Baixo', moderate: 'Moderado', high: 'Alto', very_high: 'Muito Alto',
+  };
+  const getSeverity = (avg: number): string => SEVERITY_BY_LEVEL[getPGRLevel(avg)];
+  const getProbability = (avg: number): string => PROBABILITY_BY_LEVEL[getPGRLevel(avg)];
+  const getRiskClassification = (avg: number): string => LEVEL_LABELS[getPGRLevel(avg)];
   // Tolerabilidade NR-1: decisão de intervenção
   const getTolerance = (avg: number): string => {
     const impact = getHealthImpact(avg);
