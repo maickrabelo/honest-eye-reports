@@ -745,33 +745,37 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       // Risk specification table for this department
       pdf.setFillColor(0, 51, 102);
       pdf.rect(m, y, pw - 2 * m, 10, 'F');
-      pdf.setFontSize(7);
+      pdf.setFontSize(6.5);
       pdf.setFont('helvetica', 'bold');
       setColor(255, 255, 255);
-      const deptCols = ['Agente de Risco', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Nível', 'Medida'];
-      const deptColW = [48, 25, 15, 18, 18, 22, pw - 2 * m - 146];
+      const deptCols = ['Dimensão (Agente de Risco)', 'Exposição', 'Média', 'Sev.', 'Prob.', 'Classificação', 'Tolerabilidade', 'Medida Proposta'];
+      const deptColW = [44, 18, 13, 18, 20, 22, 22, pw - 2 * m - 157];
       let dx = m + 2;
       deptCols.forEach((h, i) => { pdf.text(h, dx, y + 7); dx += deptColW[i]; });
       y += 12;
 
       CATEGORIES.forEach((cat, idx) => {
-        checkPage(12);
+        checkPage(14);
         const catAvg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
-        const impact = getHealthImpact(catAvg);
         const [cr, cg, cb] = getRiskColor(catAvg);
         
         const bgCol = idx % 2 === 0 ? 250 : 240;
         pdf.setFillColor(bgCol, bgCol, bgCol);
-        pdf.rect(m, y - 3, pw - 2 * m, 10, 'F');
+        pdf.rect(m, y - 3, pw - 2 * m, 12, 'F');
 
         pdf.setFontSize(7);
         pdf.setFont('helvetica', 'normal');
         setColor(0, 0, 0);
         
         let x2 = m + 2;
-        const agentInfo = RISK_AGENTS[cat];
-        const agentName = agentInfo.agent;
-        pdf.text(agentName, x2, y + 3); x2 += deptColW[0];
+        pdf.text(HSEIT_CATEGORY_LABELS[cat], x2, y + 2);
+        pdf.setFontSize(6);
+        setColor(90, 90, 90);
+        pdf.text(`(${RISK_AGENTS[cat].agent})`, x2, y + 6.5);
+        x2 += deptColW[0];
+
+        pdf.setFontSize(7);
+        setColor(0, 0, 0);
         pdf.text('Habitual', x2, y + 3); x2 += deptColW[1];
         pdf.text(catAvg.toFixed(2), x2, y + 3); x2 += deptColW[2];
         pdf.text(getSeverity(catAvg), x2, y + 3); x2 += deptColW[3];
@@ -780,14 +784,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(cr, cg, cb);
         pdf.text(getRiskClassification(catAvg), x2, y + 3); x2 += deptColW[5];
+        pdf.text(getTolerance(catAvg), x2, y + 3); x2 += deptColW[6];
         
         pdf.setFont('helvetica', 'normal');
         setColor(60, 60, 60);
-        const measure = impact === 'risk' ? 'Intervenção urgente' : impact === 'intermediate' ? 'Plano de ação' : 'Manter';
-        pdf.text(measure, x2, y + 3);
+        pdf.text(getMeasure(catAvg), x2, y + 3);
         
-        y += 10;
+        y += 12;
       });
+
 
       // Department charts page
       pdf.addPage(); y = m;
