@@ -967,28 +967,34 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawText('Este documento deve ser revisado periodicamente, conforme cronograma definido no plano de ação, e atualizado sempre que houver mudanças significativas na organização do trabalho ou na legislação vigente.');
   y += 20;
 
-  // Signature block
+  // Signature block (two columns, centered under each line)
+  const leftCx = (m + 20 + pw / 2 - 10) / 2;
+  const rightCx = (pw / 2 + 10 + pw - m - 20) / 2;
   pdf.setDrawColor(0, 0, 0);
   pdf.line(m + 20, y, pw / 2 - 10, y);
   pdf.line(pw / 2 + 10, y, pw - m - 20, y);
   y += 5;
 
-  pdf.setFontSize(10);
+  pdf.setFontSize(8);
   pdf.setFont('helvetica', 'bold');
   setColor(0, 0, 0);
-  pdf.text(data.sstName || 'Responsável Técnico SST', m + 20, y);
-  pdf.text('Representante Legal da Empresa', pw / 2 + 10, y);
-  y += 5;
+  const sstLines = pdf.splitTextToSize(data.sstName || 'Responsável Técnico SST', pw / 2 - m - 34);
+  sstLines.forEach((line: string) => { pdf.text(line, leftCx, y, { align: 'center' }); y += 4; });
+  pdf.text('Representante Legal da Empresa', rightCx, y - (sstLines.length - 1) * 4, { align: 'center' });
 
-  pdf.setFontSize(8);
   pdf.setFont('helvetica', 'normal');
   setColor(80, 80, 80);
-  if (data.sstCpf) pdf.text(`CPF: ${data.sstCpf}`, m + 20, y);
-  if (data.sstRegistration) { y += 5; pdf.text(`Registro MTE: ${data.sstRegistration}`, m + 20, y); }
+  if (data.sstCpf) { pdf.text(`CPF: ${data.sstCpf}`, leftCx, y, { align: 'center' }); y += 4; }
+  if (data.sstRegistration) { pdf.text(`Registro MTE: ${data.sstRegistration}`, leftCx, y, { align: 'center' }); y += 4; }
 
-  y += 10;
-  pdf.text(`${data.assessment.companyName}`, pw / 2 + 10, y - 5);
-  pdf.text(`Local e Data: _______________, ${new Date().toLocaleDateString('pt-BR')}`, m + 20, y + 5);
+  pdf.setFont('helvetica', 'bold');
+  setColor(0, 0, 0);
+  pdf.text(`${data.assessment.companyName}`, rightCx, y - 4, { align: 'center' });
+
+  y += 8;
+  pdf.setFont('helvetica', 'normal');
+  setColor(80, 80, 80);
+  pdf.text(`Local e Data: _______________, ${new Date().toLocaleDateString('pt-BR')}`, m + 20, y);
 
   // ═══ RODAPÉ EM TODAS AS PÁGINAS ═══
   const totalPages = (pdf as any).internal.pages.length - 1;
