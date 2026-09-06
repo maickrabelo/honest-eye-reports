@@ -556,13 +556,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     drawText('Questões sobre fatores negativos têm pontuação invertida, de modo que scores mais altos representam condições mais favoráveis.');
     y += 5;
 
-    drawSubSection('4.3 Classificação de Risco');
+    drawSubSection('4.3 Classificação de Risco e Tolerabilidade');
+    drawText('A régua abaixo é a única utilizada em todas as tabelas deste relatório. A coluna "Classificação" indica a intensidade do risco (cinco níveis) e a coluna "Tolerabilidade" traduz essa intensidade na decisão de intervenção exigida pela NR-1.');
+    y += 3;
     const riskThresholds = [
-      ['Muito Baixo', '≥ 4,21', 'Condição muito favorável', [34, 197, 94]],
-      ['Baixo', '3,41 – 4,20', 'Condição favorável', [132, 204, 22]],
-      ['Moderado', '2,61 – 3,40', 'Atenção necessária', [234, 179, 8]],
-      ['Alto', '1,81 – 2,60', 'Intervenção necessária', [249, 115, 22]],
-      ['Muito Alto', '< 1,81', 'Ação imediata requerida', [239, 68, 68]],
+      ['Muito Baixo', 'a partir de 4,21', 'Tolerável — condição muito favorável', [34, 197, 94]],
+      ['Baixo', 'de 3,67 a 4,20', 'Tolerável — condição favorável', [132, 204, 22]],
+      ['Moderado', 'de 2,61 a 3,66', 'Moderado — atenção necessária', [234, 179, 8]],
+      ['Alto', 'de 2,33 a 2,60', 'Moderado — intervenção necessária', [249, 115, 22]],
+      ['Muito Alto', 'abaixo de 2,33', 'Intolerável — intervenção imediata', [239, 68, 68]],
     ] as [string, string, string, number[]][];
 
     riskThresholds.forEach(([label, range, desc, color]) => {
@@ -575,16 +577,42 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       pdf.text(`${label} (${range})`, m + 12, y);
       pdf.setFont('helvetica', 'normal');
       setColor(80, 80, 80);
-      pdf.text(`— ${desc}`, m + 70, y);
+      pdf.text(`— ${desc}`, m + 80, y);
+      y += 7;
+    });
+    y += 2;
+    drawText('Observação: por se tratar de escala normalizada, médias mais altas indicam condição mais favorável e risco menor.', 5, 9);
+
+    y += 5;
+    drawSubSection('4.4 Semáforo de Impacto na Saúde');
+    const semaphoreLegend: [string, string, [number, number, number]][] = [
+      ['Favorável (a partir de 3,67)', 'Ambiente psicossocial saudável', [34, 197, 94]],
+      ['Intermediário (de 2,33 a 3,66)', 'Atenção e monitoramento necessários', [249, 115, 22]],
+      ['Risco (abaixo de 2,33)', 'Intervenção imediata necessária', [239, 68, 68]],
+    ];
+    semaphoreLegend.forEach(([label, desc, color]) => {
+      checkPage(8);
+      pdf.setFillColor(color[0], color[1], color[2]);
+      pdf.circle(m + 6, y - 1, 3, 'F');
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      setColor(0, 0, 0);
+      pdf.text(label, m + 12, y);
+      pdf.setFont('helvetica', 'normal');
+      setColor(80, 80, 80);
+      pdf.text(`— ${desc}`, m + 80, y);
       y += 7;
     });
 
     y += 5;
-    drawSubSection('4.4 Semáforo de Impacto na Saúde');
-    drawText('🟢 Favorável (< 2,33): Ambiente psicossocial saudável', 5);
-    drawText('🟡 Intermediário (2,33 – 3,66): Atenção e monitoramento necessários', 5);
-    drawText('🔴 Risco (≥ 3,67): Intervenção urgente necessária', 5);
+    drawSubSection('4.5 Equivalência entre Dimensões do HSE-IT e Agentes de Risco Psicossocial');
+    drawText('As dimensões do instrumento correspondem aos seguintes agentes de risco no inventário do PGR:');
+    y += 3;
+    CATEGORIES.forEach(cat => {
+      drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} = ${RISK_AGENTS[cat].agent}`, 5, 9.5);
+    });
   }
+
 
   y += 5;
   drawSubSection(`4.${data.methodology === 'hseit' ? '5' : '4'} Amostra e Participação`);
