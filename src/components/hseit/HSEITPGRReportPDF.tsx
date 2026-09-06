@@ -121,10 +121,11 @@ function drawRadarChart(
     pdf.setFontSize(6);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(60, 60, 60);
-    const label = categoryAverages[i].label.length > 12 
-      ? categoryAverages[i].label.substring(0, 12) + '.'
-      : categoryAverages[i].label;
-    pdf.text(label, lx, ly + 1, { align: 'center' });
+    const labelLines = HSEIT_CATEGORY_SHORT_LABEL_LINES[categoryAverages[i].category]
+      || [categoryAverages[i].label];
+    labelLines.forEach((line, li) => {
+      pdf.text(line, lx, ly + 1 + li * 3, { align: 'center' });
+    });
   }
 
   // Data polygon (filled)
