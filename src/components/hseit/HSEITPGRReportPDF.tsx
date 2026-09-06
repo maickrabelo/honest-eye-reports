@@ -9,7 +9,6 @@ import {
   HEALTH_IMPACT_LABELS,
   calculateCategoryAverage,
   normalizeScore,
-  normalizeScore,
   type HSEITWordingVariant
 } from '@/data/hseitQuestions';
 import { ActionItem } from './HSEITActionPlanEditor';
