@@ -198,7 +198,7 @@ function drawHorizontalBarChart(
     pdf.setFontSize(7);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(60, 60, 60);
-    const label = cat.label.length > 16 ? cat.label.substring(0, 16) + '.' : cat.label;
+    const label = HSEIT_CATEGORY_SHORT_LABELS[cat.category] || cat.label;
     pdf.text(label, startX, y + barHeight / 2 + 1);
 
     // Background bar
