@@ -565,8 +565,8 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     const riskThresholds = [
       ['Muito Baixo', 'a partir de 4,21', 'Tolerável — condição muito favorável', [34, 197, 94]],
       ['Baixo', 'de 3,67 a 4,20', 'Tolerável — condição favorável', [132, 204, 22]],
-      ['Moderado', 'de 2,61 a 3,66', 'Moderado — atenção necessária', [234, 179, 8]],
-      ['Alto', 'de 2,33 a 2,60', 'Moderado — intervenção necessária', [249, 115, 22]],
+      ['Moderado', 'de 3,00 a 3,66', 'Moderado — atenção e plano de ação', [234, 179, 8]],
+      ['Alto', 'de 2,33 a 2,99', 'Moderado — intervenção necessária', [249, 115, 22]],
       ['Muito Alto', 'abaixo de 2,33', 'Intolerável — intervenção imediata', [239, 68, 68]],
     ] as [string, string, string, number[]][];
 
