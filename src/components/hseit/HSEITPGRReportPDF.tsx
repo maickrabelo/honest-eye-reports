@@ -655,12 +655,12 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   drawSubSection('5.1 Visão Geral — Resultado por Dimensão');
   
   // Table header
-  const colW = [50, 18, 23, 25, 25, pw - 2 * m - 141];
-  const headers = ['Dimensão', 'Média', 'Severidade', 'Probabilidade', 'Classificação', 'Medida Proposta'];
+  const colW = [44, 13, 21, 24, 22, 22, pw - 2 * m - 146];
+  const headers = ['Dimensão (Agente de Risco)', 'Média', 'Severidade', 'Probabilidade', 'Classificação', 'Tolerabilidade', 'Medida Proposta'];
   
   pdf.setFillColor(0, 51, 102);
   pdf.rect(m, y, pw - 2 * m, 10, 'F');
-  pdf.setFontSize(7);
+  pdf.setFontSize(6.5);
   pdf.setFont('helvetica', 'bold');
   setColor(255, 255, 255);
   let xPos = m + 2;
@@ -671,22 +671,27 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
   y += 12;
 
   data.categoryAverages.forEach((cat, idx) => {
-    checkPage(12);
+    checkPage(14);
     const bgCol = idx % 2 === 0 ? 250 : 240;
     pdf.setFillColor(bgCol, bgCol, bgCol);
-    pdf.rect(m, y - 3, pw - 2 * m, 10, 'F');
+    pdf.rect(m, y - 3, pw - 2 * m, 12, 'F');
 
-    const impact = getHealthImpact(cat.average);
     const [cr, cg, cb] = getRiskColor(cat.average);
     pdf.setFillColor(cr, cg, cb);
     pdf.circle(m + 4, y + 2, 2, 'F');
 
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
     pdf.setFont('helvetica', 'normal');
     setColor(0, 0, 0);
     let x = m + 8;
-    const dimName = cat.label;
-    pdf.text(dimName, x, y + 3); x += colW[0] - 6;
+    pdf.text(cat.label, x, y + 2);
+    pdf.setFontSize(6);
+    setColor(90, 90, 90);
+    pdf.text(`(${RISK_AGENTS[cat.category].agent})`, x, y + 6.5);
+    x += colW[0] - 6;
+
+    pdf.setFontSize(7);
+    setColor(0, 0, 0);
     pdf.text(cat.average.toFixed(2), x, y + 3); x += colW[1];
     pdf.text(getSeverity(cat.average), x, y + 3); x += colW[2];
     pdf.text(getProbability(cat.average), x, y + 3); x += colW[3];
@@ -694,14 +699,15 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(cr, cg, cb);
     pdf.text(getRiskClassification(cat.average), x, y + 3); x += colW[4];
+    pdf.text(getTolerance(cat.average), x, y + 3); x += colW[5];
     
     pdf.setFont('helvetica', 'normal');
     setColor(60, 60, 60);
-    const measure = impact === 'risk' ? 'Ação imediata' : impact === 'intermediate' ? 'Monitoramento' : 'Manter';
-    pdf.text(measure, x, y + 3);
+    pdf.text(getMeasure(cat.average), x, y + 3);
     
-    y += 10;
+    y += 12;
   });
+
 
   // Per-department detailed analysis
   if (data.departments.length > 0) {
