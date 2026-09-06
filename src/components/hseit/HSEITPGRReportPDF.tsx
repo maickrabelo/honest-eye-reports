@@ -921,14 +921,14 @@ export async function generatePGRReport(data: PGRReportData): Promise<void> {
       });
 
       if (criticalCats.length === 0) {
-        drawText('Nenhuma dimensão em nível de risco identificada neste setor. Manter monitoramento periódico.', 5);
+        drawText('Nenhuma dimensão em nível intolerável identificada neste setor. Medida proposta: manter e monitorar.', 5);
       } else {
         criticalCats.forEach(cat => {
           const avg = calculateCategoryAverage(deptAnswers, cat, data.wordingVariant);
           const agentInfo = RISK_AGENTS[cat];
-          drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} (média: ${avg.toFixed(2)})`, 5);
+          drawText(`• ${HSEIT_CATEGORY_LABELS[cat]} (${agentInfo.agent}) — média: ${avg.toFixed(2)} | Classificação: ${getRiskClassification(avg)} | Tolerabilidade: ${getTolerance(avg)}`, 5);
           drawText(`  Riscos: ${agentInfo.risks.join(', ')}`, 10);
-          drawText(`  Medida: Intervenção imediata com plano específico para o setor`, 10);
+          drawText(`  Medida Proposta: ${getMeasure(avg)} com plano específico para o setor`, 10);
           y += 3;
         });
       }
