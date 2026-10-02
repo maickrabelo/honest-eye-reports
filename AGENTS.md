@@ -1,0 +1,1 @@
+- Assessment deletions (HSE-IT, COPSOQ, Burnout, CLASA, Climate) are snapshotted by a BEFORE DELETE trigger into deleted_assessments_backup; restore via restore_deleted_assessment(). Why: deleted questionnaires must be recoverable.
