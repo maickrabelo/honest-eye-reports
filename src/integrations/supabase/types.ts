@@ -1279,6 +1279,45 @@ export type Database = {
           },
         ]
       }
+      deleted_assessments_backup: {
+        Row: {
+          assessment_id: string
+          assessment_type: string
+          company_id: string | null
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          payload: Json
+          responses_count: number
+          restored_at: string | null
+          title: string | null
+        }
+        Insert: {
+          assessment_id: string
+          assessment_type: string
+          company_id?: string | null
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          payload: Json
+          responses_count?: number
+          restored_at?: string | null
+          title?: string | null
+        }
+        Update: {
+          assessment_id?: string
+          assessment_type?: string
+          company_id?: string | null
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          payload?: Json
+          responses_count?: number
+          restored_at?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       demo_leads: {
         Row: {
           company_name: string | null
@@ -4798,6 +4837,10 @@ export type Database = {
       ouvidoria_can_view: { Args: { _company_id: string }; Returns: boolean }
       pulse_create_next_cycle: { Args: { _survey_id: string }; Returns: string }
       pulse_cycle_duration: { Args: { _frequency: string }; Returns: string }
+      restore_deleted_assessment: {
+        Args: { _backup_id: string }
+        Returns: undefined
+      }
       user_has_pgr_shortcut_plan: {
         Args: { _user_id: string }
         Returns: boolean
