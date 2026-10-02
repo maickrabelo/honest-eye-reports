@@ -1,70 +1,80 @@
-# Parecer técnico — laudos HSE-IT CULTSP (04.393.475/*) e ajustes propostos
+# Parecer técnico — laudos HSE-IT CULTSP (base: PDFs gerados pela plataforma)
 
-Sem os dados brutos (questionários excluídos), o parecer abaixo explica, a partir do algoritmo real da plataforma, o que cada questionamento indica. Ao final, as correções propostas para que isso não se repita.
+Analisei os 8 PDFs enviados. Todos foram gerados pela plataforma (gerador jsPDF do SOIA): 7 de 13/08/2026 e 1 da CULTSP PRO de 20/07/2026. Os dois arquivos da Institucional – Sede são idênticos. Não há PDF do Museu das Amazônias.
 
-## Parte 1 — Parecer por questionamento
+## Principal conclusão
 
-**1. Grupos com mais respondentes do que pessoas**
-- a) A área é escolhida pelo próprio respondente no início do questionário. A plataforma não usa a lista de colaboradores do cliente nem limita quantas respostas cada área recebe.
-- Quando o questionário está configurado como "multissetor", a pessoa pode marcar mais de uma área. Nesse caso ela é contada em cada área marcada.
-- O link é público e anônimo. Não há trava contra a mesma pessoa responder duas vezes.
-- b) Sim, alguém pode ter marcado a área errada ou várias áreas. As respostas dela entram na média de cada área marcada. Em grupos pequenos (4 a 9 pessoas), uma resposta a mais muda bastante a média.
+Os números questionados pelo cliente **não são os destes PDFs de 13/08**. Eles batem com versões **antigas**, geradas em julho, quando havia um erro na plataforma, já corrigido. Exemplo: a CULTSP PRO de 20/07 mostra Performance com Relacionamentos 1,00; Atendimento com 5,00 em Apoio da Chefia, Suporte dos Pares e Mudanças; e "Operações ou TI" com 0,00 em tudo.
 
-**2. Soma dos grupos diferente do total**
-- Explicação provável: respostas com mais de uma área marcada. O total da unidade conta cada pessoa uma vez; cada grupo conta todas as pessoas que marcaram aquela área. Diferenças como 97 x 84 (CULTSP PRO) e 135 x 125 (Museu do Amanhã) correspondem a cerca de 13 e 10 marcações extras.
-- Paço do Frevo (27/27) indica que ali ninguém marcou mais de uma área.
-- O total da unidade (80, 29, 15, 125, 84, 38, 27) é o número correto de pessoas que responderam. Os números por grupo são "marcações", não pessoas.
+**O erro:** a busca de respostas trazia no máximo 1.000 linhas. Uma unidade com 84 pessoas tem 84 × 35 = 2.940 notas, então parte das notas não era carregada. Grupos ficavam com poucas notas, o que gerava 5,00 e 1,00, ou com nenhuma, o que gerava 0,00. O erro foi corrigido em seguida, e os PDFs de 13/08 já saíram com todas as notas.
 
-**3. Médias da unidade que não batem**
-- A média da unidade é calculada juntando todas as respostas válidas da unidade, cada pessoa uma vez, e tirando a média por tema (escala de 1 a 5, já com inversão).
-- As médias dos grupos contam várias vezes as pessoas que marcaram várias áreas. Por isso nenhuma ponderação a partir dos grupos (por respondentes, por pessoas na área ou sem peso) chega ao valor da unidade.
-- No Museu do Amanhã, as pessoas com várias áreas marcadas tendem a ter notas mais baixas. Elas pesam uma vez na unidade, mas quando aparecem em grupos com notas baixas também puxam a média para baixo. Isso é compatível com a unidade ficar em 3,98 mesmo com 14 dos 17 grupos acima de 4,0.
-- b) Pelo algoritmo, o valor da unidade é o mais correto, porque conta cada pessoa uma vez. Já as médias dos grupos estão infladas pelas respostas duplicadas.
-- c) O consolidado IDG não é gerado pela plataforma. Foi feito fora dela e precisa ser revisado por quem o elaborou.
+**Consequência:** os laudos que o cliente recebeu misturam números de versões antigas, com notas faltando, e de versões novas. Os valores válidos são os dos PDFs de 13/08.
 
-**4. Consolidado sem os 4 grupos Intoleráveis**
-- O consolidado é um documento externo à plataforma. Pela régua do sistema, notas abaixo de 2,33 são "Intolerável — intervenção imediata". Por isso os 4 grupos citados precisam constar no consolidado.
-- A frase sobre o "padrão consistente" é texto interpretativo e não vale para a CULTSP PRO.
+## Respostas ponto a ponto
 
-**5. Notas extremas e inversão**
-- b) Confirmado: as perguntas negativas, como as de Demandas e Relacionamentos, são invertidas (nota final = 6 − resposta). Assim, 5 é sempre o melhor resultado. Na versão 3.0 do formulário, as questões 16 e 21 foram reescritas de forma positiva e por isso não são invertidas.
-- Notas 5,00 ou 1,00 aparecem quando todas as respostas de um grupo pequeno são iguais. Com 1 a 3 respondentes, isso é comum. Também pode acontecer com uma resposta contada em várias áreas.
-- Pelo algoritmo, Relacionamentos = 1,00 significa que todos responderam "sempre" às perguntas negativas, ou seja, assédio e conflitos frequentes. Vale confirmar se o grupo entendeu a escala.
-- a) A distribuição de 1 a 5 só pode ser refeita com os dados, que foram excluídos.
+**1. Mais respondentes do que pessoas na área**
+- a) O próprio respondente escolhe a área. O questionário estava no modo de várias áreas, então uma pessoa podia marcar mais de uma e era contada em cada área marcada. A plataforma não usou a lista de colaboradores do cliente.
+- b) Sim, é possível marcar a área errada ou áreas a mais. Essas notas entram na média de cada área marcada. Nos PDFs de 13/08, os números conferem com os do cliente, por exemplo CULTSP Diretoria ou Comunicação com 11 e Escola de Ciências com 7. O excedente vem de pessoas que marcaram várias áreas.
+
+**2. Soma dos grupos diferente do total** (números confirmados nos PDFs de 13/08)
+
+| Unidade | Soma dos grupos | Total (pessoas) | Marcações extras |
+|---|---|---|---|
+| Institucional – Sede | 82 | 80 | 2 |
+| Museu do Jardim Botânico | 32 | 29 | 3 |
+| Museu do Amanhã | 135 | 125 | 10 |
+| CULTSP PRO | 97 | 84 | 13 |
+| Museu das Favelas | 45 | 38 | 7 |
+| Paço do Frevo | 27 | 27 | 0 |
+
+O total da unidade é o número correto de pessoas. O número de cada grupo conta marcações. A CULTSP de 20/07 somava 84 porque a versão antiga considerava só a primeira área marcada.
+
+**3. Médias da unidade x médias dos grupos**
+- a) A média da unidade junta todas as notas da unidade, com cada pessoa contada uma vez e as perguntas negativas já invertidas. A base são as 80, 29, 125, 84, 38 e 27 respostas.
+- Recalculei a partir dos próprios PDFs de 13/08, ponderando pelo número de respondentes de cada grupo. Os valores ficam próximos, mas não iguais, porque quem marcou várias áreas entra mais de uma vez:
+  - Museu do Amanhã: Relacionamentos 3,97 (recálculo 3,95); Papel 4,24 (4,22); Apoio da Chefia 3,91 (3,88). Paço do Frevo bate exatamente, porque ali ninguém marcou mais de uma área.
+  - A maior diferença é no Museu das Favelas: Apoio da Chefia 3,28 x 3,10. É a unidade com mais marcações extras em proporção.
+- Os valores que o cliente cita (Relacionamentos 3,98, Papel 4,14 e a Escola de Ciências com Mudanças 1,28) **não aparecem nos PDFs de 13/08**. No PDF de 13/08, a Escola de Ciências tem Mudanças 3,43 e Relacionamentos 4,54. Esses valores vêm de uma versão antiga.
+- b) Os valores corretos são os da unidade nos PDFs de 13/08. As médias dos grupos de 13/08 também são válidas, com a ressalva das marcações múltiplas.
+- c) O consolidado IDG não é gerado pela plataforma. Precisa ser refeito a partir dos PDFs de 13/08.
+
+**4. Grupos Intoleráveis**
+Os 4 grupos citados existem só nas versões antigas, com notas faltando. A CULTSP Performance de 20/07 tinha os 7 temas Intoleráveis. No PDF de 13/08, o mesmo grupo tem notas entre 2,94 e 4,03, sem nenhum Intolerável. Nos PDFs de 13/08, os temas abaixo de 2,33 aparecem só em Museu das Favelas, "Operações ou TI", Mudanças = 2,33, que fica no limite. O consolidado deve ser refeito com os PDFs de 13/08 antes de discutir intervenção emergencial.
+
+**5. Notas extremas**
+- Os 5,00 e 1,00 listados vêm das versões antigas. Nos PDFs de 13/08, os mesmos grupos têm, por exemplo: CULTSP Atendimento entre 3,23 e 4,31; Museu do Amanhã Exposições com Apoio da Chefia 4,56 e Pares 4,78; Inovação e LAA com Relacionamentos 3,44.
+- b) Confirmado: as perguntas negativas são invertidas (nota = 6 − resposta), de modo que 5 é sempre o melhor.
+- a) A distribuição de 1 a 5 só pode ser feita com os dados brutos, que foram excluídos depois.
 
 **6. Datas**
-- O sistema não imprime um "período de coleta". Cada resposta registra o horário em que foi concluída. As datas de um único dia que aparecem nos laudos foram preenchidas manualmente na edição do laudo ou correspondem à data em que o laudo foi gerado.
-- Não é possível reconstruir o período real sem os dados. Isso só seria possível com uma restauração de backup.
+- Todos os PDFs informam "Data da avaliação: 16/06/2026", que é a data de abertura do questionário e está dentro do cronograma de 15/06 a 26/06.
+- As datas citadas pelo cliente (13/07, 14/07, 15/07, 20/07, 22/07) são **datas em que os relatórios foram gerados**, não de coleta. O próprio nome do arquivo usa a data de geração, como em "CULTSP_PRO_2026-07-20".
+- O laudo de 13/08 informa "Data de Elaboração: 13/08/2026" separada da data da avaliação.
 
 **7. Critério de classificação**
-A régua da plataforma é única:
-- Muito Baixo: a partir de 4,21
-- Baixo: de 3,67 a 4,20
-- Moderado: de 3,00 a 3,66
-- Alto: de 2,33 a 2,99
-- Muito Alto: abaixo de 2,33
-
-Severidade e probabilidade acompanham o mesmo nível. Tolerabilidade: Tolerável a partir de 3,67; Moderado de 2,33 a 3,66; Intolerável abaixo de 2,33. Isso confirma o que o cliente deduziu (3,67 e cerca de 2,33).
-
-A régua de unidade "Favorável a partir de 4,0 / Intermediário de 3,0 a 3,9 / Crítico abaixo de 3,0" não é da plataforma. Ela foi introduzida no texto do laudo e gera a contradição apontada (3,80 aparece como Tolerável no grupo e Intermediário na unidade).
+- Os PDFs de 13/08 ainda usam a versão anterior do gerador. A tabela 4.3 traz a régua 4,21 / 3,41 / 2,61 / 1,81, com símbolos ilegíveis. A legenda do semáforo (4.4) estava invertida. Já as colunas Nível (Tolerável / Moderado / Intolerável) usam os cortes 3,67 e 2,33, o que confirma a dedução do cliente.
+- Essas falhas foram corrigidas em 06/09. O gerador atual usa uma régua única: Muito Baixo a partir de 4,21; Baixo de 3,67 a 4,20; Moderado de 3,00 a 3,66; Alto de 2,33 a 2,99; Muito Alto abaixo de 2,33. Severidade e probabilidade acompanham o mesmo nível, e a tolerabilidade vem descrita na metodologia.
+- A régua de unidade "Favorável a partir de 4,0 / Intermediário 3,0–3,9 / Crítico abaixo de 3,0" não existe na plataforma. Foi criada no laudo externo.
 
 **8 e 9. Trechos faltando e erros de texto**
-São problemas de redação: seções narrativas, contagens citadas no texto e cabeçalhos editados à mão ou gerados fora da plataforma. Exemplos: o cabeçalho "Institucional – Sede — Museu das Amazônias" e o método falando em 19 setores quando o laudo avalia 17. No método, o número de setores reflete os setores cadastrados, inclusive os que não tiveram resposta. Já as seções detalhadas só mostram setores com respostas. Isso explica "8 setores no método x 4 avaliados" e casos parecidos.
+- Os PDFs da plataforma não têm a seção "5. Análise dos fatores psicossociais" nem os itens 6.1, 6.6, 6.8, 6.10 ou 9.2. Esses textos foram escritos fora da plataforma pela responsável técnica e precisam ser corrigidos por ela.
+- Nos PDFs de 13/08, o número de setores no método bate com os grupos avaliados: Museu do Amanhã 17, Jardim Botânico 5, Paço do Frevo 4, Museu das Favelas 6. Os números 19, 6, 8 e 9 citados vêm do texto externo ou do cadastro antigo.
+- As contagens corretas por grupo são as dos PDFs de 13/08. Exemplos: CULTSP Gestão ou RH 7; Jardim Botânico Curadoria 6 e Comunicação 5; Institucional Orçamento e Custos 6; Favelas Desenvolvimento Institucional 4 e Operações ou TI 3.
 
-**Conclusão:** as inconsistências de 1 a 3 têm uma causa só: a escolha livre de mais de uma área e a falta de controle de duplicidade. Os itens 4 e de 6 a 9 vêm da edição externa dos laudos. O cálculo e a inversão das perguntas estão corretos.
+## Recomendação ao cliente
+1. Descartar todos os laudos de julho.
+2. Usar os PDFs de 13/08 como base oficial e refazer o consolidado e as análises escritas a partir deles.
+3. Se quiserem, emitir novos PDFs com o gerador atual, que tem a régua e o semáforo corrigidos. Isso não é possível agora, porque os dados foram excluídos. Só seria possível com uma restauração de backup.
 
-## Parte 2 — Correções propostas na plataforma
-
-1. Exibir no laudo, por setor, "respondentes únicos" e "marcações". Incluir uma nota explicando quando houver pessoas com várias áreas marcadas.
-2. Opção para a gestora definir o número de colaboradores por setor e um alerta quando as respostas passarem desse número.
-3. Aviso no questionário multissetor ("marque apenas a área onde você atua") e opção de desativar a escolha de várias áreas por padrão.
-4. Imprimir automaticamente o período real de coleta (primeira e última resposta) e a data de emissão, separadas.
-5. Seção automática "Grupos em nível Intolerável" no resumo do laudo.
-6. Método passa a citar "X setores cadastrados, Y com respostas".
-7. Corrigir a inconsistência interna: hoje a seção de recomendações por setor considera só a primeira área marcada, enquanto as tabelas consideram todas.
+## Ajustes propostos na plataforma (opcional)
+1. Exibir, por setor, "respondentes únicos" e "marcações", com uma nota quando houver pessoas com várias áreas marcadas.
+2. Permitir cadastrar o número de pessoas por setor, com alerta quando houver mais respostas do que pessoas.
+3. Aviso no formulário ("marque apenas a área onde você atua") e modo de uma única área como padrão.
+4. Imprimir o período real de coleta (primeira e última resposta) separado da data de emissão.
+5. Seção automática "Grupos em nível Intolerável" no resumo.
+6. Corrigir a seção de recomendações por setor, que hoje considera só a primeira área marcada.
 
 ## Detalhes técnicos
-- Escolha de setor: `HSEITForm.tsx` grava `department` (primeira área) e `departments[]` (todas).
-- Média da unidade: `calculateCategoryAverage` sobre todas as respostas concluídas. Inversão via `normalizeScore` (6 − valor) e `getIsInverted` (substituições da versão 3.0 nas questões 16 e 21).
-- Tabelas por setor no PDF filtram por `departments.includes(dept)`. As recomendações (cerca da linha 913) filtram só por `department`, por isso o item 7.
-- Régua: `getPGRLevel` / `getTolerance` em `HSEITPGRReportPDF.tsx`.
+- Comparação feita extraindo o texto dos 8 PDFs e recalculando as médias ponderadas por setor.
+- Erro de 1.000 linhas por consulta já corrigido com paginação nas consultas de respostas. A régua e o semáforo foram corrigidos em `HSEITPGRReportPDF.tsx`.
+- Os ajustes 1 a 6 envolveriam `HSEITForm.tsx`, `HSEITManagement.tsx`, `HSEITPGRReportPDF.tsx` e uma coluna de número de pessoas em `hseit_departments`.
