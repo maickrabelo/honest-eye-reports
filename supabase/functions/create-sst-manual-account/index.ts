@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
       max_companies,
       plan_id,
       trial_days,
+      monthly_boleto_cents,
     } = body ?? {};
 
     if (!sst_name || !email || !responsible_name) {
@@ -162,8 +163,40 @@ Deno.serve(async (req) => {
       else subscriptionId = sub?.id ?? null;
     }
 
+    // 6. Optional monthly boleto via Asaas
+    let invoiceUrl: string | null = null;
+    const boletoCents = Number(monthly_boleto_cents) || 0;
+    if (boletoCents > 0 && subscriptionId && cnpjDigits) {
+      const key = Deno.env.get("ASAAS_API_KEY")!;
+      const base = (Deno.env.get("ASAAS_ENV") ?? "production").trim().toLowerCase() !== "sandbox"
+        ? "https://api.asaas.com/v3" : "https://sandbox.asaas.com/api/v3";
+      const h = { access_token: key, "Content-Type": "application/json" };
+      const found = await (await fetch(`${base}/customers?cpfCnpj=${cnpjDigits}`, { headers: h })).json();
+      let customerId = found?.data?.[0]?.id;
+      if (!customerId) {
+        const c = await (await fetch(`${base}/customers`, { method: "POST", headers: h, body: JSON.stringify({
+          name: sst_name, email: cleanEmail, cpfCnpj: cnpjDigits, mobilePhone: (phone ?? "").replace(/\D/g, "").slice(-11) }) })).json();
+        customerId = c?.id;
+        if (!customerId) throw new Error(`Asaas customer: ${JSON.stringify(c)}`);
+      }
+      const due = new Date(); due.setDate(due.getDate() + 3);
+      const sub = await (await fetch(`${base}/subscriptions`, { method: "POST", headers: h, body: JSON.stringify({
+        customer: customerId, billingType: "BOLETO", value: boletoCents / 100, cycle: "MONTHLY",
+        nextDueDate: due.toISOString().split("T")[0], description: `SOIA - Gestora SST Ouvidoria (${sst_name})`,
+        externalReference: `soia-manual-${subscriptionId}` }) })).json();
+      if (!sub?.id) throw new Error(`Asaas subscription: ${JSON.stringify(sub)}`);
+      const pays = await (await fetch(`${base}/payments?subscription=${sub.id}&limit=1`, { headers: h })).json();
+      invoiceUrl = pays?.data?.[0]?.invoiceUrl ?? null;
+      await supabaseAdmin.from("subscriptions").update({
+        billing_cycle: "monthly", status: "active", provider: "asaas", amount_cents: boletoCents,
+        asaas_customer_id: customerId, asaas_subscription_id: sub.id, asaas_payment_id: pays?.data?.[0]?.id ?? null,
+        invoice_url: invoiceUrl,
+      }).eq("id", subscriptionId);
+    }
+
     return new Response(
       JSON.stringify({
+        invoice_url: invoiceUrl,
         success: true,
         sst_manager_id: sstManager.id,
         user_id: userId,

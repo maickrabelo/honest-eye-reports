@@ -4841,6 +4841,10 @@ export type Database = {
         Args: { _backup_id: string }
         Returns: undefined
       }
+      user_has_ouvidoria_only_plan: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       user_has_pgr_shortcut_plan: {
         Args: { _user_id: string }
         Returns: boolean
