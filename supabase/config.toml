@@ -111,6 +111,9 @@ verify_jwt = false
 [functions.asaas-list-payments]
 # Requires authentication
 
+[functions.asaas-update-subscription]
+verify_jwt = false
+
 [functions.meta-capi]
 verify_jwt = false
 
