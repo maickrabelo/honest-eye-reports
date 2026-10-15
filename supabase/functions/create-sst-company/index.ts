@@ -196,6 +196,7 @@ Deno.serve(async (req) => {
     // Descobrir flags do plano (alguns planos SMS não criam login por empresa)
     let planCreateCompanyLogin = true;
     let planOuvidoriaEnabled = true;
+    let ouvidoriaOnly = false;
     try {
       const { data: managerProfiles } = await supabase
         .from("profiles").select("id").eq("sst_manager_id", sstManagerId);
@@ -203,9 +204,9 @@ Deno.serve(async (req) => {
       if (ownerIds.length > 0) {
         const { data: sub } = await supabase
           .from("subscriptions")
-          .select("subscription_plans(create_company_login, ouvidoria_enabled)")
+          .select("subscription_plans(slug, create_company_login, ouvidoria_enabled)")
           .in("owner_user_id", ownerIds)
-          .eq("status", "active")
+          .in("status", ["active", "pending"])
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -213,6 +214,7 @@ Deno.serve(async (req) => {
         if (sp) {
           planCreateCompanyLogin = sp.create_company_login ?? true;
           planOuvidoriaEnabled = sp.ouvidoria_enabled ?? true;
+          ouvidoriaOnly = sp.slug === 'sst-ouvidoria';
         }
       }
     } catch (_e) { /* ignore, keep defaults */ }
@@ -261,10 +263,10 @@ Deno.serve(async (req) => {
         await supabase.from("company_feature_access").upsert({
           company_id: existingCompany.id,
           ouvidoria_enabled: planOuvidoriaEnabled,
-          psicossocial_enabled: true,
-          burnout_enabled: true,
-          clima_enabled: true,
-          treinamentos_enabled: true,
+          psicossocial_enabled: !ouvidoriaOnly,
+          burnout_enabled: !ouvidoriaOnly,
+          clima_enabled: !ouvidoriaOnly,
+          treinamentos_enabled: !ouvidoriaOnly,
         });
 
         if (planCreateCompanyLogin) {
@@ -315,10 +317,10 @@ Deno.serve(async (req) => {
       await supabase.from("company_feature_access").upsert({
         company_id: existingCompany.id,
         ouvidoria_enabled: planOuvidoriaEnabled,
-        psicossocial_enabled: true,
-        burnout_enabled: true,
-        clima_enabled: true,
-        treinamentos_enabled: true,
+        psicossocial_enabled: !ouvidoriaOnly,
+        burnout_enabled: !ouvidoriaOnly,
+        clima_enabled: !ouvidoriaOnly,
+        treinamentos_enabled: !ouvidoriaOnly,
       });
 
       if (planCreateCompanyLogin) {
@@ -382,10 +384,10 @@ Deno.serve(async (req) => {
     await supabase.from("company_feature_access").upsert({
       company_id: newCompanyId,
       ouvidoria_enabled: planOuvidoriaEnabled,
-      psicossocial_enabled: true,
-      burnout_enabled: true,
-      clima_enabled: true,
-      treinamentos_enabled: true,
+      psicossocial_enabled: !ouvidoriaOnly,
+      burnout_enabled: !ouvidoriaOnly,
+      clima_enabled: !ouvidoriaOnly,
+      treinamentos_enabled: !ouvidoriaOnly,
     });
 
     // Create company access user (or link existing) using CNPJ-derived password

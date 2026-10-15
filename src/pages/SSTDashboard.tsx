@@ -28,6 +28,7 @@ import SoniaChat from '@/components/SoniaChat';
 import { SoniaChatProvider, SoniaChatLayout } from '@/contexts/SoniaChatContext';
 import TeamManagementCard from '@/components/collaborators/TeamManagementCard';
 import { BETA_OUVIDORIA_COMPANY_IDS } from '@/lib/betaOuvidoria';
+import { useOuvidoriaOnlyPlan } from '@/hooks/useOuvidoriaOnlyPlan';
 import { useSmartOnlyPlan } from '@/hooks/useSmartOnlyPlan';
 import { usePgrShortcutPlan } from '@/hooks/usePgrShortcutPlan';
 import { useSmsPlan } from '@/hooks/useSmsPlan';
@@ -166,6 +167,7 @@ const SSTDashboard = () => {
   const { shouldShowTour, completeTour } = useOnboarding('sst-dashboard');
   const { hasAccess: hasPGRAccess } = usePGRModuleAccess();
   const { isSmartOnly } = useSmartOnlyPlan();
+  const { isOuvidoriaOnly } = useOuvidoriaOnlyPlan();
   const { hasShortcut: hasPgrShortcut } = usePgrShortcutPlan();
   const { isSmsPlan } = useSmsPlan();
   const { hasAccess: hasCLASAAccess } = useHasCLASAAccess();
@@ -470,6 +472,7 @@ const SSTDashboard = () => {
                     path: '/clasa-dashboard',
                   }];
                 }
+                if (isOuvidoriaOnly) return [];
                 return displayedTools;
               })().map((tool, idx) => (
                 <Card
@@ -598,7 +601,7 @@ const SSTDashboard = () => {
                           >
                             <KeyRound className="h-4 w-4" />
                           </Button>
-                          {hasPGRAccess && (
+                          {hasPGRAccess && !isOuvidoriaOnly && (
                             <Button
                               variant="ghost"
                               size="sm"
