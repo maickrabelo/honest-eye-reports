@@ -34,10 +34,13 @@ const ensureCompanyAccess = async (
   const normalizedEmail = String(company.email ?? "").trim().toLowerCase();
   if (!normalizedEmail) return null;
 
-  const { data: existingList } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  const existingAuth = existingList?.users?.find(
-    (u: any) => u.email?.toLowerCase() === normalizedEmail,
-  );
+  let existingAuth: any = null;
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) break;
+    existingAuth = data.users.find((u: any) => u.email?.toLowerCase() === normalizedEmail) ?? null;
+    if (existingAuth || data.users.length < 1000) break;
+  }
 
   let companyUserId: string;
   if (existingAuth) {

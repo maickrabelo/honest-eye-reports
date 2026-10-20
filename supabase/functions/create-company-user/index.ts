@@ -73,9 +73,14 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if email already exists
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users.find(u => u.email === normalizedEmail);
+    // Check if email already exists (paginate — default page size is only 50)
+    let existingUser: any = null;
+    for (let page = 1; page <= 50; page++) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) break;
+      existingUser = data.users.find((u: any) => u.email?.toLowerCase() === normalizedEmail) ?? null;
+      if (existingUser || data.users.length < 1000) break;
+    }
 
     if (existingUser) {
       // User exists — check which companies they already have access to
@@ -122,6 +127,14 @@ Deno.serve(async (req) => {
         .from("profiles")
         .update({ company_id: company_id })
         .eq("id", existingUser.id);
+
+      // Ensure 'company' role exists (may have been removed with the previous link)
+      const { data: compRole } = await supabaseAdmin
+        .from("user_roles").select("id")
+        .eq("user_id", existingUser.id).eq("role", "company").limit(1);
+      if (!compRole?.length) {
+        await supabaseAdmin.from("user_roles").insert({ user_id: existingUser.id, role: "company" });
+      }
 
       return new Response(
         JSON.stringify({
