@@ -128,6 +128,14 @@ Deno.serve(async (req) => {
         .update({ company_id: company_id })
         .eq("id", existingUser.id);
 
+      // Ensure 'company' role exists (may have been removed with the previous link)
+      const { data: compRole } = await supabaseAdmin
+        .from("user_roles").select("id")
+        .eq("user_id", existingUser.id).eq("role", "company").limit(1);
+      if (!compRole?.length) {
+        await supabaseAdmin.from("user_roles").insert({ user_id: existingUser.id, role: "company" });
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
