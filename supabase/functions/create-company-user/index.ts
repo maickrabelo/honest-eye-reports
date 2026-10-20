@@ -73,9 +73,14 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if email already exists
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users.find(u => u.email === normalizedEmail);
+    // Check if email already exists (paginate — default page size is only 50)
+    let existingUser: any = null;
+    for (let page = 1; page <= 50; page++) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) break;
+      existingUser = data.users.find((u: any) => u.email?.toLowerCase() === normalizedEmail) ?? null;
+      if (existingUser || data.users.length < 1000) break;
+    }
 
     if (existingUser) {
       // User exists — check which companies they already have access to
