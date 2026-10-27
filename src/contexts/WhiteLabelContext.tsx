@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealAuth } from '@/contexts/RealAuthContext';
 import srSmsLogo from '@/assets/sr-sms-logo.png.asset.json';
+import laborebemLogo from '@/assets/laborebem-logo.png.asset.json';
 
 const SR_SMS_LOGO_URL = srSmsLogo.url;
 const SR_SMS_BRAND_NAME = 'Sr. SMS';
@@ -129,6 +130,30 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const { user, role, profile } = useRealAuth();
+
+  useEffect(() => {
+    if (brandLogo !== laborebemLogo.url) return;
+
+    const existingIcon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    const icon = existingIcon ?? document.createElement('link');
+    const previousHref = icon.getAttribute('href');
+    const previousType = icon.getAttribute('type');
+    icon.rel = 'icon';
+    icon.href = '/laborebem/favicon.png';
+    icon.type = 'image/png';
+    if (!existingIcon) document.head.appendChild(icon);
+
+    return () => {
+      if (!existingIcon) {
+        icon.remove();
+        return;
+      }
+      if (previousHref === null) icon.removeAttribute('href');
+      else icon.setAttribute('href', previousHref);
+      if (previousType === null) icon.removeAttribute('type');
+      else icon.setAttribute('type', previousType);
+    };
+  }, [brandLogo]);
 
   const getColorPalette = useCallback(() => {
     return COLOR_PALETTES[brandColor || 'green'];
