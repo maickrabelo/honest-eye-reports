@@ -1,1 +1,2 @@
 - Assessment deletions (HSE-IT, COPSOQ, Burnout, CLASA, Climate) are snapshotted by a BEFORE DELETE trigger into deleted_assessments_backup; restore via restore_deleted_assessment(). Why: deleted questionnaires must be recoverable.
+- Tenant-specific favicons are applied and restored by WhiteLabelProvider when its brand logo matches a registered asset; keep the default document icon unchanged so tenant branding cannot leak into other accounts.
