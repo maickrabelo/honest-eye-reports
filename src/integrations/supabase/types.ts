@@ -4221,7 +4221,11 @@ export type Database = {
           owner_email: string
           owner_user_id: string | null
           plan_id: string
+          promo_code: string | null
+          promo_ends_at: string | null
+          promo_paid_count: number
           provider: string
+          regular_price_cents: number | null
           status: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at: string
         }
@@ -4243,7 +4247,11 @@ export type Database = {
           owner_email: string
           owner_user_id?: string | null
           plan_id: string
+          promo_code?: string | null
+          promo_ends_at?: string | null
+          promo_paid_count?: number
           provider?: string
+          regular_price_cents?: number | null
           status?: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at?: string
         }
@@ -4265,7 +4273,11 @@ export type Database = {
           owner_email?: string
           owner_user_id?: string | null
           plan_id?: string
+          promo_code?: string | null
+          promo_ends_at?: string | null
+          promo_paid_count?: number
           provider?: string
+          regular_price_cents?: number | null
           status?: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at?: string
         }

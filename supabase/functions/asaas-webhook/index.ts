@@ -316,6 +316,40 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Black Friday: após o 3º pagamento promocional, sobe para o valor normal
+    if ((eventType === 'PAYMENT_CONFIRMED' || eventType === 'PAYMENT_RECEIVED') && (sub as any).promo_code && (sub as any).regular_price_cents) {
+      try {
+        const meta0: any = sub.metadata || {};
+        const paidIds: string[] = Array.isArray(meta0.promo_paid_ids) ? meta0.promo_paid_ids : [];
+        if (asaasPaymentId && !paidIds.includes(asaasPaymentId)) {
+          paidIds.push(asaasPaymentId);
+          const count = paidIds.length;
+          const upd: Record<string, unknown> = { promo_paid_count: count, metadata: { ...meta0, promo_paid_ids: paidIds } };
+          if (count >= 3 && sub.asaas_subscription_id) {
+            const apiKey = Deno.env.get('ASAAS_API_KEY')!;
+            const base = (Deno.env.get('ASAAS_ENV') ?? 'production').trim().toLowerCase() !== 'sandbox'
+              ? 'https://api.asaas.com/v3' : 'https://sandbox.asaas.com/api/v3';
+            const r = await fetch(`${base}/subscriptions/${sub.asaas_subscription_id}`, {
+              method: 'PUT',
+              headers: { 'access_token': apiKey, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ value: (sub as any).regular_price_cents / 100, updatePendingPayments: true }),
+            });
+            if (r.ok) {
+              upd.amount_cents = (sub as any).regular_price_cents;
+              upd.promo_ends_at = new Date().toISOString();
+              upd.promo_code = null;
+              upd.metadata = { ...(upd.metadata as any), promo_finished: 'blackfriday-2026' };
+            } else {
+              console.error('Falha ao subir valor pós-promo', await r.text());
+            }
+          }
+          await supabase.from('subscriptions').update(upd).eq('id', sub.id);
+        }
+      } catch (e) {
+        console.error('promo upgrade error', e);
+      }
+    }
+
     if (eventType === 'PAYMENT_CONFIRMED' || eventType === 'PAYMENT_RECEIVED') {
       // Activate subscription + provision user
       const plan: any = (sub as any).subscription_plans;

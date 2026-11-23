@@ -35,6 +35,12 @@
     /* SOIA paleta — espelhada no tailwind config audit.* */
     --audit-primary: 217 72% 14%;
     --audit-secondary: 154 85% 43%;
+    --bf-bg: 240 20% 4%;
+    --bf-surface: 240 15% 9%;
+    --bf-fg: 0 0% 98%;
+    --bf-muted: 240 8% 65%;
+    --bf-neon: 158 100% 50%;
+    --bf-hot: 330 100% 60%;
 
     --radius: 0.5rem;
   }

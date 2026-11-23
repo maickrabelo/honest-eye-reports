@@ -87,6 +87,7 @@ const BetaOuvidoriaForm = React.lazy(() => import("./pages/BetaOuvidoriaForm"));
 const BetaOuvidoriaTrack = React.lazy(() => import("./pages/BetaOuvidoriaTrack"));
 const BetaOuvidoriaDashboard = React.lazy(() => import("./pages/BetaOuvidoriaDashboard"));
 const Ouvidoria = React.lazy(() => import("./pages/Ouvidoria"));
+const BlackFridayOuvidoria = React.lazy(() => import("./pages/BlackFridayOuvidoria"));
 const PDParceiros = React.lazy(() => import("./pages/PDParceiros"));
 const ParceirosSST = React.lazy(() => import("./pages/ParceirosSST"));
 
@@ -130,6 +131,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/ouvidoria" element={<Ouvidoria />} />
+                <Route path="/blackfriday-ouvidoria" element={<BlackFridayOuvidoria />} />
 <Route path="/pdparceiros" element={<PDParceiros />} />
                 <Route path="/parceiros-sst" element={<ParceirosSST />} />
                 <Route path="/sst/:sstSlug" element={<SSTLandingPage />} />

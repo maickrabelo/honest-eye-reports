@@ -20,6 +20,7 @@ export default {
 		},
 		extend: {
 			colors: {
+				bf: { bg: 'hsl(var(--bf-bg))', surface: 'hsl(var(--bf-surface))', fg: 'hsl(var(--bf-fg))', muted: 'hsl(var(--bf-muted))', neon: 'hsl(var(--bf-neon))', hot: 'hsl(var(--bf-hot))' },
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

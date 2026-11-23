@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { BF_PROMO_CODE, BF_PROMO_PRICE_CENTS, validateBlackFriday } from '../_shared/blackFridayPromo.ts';
 import { calculateOperatorPrice, type OperatorPlanSlug, type OperatorBillingCycle } from '../_shared/operatorPricing.ts';
 
 const corsHeaders = {
@@ -23,6 +24,7 @@ interface SubReq {
   companyName?: string;
   cnpjs?: string[]; // for Corporate
   employeeCount?: number; // Planos Ouvidoria (preço por faixa de vidas)
+  promo?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -45,6 +47,15 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    const isPromo = body.promo === BF_PROMO_CODE;
+    if (body.promo && !isPromo) {
+      return new Response(JSON.stringify({ error: 'Promoção inválida' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (isPromo) {
+      const err = validateBlackFriday(body.planSlug, body.billingCycle, body.billingType);
+      if (err) return new Response(JSON.stringify({ error: err }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // 1. Fetch plan
@@ -84,7 +95,8 @@ Deno.serve(async (req) => {
 
     // Asaas cycles: MONTHLY=1mo, QUARTERLY=3mo, YEARLY=12mo
     // Each charge in the cycle = monthly equivalent * months in cycle
-    const amountCents = monthlyEquivalentCents * monthsPerCycle;
+    const regularAmountCents = monthlyEquivalentCents * monthsPerCycle;
+    const amountCents = isPromo ? BF_PROMO_PRICE_CENTS : regularAmountCents;
     const cycleMap: Record<string, string> = { monthly: 'MONTHLY', quarterly: 'QUARTERLY', annual: 'YEARLY' };
     const asaasCycle = cycleMap[isOuvidoriaTiered ? (normCycle === 'annual' ? 'annual' : 'monthly') : body.billingCycle];
 
@@ -125,7 +137,9 @@ Deno.serve(async (req) => {
       value: amountCents / 100,
       nextDueDate: dueDateStr,
       cycle: asaasCycle,
-      description: `SOIA - ${plan.name} (${body.billingCycle})`,
+      description: isPromo
+        ? `SOIA - ${plan.name} | Black Friday: R$ 9,90 nos 3 primeiros meses, depois R$ ${(regularAmountCents / 100).toFixed(2).replace('.', ',')}/mês`
+        : `SOIA - ${plan.name} (${body.billingCycle})`,
       externalReference: `soia-${body.planSlug}-${Date.now()}`,
     };
 
@@ -165,6 +179,7 @@ Deno.serve(async (req) => {
         asaas_payment_id: paymentId,
         invoice_url: invoiceUrl,
         amount_cents: amountCents,
+        ...(isPromo ? { promo_code: BF_PROMO_CODE, regular_price_cents: regularAmountCents, promo_paid_count: 0 } : {}),
         metadata: {
           customer: body.customer,
           companyName: body.companyName,

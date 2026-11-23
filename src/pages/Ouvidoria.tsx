@@ -34,6 +34,7 @@ import {
   Play,
 } from 'lucide-react';
 import usePageSEO from '@/hooks/usePageSEO';
+import { BF_PROMO_DEADLINE } from '@/lib/blackFridayPromo';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fbqTrack } from '@/lib/metaPixel';
@@ -537,6 +538,12 @@ const Ouvidoria = () => {
       </div>
 
       <main>
+        {Date.now() < new Date(BF_PROMO_DEADLINE).getTime() && (
+          <a href="/blackfriday-ouvidoria" className="block bg-bf-bg text-bf-fg text-center text-sm py-2.5 px-4 hover:opacity-90">
+            <span className="font-black text-bf-neon">BLACK FRIDAY</span> · Qualquer plano de ouvidoria por <strong>R$ 9,90/mês</strong>
+            <span className="text-bf-muted text-xs"> (3 primeiros meses)</span> → Aproveitar
+          </a>
+        )}
         {/* HERO — foco em contratar plano */}
         <section className="relative overflow-hidden bg-background">
           <div className="absolute top-0 right-0 w-[60%] h-[80%] bg-gradient-to-bl from-audit-secondary/10 via-audit-secondary/5 to-transparent blur-xl pointer-events-none" />
