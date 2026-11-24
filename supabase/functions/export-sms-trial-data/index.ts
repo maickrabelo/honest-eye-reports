@@ -27,6 +27,33 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
+    // Authorize: must be an authenticated admin
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const token = authHeader.slice('Bearer '.length).trim();
+    const { data: userData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
+      _user_id: userData.user.id,
+      _role: 'admin',
+    });
+    if (roleError || !isAdmin) {
+      return new Response(JSON.stringify({ error: 'forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const url = new URL(req.url);
     const planFilter = url.searchParams.get('plan'); // ex: teste-sms; default: all SMS
 
