@@ -203,8 +203,8 @@ function SectionHeading({ eyebrow, title, description }: { eyebrow: string; titl
 
 export default function BlackFridayOuvidoria() {
   usePageSEO({
-    title: 'Black Friday Ouvidoria SOIA | R$ 9,90/mês nos 3 primeiros meses',
-    description: 'Black Friday SOIA: canal de ouvidoria e denúncias anônimas com IA por R$ 9,90/mês nos 3 primeiros meses. Conforme NR-01 e LGPD.',
+    title: 'Black Friday Ouvidoria SOIA | R$ 9,90/mês nos 2 primeiros meses',
+    description: 'Black Friday SOIA: canal de ouvidoria e denúncias anônimas com IA por R$ 9,90/mês nos 2 primeiros meses. Conforme NR-01 e LGPD.',
   });
   const { toast } = useToast();
   const { ended, parts } = useCountdown(BF_PROMO_DEADLINE);
@@ -296,7 +296,7 @@ export default function BlackFridayOuvidoria() {
           <p className="mt-2 text-7xl md:text-8xl font-black text-bf-neon drop-shadow-[0_0_30px_hsl(var(--bf-neon)/0.5)]">
             R$ 9,90<span className="text-2xl md:text-3xl text-bf-fg font-bold">/mês</span>
           </p>
-          <p className="mt-2 text-xs text-bf-muted">*nos 3 primeiros meses</p>
+          <p className="mt-2 text-xs text-bf-muted">*nos 2 primeiros meses</p>
 
           <div className="mt-10 flex justify-center gap-3">
             {ended ? (
@@ -339,7 +339,7 @@ export default function BlackFridayOuvidoria() {
                   <p className="text-sm text-bf-muted mt-1 mb-5">{plan.desc}</p>
                   <p className="text-sm text-bf-muted line-through">{brl(regular)}/mês</p>
                   <p className="text-5xl font-black text-bf-neon">{brl(BF_PROMO_PRICE_CENTS)}<span className="text-lg text-bf-fg">/mês</span></p>
-                  <p className="text-[11px] text-bf-muted mt-1">*nos 3 primeiros meses. Depois, {brl(regular)}/mês.</p>
+                  <p className="text-[11px] text-bf-muted mt-1">*nos 2 primeiros meses. Depois, {brl(regular)}/mês.</p>
                   <ul className="mt-6 space-y-2">
                     {plan.features.map((feature) => <li key={feature} className="flex gap-2 text-sm"><Check className="h-4 w-4 text-bf-neon shrink-0 mt-0.5" />{feature}</li>)}
                   </ul>
@@ -367,7 +367,7 @@ export default function BlackFridayOuvidoria() {
 
           <p className="mt-10 text-[11px] text-bf-muted text-center max-w-3xl mx-auto leading-relaxed">
             Condições: oferta válida para novas assinaturas mensais dos planos Ouvidoria e Ouvidoria Smart contratadas até 30/11/2026, com pagamento por cartão de crédito.
-            R$ 9,90/mês nos 3 primeiros meses. A partir do 4º mês, a cobrança passa automaticamente ao valor normal do plano conforme o número de colaboradores, salvo cancelamento antes da 4ª cobrança.
+            R$ 9,90/mês nos 2 primeiros meses. A partir do 3º mês, a cobrança passa automaticamente ao valor normal do plano conforme o número de colaboradores, salvo cancelamento antes da 3ª cobrança.
           </p>
         </section>
 
@@ -609,7 +609,7 @@ export default function BlackFridayOuvidoria() {
           <div className="max-w-4xl mx-auto rounded-2xl border border-bf-neon/40 bg-bf-neon/10 p-8 md:p-12">
             <Sparkles className="h-9 w-9 text-bf-neon mx-auto mb-4" />
             <h2 className="text-3xl md:text-4xl font-black">Ative sua Ouvidoria por R$ 9,90/mês</h2>
-            <p className="text-xs text-bf-muted mt-2">*nos 3 primeiros meses. Depois, cobrança mensal no valor normal do plano.</p>
+            <p className="text-xs text-bf-muted mt-2">*nos 2 primeiros meses. Depois, cobrança mensal no valor normal do plano.</p>
             <button onClick={scrollToPlans} disabled={ended} className="mt-7 inline-flex items-center gap-2 rounded-xl px-8 py-4 font-bold bg-gradient-to-r from-bf-neon to-bf-hot text-bf-bg hover:opacity-90 disabled:opacity-40 transition">
               Garantir a oferta <ArrowRight className="h-5 w-5" />
             </button>

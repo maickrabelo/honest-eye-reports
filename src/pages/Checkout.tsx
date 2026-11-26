@@ -57,7 +57,6 @@ const Checkout = () => {
   const planSlug = params.get('plano');
   const isPromo = params.get('promo') === BF_PROMO_CODE;
   const initialCycle = isPromo ? 'monthly' : ((params.get('ciclo') as Cycle) || 'annual');
-  const [promoAccepted, setPromoAccepted] = useState(false);
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [cycle, setCycle] = useState<Cycle>(initialCycle);
@@ -165,7 +164,6 @@ const Checkout = () => {
 
   const handleSubmit = async () => {
     if (!plan || !validate()) return;
-    if (isPromo && !promoAccepted) { toast.error('Confirme as condições da oferta Black Friday'); return; }
     setSubmitting(true);
     const monthsPerCycle = cycle === 'annual' ? 12 : cycle === 'quarterly' ? 3 : 1;
     const totalCents = (getMonthlyPrice() || 0) * monthsPerCycle;
@@ -313,7 +311,7 @@ const Checkout = () => {
                     <p className="text-sm text-muted-foreground line-through">{formatBRL(getMonthlyPrice())}/mês</p>
                     <p className="text-3xl font-extrabold text-primary">{formatBRL(BF_PROMO_PRICE_CENTS)}<span className="text-base font-semibold">/mês</span></p>
                     <p className="text-[11px] text-muted-foreground mt-2">
-                      *Nos 3 primeiros meses. A partir do 4º mês, {formatBRL(getMonthlyPrice())}/mês no cartão, salvo cancelamento.
+                      *Nos 2 primeiros meses. A partir do 3º mês, {formatBRL(getMonthlyPrice())}/mês no cartão, salvo cancelamento.
                     </p>
                   </div>
                 ) : monthsPerCycle > 1 && billingType === 'CREDIT_CARD' ? (
@@ -440,18 +438,9 @@ const Checkout = () => {
               )}
 
               {isPromo ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 p-3 border-2 border-primary rounded-lg bg-primary/10 text-primary">
-                    <CreditCard className="w-5 h-5" />
-                    <span className="text-sm font-medium">Pagamento com cartão de crédito (obrigatório na oferta)</span>
-                  </div>
-                  <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
-                    <input type="checkbox" className="mt-0.5" checked={promoAccepted} onChange={(e) => setPromoAccepted(e.target.checked)} />
-                    <span>
-                      Entendo que pagarei {formatBRL(BF_PROMO_PRICE_CENTS)}/mês nos 3 primeiros meses e que, se não cancelar,
-                      a partir do 4º mês será cobrado automaticamente no cartão o valor normal de {formatBRL(getMonthlyPrice())}/mês.
-                    </span>
-                  </label>
+                <div className="flex items-center gap-2 p-3 border-2 border-primary rounded-lg bg-primary/10 text-primary">
+                  <CreditCard className="w-5 h-5" />
+                  <span className="text-sm font-medium">Pagamento com cartão de crédito (obrigatório na oferta)</span>
                 </div>
               ) : (
               <div className="space-y-2">
@@ -485,7 +474,7 @@ const Checkout = () => {
               </div>
               )}
 
-              <Button className="w-full" size="lg" disabled={submitting || (isPromo && !promoAccepted)} onClick={handleSubmit}>
+              <Button className="w-full" size="lg" disabled={submitting} onClick={handleSubmit}>
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

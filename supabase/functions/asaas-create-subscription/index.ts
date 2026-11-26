@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { BF_PROMO_CODE, BF_PROMO_PRICE_CENTS, validateBlackFriday } from '../_shared/blackFridayPromo.ts';
+import { BF_PROMO_CODE, BF_PROMO_MONTHS, BF_PROMO_PRICE_CENTS, validateBlackFriday } from '../_shared/blackFridayPromo.ts';
 import { calculateOperatorPrice, type OperatorPlanSlug, type OperatorBillingCycle } from '../_shared/operatorPricing.ts';
 
 const corsHeaders = {
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       nextDueDate: dueDateStr,
       cycle: asaasCycle,
       description: isPromo
-        ? `SOIA - ${plan.name} | Black Friday: R$ 9,90 nos 3 primeiros meses, depois R$ ${(regularAmountCents / 100).toFixed(2).replace('.', ',')}/mês`
+        ? `SOIA - ${plan.name} | Black Friday: R$ 9,90 nos ${BF_PROMO_MONTHS} primeiros meses, depois R$ ${(regularAmountCents / 100).toFixed(2).replace('.', ',')}/mês`
         : `SOIA - ${plan.name} (${body.billingCycle})`,
       externalReference: `soia-${body.planSlug}-${Date.now()}`,
     };

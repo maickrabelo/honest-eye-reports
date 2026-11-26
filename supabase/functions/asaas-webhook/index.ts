@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { BF_PROMO_MONTHS } from '../_shared/blackFridayPromo.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -316,7 +317,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Black Friday: após o 3º pagamento promocional, sobe para o valor normal
+    // Black Friday: após os pagamentos promocionais, sobe para o valor normal
     if ((eventType === 'PAYMENT_CONFIRMED' || eventType === 'PAYMENT_RECEIVED') && (sub as any).promo_code && (sub as any).regular_price_cents) {
       try {
         const meta0: any = sub.metadata || {};
@@ -325,7 +326,7 @@ Deno.serve(async (req) => {
           paidIds.push(asaasPaymentId);
           const count = paidIds.length;
           const upd: Record<string, unknown> = { promo_paid_count: count, metadata: { ...meta0, promo_paid_ids: paidIds } };
-          if (count >= 3 && sub.asaas_subscription_id) {
+          if (count >= BF_PROMO_MONTHS && sub.asaas_subscription_id) {
             const apiKey = Deno.env.get('ASAAS_API_KEY')!;
             const base = (Deno.env.get('ASAAS_ENV') ?? 'production').trim().toLowerCase() !== 'sandbox'
               ? 'https://api.asaas.com/v3' : 'https://sandbox.asaas.com/api/v3';
@@ -344,6 +345,7 @@ Deno.serve(async (req) => {
             }
           }
           await supabase.from('subscriptions').update(upd).eq('id', sub.id);
+          sub.metadata = upd.metadata;
         }
       } catch (e) {
         console.error('promo upgrade error', e);

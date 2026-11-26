@@ -541,7 +541,7 @@ const Ouvidoria = () => {
         {Date.now() < new Date(BF_PROMO_DEADLINE).getTime() && (
           <a href="/blackfriday-ouvidoria" className="block bg-bf-bg text-bf-fg text-center text-sm py-2.5 px-4 hover:opacity-90">
             <span className="font-black text-bf-neon">BLACK FRIDAY</span> · Qualquer plano de ouvidoria por <strong>R$ 9,90/mês</strong>
-            <span className="text-bf-muted text-xs"> (3 primeiros meses)</span> → Aproveitar
+            <span className="text-bf-muted text-xs"> (2 primeiros meses)</span> → Aproveitar
           </a>
         )}
         {/* HERO — foco em contratar plano */}

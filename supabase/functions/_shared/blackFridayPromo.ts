@@ -1,7 +1,7 @@
 // Black Friday Ouvidoria 2026 — keep in sync with src/lib/blackFridayPromo.ts
 export const BF_PROMO_CODE = 'blackfriday-2026';
 export const BF_PROMO_PRICE_CENTS = 990;
-export const BF_PROMO_MONTHS = 3;
+export const BF_PROMO_MONTHS = 2;
 export const BF_PROMO_DEADLINE = '2026-12-01T02:59:59Z'; // 30/11/2026 23:59 (BRT)
 export const BF_PROMO_PLANS = ['ouvidoria', 'ouvidoria-smart'];
 
